@@ -40,19 +40,6 @@ PRIVATE
      ST2,& ! second layer soil temperature
      ST3,& ! third layer soil temperature
      ST4   ! bottom layer soil temperature
-  REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::    &
-     EMISSI_lsm,CMC_lsm,T1_lsm,SNOWH_lsm,&
-     SNEQV_lsm,ALBEDO_lsm,CH_lsm,&
-     ETA_lsm,FDOWN_lsm,EC_lsm,EDIR_lsm,&
-     ETT_lsm,ESNOW_lsm,DRIP_lsm,&
-     DEW_lsm,BETA_lsm,ETP_lsm,SSOIL_lsm,&
-     FLX1_lsm,FLX2_lsm,FLX3_lsm,SNOMLT_lsm,&
-     SNCOVR_lsm,RUNOFF1_lsm,RUNOFF2_lsm,&
-     RUNOFF3_lsm,RC_lsm,PC_lsm,RSMIN_lsm,&
-     XLAI_lsm,RCS_lsm,RCT_lsm,RCQ_lsm,&
-     RCSOIL_lsm,SOILW_lsm,SOILM_lsm,Q1_lsm,&
-     SMCWLT_lsm,SMCDRY_lsm,&
-     SMCREF_lsm,SMCMAX_lsm,CM_lsm
   INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::  &
      NROOT_lsm,LU_lsm
 
@@ -141,6 +128,8 @@ CONTAINS
       CP = 1004.5
 
 
+      DO 100 J=1,MJ1
+      DO 100 I=1,MI1
 
 !        T2  = thbar(hxp)*pibar(hxp)
 !        TG1 = tg(I,J)
@@ -191,70 +180,8 @@ CONTAINS
         WT(I,J) = WTT  !SHEAT in NOAHLSM
         WQ(I,J) = WQQ  !ETAKIN in NOAHLSM
         VEN2D(I,J) = lCM(I,J)
-         CM_lsm(I,J)         = lCM(I,J)
-         ST_lsm(I,J,1)       = lST(I,J,1)
-         ST_lsm(I,J,2)       = lST(I,J,2)
-         ST_lsm(I,J,3)       = lST(I,J,3)
-         ST_lsm(I,J,4)       = lST(I,J,4)
-         SM_lsm(I,J,1)       = lSM(I,J,1)
-         SM_lsm(I,J,2)       = lSM(I,J,2)
-         SM_lsm(I,J,3)       = lSM(I,J,3)
-         SM_lsm(I,J,4)       = lSM(I,J,4)
-         SL_lsm(I,J,1)       = lSL(I,J,1)
-         SL_lsm(I,J,2)       = lSL(I,J,2)
-         SL_lsm(I,J,3)       = lSL(I,J,3)
-         SL_lsm(I,J,4)       = lSL(I,J,4)
-         EMISSI_lsm(I,J)     = lEMISSI(I,J)
-         CMC_lsm(I,J)        = lCMC(I,J)
-         T1_lsm(I,J)         = lT1(I,J)
-         SNOWH_lsm(I,J)      = lSNOWH(I,J)
-         SNEQV_lsm(I,J)      = lSNEQV(I,J)
-         ALBEDO_lsm(I,J)     = lALBEDO(I,J)
-         CH_lsm(I,J)         = lCH(I,J)
-         ETA_lsm(I,J)        = lETA(I,J)
-         FDOWN_lsm(I,J)      = lFDOWN(I,J)
-         EC_lsm(I,J)         = lEC(I,J)
-         EDIR_lsm(I,J)       = lEDIR(I,J)
-         ET_lsm(I,J,1)       = lET(I,J,1)
-         ET_lsm(I,J,2)       = lET(I,J,2)
-         ET_lsm(I,J,3)       = lET(I,J,3)
-         ET_lsm(I,J,4)       = lET(I,J,4)
-         ETT_lsm(I,J)        = lETT(I,J)
-         ESNOW_lsm(I,J)      = lESNOW(I,J)
-         DRIP_lsm(I,J)       = lDRIP(I,J)
-         DEW_lsm(I,J)        = lDEW(I,J)
-         BETA_lsm(I,J)       = lBETA(I,J)
-         ETP_lsm(I,J)        = lETP(I,J)
-         SSOIL_lsm(I,J)      = lSSOIL(I,J)
-         FLX1_lsm(I,J)       = lFLX1(I,J)
-         FLX2_lsm(I,J)       = lFLX2(I,J)
-         FLX3_lsm(I,J)       = lFLX3(I,J)
-         SNOMLT_lsm(I,J)     = lSNOMLT(I,J)
-         SNCOVR_lsm(I,J)     = lSNCOVR(I,J)
-         RUNOFF1_lsm(I,J)    = lRUNOFF1(I,J)
-         RUNOFF2_lsm(I,J)    = lRUNOFF2(I,J)
-         RUNOFF3_lsm(I,J)    = lRUNOFF3(I,J)
-         RC_lsm(I,J)         = lRC(I,J)
-         PC_lsm(I,J)         = lPC(I,J)
-         RSMIN_lsm(I,J)      = lRSMIN(I,J)
-         XLAI_lsm(I,J)       = lXLAI(I,J)
-         RCS_lsm(I,J)        = lRCS(I,J)
-         RCT_lsm(I,J)        = lRCT(I,J)
-         RCQ_lsm(I,J)        = lRCQ(I,J)
-         RCSOIL_lsm(I,J)     = lRCSOIL(I,J)
-         SOILW_lsm(I,J)      = lSOILW(I,J)
-         SOILM_lsm(I,J)      = lSOILM(I,J)
-         Q1_lsm(I,J)         = lQ1(I,J)
-         SMAV_lsm(I,J,1)     = lSMAV(I,J,1)
-         SMAV_lsm(I,J,2)     = lSMAV(I,J,2)
-         SMAV_lsm(I,J,3)     = lSMAV(I,J,3)
-         SMAV_lsm(I,J,4)     = lSMAV(I,J,4)
-         SMCWLT_lsm(I,J)     = lSMCWLT(I,J)
-         SMCDRY_lsm(I,J)     = lSMCDRY(I,J)
-         SMCREF_lsm(I,J)     = lSMCREF(I,J)
-         SMCMAX_lsm(I,J)     = lSMCMAX(I,J)
-         NROOT_lsm(I,J)      = lNROOT(I,J)
-         LU_lsm(I,J)         = LU(I,J)
+  100 CONTINUE
+
 #endif
 
    END SUBROUTINE land_interface
@@ -404,6 +331,9 @@ CONTAINS
 !      OPEN(99,FILE=FILENAME2,FORM='unformatted',STATUS='OLD')
 !      READ(99) ((ST4(I,J),I=1,MI1),J=1,MJ1)
 !      CLOSE(99)
+      DO 100 J = 1,MJ1
+      DO 100 I = 1,MI1
+      hxp=INT(hx(I,J))+1
 
 
          T2               = thbar(hxp)*pibar(hxp)
@@ -486,16 +416,16 @@ CONTAINS
          lSMCMAX(I,J)     = -9.9999996E+35
          lNROOT(I,J)      = -999999
          LU_lsm(I,J)         = LU(I,J)
+  100 CONTINUE
 
-
-  call open_forcing_file(iunit, output_dir, forcing_filename, nsoil, startdate, enddate,          &
-       loop_for_a_while, latitude, longitude,                                                               &
-       forcing_timestep, noahlsm_timestep, ice, t1, stc, smc, sh2o, sldpth, cmc, snowh, sneqv, tbot,        &
-       vegtyp, soiltyp, slopetyp, snoalb, zlvl, zlvl_wind, albedo_monthly, shdfac_monthly,                  &
-       z0brd_monthly, lai_monthly, use_urban_module, isurban, shdmin, shdmax, usemonalb, rdlai2d, llanduse, &
-       iz0tlnd, sfcdif_option,STinout,SMinout,SLinout)
-
-
+  call open_forcing_file(iunit, output_dir, forcing_filename, nsoil,    &
+        startdate, enddate, loop_for_a_while, latitude, longitude,      &
+        forcing_timestep, noahlsm_timestep, ice, t1, stc, smc, sh2o,    &
+        sldpth, cmc, snowh, sneqv, tbot, vegtyp, soiltyp, slopetyp,     &
+        snoalb, zlvl, zlvl_wind, albedo_monthly, shdfac_monthly,        &
+        z0brd_monthly, lai_monthly, use_urban_module, isurban, shdmin,  &
+        shdmax, usemonalb, rdlai2d, llanduse, iz0tlnd, sfcdif_option,   &
+        STinout,SMinout,SLinout)
 
 #endif
 
