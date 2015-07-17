@@ -1,6 +1,7 @@
-!program simple_driver
   MODULE module_simple_driver
 
+  implicit none
+ 
   !
   ! Through MODULE_IO, we access most of our top-level input/output routines.  This
   ! includes routines OPEN_FORCING_FILE, READ_FORCING_TEXT, INITIALIZE_OUTPUT,
@@ -48,36 +49,7 @@
   use kwm_date_utilities
 
 !======hchun===============================================
-  IMPLICIT NONE
-  PUBLIC ::  &
-           month_d, &
-           SOIL_VEG_GEN_PARM
-        
-!==========================================================
-
-!======hchun===============================================
-CONTAINS
-  SUBROUTINE LSM_DRV(sfcspd,sfcu,sfcv,sfctmp,q2,sfcprs,&
-            tg1,soldn,longwave,prcp,ETAKIN,SHEAT,CM,&
-            STinout,SMinout,SLinout,&
-            EMISSI,CMC,T1,SNOWH,SNEQV,ALBEDO,CH,&
-            ETA,FDOWN,EC,EDIR,ETout,ETT,ESNOW,DRIP,&
-            DEW,BETA,ETP,SSOIL,FLX1,FLX2,FLX3,&
-            SNOMLT,SNCOVR,RUNOFF1,RUNOFF2,RUNOFF3,&
-            RC,PC,RSMIN,XLAI,RCS,RCT,RCQ,RCSOIL,&
-            SOILW,SOILM,Q1,SMAVout,SMCWLT,SMCDRY,&
-            SMCREF,SMCMAX,NROOT,LU1,ITT,Z0,SOIL1,&
-            SLOPE1,ALBEDO1,GREENFRAC1,LAI1,&
-            SHDMAX1,SHDMIN1,zz1)
-!==========================================================
-
-  implicit none
-
-  !
-  ! Command-line:
-  !
-
-  character(len=256) :: executable_name   ! The name of the executable, as found by Fortran library 
+  character(len=256) :: executable_name   ! The name of the executable, as found by Fortran library
   !                                       ! function GETARG
 
   character(len=256) :: forcing_filename  ! The name of the initial/forcing conditions file, as found
@@ -88,24 +60,25 @@ CONTAINS
   !
 
   integer            :: ktime   ! A counter for the timesteps in the main loop TIMELOOP.
-  character(len=12)  :: nowdate ! The date of each time step, ( YYYYMMDDHHmm ), updated in each step 
+  character(len=12)  :: nowdate ! The date of each time step, ( YYYYMMDDHHmm ), updated in each step
   !                             ! of the main loop TIMELOOP
 
   character(len=256) :: teststr
   integer :: reloop_count = 0
 
   !
-  ! Useful data attributes describing the data in the initial/forcing conditions file
+  ! Useful data attributes describing the data in the initial/forcing conditions
+  ! file
   !
 
-  character(len=4096) :: infotext         ! Character string returned by subroutine OPEN_FORCING_FILE, 
+  character(len=4096) :: infotext         ! Character string returned by subroutine OPEN_FORCING_FILE,
   !                                       ! giving some possibly useful information for the user.
 
   real                :: latitude         ! Latitude of the point ( Degrees North )
   real                :: longitude        ! Longitude of the point ( Degrees East )
   integer             :: ice              ! Flag for sea-ice (1) or land (0), or glacial ice (-1).
   integer             :: loop_for_a_while ! Number of times to repeat the same year of forcing ( Default=0 ==> one pass through the data)
-  character(len=12)   :: startdate        ! Starting date of the data ( YYYYMMDDHHmm ) 
+  character(len=12)   :: startdate        ! Starting date of the data ( YYYYMMDDHHmm )
   character(len=12)   :: enddate          ! Ending date of the data ( YYYYMMDDHHmm )
   integer             :: forcing_timestep ! The time interval ( seconds ) of the data in the forcing file
   integer             :: noahlsm_timestep ! The timestep ( seconds ) to use when integrating the Noah LSM
@@ -113,7 +86,6 @@ CONTAINS
   real, dimension(12) :: shdfac_monthly   ! Monthly values for green vegetation fraction ( Fraction [0.0-1.0] )
   real, dimension(12) :: z0brd_monthly    ! Monthly values for background (i.e., snow-free) roughness length ( m )
   real, dimension(12) :: lai_monthly      ! Monthly values for Leaf Area Index ( dimensionless )
-
   !
   ! Various arguments to subroutine SFLX:
   !
@@ -125,12 +97,13 @@ CONTAINS
   real    :: DT         ! Time step (seconds).
   real    :: ZLVL       ! Height at which atmospheric forcing variables are taken to be valid (m)
   real    :: zlvl_wind  ! Height at which the wind forcing variable is taken to be valid (m)
-  real, pointer, dimension(:) :: SLDPTH ! Thicknesses of each soil level
+  real, pointer, dimension(:) :: SLDPTH ! Thicknesses of each soil level 
   integer :: NSOIL      ! Number of soil levels.
   logical :: LOCAL      ! Not used in SFLX
   character(len=256) :: LLANDUSE  ! Land-use dataset.  Valid values are :
   !                               ! "USGS" (USGS 24/27 category dataset) and
-  !                               ! "MODIFIED_IGBP_MODIS_NOAH" (MODIS 20-category dataset)
+  !                               ! "MODIFIED_IGBP_MODIS_NOAH" (MODIS
+  !                               20-category dataset)
   character(len=256) :: LSOIL     ! Soil-category dateset.  Only "STAS" (STATSGO dataset) supported.
   real    :: LWDN       ! Downward longwave radiation flux at surface (W m-2) [Forcing]
   real    :: SOLDN      ! Downward shortwave radiation flux at surface (W m-2) [Forcing]
@@ -160,18 +133,125 @@ CONTAINS
   real    :: SHDMAX     ! Maximum shade factor (0.0-1.0).
   real    :: ALB        ! Background snow-free albedo (0.0-1.0).
   real    :: SNOALB     ! Maximum snow albedo over deep snow (0.0-1.0)
-  real    :: TBOT       ! Deep-soil time-invariant temperature (K).  Representing sort of a mean annual air temperature.
+  real    :: TBOT       ! Deep-soil time-invariant temperature (K). Representing sort of a mean annual air temperature.
   real    :: Z0BRD      ! Background Z0 value (m).
+  real    :: EMBRD      ! Background value (i.e., not including snow-cover effect) of surface emissivity (0.0 - 1.0)
+
+  real, dimension(4) :: ETout
+  real, dimension(4) :: SMAVout
+  real     :: TG1,zz1
+!  real    :: SHEAT      ! Sensible heat flux ( W m{-2} )
+!  real    :: ETAKIN     ! Latent heat flux (evapotranspiration) ( kg m{-2}
+!  s{-1} )
+  integer :: LU1,ITT,SOIL1,SLOPE1
+  real :: ALBEDO1,GREENFRAC1,LAI1,SHDMAX1,SHDMIN1
+!================================================================================================
+
+  logical :: RDLAI2D    ! If RDLAI2D == .TRUE., then the XLAI value that we pass to SFLX will be used.
+  !                     ! If RDLAI2d == .FALSE., then XLAI will be computed
+  !                     within SFLX, from table
+  !                     ! minimum and maximum values in VEGPARM.TBL, and the
+  !                     current Green Vegetation Fraction.
+  logical :: USEMONALB  ! If USEMONALB == .TRUE., then the ALB value passed to SFLX will be used as the background
+  !                     ! snow-free albedo term.  If USEMONALB == .FALSE., then
+  !                     ALB will be computed within SFLX
+  !                     ! from minimum and maximum values in VEGPARM.TBL, and
+  !                     the current Green Vegetation Fraction.
+  real    :: SNOTIME1   ! Age of the snow on the ground.
+  real    :: RIBB       ! Bulk Richardson number used to limit the dew/frost.
+  integer :: NROOT      ! Number of root layers ( count )
+
+  integer :: iz0tlnd    ! Option to turn on (IZ0TLND=1) or off (IZ0TLND=0) the vegetation-category-dependent
+  !                     ! calculation of the Zilitinkivich coefficient CZIL in   !                     the SFCDIF subroutines.
+
+  integer :: sfcdif_option ! Option to use previous (SFCDIF_OPTION=0) or updated (SFCDIF_OPTION=1) version of
+  !                        ! SFCDIF subroutine.
+
+  !
+  ! Some diagnostics computed from the output of subroutine SFLX
+  !
+  real :: QFX       ! Evapotranspiration ( W m{-2} )  the sum of 1) direct evaporation
+  !                 ! from soil; 2) evaporation from canopy; 3) total plant transpiration;
+  !                 ! and 4) evaporation from snowpack.  Mostly, this should be the
+  !                 ! same as ETA
+
+  real :: RES       ! Residual of the surface energy balance equation ( W m{-2} )
+  real :: FUP       ! Upward longwave radiation flux from the surface ( W m{-2} )
+  real :: F         ! Incoming shortwave and longwave radiation flux  ( W m{-2} )
+
+  !
+  ! Miscellaneous declarations
+  !
+  integer            :: ierr             ! Error flag returned from read routines.
+  integer, parameter :: iunit = 10       ! Fortran unit number for reading initial/forcing conditions file.
+  logical            :: use_urban_module ! Flag, set to TRUE in the initial/forcing conditions file, if the
+  !                                      ! user wants to use the urban canopy
+  !                                      model.  Since this code does not
+  !                                      ! include the urban canopy model, a
+  !                                      TRUE value of this flag will simply
+  !                                      ! stop the execution.
+!===hchun================================================================================================================
+!  real, external     :: month_d          ! External function (follows this main
+!  program):  given an array (dimension 12)
+!========================================================================================================================
+  !                                      ! representing monthly values for some
+  !                                      parameter, return a value for
+  !                                      ! a specified date.
+  real                :: CZIL            ! Zilitinkevich constant, read from GENPARM.TBL and used to compute surface
+  !                                      ! exchange coefficients
+  real                :: LONGWAVE        ! Longwave radiation as read from the forcing data, which is immediately
+  !                                      ! adjusted (by the emissivity factor)
+  !                                      to set variable LWDN.
+
+  character(len=1024) :: output_dir      ! Output directory to which to write results.
+
+  !
+  ! Get the command-line arguments
+  !
+
+!==hchun====================================================================================
+!  call getarg(0, executable_name)
+!  call getarg(1, forcing_filename)
+
+!  if (forcing_filename == " ") then
+!     write(*,'(/," ***** Problem:  Program expects a command-line argument
+!     *****")')
+!     write(*,'(" ***** Please specify the forcing filename on the
+!     command-line.")')
+!     write(*,'(" ***** E.g.:  ''",A,1x,A,"''",/)') trim(executable_name),
+!     "bondville.dat"
+!     stop ":  ERROR EXIT"
+!  endif
+
+
+  PUBLIC :: LSM_DRV, &
+            LSM_DRV_ini, & 
+            month_d, &
+            SOIL_VEG_GEN_PARM
+        
+!==========================================================
+
+!======hchun===============================================
+CONTAINS
+  SUBROUTINE LSM_DRV(sfcspd,sfcu,sfcv,sfctmp,q2,sfcprs,&
+            tg1,soldn,longwave,prcp,ETAKIN,SHEAT,CM,&
+            STinout,SMinout,SLinout,&
+            EMISSI,CMC,T1,SNOWH,SNEQV,ALBEDO,CH,&
+            ETA,FDOWN,EC,EDIR,ETout,ETT,ESNOW,DRIP,&
+            DEW,BETA,ETP,SSOIL,FLX1,FLX2,FLX3,&
+            SNOMLT,SNCOVR,RUNOFF1,RUNOFF2,RUNOFF3,&
+            RC,PC,RSMIN,XLAI,RCS,RCT,RCQ,RCSOIL,&
+            SOILW,SOILM,Q1,SMAVout,SMCWLT,SMCDRY,&
+            SMCREF,SMCMAX,NROOT,LU1,ITT,Z0,SOIL1,&
+            SLOPE1,ALBEDO1,GREENFRAC1,LAI1,&
+            SHDMAX1,SHDMIN1,zz1)
+!==========================================================
+
+
   real,INTENT(INOUT)    :: Z0         ! Roughness length (m)
   real,INTENT(INOUT)    :: EMISSI     ! Surface emissivity (0.0 - 1.0).  This includes the snow-cover effect.
-  real    :: EMBRD      ! Background value (i.e., not including snow-cover effect) of surface emissivity (0.0 - 1.0)
   real,INTENT(INOUT)    :: CMC        ! Canopy moisture content (kg m-2)
   real,INTENT(INOUT)    :: T1         ! Skin temperature (K)
-  real, pointer,     dimension(:) :: STC   ! Soil temperature (K)
-  real, pointer,     dimension(:) :: SMC   ! Total soil moisture content (m3 m-3)
-  real, pointer,     dimension(:) :: SH2O  ! Liquid soil moisture content (m3 m-3)
-  real, allocatable, dimension(:) :: ET    ! Plant transpiration from each soil level.
-  real, allocatable, dimension(:) :: SMAV  ! Soil Moisture Availability at each level, fraction between
   !                                        ! SMCWLT (SMAV=0.0) and SMCMAX (SMAV=1.0)
   real,INTENT(INOUT)    :: SNOWH      ! Physical snow depth.
   real,INTENT(INOUT)    :: SNEQV      ! Water equivalent of accumulated snow depth (m).
@@ -188,15 +268,7 @@ CONTAINS
   real, INTENT(INOUT),dimension(4)    :: STinout     ! soil temperature
   real, INTENT(INOUT),dimension(4)    :: SMinout     ! soil moisture
   real, INTENT(INOUT),dimension(4)    :: SLinout     ! soil liquid
-  real, dimension(4) :: ETout
-  real, dimension(4) :: SMAVout
-  real     :: TG1,zz1
   real, INTENT(INOUT)    :: ETA        ! Latent heat flux (evapotranspiration) ( W m{-2} )
-!  real    :: SHEAT      ! Sensible heat flux ( W m{-2} )
-!  real    :: ETAKIN     ! Latent heat flux (evapotranspiration) ( kg m{-2} s{-1} )
-  integer :: LU1,ITT,SOIL1,SLOPE1
-  real :: ALBEDO1,GREENFRAC1,LAI1,SHDMAX1,SHDMIN1
-!================================================================================================
   real,INTENT(INOUT)    :: FDOWN      ! Radiation forcing at the surface ( W m{-2} )
   real,INTENT(INOUT)    :: EC         ! Latent heat flux component: canopy water evaporation ( W m{-2} )
   real,INTENT(INOUT)    :: EDIR       ! Latent heat flux component: direct soil evaporation ( W m{-2} )
@@ -218,7 +290,6 @@ CONTAINS
   real,INTENT(INOUT)    :: RC         ! Canopy resistance ( s m{-1} )
   real,INTENT(INOUT)    :: PC         ! Plant coefficient, where PC * ETP = ETA ( Fraction [0.0-1.0] )
   real,INTENT(INOUT)    :: RSMIN      ! Minimum canopy resistance ( s m{-1} )
-  real    :: XLAI       ! Leaf area index ( dimensionless )
   real,INTENT(INOUT)    :: RCS        ! Incoming solar RC factor ( dimensionless )
   real,INTENT(INOUT)    :: RCT        ! Air temperature RC factor ( dimensionless )
   real,INTENT(INOUT)    :: RCQ        ! Atmospheric water vapor deficit RC factor ( dimensionless )
@@ -226,73 +297,10 @@ CONTAINS
   real,INTENT(INOUT)    :: SOILW      ! Available soil moisture in the root zone ( Fraction [SMCWLT-SMCMAX] )
   real,INTENT(INOUT)    :: SOILM      ! Total soil column moisture content, frozen and unfrozen ( m )
   real,INTENT(INOUT)    :: Q1         ! Effective mixing ratio at the surface ( kg kg{-1} )
-  logical :: RDLAI2D    ! If RDLAI2D == .TRUE., then the XLAI value that we pass to SFLX will be used.
-  !                     ! If RDLAI2d == .FALSE., then XLAI will be computed within SFLX, from table 
-  !                     ! minimum and maximum values in VEGPARM.TBL, and the current Green Vegetation Fraction.
-  logical :: USEMONALB  ! If USEMONALB == .TRUE., then the ALB value passed to SFLX will be used as the background
-  !                     ! snow-free albedo term.  If USEMONALB == .FALSE., then ALB will be computed within SFLX
-  !                     ! from minimum and maximum values in VEGPARM.TBL, and the current Green Vegetation Fraction.
-  real    :: SNOTIME1   ! Age of the snow on the ground.
-  real    :: RIBB       ! Bulk Richardson number used to limit the dew/frost.
   real,INTENT(INOUT)    :: SMCWLT     ! Wilting point ( m{3} m{-3} )
   real,INTENT(INOUT)    :: SMCDRY     ! Dry soil moisture threshold where direct evaporation from the top layer ends ( m{3} m{-3} )
   real,INTENT(INOUT)    :: SMCREF     ! Soil moisture threshold where transpiration begins to stress ( m{3} m{-3} )
   real,INTENT(INOUT)    :: SMCMAX     ! Porosity, i.e., saturated value of soil moisture ( m{3} m{-3} )
-  integer :: NROOT      ! Number of root layers ( count )
-
-  integer :: iz0tlnd    ! Option to turn on (IZ0TLND=1) or off (IZ0TLND=0) the vegetation-category-dependent
-  !                     ! calculation of the Zilitinkivich coefficient CZIL in the SFCDIF subroutines.
-
-  integer :: sfcdif_option ! Option to use previous (SFCDIF_OPTION=0) or updated (SFCDIF_OPTION=1) version of 
-  !                        ! SFCDIF subroutine.
-
-  !
-  ! Some diagnostics computed from the output of subroutine SFLX
-  !
-  real :: QFX       ! Evapotranspiration ( W m{-2} )  the sum of 1) direct evaporation
-  !                 ! from soil; 2) evaporation from canopy; 3) total plant transpiration; 
-  !                 ! and 4) evaporation from snowpack.  Mostly, this should be the 
-  !                 ! same as ETA
-
-  real :: RES       ! Residual of the surface energy balance equation ( W m{-2} )
-  real :: FUP       ! Upward longwave radiation flux from the surface ( W m{-2} )
-  real :: F         ! Incoming shortwave and longwave radiation flux  ( W m{-2} )
-
-  !
-  ! Miscellaneous declarations
-  !
-  integer            :: ierr             ! Error flag returned from read routines.
-  integer, parameter :: iunit = 10       ! Fortran unit number for reading initial/forcing conditions file.
-  logical            :: use_urban_module ! Flag, set to TRUE in the initial/forcing conditions file, if the 
-  !                                      ! user wants to use the urban canopy model.  Since this code does not
-  !                                      ! include the urban canopy model, a TRUE value of this flag will simply
-  !                                      ! stop the execution.
-!===hchun================================================================================================================
-!  real, external     :: month_d          ! External function (follows this main program):  given an array (dimension 12)
-!========================================================================================================================
-  !                                      ! representing monthly values for some parameter, return a value for 
-  !                                      ! a specified date.
-  real                :: CZIL            ! Zilitinkevich constant, read from GENPARM.TBL and used to compute surface
-  !                                      ! exchange coefficients
-  real                :: LONGWAVE        ! Longwave radiation as read from the forcing data, which is immediately 
-  !                                      ! adjusted (by the emissivity factor) to set variable LWDN.
-
-  character(len=1024) :: output_dir      ! Output directory to which to write results.
-
-  !
-  ! Get the command-line arguments
-  !
-
-!==hchun====================================================================================
-!  call getarg(0, executable_name)
-!  call getarg(1, forcing_filename)
-
-!  if (forcing_filename == " ") then
-!     write(*,'(/," ***** Problem:  Program expects a command-line argument *****")')
-!     write(*,'(" ***** Please specify the forcing filename on the command-line.")')
-!     write(*,'(" ***** E.g.:  ''",A,1x,A,"''",/)') trim(executable_name), "bondville.dat"
-!     stop ":  ERROR EXIT"
-!  endif
 
   forcing_filename = "bondville.dat"
 !===========================================================================================
