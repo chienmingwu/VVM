@@ -3,16 +3,11 @@ MODULE land_module
 
 USE kinds
 USE parmsld
-USE profoutld
 USE const3d
 USE constld
-USE workcom
-USE bound
-USE utils
 USE domain_decomposition
 !===hchun=================================
-USE module_simple_driver
-USE module_ascii_io
+USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 USE rad, only:lwDown_3D,swDown_3D
 !=========================================
 
@@ -41,7 +36,7 @@ PRIVATE
      ST3,& ! third layer soil temperature
      ST4   ! bottom layer soil temperature
   INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::  &
-     NROOT_lsm,LU_lsm
+     NROOT,lLU,lSOIL
 
   REAL (KIND=int_kind),dimension(MI1,MJ1,4), PRIVATE :: &
      lST,lSM,lSL,lET,lSMAV
@@ -59,8 +54,11 @@ PRIVATE
      lSMCWLT,lSMCDRY,&
      lSMCREF,lSMCMAX,lCM,Z0
   REAL (KIND=int_kind), PRIVATE:: &
-     WS,SFCU,SFCV,T2,Q2,CP,WTT,WQQ,PP,RR,TG1,lat,lon
+     WS,SFCU,SFCV,Q2,CP,WTT,WQQ,PP,RR,TG1,lat,lon
   INTEGER (KIND=int_kind), dimension(MI1,MJ1), PRIVATE::lNROOT
+  REAL (KIND=int_kind), dimension(MI1,MJ1), PRIVATE:: T2,P2,Q2
+
+
 #endif
 #endif
 !public member functions
@@ -71,7 +69,7 @@ PUBLIC ::      &
 CONTAINS
 
 !=======================================================================
-   SUBROUTINE land_interface 
+   SUBROUTINE land_interface(WT,WQ,VNE2D,SFCSPD) 
 #if defined (LSM)
 
 !=======================================================================
@@ -87,8 +85,12 @@ CONTAINS
          MOLEN
       REAL (KIND=dbl_kind) ::    &
          VENTFC(2)
-      REAL (KIND=dbl_kind) ::    &
-         WT(MI1,MJ1),WQ(MI1,MJ1),SPEEDTP(MI1,MJ1),VEN2D(mim:mip,mjm:mjp) 
+      REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::    &
+         WT(MI1,MJ1),            &
+         WQ(MI1,MJ1),            &
+         SPCSPD(MI1,MJ1),       &
+         VEN2D(mim:mip,mjm:mjp)
+         
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
          q,       & !
@@ -101,86 +103,34 @@ CONTAINS
          zrough1    !
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
-!ccwu
-      INTEGER (KIND=int_kind) ::   &
-         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo       ! do loop indices for zonal, meridional and vertical dimensions
 
 !=====hchun================================================
-      REAL  :: WS,SFCU,SFCV,T2,Q2,CP,WTT,WQQ,PP,RR,TG1!,CM
-      REAL  :: lat,lon
-      REAL ,dimension(MI1,MJ1,4) :: &
-               lST,lSM,lSL,lET,lSMAV
-      REAL ,dimension(MI1,MJ1) :: &
-            lEMISSI,lCMC,lT1,lSNOWH,&
-            lSNEQV,lALBEDO,lCH,&
-            lETA,lFDOWN,lEC,lEDIR,&
-            lETT,lESNOW,lDRIP,&
-            lDEW,lBETA,lETP,lSSOIL,&
-            lFLX1,lFLX2,lFLX3,lSNOMLT,&
-            lSNCOVR,lRUNOFF1,lRUNOFF2,&
-            lRUNOFF3,lRC,lPC,lRSMIN,&
-            lXLAI,lRCS,lRCT,lRCQ,&
-            lRCSOIL,lSOILW,lSOILM,lQ1,&
-            lSMCWLT,lSMCDRY,&
-            lSMCREF,lSMCMAX,lCM,Z0
-      integer ,dimension(MI1,MJ1) :: lNROOT
-      integer :: ITT
+      REAL  :: WS,SFCU,SFCV,CP,TG1!,CM
       CP = 1004.5
 
 
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
+      hxp=INT(hx(I,J))+1
+      Q2(I,J) = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
 
-!        T2  = thbar(hxp)*pibar(hxp)
-!        TG1 = tg(I,J)
-        WS  = SPEEDM
-        PP  = PBAR(hxp)
-        RR  = SPREC(I,J)
-!         ST(I,J,1)       = ST1(I,J)
-!         ST(I,J,2)       = ST2(I,J)
-!         ST(I,J,3)       = ST3(I,J)
-!         ST(I,J,4)       = ST4(I,J)
-!         SM(I,J,1)       = SM1(I,J)
-!         SM(I,J,2)       = SM2(I,J)
-!         SM(I,J,3)       = SM3(I,J)
-!         SM(I,J,4)       = SM4(I,J)
-!         SL(I,J,1)       = SM1(I,J)
-!         SL(I,J,2)       = SM2(I,J)
-!         SL(I,J,3)       = SM3(I,J)
-!         SL(I,J,4)       = SM4(I,J)
-
-          TG1             = T1_lsm(I,J)
-          T2              = TH3D(I,J,hxp)*PIBAR(hxp)
-          WTT             = WT(I,J)
-          WQQ             = WQ(I,J)
-
-        CALL LSM_DRV (WS,SFCU,SFCV,T2,Q2,PP,&
-           TG1,swDown_3D(I,J,hxp),lwDown_3D(I,J,hxp),&
-           RR,WQQ,WTT,lCM(I,J),lST(I,J,:),&
-           lSM(I,J,:),lSL(I,J,:),&
-           lEMISSI(I,J),lCMC(I,J),lT1(I,J),&
-           lSNOWH(I,J),lSNEQV(I,J),lALBEDO(I,J),&
-           lCH(I,J),lETA(I,J),lFDOWN(I,J),&
-           lEC(I,J),lEDIR(I,J),lET(I,J,:),&
-           lETT(I,J),lESNOW(I,J),lDRIP(I,J),&
-           lDEW(I,J),lBETA(I,J),lETP(I,J),&
-           lSSOIL(I,J),lFLX1(I,J),lFLX2(I,J),&
-           lFLX3(I,J),lSNOMLT(I,J),lSNCOVR(I,J),&
-           lRUNOFF1(I,J),lRUNOFF2(I,J),&
-           lRUNOFF3(I,J),lRC(I,J),lPC(I,J),&
-           lRSMIN(I,J),lXLAI(I,J),lRCS(I,J),&
-           lRCT(I,J),lRCQ(I,J),lRCSOIL(I,J),&
-           lSOILW(I,J),lSOILM(I,J),lQ1(I,J),&
-           lSMAV(I,J,:),lSMCWLT(I,J),&
-           lSMCDRY(I,J),lSMCREF(I,J),&
-           lSMCMAX(I,J),lNROOT(I,J),INT(LU(I,J)),ITT,Z0(I,J),&
-           INT(SOIL(I,J)),INT(SLOPE(I,J)),REAL(ALBEDOM(I,J)),&
-           REAL(GREENFRACM(I,J)),REAL(LAIM(I,J)),&
-           REAL(SHDMAX(I,J)),REAL(SHDMIN(I,J)))
-        WT(I,J) = WTT  !SHEAT in NOAHLSM
-        WQ(I,J) = WQQ  !ETAKIN in NOAHLSM
-        VEN2D(I,J) = lCM(I,J)
   100 CONTINUE
+
+        CALL LSM_DRV(SFCSPD,T2,Q2,P2,swDown_3D,lwDown_3D,&
+           SPREC,WQ,WT, &
+! LSM inout variables
+           lCM,lST,lSM,lSL,lEMISSI,lCMC,lT1,lSNOWH,lSNEQV,&
+           lALBEDO,lCH,lETA,lFDOWN,lEC,lEDIR,lET,lETT,lESNOW,lDRIP,&
+           lDEW,lBETA,lETP,lSSOIL,lFLX1,lFX2,lFLX3,lSNOMLT,lSNCOVR,&
+           lRUNOFF1,lRUNOFF2,lRUNOFF3,lRC,lPC,lRSMIN,lXLAI,lRCS,lRCT,&
+           lRCQ,lRCSOIL,lSOILW,lSOILM,lQ1,lSMAV,lSMCWLT,lSMCDRY,lSMCREF,&
+           lSMCMAX,lNROOT,lLU)
+
+      DO 200 J = 1,MJ1
+      DO 200 I = 1,MI1
+
+      VEN2D(I,J) = lCM(I,J)
+  200 CONTINUE
 
 #endif
 
@@ -190,6 +140,11 @@ CONTAINS
    SUBROUTINE land_ini
 
 #if defined (LSM)
+
+! input the following varibles to lsm routine
+   integer (kind=int_kind), dimension(mi1,mj1):: LU,SOIL,SLOPE
+   real (kind=int_kind), dimension(mi1,mj1):: & 
+      ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/LULU',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
@@ -336,7 +291,10 @@ CONTAINS
       hxp=INT(hx(I,J))+1
 
 
-         T2               = thbar(hxp)*pibar(hxp)
+         T2(I,J)          = thbar(hxp)*pibar(hxp)
+         P2(I,J)          = PBAR(hxp)
+
+
          TG1              = tg(I,J)
          lST(I,J,1)       = 297.0995
          lST(I,J,2)       = 298.0445
@@ -415,17 +373,10 @@ CONTAINS
          lSMCREF(I,J)     = -9.9999996E+35
          lSMCMAX(I,J)     = -9.9999996E+35
          lNROOT(I,J)      = -999999
-         LU_lsm(I,J)         = LU(I,J)
+         lLU(I,J)         = LU(I,J)
   100 CONTINUE
 
-  call open_forcing_file(iunit, output_dir, forcing_filename, nsoil,    &
-        startdate, enddate, loop_for_a_while, latitude, longitude,      &
-        forcing_timestep, noahlsm_timestep, ice, t1, stc, smc, sh2o,    &
-        sldpth, cmc, snowh, sneqv, tbot, vegtyp, soiltyp, slopetyp,     &
-        snoalb, zlvl, zlvl_wind, albedo_monthly, shdfac_monthly,        &
-        z0brd_monthly, lai_monthly, use_urban_module, isurban, shdmin,  &
-        shdmax, usemonalb, rdlai2d, llanduse, iz0tlnd, sfcdif_option,   &
-        STinout,SMinout,SLinout)
+      call LSM_DRV_ini(LU,SOIL,SLOPE,ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN)
 
 #endif
 

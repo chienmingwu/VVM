@@ -833,15 +833,6 @@ CONTAINS
 !ccwu
       INTEGER (KIND=int_kind) ::   &
          hxp, hx1, hxup, hxvp, hxu1, hxv1, topo       ! do loop indices for zonal, meridional and vertical dimensions
-
-#if defined (LSM)
-
-      call land_interface(WT,WQ(I,j),VEN2D(I,J))
-
-#else
-      CP = 1004.5
-!==========================================================
-
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
       hxp=INT(hx(I,J))+1
@@ -854,6 +845,13 @@ CONTAINS
       gwet(i,j)=0.8
       endif
   100 CONTINUE
+
+#if defined (LSM)
+      call land_interface(WT,WQ,VEN2D,SPEEDTP)
+
+#else
+      CP = 1004.5
+!==========================================================
 
       DO 110 J=1,MJ1
       DO 110 I=1,MI1

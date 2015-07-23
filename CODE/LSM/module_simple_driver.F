@@ -129,8 +129,8 @@
   integer :: SOILTYP    ! Soil category.
   integer :: SLOPETYP   ! Slope category.
   real    :: SHDFAC     ! Shade factor (0.0-1.0).
-  real    :: SHDMIN     ! Minimum shade factor (0.0-1.0).
-  real    :: SHDMAX     ! Maximum shade factor (0.0-1.0).
+  real    :: SHDMIN(MI1,MJ1)     ! Minimum shade factor (0.0-1.0).
+  real    :: SHDMAX(MI1,MJ1)     ! Maximum shade factor (0.0-1.0).
   real    :: ALB        ! Background snow-free albedo (0.0-1.0).
   real    :: SNOALB     ! Maximum snow albedo over deep snow (0.0-1.0)
   real    :: TBOT       ! Deep-soil time-invariant temperature (K). Representing sort of a mean annual air temperature.
