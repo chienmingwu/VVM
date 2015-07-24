@@ -265,8 +265,7 @@ CONTAINS
       hxp=INT(hx(I,J))+1
 
          P2(I,J)          = PBAR(hxp)
-
-         TG1              = tg(I,J)
+         TG1              = thbar(hxp-1)*pibar(hxp-1)
          lST(I,J,1)       = 297.0995
          lST(I,J,2)       = 298.0445
          lST(I,J,3)       = 297.8954
