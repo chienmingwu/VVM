@@ -3,12 +3,10 @@ MODULE land_module
 
 USE kinds
 USE parmsld
-USE const3d
 USE constld
 USE domain_decomposition
 !===hchun=================================
 USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
-USE rad, only:lwDown_3D,swDown_3D
 !=========================================
 
 IMPLICIT NONE
@@ -56,7 +54,7 @@ PRIVATE
   REAL (KIND=int_kind), PRIVATE:: &
      WS,SFCU,SFCV,Q2,CP,WTT,WQQ,PP,RR,TG1,lat,lon
   INTEGER (KIND=int_kind), dimension(MI1,MJ1), PRIVATE::lNROOT
-  REAL (KIND=int_kind), dimension(MI1,MJ1), PRIVATE:: T2,P2,Q2
+  REAL (KIND=int_kind), dimension(MI1,MJ1), PRIVATE:: P2
 
 
 #endif
@@ -69,7 +67,7 @@ PUBLIC ::      &
 CONTAINS
 
 !=======================================================================
-   SUBROUTINE land_interface(WT,WQ,VNE2D,SFCSPD) 
+   SUBROUTINE land_interface(T2,Q2,swD,lwD,SPREC,WT,WQ,VNE2D,SFCSPD) 
 #if defined (LSM)
 
 !=======================================================================
@@ -86,6 +84,11 @@ CONTAINS
       REAL (KIND=dbl_kind) ::    &
          VENTFC(2)
       REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::    &
+         T2(MI1,MJ1),            &
+         Q2(MI1,MJ1),            &
+         swD(MI1,MJ1),           &
+         lwD(MI1,MJ1),           &
+         SPREC(MI1,MJ1),         &
          WT(MI1,MJ1),            &
          WQ(MI1,MJ1),            &
          SPCSPD(MI1,MJ1),       &
@@ -106,18 +109,8 @@ CONTAINS
 
 !=====hchun================================================
       REAL  :: WS,SFCU,SFCV,CP,TG1!,CM
-      CP = 1004.5
 
-
-      DO 100 J=1,MJ1
-      DO 100 I=1,MI1
-      hxp=INT(hx(I,J))+1
-      Q2(I,J) = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
-
-  100 CONTINUE
-
-        CALL LSM_DRV(SFCSPD,T2,Q2,P2,swDown_3D,lwDown_3D,&
-           SPREC,WQ,WT, &
+        CALL LSM_DRV(SFCSPD,T2,Q2,P2,swD,lw3D,SPREC,WQ,WT, &
 ! LSM inout variables
            lCM,lST,lSM,lSL,lEMISSI,lCMC,lT1,lSNOWH,lSNEQV,&
            lALBEDO,lCH,lETA,lFDOWN,lEC,lEDIR,lET,lETT,lESNOW,lDRIP,&
