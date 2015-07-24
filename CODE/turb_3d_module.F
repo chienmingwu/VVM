@@ -818,13 +818,14 @@ CONTAINS
       REAL (KIND=dbl_kind) ::    &
          VENTFC(2)
       REAL (KIND=dbl_kind) ::    &
-         WT(MI1,MJ1),            &
-         WQ(MI1,MJ1),            &
-         SPEEDTP(MI1,MJ1),       &
-         QG(MI1,MJ1),            &
-         swD(MI1,MJ1),           &
-         lwD(MI1,MJ1),           & 
-         VEN2D(mim:mip,mjm:mjp) 
+         WT(MI1,MJ1),            & ! surface heat flux out from LSM/SFLUX_2D
+         WQ(MI1,MJ1),            & ! surface water flux out from LSM/SFLUX_2D
+         SPEEDTP(MI1,MJ1),       & ! surface spd flux input for LSM/SFLUX_2
+         QG(MI1,MJ1),            & ! surface qv flux input for LSM/SFLUX_2
+         T2(MI1,MJ1),            & ! second lv tmperature for LSM
+         swD(MI1,MJ1),           & ! surface short wave flux input for LSM
+         lwD(MI1,MJ1),           & ! surface long wave flux input fof LSM
+         VEN2D(mim:mip,mjm:mjp)    ! surface spd factor output fof LSM
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
          q,       & !
@@ -862,13 +863,14 @@ CONTAINS
       DO 105 I = 1,MI1
 
       hxp=INT(hx(I,J))+1
+      T2(I,J) = TH3D(I,J,hxp)*PIBAR(hxp)
       QG(I,J) = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
       swD(I,J) = swDown_3D(I,J,hxp)
       lwD(I,J) = lwDown_3D(I,J,hxp)
 
   105 CONTINUE
 
-      call land_interface(TG,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ,VEN2D,SPEEDTP)
+      call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ,VEN2D,SPEEDTP)
 
 #else
 !==========================================================

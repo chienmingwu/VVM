@@ -18,12 +18,6 @@ PRIVATE
 ! hchun
 ! soil temperature/moisture/liquid
 !
-  REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,4), PUBLIC ::    &
-     ST_lsm, & ! soil temperature
-     SM_lsm, & ! soil moisture
-     SL_lsm, & ! soil liquid
-     ET_lsm, & ! plant transpiration from each soil level
-     SMAV_lsm  ! soil moisture availability at each level
   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::    &
      SM1,& ! top layer soil moisture
      SM2,& ! second layer soil moisture
@@ -33,11 +27,12 @@ PRIVATE
      ST2,& ! second layer soil temperature
      ST3,& ! third layer soil temperature
      ST4   ! bottom layer soil temperature
-  INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::  &
-     NROOT,lLU,lSOIL
 
+
+! four level variables for LSM with output to nc file
   REAL (KIND=int_kind),dimension(MI1,MJ1,4), PRIVATE :: &
      lST,lSM,lSL,lET,lSMAV
+! one level variables for LSM with output to nc file
   REAL (KIND=int_kind),dimension(MI1,MJ1), PRIVATE :: &
      lEMISSI,lCMC,lT1,lSNOWH,&
      lSNEQV,lALBEDO,lCH,&
@@ -50,12 +45,8 @@ PRIVATE
      lXLAI,lRCS,lRCT,lRCQ,&
      lRCSOIL,lSOILW,lSOILM,lQ1,&
      lSMCWLT,lSMCDRY,&
-     lSMCREF,lSMCMAX,lCM,Z0
-  REAL (KIND=int_kind), PRIVATE:: &
-     WS,SFCU,SFCV,Q2,CP,WTT,WQQ,PP,RR,TG1,lat,lon
+     lSMCREF,lSMCMAX,lCM
   INTEGER (KIND=int_kind), dimension(MI1,MJ1), PRIVATE::lNROOT
-  REAL (KIND=int_kind), dimension(MI1,MJ1), PRIVATE:: P2
-
 
 #endif
 #endif
@@ -71,18 +62,17 @@ CONTAINS
 #if defined (LSM)
 
 !=======================================================================
-!     Case of TGSPEC=.TRUE.  
-!     Surface layer model: Businger et al. (1971) & Deardorff (1972)
-!     Based on the constant surface condition (ocean case)
-!
-!     OUTPUT : UW,WV,WTH,WQV AT LOWER BOUNDARY
-!
-
+! land model interface for LSM_DRV 
+! with input  surface temperature      T2 = TH3D(I,J,hxp)*PIBAR(hxp)          
+!             surface water vapor      Q2 = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
+!             short wave income        swD = swDown_3D(I,J,hxp)
+!             long wave income         lwD = lwDown_3D(I,J,hxp)
+!             precipitation            SPREC = SPREC
+!             surface speed            SFCSPD
+! with output heat flux                WT 
+!             water vapro flux         WQ
+!             surface speed            VNE2D
 ! local variables
-      REAL (KIND=dbl_kind) ::    &
-         MOLEN
-      REAL (KIND=dbl_kind) ::    &
-         VENTFC(2)
       REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::    &
          T2(MI1,MJ1),            &
          Q2(MI1,MJ1),            &
@@ -91,26 +81,14 @@ CONTAINS
          SPREC(MI1,MJ1),         &
          WT(MI1,MJ1),            &
          WQ(MI1,MJ1),            &
-         SPCSPD(MI1,MJ1),       &
+         SPCSPD(MI1,MJ1),        &
+         SPREC(mim:mip,mjm,mjp), &
          VEN2D(mim:mip,mjm:mjp)
          
-      REAL (KIND=dbl_kind) ::    &
-         es1,     & !
-         q,       & !
-         qsfc,    & !
-         speedm,  & !
-         t,       & !
-         thvsm,   & !
-         ts,      & !
-         ustar,   & !
-         zrough1    !
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 
-!=====hchun================================================
-      REAL  :: WS,SFCU,SFCV,CP,TG1!,CM
-
-        CALL LSM_DRV(SFCSPD,T2,Q2,P2,swD,lw3D,SPREC,WQ,WT, &
+        CALL LSM_DRV(SFCSPD,T2,Q2,swD,lw3D,SPREC(1:MI1,1:MJ1),WQ,WT, &
 ! LSM inout variables
            lCM,lST,lSM,lSL,lEMISSI,lCMC,lT1,lSNOWH,lSNEQV,&
            lALBEDO,lCH,lETA,lFDOWN,lEC,lEDIR,lET,lETT,lESNOW,lDRIP,&
@@ -138,6 +116,9 @@ CONTAINS
    integer (kind=int_kind), dimension(mi1,mj1):: LU,SOIL,SLOPE
    real (kind=int_kind), dimension(mi1,mj1):: & 
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
+
+  REAL (KIND=int_kind), dimension(MI1,MJ1), PRIVATE:: P2 
+! surface pressure
 
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/LULU',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
@@ -283,10 +264,7 @@ CONTAINS
       DO 100 I = 1,MI1
       hxp=INT(hx(I,J))+1
 
-
-         T2(I,J)          = thbar(hxp)*pibar(hxp)
          P2(I,J)          = PBAR(hxp)
-
 
          TG1              = tg(I,J)
          lST(I,J,1)       = 297.0995
@@ -369,7 +347,7 @@ CONTAINS
          lLU(I,J)         = LU(I,J)
   100 CONTINUE
 
-      call LSM_DRV_ini(LU,SOIL,SLOPE,ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN)
+      call LSM_DRV_ini(LU,SOIL,SLOPE,ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2)
 
 #endif
 
