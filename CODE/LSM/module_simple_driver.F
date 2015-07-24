@@ -55,7 +55,7 @@
 
 
 integer, dimension(mi1,mj1) :: LU,SOIL,SLOPE
-real, dimension(mi1,mj1) :: ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,SFCPRS
+real, dimension(mi1,mj1) :: ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,SFCPRS,ZZ,Z0
 
   PUBLIC :: LSM_DRV, &
             LSM_DRV_ini, & 
@@ -66,23 +66,17 @@ real, dimension(mi1,mj1) :: ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,SFCPRS
 
 !======hchun===============================================
 CONTAINS
-  SUBROUTINE LSM_DRV(
-            RUNOFF1,RUNOFF2,RUNOFF3,&
-            RC,PC,RSMIN,XLAI,RCS,RCT,RCQ,RCSOIL,&
-            SOILW,SOILM,Q1,SMAVout,SMCWLT,SMCDRY,&
-            SMCREF,SMCMAX,NROOT,LU1,ITT,Z0,SOIL1,&
-            SLOPE1,ALBEDO1,GREENFRAC1,LAI1,&
-            SHDMAX1,SHDMIN1,zz1)
-!==========================================================
-
   SUBROUTINE LSM_DRV(SFCSPD,SFCTMP,Q2,SOLDN,LONGWAVE,PRCP,ETAKIN,SHEAT, &
 ! LSM inout variables
-           CM,STinout,SMinout,SLinout,EMISSI,CMC,T1,SNOWH,SNEQV,&
-           ALBEDO,CH,ETA,FDOWN,EC,EDIR,ET,ETT,ESNOW,DRIP,&
-           DEW,BETA,ETP,SSOIL,FLX1,FX2,FLX3,SNOMLT,SNCOVR,&
-           RUNOFF1,RUNOFF2,RUNOFF3,RC,PC,RSMIN,XLAI,RCS,RCT,&
-           RCQ,RCSOIL,SOILW,SOILM,Q1,lSMAV,lSMCWLT,lSMCDRY,lSMCREF,&
-           lSMCMAX,lNROOT,lLU)
+           CM,STinout,SMinout,SLinout,EMISSI,CMC,T1,SNOWH,SNEQV,ALBEDO,
+           CH,ETA,FDOWN,EC,EDIR,ET,ETT,ESNOW,DRIP,DEW,BETA,ETP,SSOIL,
+           FLX1,FX2,FLX3,SNOMLT,SNCOVR,RUNOFF1,RUNOFF2,RUNOFF3,RC,PC,
+           RSMIN,XLAI,RCS,RCT,RCQ,RCSOIL,SOILW,SOILM,Q1,SMAVout,SMCWLT,
+           SMCDRY,SMCREF,SMCMAX,NROOT)
+
+
+! change name zz1->zz
+!             z0->z0 
 
 ! input variables from vvm 
   real(kind=dbl_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
@@ -100,8 +94,9 @@ CONTAINS
   real(kind=int_kind),dimension(mi1,mj1,4) ,intent(INOUT) :: &
     STinout,   &! soil temperature
     SMinout,   &! soil moisture
-    SLinout,    &! soil liquid
-
+    SLinout,   &! soil liquid
+    SMAVout,   &! Soil Moisture Availability  output
+     
   real(kind=int_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
     CM,        &! Exchange coefficient for momentum (m s-1).  
                 ! An initial value is needed for SFCDIF_off.
@@ -150,8 +145,15 @@ CONTAINS
                 ! ( Fraction [SMCWLT-SMCMAX] )
     SOILM,     &! Total soil column moisture content, frozen and unfrozen ( m )
     Q1,        &! Effective mixing ratio at the surface ( kg kg{-1} )
+    SMCWLT,    &! Wilting point ( m{3} m{-3} )
+    SMCDRY,    &! Dry soil moisture threshold where direct evaporation 
+                !from the top layer ends ( m{3} m{-3} )
+    SMCREF,    &! Soil moisture threshold where transpiration begins to stress 
+                ! ( m{3} m{-3} )
+    SMCMAX     &! Porosity, i.e., saturated value of soil moisture ( m{3} m{-3} )
 
-
+  integer(kind=int_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
+    NROOT      ! Number of root layers ( count )
 
  
 
@@ -1081,22 +1083,28 @@ CONTAINS
 !end program simple_driver
 !write(*,*) 'before end subroutine LSM_DRV'
 END SUBROUTINE LSM_DRV
-SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2)
+SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1, &
+                       ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ1)
 
    integer (kind=int_kind), dimension(mi1,mj1):: LU1,SOIL1,SLOPE1
    real (kind=int_kind), dimension(mi1,mj1):: &
-      ALBEDOMi1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2
+      ALBEDOMi1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ
 
    LU = LU1
    SOIL = SOIL1 
    SLOPE = SLOPE1
 
-   ALBEDOM = ALBEDOM1
+   ALBEDOM    = ALBEDOM1
    GREENFRACM = GREENFRACM 
-   LAIM = LAIM
-   SHDMAX = SHDMAX
-   SHDMIN = SHDMIN
-   SFCPRS = SFCPRS
+   LAIM       = LAIM
+   SHDMAX     = SHDMAX
+   SHDMIN     = SHDMIN
+   SFCPRS     = SFCPRS
+   ZZ         = ZZ1
+
+! undetermined 
+!  Z0  
+
 
 END SUBROUTINE LSM_DRV_INI
 !============================

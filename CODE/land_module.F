@@ -14,20 +14,6 @@ PRIVATE
 
 #if defined (DIFFUSION)
 #if defined (LSM)
-!*****************************
-! hchun
-! soil temperature/moisture/liquid
-!
-  REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::    &
-     SM1,& ! top layer soil moisture
-     SM2,& ! second layer soil moisture
-     SM3,& ! third layer soil moisture
-     SM4,& ! bottom layer soil moisture
-     ST1,& ! top layer soil temperature
-     ST2,& ! second layer soil temperature
-     ST3,& ! third layer soil temperature
-     ST4   ! bottom layer soil temperature
-
 
 ! four level variables for LSM with output to nc file
   REAL (KIND=int_kind),dimension(MI1,MJ1,4), PRIVATE :: &
@@ -95,7 +81,7 @@ CONTAINS
            lDEW,lBETA,lETP,lSSOIL,lFLX1,lFX2,lFLX3,lSNOMLT,lSNCOVR,&
            lRUNOFF1,lRUNOFF2,lRUNOFF3,lRC,lPC,lRSMIN,lXLAI,lRCS,lRCT,&
            lRCQ,lRCSOIL,lSOILW,lSOILM,lQ1,lSMAV,lSMCWLT,lSMCDRY,lSMCREF,&
-           lSMCMAX,lNROOT,lLU)
+           lSMCMAX,lNROOT)
 
       DO 200 J = 1,MJ1
       DO 200 I = 1,MI1
@@ -117,7 +103,7 @@ CONTAINS
    real (kind=int_kind), dimension(mi1,mj1):: & 
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
-  REAL (KIND=int_kind), dimension(MI1,MJ1) :: P2 
+  REAL (KIND=int_kind), dimension(MI1,MJ1) :: P2,ZZ
 ! surface pressure
 
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
@@ -264,6 +250,8 @@ CONTAINS
       DO 100 I = 1,MI1
       hxp=INT(hx(I,J))+1
 
+          
+         ZZ(I,J)          = DZ/FNZ(hxp)
          P2(I,J)          = PBAR(hxp)
          TG1              = thbar(hxp-1)*pibar(hxp-1)
          lST(I,J,1)       = 297.0995
@@ -343,10 +331,10 @@ CONTAINS
          lSMCREF(I,J)     = -9.9999996E+35
          lSMCMAX(I,J)     = -9.9999996E+35
          lNROOT(I,J)      = -999999
-         lLU(I,J)         = LU(I,J)
   100 CONTINUE
 
-      call LSM_DRV_ini(LU,SOIL,SLOPE,ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2)
+      call LSM_DRV_ini(LU,SOIL,SLOPE, &
+                       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ)
 
 #endif
 
