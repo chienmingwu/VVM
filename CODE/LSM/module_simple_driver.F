@@ -1,6 +1,10 @@
   MODULE module_simple_driver
 
   implicit none
+
+  USE kinds
+  USE parmsld
+
  
   !
   ! Through MODULE_IO, we access most of our top-level input/output routines.  This
@@ -50,9 +54,8 @@
 
 
 
-
-
-
+integer, dimension(mi1,mj1) :: LU,SOIL,SLOPE
+real, dimension(mi1,mj1) :: ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,SFCPRS
 
   PUBLIC :: LSM_DRV, &
             LSM_DRV_ini, & 
@@ -63,13 +66,8 @@
 
 !======hchun===============================================
 CONTAINS
-  SUBROUTINE LSM_DRV(sfcspd,sfcu,sfcv,sfctmp,q2,sfcprs,&
-            tg1,soldn,longwave,prcp,ETAKIN,SHEAT,CM,&
-            STinout,SMinout,SLinout,&
-            EMISSI,CMC,T1,SNOWH,SNEQV,ALBEDO,CH,&
-            ETA,FDOWN,EC,EDIR,ETout,ETT,ESNOW,DRIP,&
-            DEW,BETA,ETP,SSOIL,FLX1,FLX2,FLX3,&
-            SNOMLT,SNCOVR,RUNOFF1,RUNOFF2,RUNOFF3,&
+  SUBROUTINE LSM_DRV(
+            RUNOFF1,RUNOFF2,RUNOFF3,&
             RC,PC,RSMIN,XLAI,RCS,RCT,RCQ,RCSOIL,&
             SOILW,SOILM,Q1,SMAVout,SMCWLT,SMCDRY,&
             SMCREF,SMCMAX,NROOT,LU1,ITT,Z0,SOIL1,&
@@ -77,60 +75,85 @@ CONTAINS
             SHDMAX1,SHDMIN1,zz1)
 !==========================================================
 
+  SUBROUTINE LSM_DRV(SFCSPD,SFCTMP,Q2,SOLDN,LONGWAVE,PRCP,ETAKIN,SHEAT, &
+! LSM inout variables
+           CM,STinout,SMinout,SLinout,EMISSI,CMC,T1,SNOWH,SNEQV,&
+           ALBEDO,CH,ETA,FDOWN,EC,EDIR,ET,ETT,ESNOW,DRIP,&
+           DEW,BETA,ETP,SSOIL,FLX1,FX2,FLX3,SNOMLT,SNCOVR,&
+           RUNOFF1,RUNOFF2,RUNOFF3,RC,PC,RSMIN,XLAI,RCS,RCT,&
+           RCQ,RCSOIL,SOILW,SOILM,Q1,lSMAV,lSMCWLT,lSMCDRY,lSMCREF,&
+           lSMCMAX,lNROOT,lLU)
 
-  real,INTENT(INOUT)    :: Z0         ! Roughness length (m)
-  real,INTENT(INOUT)    :: EMISSI     ! Surface emissivity (0.0 - 1.0).  This includes the snow-cover effect.
-  real,INTENT(INOUT)    :: CMC        ! Canopy moisture content (kg m-2)
-  real,INTENT(INOUT)    :: T1         ! Skin temperature (K)
-  !                                        ! SMCWLT (SMAV=0.0) and SMCMAX (SMAV=1.0)
-  real,INTENT(INOUT)    :: SNOWH      ! Physical snow depth.
-  real,INTENT(INOUT)    :: SNEQV      ! Water equivalent of accumulated snow depth (m).
-  real,INTENT(INOUT)    :: ALBEDO     ! Surface albedo including possible snow-cover effect.  This is set in SFLX,
-  !                     ! overriding any value given; it should perhaps be INTENT(OUT) from SFLX.
-  real,INTENT(INOUT)    :: CH         ! Exchange coefficient for head and moisture (m s-1).  An initial value is needed for SFCDIF_off.
-!===hchun========================================================================================
-  real, INTENT(INOUT)    :: CM         ! Exchange coefficient for momentum (m s-1).  An initial value is needed for SFCDIF_off.
-!  real    :: CM         ! Exchange coefficient for momentum (m s-1).  An initial value is needed for SFCDIF_off.
+! input variables from vvm 
+  real(kind=dbl_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
+    SFCSPD,    &! Surface wind speed (m s-1) [Forcing]
+    SFCTMP,    &! Air temperature (K) [Forcing]
+    Q2,        &! Surface specific humidity (kg kg-1) [Forcing]
+    SOLDN,     &! Downward shortwave radiation flux at surface (W m-2) [Forcing]
+    LONGWAVE,  &! Longwave radiation as read from the forcing data,
+!which is immediately adjusted (by the emissivity factor) to set variable LWDN.
+    PRCP,      &! Precipitation rate (kg m-2 s-1) [Forcing]
+    ETAKIN,    &! Latent heat flux (evapotranspiration) ( kg m{-2} s{-1} ) 
+    SHEAT      &! Sensible heat flux ( W m{-2} )
 
-!  real, INTENT(OUT)    :: ETA        ! Latent heat flux (evapotranspiration) ( W m{-2} )
-  real, INTENT(INOUT)    :: SHEAT      ! Sensible heat flux ( W m{-2} )
-  real, INTENT(INOUT)    :: ETAKIN     ! Latent heat flux (evapotranspiration) ( kg m{-2} s{-1} )
-  real, INTENT(INOUT),dimension(4)    :: STinout     ! soil temperature
-  real, INTENT(INOUT),dimension(4)    :: SMinout     ! soil moisture
-  real, INTENT(INOUT),dimension(4)    :: SLinout     ! soil liquid
-  real, INTENT(INOUT)    :: ETA        ! Latent heat flux (evapotranspiration) ( W m{-2} )
-  real,INTENT(INOUT)    :: FDOWN      ! Radiation forcing at the surface ( W m{-2} )
-  real,INTENT(INOUT)    :: EC         ! Latent heat flux component: canopy water evaporation ( W m{-2} )
-  real,INTENT(INOUT)    :: EDIR       ! Latent heat flux component: direct soil evaporation ( W m{-2} )
-  real,INTENT(INOUT)    :: ETT        ! Latent heat flux component: total plant transpiration ( W m{-2} )
-  real,INTENT(INOUT)    :: ESNOW      ! Latent heat flux component: sublimation from (or deposition to) snowpack ( W m{-2} )
-  real,INTENT(INOUT)    :: DRIP       ! Precipitation or dew falling through canopy, in excess of canopy holding capacity ( m )
-  real,INTENT(INOUT)    :: DEW        ! Dewfall (or frostfall for T<273.15) ( m )
-  real,INTENT(INOUT)    :: BETA       ! Ratio of actual to potential evapotranspiration ( Fraction [0.0-1.0] )
-  real,INTENT(INOUT)    :: ETP        ! Potential evapotranspiration ( W m{-2} )
-  real,INTENT(INOUT)    :: SSOIL      ! Soil heat flux ( W m{-2} )
-  real,INTENT(INOUT)    :: FLX1       ! Latent heat flux from precipitation accumulating as snow ( W m{-2} )
-  real,INTENT(INOUT)    :: FLX2       ! Latent heat flux from freezing rain converting to ice ( W m{-2} )
-  real,INTENT(INOUT)    :: FLX3       ! Latent heat flux from melting snow ( W m{-2} )
-  real,INTENT(INOUT)    :: SNOMLT     ! Snow melt water ( m )
-  real,INTENT(INOUT)    :: SNCOVR     ! Fractional snow cover ( Fraction [0.0-1.0] )
-  real,INTENT(INOUT)    :: RUNOFF1    ! Surface runoff, not infiltrating the soil ( m s{-1} )
-  real,INTENT(INOUT)    :: RUNOFF2    ! Subsurface runoff, drainage out the bottom of the last soil layer ( m s{-1} )
-  real,INTENT(INOUT)    :: RUNOFF3    ! Internal soil layer runoff ( m s{-1} )
-  real,INTENT(INOUT)    :: RC         ! Canopy resistance ( s m{-1} )
-  real,INTENT(INOUT)    :: PC         ! Plant coefficient, where PC * ETP = ETA ( Fraction [0.0-1.0] )
-  real,INTENT(INOUT)    :: RSMIN      ! Minimum canopy resistance ( s m{-1} )
-  real,INTENT(INOUT)    :: RCS        ! Incoming solar RC factor ( dimensionless )
-  real,INTENT(INOUT)    :: RCT        ! Air temperature RC factor ( dimensionless )
-  real,INTENT(INOUT)    :: RCQ        ! Atmospheric water vapor deficit RC factor ( dimensionless )
-  real,INTENT(INOUT)    :: RCSOIL     ! Soil moisture RC factor ( dimensionless )
-  real,INTENT(INOUT)    :: SOILW      ! Available soil moisture in the root zone ( Fraction [SMCWLT-SMCMAX] )
-  real,INTENT(INOUT)    :: SOILM      ! Total soil column moisture content, frozen and unfrozen ( m )
-  real,INTENT(INOUT)    :: Q1         ! Effective mixing ratio at the surface ( kg kg{-1} )
-  real,INTENT(INOUT)    :: SMCWLT     ! Wilting point ( m{3} m{-3} )
-  real,INTENT(INOUT)    :: SMCDRY     ! Dry soil moisture threshold where direct evaporation from the top layer ends ( m{3} m{-3} )
-  real,INTENT(INOUT)    :: SMCREF     ! Soil moisture threshold where transpiration begins to stress ( m{3} m{-3} )
-  real,INTENT(INOUT)    :: SMCMAX     ! Porosity, i.e., saturated value of soil moisture ( m{3} m{-3} )
+! input variables form land_interface
+  real(kind=int_kind),dimension(mi1,mj1,4) ,intent(INOUT) :: &
+    STinout,   &! soil temperature
+    SMinout,   &! soil moisture
+    SLinout,    &! soil liquid
+
+  real(kind=int_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
+    CM,        &! Exchange coefficient for momentum (m s-1).  
+                ! An initial value is needed for SFCDIF_off.
+    EMISSI,    &! Surface emissivity (0.0 - 1.0). 
+                ! This includes the snow-cover effect.
+    CMC,       &! Canopy moisture content (kg m-2)
+    T1,        &! Skin temperature (K)
+    SNOWH,     &! Physical snow depth.
+    SNEQV,     &! Water equivalent of accumulated snow depth (m).
+    ALBEDO,    &! Surface albedo including possible snow-cover effect. 
+                ! This is set in SFLX,
+    CH,        &! Exchange coefficient for head and moisture (m s-1).
+                ! An initial value is needed for SFCDIF_off. 
+    ETA,       &! Latent heat flux (evapotranspiration) ( W m{-2} )
+    FDOWN,     &! Radiation forcing at the surface ( W m{-2} ) 
+    EC,        &! Latent heat flux component: canopy water evaporation ( W m{-2})
+    EDIR,      &! Latent heat flux component: direct soil evaporation ( W m{-2} )
+    ETT,       &! Latent heat flux component: total plant transpiration ( W m{-2} )
+    ESNOW,     &! Latent heat flux component: sublimation from
+                ! (or deposition to) snowpack ( W m{-2} )
+    DRIP,      &! Precipitation or dew falling through canopy,
+                ! in excess of canopy holding capacity ( m )
+    DEW,       &! Dewfall (or frostfall for T<273.15) ( m )
+    BETA,      &! Ratio of actual to potential evapotranspiration 
+                ! ( Fraction [0.0-1.0] )
+    ETP,       &! Potential evapotranspiration ( W m{-2} )
+    SSOIL,     &! Soil heat flux ( W m{-2} )
+    FLX1,      &! Latent heat flux from precipitation accumulating as snow ( W m{-2} )
+    FLX2,      &! Latent heat flux from freezing rain converting to ice ( W m{-2} )
+    FLX3,      &! Latent heat flux from melting snow ( Wm{-2} )
+    SNOMLT,    &! Snow melt water ( m )
+    SNCOVR,    & ! Fractional snow cover ( Fraction [0.0-1.0] )
+    RUNOFF1,   &! Surface runoff, not infiltrating the soil ( m s{-1} )
+    RUNOFF2,   &! Subsurface runoff, drainage out the bottom of
+                ! the last soil layer ( m s{-1} )
+    RUNOFF3,   &! Internal soil layer runoff ( m s{-1} )
+    RC,        &! Canopy resistance ( s m{-1} )
+    PC,        &! Plant coefficient, where PC * ETP = ETA ( Fraction [0.0-1.0] )
+    RSMIN,     &! Minimum canopy resistance ( s m{-1} )
+    XLAI,      &! Leaf area index ( dimensionless )
+    RCS,       &! Incoming solar RC factor ( dimensionless )
+    RCT,       &! Air temperature RC factor ( dimensionless )
+    RCQ,       &! Atmospheric water vapor deficit RC factor ( dimensionless )
+    RCSOIL,    &! Soil moisture RC factor ( dimensionless )
+    SOILW,     &! Available soil moisture in the root zone 
+                ! ( Fraction [SMCWLT-SMCMAX] )
+    SOILM,     &! Total soil column moisture content, frozen and unfrozen ( m )
+    Q1,        &! Effective mixing ratio at the surface ( kg kg{-1} )
+
+
+
+ 
 
   forcing_filename = "bondville.dat"
 !===========================================================================================
@@ -1058,15 +1081,25 @@ CONTAINS
 !end program simple_driver
 !write(*,*) 'before end subroutine LSM_DRV'
 END SUBROUTINE LSM_DRV
-SUBROUTINE LSM_DRV_ini
+SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2)
 
+   integer (kind=int_kind), dimension(mi1,mj1):: LU1,SOIL1,SLOPE1
+   real (kind=int_kind), dimension(mi1,mj1):: &
+      ALBEDOMi1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2
+
+   LU = LU1
+   SOIL = SOIL1 
+   SLOPE = SLOPE1
+
+   ALBEDOM = ALBEDOM1
+   GREENFRACM = GREENFRACM 
+   LAIM = LAIM
+   SHDMAX = SHDMAX
+   SHDMIN = SHDMIN
+   SFCPRS = SFCPRS
 
 END SUBROUTINE LSM_DRV_INI
 !============================
-
-!------------------------------------------------------------------------------------------------
-!------------------------------------------------------------------------------------------------
-
 real function month_d(a12, nowdate) result (nowval)
   !
   ! Given a set of 12 values, taken to be valid on the fifteenth of each month (Jan through Dec)

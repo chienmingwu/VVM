@@ -117,7 +117,7 @@ CONTAINS
    real (kind=int_kind), dimension(mi1,mj1):: & 
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
-  REAL (KIND=int_kind), dimension(MI1,MJ1), PRIVATE:: P2 
+  REAL (KIND=int_kind), dimension(MI1,MJ1) :: P2 
 ! surface pressure
 
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
