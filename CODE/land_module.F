@@ -78,7 +78,7 @@ CONTAINS
 ! LSM inout variables
            lCM,lST,lSM,lSL,lEMISSI,lCMC,lT1,lSNOWH,lSNEQV,&
            lALBEDO,lCH,lETA,lFDOWN,lEC,lEDIR,lET,lETT,lESNOW,lDRIP,&
-           lDEW,lBETA,lETP,lSSOIL,lFLX1,lFX2,lFLX3,lSNOMLT,lSNCOVR,&
+           lDEW,lBETA,lETP,lSSOIL,lFLX1,lFLX2,lFLX3,lSNOMLT,lSNCOVR,&
            lRUNOFF1,lRUNOFF2,lRUNOFF3,lRC,lPC,lRSMIN,lXLAI,lRCS,lRCT,&
            lRCQ,lRCSOIL,lSOILW,lSOILM,lQ1,lSMAV,lSMCWLT,lSMCDRY,lSMCREF,&
            lSMCMAX,lNROOT)
@@ -278,60 +278,54 @@ CONTAINS
 !         SL(I,J,2)       = SM2(I,J)
 !         SL(I,J,3)       = SM3(I,J)
 !         SL(I,J,4)       = SM4(I,J)
-         WTT              = -9.9999996E+35!SHEAT in NOAHLSM
-         WQQ              = -9.9999996E+35!ETAKIN in NOAHLSM
-         lCM(I,J)         = -9.9999996E+35
-         lEMISSI(I,J)     = -9.9999996E+35
-         lCMC(I,J)        = -9.9999996E+35
-         lT1(I,J)         = -9.9999996E+35
-         lSNOWH(I,J)      = -9.9999996E+35
-         lSNEQV(I,J)      = -9.9999996E+35
-         lALBEDO(I,J)     = -9.9999996E+35
-         lCH(I,J)         = -9.9999996E+35
-         lETA(I,J)        = -9.9999996E+35
-         lFDOWN(I,J)      = -9.9999996E+35
-         lEC(I,J)         = -9.9999996E+35
-         lEDIR(I,J)       = -9.9999996E+35
-         lET(I,J,1)       = -9.9999996E+35
-         lET(I,J,2)       = -9.9999996E+35
-         lET(I,J,3)       = -9.9999996E+35
-         lET(I,J,4)       = -9.9999996E+35
-         lETT(I,J)        = -9.9999996E+35
-         lESNOW(I,J)      = -9.9999996E+35
-         lDRIP(I,J)       = -9.9999996E+35
-         lDEW(I,J)        = -9.9999996E+35
-         lBETA(I,J)       = -9.9999996E+35
-         lETP(I,J)        = -9.9999996E+35
-         lSSOIL(I,J)      = -9.9999996E+35
-         lFLX1(I,J)       = -9.9999996E+35
-         lFLX2(I,J)       = -9.9999996E+35
-         lFLX3(I,J)       = -9.9999996E+35
-         lSNOMLT(I,J)     = -9.9999996E+35
-         lSNCOVR(I,J)     = -9.9999996E+35
-         lRUNOFF1(I,J)    = -9.9999996E+35
-         lRUNOFF2(I,J)    = -9.9999996E+35
-         lRUNOFF3(I,J)    = -9.9999996E+35
-         lRC(I,J)         = -9.9999996E+35
-         lPC(I,J)         = -9.9999996E+35
-         lRSMIN(I,J)      = -9.9999996E+35
-         lXLAI(I,J)       = -9.9999996E+35
-         lRCS(I,J)        = -9.9999996E+35
-         lRCT(I,J)        = -9.9999996E+35
-         lRCQ(I,J)        = -9.9999996E+35
-         lRCSOIL(I,J)     = -9.9999996E+35
-         lSOILW(I,J)      = -9.9999996E+35
-         lSOILM(I,J)      = -9.9999996E+35
-         lQ1(I,J)         = -9.9999996E+35
-         lSMAV(I,J,1)     = -9.9999996E+35
-         lSMAV(I,J,2)     = -9.9999996E+35
-         lSMAV(I,J,3)     = -9.9999996E+35
-         lSMAV(I,J,4)     = -9.9999996E+35
-         lSMCWLT(I,J)     = -9.9999996E+35
-         lSMCDRY(I,J)     = -9.9999996E+35
-         lSMCREF(I,J)     = -9.9999996E+35
-         lSMCMAX(I,J)     = -9.9999996E+35
-         lNROOT(I,J)      = -999999
+!         WTT              = -9.9999996E+35!SHEAT in NOAHLSM
+!         WQQ              = -9.9999996E+35!ETAKIN in NOAHLSM
   100 CONTINUE
+         lCM         = -9.9999996E+35
+         lEMISSI     = -9.9999996E+35
+         lCMC        = -9.9999996E+35
+         lT1         = -9.9999996E+35
+         lSNOWH      = -9.9999996E+35
+         lSNEQV      = -9.9999996E+35
+         lALBEDO     = -9.9999996E+35
+         lCH         = -9.9999996E+35
+         lETA        = -9.9999996E+35
+         lFDOWN      = -9.9999996E+35
+         lEC         = -9.9999996E+35
+         lEDIR       = -9.9999996E+35
+         lET       = -9.9999996E+35
+         lETT        = -9.9999996E+35
+         lESNOW      = -9.9999996E+35
+         lDRIP       = -9.9999996E+35
+         lDEW        = -9.9999996E+35
+         lBETA       = -9.9999996E+35
+         lETP        = -9.9999996E+35
+         lSSOIL      = -9.9999996E+35
+         lFLX1       = -9.9999996E+35
+         lFLX2       = -9.9999996E+35
+         lFLX3       = -9.9999996E+35
+         lSNOMLT     = -9.9999996E+35
+         lSNCOVR     = -9.9999996E+35
+         lRUNOFF1    = -9.9999996E+35
+         lRUNOFF2    = -9.9999996E+35
+         lRUNOFF3    = -9.9999996E+35
+         lRC         = -9.9999996E+35
+         lPC         = -9.9999996E+35
+         lRSMIN      = -9.9999996E+35
+         lXLAI       = -9.9999996E+35
+         lRCS        = -9.9999996E+35
+         lRCT        = -9.9999996E+35
+         lRCQ        = -9.9999996E+35
+         lRCSOIL     = -9.9999996E+35
+         lSOILW      = -9.9999996E+35
+         lSOILM      = -9.9999996E+35
+         lQ1         = -9.9999996E+35
+         lSMAV     = -9.9999996E+35
+         lSMCWLT     = -9.9999996E+35
+         lSMCDRY     = -9.9999996E+35
+         lSMCREF     = -9.9999996E+35
+         lSMCMAX     = -9.9999996E+35
+         lNROOT      = -999999
 
       call LSM_DRV_ini(LU,SOIL,SLOPE, &
                        ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ)

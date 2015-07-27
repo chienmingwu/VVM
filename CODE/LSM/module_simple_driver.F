@@ -53,7 +53,96 @@
   use kwm_date_utilities
 
 
+integer, parameter  :: iunit = 10 ! Fortran unit number for reading initial/forcing conditions file.
+character(len=1024) :: output_dir ! Output directory to which to write results.
+character(len=256)  :: forcing_filename ! The name of the initial/forcing conditions file, as found
+character(len=12)   :: startdate        ! Starting date of the data (YYYYMMDDHHmm )
+character(len=12)   :: enddate          ! Ending date of the data ( YYYYMMDDHHmm )
+                                        ! by Fortran library function GETARG
+character(len=256)  :: LLANDUSE         ! Land-use dataset.  Valid values are :
+                                        ! "USGS" (USGS 24/27 category dataset) and
+                                        ! "MODIFIED_IGBP_MODIS_NOAH" (MODIS 20-category dataset)
 
+logical             :: use_urban_module ! Flag, set to TRUE in the initial/forcing conditions file, 
+                                        ! if the user wants to use the urban canopy model.
+                                        ! Since this code does not include the urban canopy model, 
+                                        ! a TRUE value of this flag will simply stop the execution.
+logical             :: USEMONALB        ! If USEMONALB == .TRUE., then the ALB value passed to 
+                                        ! SFLX will be used as the background snow-free albedo term. 
+                                        ! If USEMONALB == .FALSE., then ALB will be computed 
+                                        ! within SFLX from minimum and maximum values
+                                        ! in VEGPARM.TBL, and the current Green Vegetation Fraction.
+logical             :: RDLAI2D          ! If RDLAI2D == .TRUE., then the XLAI value 
+                                        ! that we pass to SFLX will be used.
+                                        ! If RDLAI2d == .FALSE., then XLAI will be computed
+                                        ! within SFLX, from table minimum and maximum values in VEGPARM.
+                                        ! TBL and the current Green Vegetation Fraction.
+
+
+integer             :: loop_for_a_while ! Number of times to repeat the same year of forcing 
+                                        !( Default=0 ==> one pass through the data)
+integer             :: forcing_timestep ! The time interval ( seconds ) of the data in the forcing file
+integer             :: noahlsm_timestep ! The timestep ( seconds ) to use when integrating the Noah LSM
+integer             :: ice              ! Flag for sea-ice (1) or land (0), or glacial ice (-1).
+integer             :: VEGTYP           ! Vegetation category.
+integer             :: SOILTYP          ! Soil category.
+integer             :: SLOPETYP         ! Slope category.
+integer             :: ISURBAN          ! Vegetation category for urban land class.
+integer             :: iz0tlnd          ! Option to turn on (IZ0TLND=1) or off (IZ0TLND=0) 
+                                        ! the vegetation-category-dependent calculation of 
+                                        ! the Zilitinkivich coefficient CZIL in the SFCDIF subroutines.
+integer             :: sfcdif_option    ! Option to use previous (SFCDIF_OPTION=0) or 
+                                        ! updated (SFCDIF_OPTION=1) version of SFCDIF subroutine.
+
+
+
+real                :: latitude         ! Latitude of the point ( Degrees North )
+real                :: longitude        ! Longitude of the point ( Degrees East )
+real                :: TBOT             ! Deep-soil time-invariant temperature (K).
+                                        ! Representing sort of a mean annual air temperature.
+real                :: SNOALB           ! Maximum snow albedo over deep snow (0.0-1.0)
+real                :: ZLVL             ! Height at which atmospheric forcing variables are taken 
+                                        ! to be valid (m)
+real                :: ZLVL_wind        ! Height at which the wind forcing variable is taken 
+                                        ! to be valid (m)
+real                :: SHDMIN1          ! Minimum shade factor (0.0-1.0). 
+                                        ! Note that this is shdmin in origin version.
+real                :: SHDMAX1          ! Maximum shade factor (0.0-1.0).
+                                        ! Note that this is shdmax in origin version.
+
+
+
+
+real, dimension(12) :: albedo_monthly   ! Monthly values of background (i.e., snow-free) albedo
+                                        ! ( Fraction [0.0-1.0] )
+real, dimension(12) :: shdfac_monthly   ! Monthly values for green vegetation fraction
+                                        ! ( Fraction [0.0-1.0] )
+real, dimension(12) :: z0brd_monthly    ! Monthly values for background (i.e., snow-free) 
+                                        ! roughness length ( m )
+real, dimension(12) :: lai_monthly      ! Monthly values for Leaf Area Index ( dimensionless )
+
+
+
+
+real, pointer, dimension(:) :: STC    ! Soil temperature (K)
+real, pointer, dimension(:) :: SMC    ! Total soil moisture content (m3 m-3)
+real, pointer, dimension(:) :: SH2O   ! Liquid soil moisture content (m3 m-3)
+real, pointer, dimension(:) :: SLDPTH ! Thicknesses of each soil level
+
+
+
+
+
+
+
+
+integer, dimension(mi1,mj1) :: NSOIL      ! Number of soil levels.
+
+
+
+
+
+! input data from land_module_ini.F
 integer, dimension(mi1,mj1) :: LU,SOIL,SLOPE
 real, dimension(mi1,mj1) :: ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,SFCPRS,ZZ,Z0
 
@@ -168,49 +257,6 @@ CONTAINS
   jjloc     = 1
   snotime1  = 0.0
   RIBB      = 0.0
-
-!---hchun
-  if(ITT.eq.1) then
-  sheat = badval
-  etakin = badval
-  eta = badval
-  fdown = badval
-  ec = badval
-  edir = badval
-  ett = badval
-  esnow = badval
-  drip = badval
-  dew = badval
-  beta=badval
-  t1 = badval
-  snowh = badval
-  sneqv = badval
-  etp = badval
-  ssoil = badval
-  flx1 = badval
-  flx2 = badval
-  flx3 = badval
-  snomlt = badval
-  sncovr = badval
-  runoff1 = badval
-  runoff2 = badval
-  runoff3 = badval
-  rc = badval
-  pc = badval
-  rcs = badval
-  rct = badval
-  rcq = badval
-  rcsoil = badval
-  soilw = badval
-  soilm = badval
-  q1 = badval
-  smcwlt = badval
-  smcdry = badval
-  smcref = badval
-  smcmax = badval
-  rsmin = badval
-  nroot = -999999
-  endif
 !-----------------
 
   !
@@ -1083,12 +1129,21 @@ CONTAINS
 !end program simple_driver
 !write(*,*) 'before end subroutine LSM_DRV'
 END SUBROUTINE LSM_DRV
-SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1, &
-                       ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ1)
+SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,                                  & 
+                       ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ1  )
 
-   integer (kind=int_kind), dimension(mi1,mj1):: LU1,SOIL1,SLOPE1
-   real (kind=int_kind), dimension(mi1,mj1):: &
+   integer (kind=int_kind), dimension(mi1,mj1), intent(IN):: LU1,SOIL1,SLOPE1
+   real (kind=int_kind), dimension(mi1,mj1), intent(IN):: &
       ALBEDOMi1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ
+
+   real(kind=int_kind),dimension(mi1,mj1,4) ,intent(INOUT) :: &
+    STinout,   &! soil temperature
+    SMinout,   &! soil moisture
+    SLinout    &! soil liquid
+
+   real(kind=int_kind) :: cmc1,t11,showh1,sneqv1,sneqv1
+
+   integer (kind=int_kind):: i,j
 
    LU = LU1
    SOIL = SOIL1 
@@ -1105,6 +1160,13 @@ SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1, &
 ! undetermined 
 !  Z0  
 
+
+  call open_forcing_file(iunit, output_dir, forcing_filename, nsoil, startdate, enddate,          &
+       loop_for_a_while, latitude, longitude, &
+       forcing_timestep, noahlsm_timestep, ice, t1, stc, smc, sh2o, sldpth, cmc1, snowh1, sneqv1, tbot,     &
+       vegtyp, soiltyp, slopetyp, snoalb, zlvl, zlvl_wind, albedo_monthly, shdfac_monthly,                  &
+       z0brd_monthly, lai_monthly, use_urban_module, isurban, shdmin, shdmax, usemonalb, rdlai2d, llanduse, &
+       iz0tlnd, sfcdif_option,STinout,SMinout,SLinout)
 
 END SUBROUTINE LSM_DRV_INI
 !============================
