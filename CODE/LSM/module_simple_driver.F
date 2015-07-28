@@ -131,11 +131,6 @@ real, pointer, dimension(:) :: SLDPTH ! Thicknesses of each soil level
 
 
 
-
-
-
-
-
 integer, dimension(mi1,mj1) :: NSOIL      ! Number of soil levels.
 
 
@@ -321,134 +316,6 @@ CONTAINS
   zlvl_wind                 = zz1
 
 !==============================================================================================================
-
-  dt = real(noahlsm_timestep)
-
-  if (use_urban_module) STOP "This is not urban code."
-
-  !
-  ! Allocate additonal arrays (dimensioned by the number of soil levels) which we will need for SFLX.
-  !
-
-  allocate( et ( nsoil ) )
-  if(ITT.eq.1) then
-  et = -1.E36
-  endif
-
-  allocate( smav ( nsoil ) )
-  if(ITT.eq.1) then
-  smav = -1.E36
-  endif
-
-  !
-  ! Set up some input variables for SFLX.
-  !
-
-  !
-  ! LLANDUSE:  Currently only the USGS vegetation dataset as used in WRF is supported.
-  !
-
-  LLANDUSE = "USGS"
-
-  !
-  ! LSOIL:  Currently, only the STATSGO soil dataset as used in WRF is supported.
-  !
-
-  LSOIL = "STAS"
-
-  !
-  ! Read our lookup tables and parameter tables:  VEGPARM.TBL, SOILPARM.TBL, GENPARM.TBL
-  !
-
-  call soil_veg_gen_parm( LLANDUSE, LSOIL )
-
-  !
-  ! COSZ is unused if we're not using the urban canopy model.  If we implement the
-  ! urban canopy model for this simple point driver, we will need to compute a COSZ
-  ! somewhere.
-  !
-
-  COSZ = badval
-
-  !
-  ! PRCPRAIN is unused.
-  !
-
-  PRCPRAIN = badval
-
-  !
-  ! SOLARDIRECT is unused.
-  !
-
-  SOLARDIRECT = badval
-
-  !
-  ! Set EMISSI for our first time step.  Just a guess, but it's only for the 
-  ! first step.  Later time steps get EMISSI from what was set in the prior
-  ! time step by SFLX.
-  !
-!---hchun
-  if(ITT.eq.1) then
-  EMISSI = 0.96
-
-  !
-  ! For the initial ALBEDO value used in computing SOLNET, just use our
-  ! snow-free value.  Subsequent timesteps use the value computed in the
-  ! previous call to SFLX:
-  !
-
-  ALBEDO = month_d (albedo_monthly, startdate)
-  ALBEDO = ALBEDO1/100.0
-
-  !
-  ! For the initial value of Z0 (used in SFCDIF_off to compute CH and CM),
-  ! just use a snow-free background value.  Subsequent timesteps use this
-  ! value as computed in the previous call to SFLX:
-  !
-
-  Z0 = month_d(z0brd_monthly, startdate)
-  endif
-!-----
-
-  !
-  ! Z0BRD is computed within SFLX.  But we need an initial value, so the call to 
-  ! SFCDIF_MYJ can do its thing.  Subsequent timesteps will recycle the Z0BRD 
-  ! value as returned from SFLX in the previous timestep.
-  !
-
-  if ( sfcdif_option == 1 ) then
-     z0brd  = z0
-  else
-     z0brd = badval
-  endif
-
-  !
-  ! CZIL is needed for the SFCDIF_OFF step.  This comes from CZIL_DATA, as read
-  ! from the GENPARM.TBL file, which is how REDPRM ultimately gets it as well:
-  !
-
-  CZIL = CZIL_DATA
-
-  !
-  !  CM and CH, computed in subroutine SFCDIF_OFF, need initial values.  Values are
-  !  subsequently updated for each time step.  So, just take a guess at reasonable
-  !  initial values:
-  !
-!---hchun
-  if(ITT.eq.1) then
-  CH = 1.E-4
-  CM = 1.E-4
-
-  if ( sfcdif_option == 1 ) then
-     call MYJSFCINIT()
-  endif
-  endif
-
-  !
-  ! Enter time loop:
-  !
-
-  nowdate = startdate
 !===hchun============================================
 !  ktime = 0
 !  TIMELOOP : do while ( nowdate < enddate)
@@ -533,31 +400,6 @@ CONTAINS
      ! If the USEMONALB flag is .TRUE., we want to provide ALB from the user-specified
      ! trend through the year, rather than let SFLX calculate it for us.
      !
-!---hchun
-     if(ITT.eq.1) then
-
-     if (USEMONALB) then
-        alb    = month_d(albedo_monthly, nowdate)
-     else
-!        alb = badval
-        alb = albedo1/100.0
-     endif
-
-     !
-     ! If the RDLAI2D flag is .TRUE., we want to provide XLAI from the user-specified
-     ! trend through the year, rather than let SFLX calculate it for us.
-     !
-
-     if (RDLAI2D) then
-        xlai = month_d(lai_monthly, nowdate)
-     else
-!        xlai = badval
-        xlai = lai1
-     endif
-
-     endif
-!-----
-
      !
      ! SHDFAC comes from the user-specified trend through the year.  No other option
      ! at the moment
@@ -1136,10 +978,10 @@ SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,                                  &
    real (kind=int_kind), dimension(mi1,mj1), intent(IN):: &
       ALBEDOMi1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ
 
-   real(kind=int_kind),dimension(mi1,mj1,4) ,intent(INOUT) :: &
-    STinout,   &! soil temperature
-    SMinout,   &! soil moisture
-    SLinout    &! soil liquid
+   real(kind=int_kind),dimension(4):: &
+    STinout_ini,   &! soil temperature
+    SMinout_ini,   &! soil moisture
+    SLinout_ini    &! soil liquid
 
    real(kind=int_kind) :: cmc1,t11,showh1,sneqv1,sneqv1
 
@@ -1157,16 +999,163 @@ SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,                                  &
    SFCPRS     = SFCPRS
    ZZ         = ZZ1
 
-! undetermined 
-!  Z0  
-
-
   call open_forcing_file(iunit, output_dir, forcing_filename, nsoil, startdate, enddate,          &
        loop_for_a_while, latitude, longitude, &
        forcing_timestep, noahlsm_timestep, ice, t1, stc, smc, sh2o, sldpth, cmc1, snowh1, sneqv1, tbot,     &
        vegtyp, soiltyp, slopetyp, snoalb, zlvl, zlvl_wind, albedo_monthly, shdfac_monthly,                  &
        z0brd_monthly, lai_monthly, use_urban_module, isurban, shdmin, shdmax, usemonalb, rdlai2d, llanduse, &
-       iz0tlnd, sfcdif_option,STinout,SMinout,SLinout)
+       iz0tlnd, sfcdif_option,STinout_ini,SMinout_ini,SLinout_ini)
+
+  dt = real(noahlsm_timestep)
+
+  if (use_urban_module) STOP "This is not urban code."
+
+  !
+  ! Allocate additonal arrays (dimensioned by the number of soil levels) which
+  ! we will need for SFLX.
+  !
+
+  allocate( et ( nsoil ) )
+  if(ITT.eq.1) then
+  et = -1.E36
+  endif
+
+  allocate( smav ( nsoil ) )
+  if(ITT.eq.1) then
+  smav = -1.E36
+  endif
+
+  LLANDUSE = "USGS"
+
+  !
+  ! LSOIL:  Currently, only the STATSGO soil dataset as used in WRF is
+  ! supported.
+  !
+
+  LSOIL = "STAS"
+
+  !
+  ! Read our lookup tables and parameter tables:  VEGPARM.TBL, SOILPARM.TBL,
+  ! GENPARM.TBL
+  !
+
+  call soil_veg_gen_parm( LLANDUSE, LSOIL )
+
+  !
+  ! COSZ is unused if we're not using the urban canopy model.  If we implement
+  ! the
+  ! urban canopy model for this simple point driver, we will need to compute a
+  ! COSZ
+  ! somewhere.
+  !
+
+  COSZ = badval
+
+  !
+  ! PRCPRAIN is unused.
+  !
+
+  PRCPRAIN = badval
+
+  !
+  ! SOLARDIRECT is unused.
+  !
+
+  SOLARDIRECT = badval
+
+  !
+  ! Set EMISSI for our first time step.  Just a guess, but it's only for the
+  ! first step.  Later time steps get EMISSI from what was set in the prior
+  ! time step by SFLX.
+  !
+!---hchun
+!---hchun
+  EMISSI = 0.96
+
+  !
+  ! For the initial ALBEDO value used in computing SOLNET, just use our
+  ! snow-free value.  Subsequent timesteps use the value computed in the
+  ! previous call to SFLX:
+  !
+
+  ALBEDO = month_d (albedo_monthly, startdate)
+  ALBEDO = ALBEDO1/100.0
+
+  !
+  ! For the initial value of Z0 (used in SFCDIF_off to compute CH and CM),
+  ! just use a snow-free background value.  Subsequent timesteps use this
+  ! value as computed in the previous call to SFLX:
+  !
+
+  Z0 = month_d(z0brd_monthly, startdate)
+!-----
+  !
+  ! Z0BRD is computed within SFLX.  But we need an initial value, so the call to
+  ! SFCDIF_MYJ can do its thing.  Subsequent timesteps will recycle the Z0BRD
+  ! value as returned from SFLX in the previous timestep.
+  !
+
+  if ( sfcdif_option == 1 ) then
+     z0brd  = z0
+  else
+     z0brd = badval
+  endif
+
+  !
+  ! CZIL is needed for the SFCDIF_OFF step.  This comes from CZIL_DATA, as read
+  ! from the GENPARM.TBL file, which is how REDPRM ultimately gets it as well:
+  !
+
+  CZIL = CZIL_DATA
+
+  !
+  !  CM and CH, computed in subroutine SFCDIF_OFF, need initial values.  Values
+  !  are
+  !  subsequently updated for each time step.  So, just take a guess at
+  !  reasonable
+  !  initial values:
+  !
+!---hchun
+  CH = 1.E-4
+  CM = 1.E-4
+  if ( sfcdif_option == 1 ) then
+     call MYJSFCINIT()
+  endif
+
+  !
+  ! Enter time loop:
+  !
+
+  nowdate = startdate
+
+!---hchun
+     if(ITT.eq.1) then
+
+     if (USEMONALB) then
+        alb    = month_d(albedo_monthly, nowdate)
+     else
+!        alb = badval
+        alb = albedo1/100.0
+     endif
+
+     !
+     ! If the RDLAI2D flag is .TRUE., we want to provide XLAI from the
+     ! user-specified
+     ! trend through the year, rather than let SFLX calculate it for us.
+     !
+
+     if (RDLAI2D) then
+        xlai = month_d(lai_monthly, nowdate)
+     else
+!        xlai = badval
+        xlai = lai1
+     endif
+
+     endif
+!-----
+
+
+
 
 END SUBROUTINE LSM_DRV_INI
 !============================
