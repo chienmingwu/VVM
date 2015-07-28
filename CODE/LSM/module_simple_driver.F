@@ -62,6 +62,8 @@ character(len=12)   :: enddate          ! Ending date of the data ( YYYYMMDDHHmm
 character(len=256)  :: LLANDUSE         ! Land-use dataset.  Valid values are :
                                         ! "USGS" (USGS 24/27 category dataset) and
                                         ! "MODIFIED_IGBP_MODIS_NOAH" (MODIS 20-category dataset)
+character(len=256) :: LSOIL             ! Soil-category dateset.  Only "STAS" 
+                                        ! (STATSGO dataset) supported.
 
 logical             :: use_urban_module ! Flag, set to TRUE in the initial/forcing conditions file, 
                                         ! if the user wants to use the urban canopy model.
@@ -109,9 +111,7 @@ real                :: SHDMIN1          ! Minimum shade factor (0.0-1.0).
                                         ! Note that this is shdmin in origin version.
 real                :: SHDMAX1          ! Maximum shade factor (0.0-1.0).
                                         ! Note that this is shdmax in origin version.
-
-
-
+real                :: DT               ! Time step (seconds).
 
 real, dimension(12) :: albedo_monthly   ! Monthly values of background (i.e., snow-free) albedo
                                         ! ( Fraction [0.0-1.0] )
@@ -130,9 +130,16 @@ real, pointer, dimension(:) :: SH2O   ! Liquid soil moisture content (m3 m-3)
 real, pointer, dimension(:) :: SLDPTH ! Thicknesses of each soil level
 
 
+real, allocatable, dimension(:) :: ET    ! Plant transpiration from each soil level.
+real, allocatable, dimension(:) :: SMAV  ! Soil Moisture Availability at each level, fraction between
+                                         ! SMCWLT (SMAV=0.0) and SMCMAX (SMAV=1.0)
+integer, dimension(mi1,mj1) :: NSOIL     ! Number of soil levels.
 
-integer, dimension(mi1,mj1) :: NSOIL      ! Number of soil levels.
-
+real, dimension(mi1,mj1)    ::          &
+                       ZLVL,            &! Height at which atmospheric forcing variables are taken
+                                         ! to be valid (m)
+                       ZLVL_wind,       &! Height at which the wind forcing variable is taken
+                                         ! to be valid (m)
 
 
 
@@ -238,6 +245,18 @@ CONTAINS
 
   integer(kind=int_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
     NROOT      ! Number of root layers ( count )
+
+! -----------------------------------------------------------------------------
+! Local varibles
+  logical :: LOCAL       
+  real    :: FFROZP,       &! Fraction of precip which is frozen (0.0 - 1.0).
+             LWDN,         &! Downward longwave radiation flux at surface (W m-2) [Forcing]
+             SOLDNET,      &! Net downward shortwave radiation flux at the surface (W m-2)
+             COSZ,         &! Unused if we're not using urban canopy model.
+             PRCPRAIN,     &! Unused
+             SOLARDIRECT,  &! Unused.
+              
+
 
  
 
@@ -971,12 +990,13 @@ CONTAINS
 !end program simple_driver
 !write(*,*) 'before end subroutine LSM_DRV'
 END SUBROUTINE LSM_DRV
-SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,                                  & 
+SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  & 
                        ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ1  )
-
+      
+   real(kind=dbl_kind), intent(in):: dt1
    integer (kind=int_kind), dimension(mi1,mj1), intent(IN):: LU1,SOIL1,SLOPE1
    real (kind=int_kind), dimension(mi1,mj1), intent(IN):: &
-      ALBEDOMi1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ
+      ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ
 
    real(kind=int_kind),dimension(4):: &
     STinout_ini,   &! soil temperature
@@ -987,6 +1007,8 @@ SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,                                  &
 
    integer (kind=int_kind):: i,j
 
+   
+   dt = dt1
    LU = LU1
    SOIL = SOIL1 
    SLOPE = SLOPE1
@@ -1016,14 +1038,10 @@ SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,                                  &
   !
 
   allocate( et ( nsoil ) )
-  if(ITT.eq.1) then
   et = -1.E36
-  endif
 
   allocate( smav ( nsoil ) )
-  if(ITT.eq.1) then
   smav = -1.E36
-  endif
 
   LLANDUSE = "USGS"
 
@@ -1129,8 +1147,6 @@ SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,                                  &
   nowdate = startdate
 
 !---hchun
-     if(ITT.eq.1) then
-
      if (USEMONALB) then
         alb    = month_d(albedo_monthly, nowdate)
      else
@@ -1151,7 +1167,6 @@ SUBROUTINE LSM_DRV_ini(LU1,SOIL1,SLOPE1,                                  &
         xlai = lai1
      endif
 
-     endif
 !-----
 
 

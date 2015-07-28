@@ -11,7 +11,7 @@ USE bound
 USE utils
 USE domain_decomposition
 #if defined (LSM)
-USE land_module, only:land_interface
+USE land_module, only:land_interface,land_ini
 USE rad, only:lwDown_3D,swDown_3D
 #endif
 
@@ -1301,6 +1301,10 @@ SUBROUTINE TURB_3D_INI
       DHWW2(I,J,1)=0.
       ENDDO
       ENDDO
+
+#if defined (LSM)
+      call land_ini
+#endif
 #endif
 
    END SUBROUTINE TURB_3D_INI

@@ -327,7 +327,7 @@ CONTAINS
          lSMCMAX     = -9.9999996E+35
          lNROOT      = -999999
 
-      call LSM_DRV_ini(LU,SOIL,SLOPE, &
+      call LSM_DRV_ini(DT,LU,SOIL,SLOPE, &
                        ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ)
 
 #endif

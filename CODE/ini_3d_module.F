@@ -13,9 +13,6 @@ USE z_coord
 USE domain_decomposition
 #if defined (DIFFUSION)
 USE TURB_3D_module
-#if defined (LSM)
-USE land_module
-#endif
 #endif
 USE petscsys
 
@@ -590,7 +587,6 @@ CONTAINS
       ENDDO
       ENDDO
 
-
 #else
       hx=1
       maxtopo=2
@@ -598,9 +594,6 @@ CONTAINS
 
 #if defined (DIFFUSION)
       call turb_3d_ini
-#if defined (LSM)
-      call land_ini
-#endif
 #endif
 
       ENDSUBROUTINE PTSPEC
