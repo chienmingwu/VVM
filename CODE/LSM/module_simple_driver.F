@@ -138,7 +138,7 @@ integer, dimension(mi1,mj1) :: NSOIL     ! Number of soil levels.
 real, dimension(mi1,mj1)    ::          &
                        ZLVL,            &! Height at which atmospheric forcing variables are taken
                                          ! to be valid (m)
-                       ZLVL_wind,       &! Height at which the wind forcing variable is taken
+                       ZLVL_wind         ! Height at which the wind forcing variable is taken
                                          ! to be valid (m)
 
 
@@ -187,7 +187,8 @@ CONTAINS
     SMinout,   &! soil moisture
     SLinout,   &! soil liquid
     SMAVout,   &! Soil Moisture Availability  output
-     
+    ETout       ! Plant transpiration from each soil level.  
+
   real(kind=int_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
     CM,        &! Exchange coefficient for momentum (m s-1).  
                 ! An initial value is needed for SFCDIF_off.
@@ -248,17 +249,35 @@ CONTAINS
 
 ! -----------------------------------------------------------------------------
 ! Local varibles
-  logical :: LOCAL       
+  logical :: LOCAL,        &
+             USEMONALB,    &! If USEMONALB == .TRUE., then the ALB value passed to
+                            ! SFLX will be used as the background snow-free albedo term.
+                            ! If USEMONALB == .FALSE., then ALB will be computed within SFLX
+                            ! from minimum and maximum values in VEGPARM.TBL, and
+                            ! the current Green Vegetation Fraction 
+             RDLAI2D        ! If RDLAI2D == .TRUE., then the XLAI value 
+                            ! that we pass to SFLX will be used.
+                            ! If RDLAI2d == .FALSE., then XLAI will be computed
+                            ! within SFLX, from table minimum and maximum values in VEGPARM.TBL, 
+                            ! and the current Green Vegetation Fraction.
+
   real    :: FFROZP,       &! Fraction of precip which is frozen (0.0 - 1.0).
              LWDN,         &! Downward longwave radiation flux at surface (W m-2) [Forcing]
              SOLDNET,      &! Net downward shortwave radiation flux at the surface (W m-2)
              COSZ,         &! Unused if we're not using urban canopy model.
              PRCPRAIN,     &! Unused
              SOLARDIRECT,  &! Unused.
-              
-
-
- 
+             TH2,          &! Potential temperature at level ZLVL (K) 
+             Q2SAT,        &! Saturated specific humidity (kg kg-1)
+             DQSDT2,       &! Slope of the Saturated specific humidity curve 
+                            ! W.R.T. Temperature.
+             SHDFAC,       &! Shade factor (0.0-1.0).            
+             SNOALB,       &! Maximum snow albedo over deep snow (0.0-1.0)
+             Z0BRD,        &! Background Z0 value (m).
+             EMBRD,        &! Background value (i.e., not including snow-cover effect)
+                            ! of surface emissivity (0.0 - 1.0 )
+             RIBB,         &! Bulk Richardson number used to limit the dew/frost.
+             SNOTIME1,     &! Age of the snow on the ground.
 
   forcing_filename = "bondville.dat"
 !===========================================================================================
@@ -691,18 +710,17 @@ CONTAINS
              COSZ, PRCPRAIN, SOLARDIRECT,                              &  ! F
              TH2, Q2SAT, DQSDT2,                                       &  ! I
              VEGTYP, SOILTYP, SLOPETYP, SHDFAC, SHDMIN, SHDMAX,        &  ! I
-             ALB, SNOALB, TBOT, Z0BRD, Z0, EMISSI, EMBRD,              &  ! S
-             CMC, T1, STC, SMC, SH2O, SNOWH, SNEQV, ALBEDO, CH, CM,    &  ! H
-             ETA, SHEAT, ETAKIN, FDOWN,                                &  ! O
-             EC, EDIR, ET, ETT, ESNOW, DRIP, DEW,                      &  ! O
-             BETA, ETP, SSOIL,                                         &  ! O
-             FLX1, FLX2, FLX3,                                         &  ! O
-             SNOMLT, SNCOVR,                                           &  ! O
-             RUNOFF1, RUNOFF2, RUNOFF3,                                &  ! O
-             RC, PC, RSMIN, XLAI, RCS ,RCT, RCQ, RCSOIL,               &  ! O
-             SOILW, SOILM, Q1, SMAV, RDLAI2D, USEMONALB, SNOTIME1,     &  ! D
-             RIBB,                                                     &  ! D
-             SMCWLT, SMCDRY, SMCREF, SMCMAX, NROOT)
+             ALB, SNOALB, TBOT, Z0BRD, Z0, EMISSI(I,J), EMBRD,              &  ! S
+             CMC(I,J), T1(I,J), STC, SMC, SH2O, SNOWH(I,J), SNEQV(I,J), &  ! H
+             SNEQV(I,J), ALBEDO(I,J), CH(I,J), CM(I,J), ETA(I,J), SHEAT(I,J),    &  ! O
+             ETAKIN(I,J), FDOWN(I,J), EC(I,J), EDIR(I,J), ET(I,J), ETT(I,J),     &
+             ESNOW(I,J), DRIP(I,J), DEW(I,J), BETA(I,J), ETP(I,J), SSOIL(I,J),   &  ! O
+             FLX1(I,J), FLX2(I,J), FLX3(I,J), SNOMLT(I,J), SNCOVR(I,J),          &  ! O
+             RUNOFF1(I,J), RUNOFF2(I,J), RUNOFF3(I,J), RC(I,J), PC(I,J),         &
+             RSMIN(I,J), XLAI(I,J), RCS(I,J) ,RCT(I,J), RCQ(I,J), RCSOIL(I,J),   &  ! O
+             SOILW(I,J), SOILM(I,J), Q1(I,J), SMAV(I,J,:),                       &  !
+             RDLAI2D, USEMONALB, SNOTIME1, RIBB,                                 &  ! D
+             SMCWLT(I,J), SMCDRY(I,J), SMCREF(I,J), SMCMAX(I,J), NROOT(I,J))
 !====hchun
      STinout(1:NSOIL)=STC(1:NSOIL)
      SMinout(1:NSOIL)=SMC(1:NSOIL)
