@@ -1,10 +1,9 @@
   MODULE module_simple_driver
 
-  implicit none
+!  implicit none
 
   USE kinds
   USE parmsld
-
  
   !
   ! Through MODULE_IO, we access most of our top-level input/output routines.  This
@@ -33,7 +32,7 @@
 
   !
   ! MODULE_SF_NOAHLSM_GLACIAL_ONLY contains the Noah LSM physics code that applies to 
-  ! glacial points.  This driver program makes use of module subroutine SFLX_GLACIAL.
+  ! glacial points.  This driver program makes use of module subroutinSFLX_GLACIAL.
   !
 
   use module_sf_noahlsm_glacial_only
@@ -59,6 +58,10 @@ character(len=256)  :: forcing_filename ! The name of the initial/forcing condit
 character(len=12)   :: startdate        ! Starting date of the data (YYYYMMDDHHmm )
 character(len=12)   :: enddate          ! Ending date of the data ( YYYYMMDDHHmm )
                                         ! by Fortran library function GETARG
+character(len=12)  :: nowdate           ! The date of each time step, (YYYYMMDDHHmm ), 
+                                        ! updated in each step of the main loop TIMELOOP
+
+
 character(len=256)  :: LLANDUSE         ! Land-use dataset.  Valid values are :
                                         ! "USGS" (USGS 24/27 category dataset) and
                                         ! "MODIFIED_IGBP_MODIS_NOAH" (MODIS 20-category dataset)
@@ -89,12 +92,13 @@ integer             :: ice              ! Flag for sea-ice (1) or land (0), or g
 integer             :: VEGTYP           ! Vegetation category.
 integer             :: SOILTYP          ! Soil category.
 integer             :: SLOPETYP         ! Slope category.
-integer             :: ISURBAN          ! Vegetation category for urban land class.
 integer             :: iz0tlnd          ! Option to turn on (IZ0TLND=1) or off (IZ0TLND=0) 
                                         ! the vegetation-category-dependent calculation of 
                                         ! the Zilitinkivich coefficient CZIL in the SFCDIF subroutines.
 integer             :: sfcdif_option    ! Option to use previous (SFCDIF_OPTION=0) or 
                                         ! updated (SFCDIF_OPTION=1) version of SFCDIF subroutine.
+
+integer,dimension(mi1,mj1) :: ISURBAN   ! Vegetation category for urban land class.
 
 
 
@@ -103,15 +107,14 @@ real                :: longitude        ! Longitude of the point ( Degrees East 
 real                :: TBOT             ! Deep-soil time-invariant temperature (K).
                                         ! Representing sort of a mean annual air temperature.
 real                :: SNOALB           ! Maximum snow albedo over deep snow (0.0-1.0)
-real                :: ZLVL             ! Height at which atmospheric forcing variables are taken 
-                                        ! to be valid (m)
-real                :: ZLVL_wind        ! Height at which the wind forcing variable is taken 
-                                        ! to be valid (m)
 real                :: SHDMIN1          ! Minimum shade factor (0.0-1.0). 
                                         ! Note that this is shdmin in origin version.
 real                :: SHDMAX1          ! Maximum shade factor (0.0-1.0).
                                         ! Note that this is shdmax in origin version.
 real                :: DT               ! Time step (seconds).
+
+real                :: CZIL             ! Zilitinkevich constant, read from GENPARM.TBL
+                                        ! and used to compute surface
 
 real, dimension(12) :: albedo_monthly   ! Monthly values of background (i.e., snow-free) albedo
                                         ! ( Fraction [0.0-1.0] )
@@ -121,32 +124,23 @@ real, dimension(12) :: z0brd_monthly    ! Monthly values for background (i.e., s
                                         ! roughness length ( m )
 real, dimension(12) :: lai_monthly      ! Monthly values for Leaf Area Index ( dimensionless )
 
-
-
-
-real, pointer, dimension(:) :: STC    ! Soil temperature (K)
-real, pointer, dimension(:) :: SMC    ! Total soil moisture content (m3 m-3)
-real, pointer, dimension(:) :: SH2O   ! Liquid soil moisture content (m3 m-3)
 real, pointer, dimension(:) :: SLDPTH ! Thicknesses of each soil level
 
 
-real, allocatable, dimension(:) :: ET    ! Plant transpiration from each soil level.
-real, allocatable, dimension(:) :: SMAV  ! Soil Moisture Availability at each level, fraction between
-                                         ! SMCWLT (SMAV=0.0) and SMCMAX (SMAV=1.0)
 integer, dimension(mi1,mj1) :: NSOIL     ! Number of soil levels.
 
 real, dimension(mi1,mj1)    ::          &
                        ZLVL,            &! Height at which atmospheric forcing variables are taken
                                          ! to be valid (m)
-                       ZLVL_wind         ! Height at which the wind forcing variable is taken
+                       ZLVL_wind,       &! Height at which the wind forcing variable is taken
                                          ! to be valid (m)
-
+                       Z0BRD             ! Background Z0 value (m).
 
 
 
 ! input data from land_module_ini.F
 integer, dimension(mi1,mj1) :: LU,SOIL,SLOPE
-real, dimension(mi1,mj1) :: ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,SFCPRS,ZZ,Z0
+real, dimension(mi1,mj1) :: ALBEDOM,SHDFAC,LAIM,SHDMAX,SHDMIN,SFCPRS,ZZ,Z0
 
   PUBLIC :: LSM_DRV, &
             LSM_DRV_ini, & 
@@ -159,18 +153,17 @@ real, dimension(mi1,mj1) :: ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,SFCPRS,ZZ,Z0
 CONTAINS
   SUBROUTINE LSM_DRV(SFCSPD,SFCTMP,Q2,SOLDN,LONGWAVE,PRCP,ETAKIN,SHEAT, &
 ! LSM inout variables
-           CM,STinout,SMinout,SLinout,EMISSI,CMC,T1,SNOWH,SNEQV,ALBEDO,
-           CH,ETA,FDOWN,EC,EDIR,ET,ETT,ESNOW,DRIP,DEW,BETA,ETP,SSOIL,
-           FLX1,FX2,FLX3,SNOMLT,SNCOVR,RUNOFF1,RUNOFF2,RUNOFF3,RC,PC,
-           RSMIN,XLAI,RCS,RCT,RCQ,RCSOIL,SOILW,SOILM,Q1,SMAVout,SMCWLT,
+           CM,STC,SMC,SH2O,EMISSI,CMC,T1,SNOWH,SNEQV,ALBEDO,            &
+           CH,ETA,FDOWN,EC,EDIR,ET,ETT,ESNOW,DRIP,DEW,BETA,ETP,SSOIL,   &
+           FLX1,FLX2,FLX3,SNOMLT,SNCOVR,RUNOFF1,RUNOFF2,RUNOFF3,RC,PC,  &
+           RSMIN,XLAI,RCS,RCT,RCQ,RCSOIL,SOILW,SOILM,Q1,SMAV,SMCWLT, &
            SMCDRY,SMCREF,SMCMAX,NROOT)
-
 
 ! change name zz1->zz
 !             z0->z0 
 
 ! input variables from vvm 
-  real(kind=dbl_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
+  real(kind=int_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
     SFCSPD,    &! Surface wind speed (m s-1) [Forcing]
     SFCTMP,    &! Air temperature (K) [Forcing]
     Q2,        &! Surface specific humidity (kg kg-1) [Forcing]
@@ -179,15 +172,15 @@ CONTAINS
 !which is immediately adjusted (by the emissivity factor) to set variable LWDN.
     PRCP,      &! Precipitation rate (kg m-2 s-1) [Forcing]
     ETAKIN,    &! Latent heat flux (evapotranspiration) ( kg m{-2} s{-1} ) 
-    SHEAT      &! Sensible heat flux ( W m{-2} )
+    SHEAT       ! Sensible heat flux ( W m{-2} )
 
 ! input variables form land_interface
   real(kind=int_kind),dimension(mi1,mj1,4) ,intent(INOUT) :: &
-    STinout,   &! soil temperature
-    SMinout,   &! soil moisture
-    SLinout,   &! soil liquid
-    SMAVout,   &! Soil Moisture Availability  output
-    ETout       ! Plant transpiration from each soil level.  
+    STC,    &! soil temperature
+    SMC,    &! soil moisture
+    SH2O,   &! soil liquid
+    SMAV,   &! Soil Moisture Availability  output
+    ET       ! Plant transpiration from each soil level.  
 
   real(kind=int_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
     CM,        &! Exchange coefficient for momentum (m s-1).  
@@ -242,7 +235,7 @@ CONTAINS
                 !from the top layer ends ( m{3} m{-3} )
     SMCREF,    &! Soil moisture threshold where transpiration begins to stress 
                 ! ( m{3} m{-3} )
-    SMCMAX     &! Porosity, i.e., saturated value of soil moisture ( m{3} m{-3} )
+    SMCMAX      ! Porosity, i.e., saturated value of soil moisture ( m{3} m{-3} )
 
   integer(kind=int_kind),dimension(mi1,mj1) ,intent(INOUT) :: &
     NROOT      ! Number of root layers ( count )
@@ -260,24 +253,30 @@ CONTAINS
                             ! If RDLAI2d == .FALSE., then XLAI will be computed
                             ! within SFLX, from table minimum and maximum values in VEGPARM.TBL, 
                             ! and the current Green Vegetation Fraction.
+  integer :: iloc,jloc
 
   real    :: FFROZP,       &! Fraction of precip which is frozen (0.0 - 1.0).
              LWDN,         &! Downward longwave radiation flux at surface (W m-2) [Forcing]
-             SOLDNET,      &! Net downward shortwave radiation flux at the surface (W m-2)
+             SOLNET,       &! Net downward shortwave radiation flux at the surface (W m-2)
              COSZ,         &! Unused if we're not using urban canopy model.
              PRCPRAIN,     &! Unused
              SOLARDIRECT,  &! Unused.
              TH2,          &! Potential temperature at level ZLVL (K) 
+             T1V,          &! Virtual skin temperature (K).  Used in SFCDIF_off for
+                            ! computing CM and CH, but not passed to SFLX
+             TH2V,         &! Virtual potential temperature at level ZLVL (K).  
+                            ! Used in SFCDIF_off for computing CM and CH, but not passed to SFLX
+             RHO,          &! Air density (dummy value output from CALTMP,
+                            !  not passed to SFLX).
              Q2SAT,        &! Saturated specific humidity (kg kg-1)
              DQSDT2,       &! Slope of the Saturated specific humidity curve 
                             ! W.R.T. Temperature.
-             SHDFAC,       &! Shade factor (0.0-1.0).            
-             SNOALB,       &! Maximum snow albedo over deep snow (0.0-1.0)
-             Z0BRD,        &! Background Z0 value (m).
+!             SHDFAC,       &! Shade factor (0.0-1.0).            
+!             SNOALB,       &! Maximum snow albedo over deep snow (0.0-1.0)
              EMBRD,        &! Background value (i.e., not including snow-cover effect)
                             ! of surface emissivity (0.0 - 1.0 )
              RIBB,         &! Bulk Richardson number used to limit the dew/frost.
-             SNOTIME1,     &! Age of the snow on the ground.
+             SNOTIME1       ! Age of the snow on the ground.
 
   forcing_filename = "bondville.dat"
 !===========================================================================================
@@ -286,8 +285,8 @@ CONTAINS
   ! Some defaults
   !
 
-  iiloc     = 1
-  jjloc     = 1
+  iloc     = 1
+  jloc     = 1
   snotime1  = 0.0
   RIBB      = 0.0
 !-----------------
@@ -337,86 +336,22 @@ CONTAINS
   !
 
 !===hchun======================================================================================================
-  call open_forcing_file(iunit, output_dir, forcing_filename, nsoil, startdate, enddate,          &
-       loop_for_a_while, latitude, longitude,                                                               &
-       forcing_timestep, noahlsm_timestep, ice, t1, stc, smc, sh2o, sldpth, cmc, snowh, sneqv, tbot,        &
-       vegtyp, soiltyp, slopetyp, snoalb, zlvl, zlvl_wind, albedo_monthly, shdfac_monthly,                  &
-       z0brd_monthly, lai_monthly, use_urban_module, isurban, shdmin, shdmax, usemonalb, rdlai2d, llanduse, &
-       iz0tlnd, sfcdif_option,STinout,SMinout,SLinout)
+!  call open_forcing_file(iunit, output_dir, forcing_filename, nsoil, startdate, enddate,          &
+!       loop_for_a_while, latitude, longitude,                                                               &
+!       forcing_timestep, noahlsm_timestep, ice, t1, stc, smc, sh2o, sldpth, cmc, snowh, sneqv, tbot,        &
+!       vegtyp, soiltyp, slopetyp, snoalb, zlvl, zlvl_wind, albedo_monthly, shdfac_monthly,                  &
+!       z0brd_monthly, lai_monthly, use_urban_module, isurban, shdmin, shdmax, usemonalb, rdlai2d, llanduse, &
+!       iz0tlnd, sfcdif_option,STinout,SMinout,SLinout)
 
-  t1                        = tg1
-  vegtyp                    = lu1
-  soiltyp                   = soil1
-  slopetyp                  = slope1
-  shdmax                    = shdmax1/100.0
-  shdmin                    = shdmin1/100.0
-  zlvl                      = zz1
-  zlvl_wind                 = zz1
+!  t1                        = tg1
+DO J=1,MJ1
+DO I=1,MI1
 
-!==============================================================================================================
-!===hchun============================================
-!  ktime = 0
-!  TIMELOOP : do while ( nowdate < enddate)
-
-     !
-     ! Increment our counter KTIME and our time variable NOWDATE
-     !
-
-!     call geth_newdate(nowdate, startdate, ktime*(noahlsm_timestep/60))
-!     ktime = ktime + 1
-
-     !
-     ! Check if we need to cycle back to our starting data
-     !
-
-!     if ( ( loop_for_a_while > 0 ) .and. ( nowdate == enddate ) ) then
-!        print*, 'Nowdate: '//nowdate//"  Switching to startdate: "//startdate
-
-!        if ( reloop_count >= loop_for_a_while ) exit TIMELOOP
-
-!        call output_close()
-
-!        nowdate = startdate
-
-!        reloop_count = reloop_count + 1
-!        ktime = 1
-!====================================================================================
-!=======hchun========================================================================
-!        call read_forcing_text(iunit, nowdate, forcing_timestep, &
-!             sfcspd, sfcu, sfcv, sfctmp, q2, sfcprs, soldn, longwave, prcp, ierr)
-!====================================================================================
-!=======hchun========================================================================
-!        if (ierr == 0) stop "Wrong input for looping a year."
-
-!        rewind(iunit)
-
-!     endif
-!====================================================================================
-
-
-     !
-     ! Read the forcing fields, updated from external data every time step:
-     ! SFCSPD, SFCU, SFCV, SFCTMP, Q2, SFCPRS, SOLDN, LONGWAVE, PRCP.
-     !
-
-!=======hchun========================================================================
-!     call read_forcing_text(iunit, nowdate, forcing_timestep, &
-!          sfcspd, sfcu, sfcv, sfctmp, q2, sfcprs, soldn, longwave, prcp, ierr)
-!====================================================================================
-!=======hchun========================================================================
-!     if (ierr /= 0) then
-!        exit TIMELOOP
-!        stop ":  FORCING DATA READ PROBLEM"
-!     endif
-!====================================================================================
-
-     !
-     ! Update FFROZP for each time step, depending on the air temperature in the forcing data.
      ! FFROZP indicates the fraction of the total precipitation which is considered to be
      ! frozen.
      !
 
-     if ( (PRCP > 0) .and. (SFCTMP < 273.15) ) then
+     if ( (PRCP(I,J) > 0) .and. (SFCTMP(I,J) < 273.15) ) then
         FFROZP = 1.0
      else
         FFROZP = 0.0
@@ -431,20 +366,15 @@ CONTAINS
      !             as far as the non-urban code is concerned.
      !
 
-     CALL CALTMP(T1, SFCTMP, SFCPRS, ZLVL, Q2, TH2, T1V, TH2V, RHO) ! Returns TH2, T1V, TH2V, RHO
-     CALL CALHUM(SFCTMP, SFCPRS, Q2SAT, DQSDT2) ! Returns Q2SAT, DQSDT2
+     CALL CALTMP(T1(I,J), SFCTMP(I,J), SFCPRS(I,J), ZLVL(I,J), Q2(I,J), TH2, T1V, TH2V, RHO)
+ ! Returns TH2, T1V, TH2V, RHO
+     CALL CALHUM(SFCTMP(I,J), SFCPRS(I,J), Q2SAT, DQSDT2) ! Returns Q2SAT, DQSDT2
 
      !
      ! If the USEMONALB flag is .TRUE., we want to provide ALB from the user-specified
      ! trend through the year, rather than let SFLX calculate it for us.
      !
      !
-     ! SHDFAC comes from the user-specified trend through the year.  No other option
-     ! at the moment
-     !
-
-     shdfac = month_d(shdfac_monthly, nowdate)
-     shdfac = greenfrac1
 
      !
      ! Q1 is computed within SFLX.  But we need an initial value, so the call to 
@@ -452,9 +382,10 @@ CONTAINS
      ! value from as returned from SFLX in the previous time step.
      !
 
-     if (q1 == badval) then
-        q1 = q2
+     if (q1(I,J) == badval) then
+        q1(I,J) = q2(I,J)
      endif
+
 
      !
      ! SFCDIF_OFF computes mixing lengths for momentum and heat, CM and CH.
@@ -466,17 +397,18 @@ CONTAINS
      ! set above.
      !
 
-     if ( SFCDIF_OPTION == 0 ) then
+!     if ( SFCDIF_OPTION == 0 ) then
 !=======hchun==============================================================================
 !        CALL SFCDIF_OFF ( ZLVL, ZLVL_WIND , Z0 , T1V , TH2V , SFCSPD , CZIL , CM , CH , &
 !             VEGTYP , ISURBAN , IZ0TLND ) ! Out:  CM, CH
 !==========================================================================================
-     else if ( SFCDIF_OPTION == 1 ) then
+!     else if ( SFCDIF_OPTION == 1 ) then
 
-        CALL SFCDIF_MYJ ( ZLVL, ZLVL_WIND , Z0 , Z0BRD , SFCPRS , T1 , SFCTMP , Q1 , &
-             Q2 , SFCSPD , CZIL , RIBB , CM , CH , VEGTYP , ISURBAN , IZ0TLND )
+        CALL SFCDIF_MYJ ( ZLVL(I,J), ZLVL_WIND(I,J) , Z0(I,J) , Z0BRD(I,J) , SFCPRS(I,J) ,&
+              T1(I,J) , SFCTMP(I,J) , Q1(I,J) , Q2(I,J) , SFCSPD(I,J) , CZIL , RIBB , &
+              CM(I,J) , CH(I,J) , LU(I,J) , ISURBAN(I,J) , IZ0TLND )
 
-     endif
+!     endif
 
      !
      ! SOLNET is an additional forcing field, created by applying the albedo to SOLDN.
@@ -484,7 +416,7 @@ CONTAINS
      ! not quite what we want, but each subsequent timestep should be OK.
      !
 
-     SOLNET = SOLDN * (1.0-ALBEDO)
+     SOLNET = SOLDN(I,J) * (1.0-ALBEDO(I,J))
 
      !
      ! Apply the emissivity factor to the given longwave radiation.
@@ -492,7 +424,7 @@ CONTAINS
      ! for the first time through the loop, when EMISSI is set above.
      !
 
-     LWDN = LONGWAVE * EMISSI
+     LWDN = LONGWAVE(I,J) * EMISSI(I,J)
 
      !
      !  Call the Noah LSM routine for a single time step.
@@ -595,160 +527,45 @@ CONTAINS
      !    NROOT       -- Number of root layers ( count )
      !
 
+!     if ( ICE == 0 ) THEN
+     if (.true.) then
 
-#define _DEBUG_PRINT_ 0
-#if _DEBUG_PRINT_
-     print*, "Before SFLX."
-     print*, 'b  FFROZP = ', FFROZP
-     print*, 'b  ICE = ', ICE
-!              print*, 'b  ISURBAN = ', ISURBAN
-     print*, 'b  DT = ', DT
-     print*, 'b  ZLVL = ', ZLVL
-     print*, 'b  NSOIL = ', NSOIL
-     print*, 'b  SLDPTH = ', SLDPTH
-     print*, 'b  LLANDUSE = ', trim(LLANDUSE)
-     print*, 'b  LSOIL = ', trim(LSOIL)
-     print*, 'b  LWDN = ', LWDN
-     print*, 'b  SOLDN = ', SOLDN
-     print*, 'b  SOLNET = ', SOLNET
-     print*, 'b  SFCPRS = ', SFCPRS
-     print*, 'b  PRCP = ', PRCP
-     print*, 'b  SFCTMP = ', SFCTMP
-     print*, 'b  Q2 = ', Q2
-     print*, 'b  SFCSPD = ', SFCSPD
-     print*, 'b  COSZ = ', COSZ
-     print*, 'b  PRCPRAIN = ', PRCPRAIN
-     print*, 'b  SOLARDIRECT = ', SOLARDIRECT
-     print*, 'b  TH2 = ', TH2
-     print*, 'b  Q2SAT = ', Q2SAT
-     print*, 'b  DQSDT2 = ', DQSDT2
-     print*, 'b  VEGTYP = ', VEGTYP
-     print*, 'b  SOILTYP = ', SOILTYP
-     print*, 'b  SLOPETYP = ', SLOPETYP
-     print*, 'b  SHDFAC = ', SHDFAC
-!              print*, 'b  SHDMIN = ', SHDMIN
-!              print*, 'b  SHDMAX = ', SHDMAX
-!              print*, 'b  ALB = ', ALB
-     print*, 'b  SNOALB = ', SNOALB
-     print*, 'b  TBOT = ', TBOT
-     print*, 'b  Z0BRD = ', Z0BRD
-     print*, 'b  Z0 = ', Z0
-     print*, 'b  EMISSI = ', EMISSI
-!              print*, 'b  EMBRD = ', EMBRD
-     print*, 'b  CMC = ', CMC
-     print*, 'b  T1 = ', T1
-     print*, 'b  STC = ', STC
-     print*, 'b  SMC = ', SMC
-     print*, 'b  SH2O = ', SH2O
-     print*, 'b  SNOWH = ', SNOWH
-     print*, 'b  SNEQV = ', SNEQV
-     print*, 'b  ALBEDO = ', ALBEDO
-     print*, 'b  CH = ', CH
-     print*, 'b  CM = ', CM
-     print*, 'b  ETA = ', ETA
-     print*, 'b  SHEAT = ', SHEAT
-     print*, 'b  ETAKIN = ', ETAKIN
-     print*, 'b  FDOWN = ', FDOWN
-     print*, 'b  EC = ', EC
-     print*, 'b  EDIR = ', EDIR
-     print*, 'b  ET = ', ET
-     print*, 'b  ETT = ', ETT
-     print*, 'b  ESNOW = ', ESNOW
-     print*, 'b  DRIP = ', DRIP
-     print*, 'b  DEW = ', DEW
-     print*, 'b  BETA = ', BETA
-     print*, 'b  ETP = ', ETP
-     print*, 'b  SSOIL = ', SSOIL
-     print*, 'b  FLX1 = ', FLX1
-     print*, 'b  FLX2 = ', FLX2
-     print*, 'b  FLX3 = ', FLX3
-     print*, 'b  SNOMLT = ', SNOMLT
-     print*, 'b  SNCOVR = ', SNCOVR
-     print*, 'b  RUNOFF1 = ', RUNOFF1
-     print*, 'b  RUNOFF2 = ', RUNOFF2
-     print*, 'b  RUNOFF3 = ', RUNOFF3
-     print*, 'b  RC = ', RC
-     print*, 'b  PC = ', PC
-     print*, 'b  RSMIN = ', RSMIN
-!              write(*, '("XLAI = ", F7.5)') XLAI
-     print*, 'b  RCS = ', RCS
-     print*, 'b  RCT = ', RCT
-     print*, 'b  RCQ = ', RCQ
-     print*, 'b  RCSOIL = ', RCSOIL
-     print*, 'b  SOILW = ', SOILW
-     print*, 'b  SOILM = ', SOILM
-     print*, 'b  Q1 = ', Q1
-#if 0
-     print*, 'b  RDLAI2D = ', RDLAI2D
-     print*, 'b  USEMONALB = ', USEMONALB
-     print*, 'b  SNOTIME1 = ', SNOTIME1
-     print*, 'b  RIBB = ', RIBB
-#endif
-     print*, 'b  SMCWLT = ', SMCWLT
-     print*, 'b  SMCDRY = ', SMCDRY
-     print*, 'b  SMCREF = ', SMCREF
-     print*, 'b  SMCMAX = ', SMCMAX
-     print*, 'b  NROOT = ', NROOT
-#endif
-
-     if ( ICE == 0 ) THEN
-
-
-!====hchun
-!     print*,"T1 before = ",T1
-!     print*,"SMC before = ",SMC(1)
-!     print*,"SHEAT before SFLX = ",SHEAT
-!     write(103,*)sfcspd,sfcu,sfcv,sfctmp,q2,sfcprs,&
-!            tg1,soldn,longwave,prcp,ETAKIN,SHEAT
-!=========
-
-        call sflx(IILOC, JJLOC, FFROZP, ISURBAN, DT, ZLVL, NSOIL,      &  ! C
-             SLDPTH,                                                   &  ! C
-             LOCAL,                                                    &  ! L
-             LLANDUSE, LSOIL,                                          &  ! CL
-             LWDN, SOLDN, SOLNET, SFCPRS, PRCP, SFCTMP, Q2, SFCSPD,    &  ! F
-             COSZ, PRCPRAIN, SOLARDIRECT,                              &  ! F
-             TH2, Q2SAT, DQSDT2,                                       &  ! I
-             VEGTYP, SOILTYP, SLOPETYP, SHDFAC, SHDMIN, SHDMAX,        &  ! I
-             ALB, SNOALB, TBOT, Z0BRD, Z0, EMISSI(I,J), EMBRD,              &  ! S
-             CMC(I,J), T1(I,J), STC, SMC, SH2O, SNOWH(I,J), SNEQV(I,J), &  ! H
-             SNEQV(I,J), ALBEDO(I,J), CH(I,J), CM(I,J), ETA(I,J), SHEAT(I,J),    &  ! O
-             ETAKIN(I,J), FDOWN(I,J), EC(I,J), EDIR(I,J), ET(I,J), ETT(I,J),     &
-             ESNOW(I,J), DRIP(I,J), DEW(I,J), BETA(I,J), ETP(I,J), SSOIL(I,J),   &  ! O
-             FLX1(I,J), FLX2(I,J), FLX3(I,J), SNOMLT(I,J), SNCOVR(I,J),          &  ! O
-             RUNOFF1(I,J), RUNOFF2(I,J), RUNOFF3(I,J), RC(I,J), PC(I,J),         &
-             RSMIN(I,J), XLAI(I,J), RCS(I,J) ,RCT(I,J), RCQ(I,J), RCSOIL(I,J),   &  ! O
-             SOILW(I,J), SOILM(I,J), Q1(I,J), SMAV(I,J,:),                       &  !
-             RDLAI2D, USEMONALB, SNOTIME1, RIBB,                                 &  ! D
-             SMCWLT(I,J), SMCDRY(I,J), SMCREF(I,J), SMCMAX(I,J), NROOT(I,J))
-!====hchun
-     STinout(1:NSOIL)=STC(1:NSOIL)
-     SMinout(1:NSOIL)=SMC(1:NSOIL)
-     SLinout(1:NSOIL)=SH2O(1:NSOIL)
-     ETout(1:NSOIL) = ET(1:NSOIL)
-     SMAVout(1:NSOIL) = SMAV(1:NSOIL)
-!     print*,"ST in module_simple_driver.F = ",STinout(1)
-!     print*,"SHEAT after SFLX = ",SHEAT
-!     write(102,*)sfcspd,sfcu,sfcv,sfctmp,q2,sfcprs,&
-!            tg1,soldn,longwave,prcp,ETAKIN,SHEAT
-!=========
+        call sflx(ILOC, JLOC, FFROZP, ISURBAN(I,J), DT, ZLVL(I,J),     &
+             NSOIL(I,J), SLDPTH, LOCAL, LLANDUSE, LSOIL, LWDN,         &
+             SOLDN(I,J), SOLNET, SFCPRS(I,J), PRCP(I,J), SFCTMP(I,J),  &
+             Q2(I,J), SFCSPD(I,J), COSZ, PRCPRAIN, SOLARDIRECT,        &  ! F
+             TH2, Q2SAT, DQSDT2, LU(I,J), SOIL(I,J), SLOPE(I,J),       &
+             SHDFAC(I,J), SHDMIN(I,J), SHDMAX(I,J), ALBEDO(I,J),       &
+             SNOALB, TBOT, Z0BRD(I,J), Z0(I,J),                        &
+             EMISSI(I,J), EMBRD, CMC(I,J), T1(I,J), STC(I,J,:),        &
+             SMC(I,J,:), SH2O(I,J,:), SNOWH(I,J), SNEQV(I,J),          &
+             ALBEDO(I,J), CH(I,J), CM(I,J), ETA(I,J), SHEAT(I,J),      &
+             ETAKIN(I,J), FDOWN(I,J), EC(I,J), EDIR(I,J), ET(I,J,:),   &
+             ETT(I,J), ESNOW(I,J), DRIP(I,J), DEW(I,J), BETA(I,J),     &
+             ETP(I,J), SSOIL(I,J), FLX1(I,J), FLX2(I,J), FLX3(I,J),    &
+             SNOMLT(I,J), SNCOVR(I,J), RUNOFF1(I,J), RUNOFF2(I,J),     &
+             RUNOFF3(I,J), RC(I,J), PC(I,J), RSMIN(I,J), XLAI(I,J),    &
+             RCS(I,J) ,RCT(I,J), RCQ(I,J), RCSOIL(I,J), SOILW(I,J),    &
+             SOILM(I,J), Q1(I,J), SMAV(I,J,:), RDLAI2D, USEMONALB,     &
+             SNOTIME1, RIBB, SMCWLT(I,J), SMCDRY(I,J), SMCREF(I,J),    &
+             SMCMAX(I,J), NROOT(I,J))
 
      ELSEIF ( ICE == -1 ) THEN
 
         !
         ! Soil moisture fields set to 1.0 for glacial points.
         !
-        SMC(1:NSOIL) = 1.0
-        SH2O(1:NSOIL) = 1.0
-        SMAV(1:NSOIL) = 1.0
+        SMC(I,J,:) = 1.0
+        SH2O(I,J,:) = 1.0
+        SMAV(I,J,:) = 1.0
 
         !
         ! EDIR, ETT, and EC need to be set for the QFX calculation
         ! (done later) to be sane.
         !
-        EDIR        = 0.0
-        ETT         = 0.0
-        EC          = 0.0
+        EDIR(I,J)        = 0.0
+        ETT(I,J)         = 0.0
+        EC(I,J)          = 0.0
 
         !
         ! SHDFAC, set elsewhere in the driver, is overwritten here.
@@ -763,26 +580,21 @@ CONTAINS
         ! snow/ice points.
         !
         ALB = ALBEDOMAXTBL(VEGTYP)
-        Z0BRD = Z0MINTBL(VEGTYP)
+        Z0BRD(I,K) = Z0MINTBL(VEGTYP)
 
         !
         ! Call the Noah LSM routines for Glacial Ice points.
         !
-        CALL SFLX_GLACIAL(IILOC, JJLOC, 1, FFROZP, DT, ZLVL, NSOIL,  &    !C
-             &    SLDPTH,                                            &    !C
-             &    LWDN, SOLNET, SFCPRS, PRCP, SFCTMP, Q2,            &    !F
-             &    TH2, Q2SAT, DQSDT2,                                &    !I
-             &    ALB, SNOALB, TBOT, Z0BRD, Z0, EMISSI, EMBRD,       &    !S
-             &    T1, STC, SNOWH, SNEQV, ALBEDO, CH,                 &    !H
-             &    ETA, SHEAT, ETAKIN, FDOWN,                         &    !O
-             &    ESNOW, DEW,                                        &    !O
-             &    ETP, SSOIL,                                        &    !O
-             &    FLX1, FLX2, FLX3,                                  &    !O
-             &    SNOMLT, SNCOVR,                                    &    !O
-             &    RUNOFF1,                                           &    !O
-             &    Q1,                                                &    !D
-             &    SNOTIME1,                                          &
-             &    RIBB)
+        call sflx_glacial(ILOC, JLOC, 1, FFROZP, DT, ZLVL(I,J),        &
+             NSOIL(I,J), SLDPTH, LWDN, SOLNET, SFCPRS(I,J), PRCP(I,J), &
+             SFCTMP(I,J), Q2(I,J), TH2, Q2SAT, DQSDT2, ALBDOM1, SNOALB,&
+             TBOT, Z0BRD(I,J), Z0(I,J), EMISSI(I,J), EMBRD, T1(I,J),   &
+             STC(I,J,:), SNOWH(I,J), SNEQV(I,J), ALBEDO(I,J), CH(I,J), &
+             ETA(I,J), SHEAT(I,J), ETAKIN(I,J), FDOWN(I,J), ESNOW(I,J),&
+             DEW(I,J), ETP(I,J), SSOIL(I,J), FLX1(I,J), FLX2(I,J),     &
+             FLX3(I,J), SNOMLT(I,J), SNCOVR(I,J), RUNOFF1(I,J),        &
+             Q1(I,J), SNOTIME1, RIBB )
+
 
      ELSE
 
@@ -793,238 +605,58 @@ CONTAINS
 
      ENDIF
 
-#if _DEBUG_PRINT_
-     print*, "After SFLX."
-     print*, 'a  FFROZP = ', FFROZP
-     print*, 'a  ICE = ', ICE
-!              print*, 'a  ISURBAN = ', ISURBAN
-     print*, 'a  DT = ', DT
-     print*, 'a  ZLVL = ', ZLVL
-     print*, 'a  NSOIL = ', NSOIL
-     print*, 'a  SLDPTH = ', SLDPTH
-     print*, 'a  LLANDUSE = ', trim(LLANDUSE)
-     print*, 'a  LSOIL = ', trim(LSOIL)
-     print*, 'a  LWDN = ', LWDN
-     print*, 'a  SOLDN = ', SOLDN
-     print*, 'a  SOLNET = ', SOLNET
-     print*, 'a  SFCPRS = ', SFCPRS
-     print*, 'a  PRCP = ', PRCP
-     print*, 'a  SFCTMP = ', SFCTMP
-     print*, 'a  Q2 = ', Q2
-     print*, 'a  SFCSPD = ', SFCSPD
-     print*, 'a  COSZ = ', COSZ
-     print*, 'a  PRCPRAIN = ', PRCPRAIN
-     print*, 'a  SOLARDIRECT = ', SOLARDIRECT
-     print*, 'a  TH2 = ', TH2
-     print*, 'a  Q2SAT = ', Q2SAT
-     print*, 'a  DQSDT2 = ', DQSDT2
-     print*, 'a  VEGTYP = ', VEGTYP
-     print*, 'a  SOILTYP = ', SOILTYP
-     print*, 'a  SLOPETYP = ', SLOPETYP
-     print*, 'a  SHDFAC = ', SHDFAC
-!              print*, 'a  SHDMIN = ', SHDMIN
-!              print*, 'a  SHDMAX = ', SHDMAX
-!              print*, 'a  ALB = ', ALB
-     print*, 'a  SNOALB = ', SNOALB
-     print*, 'a  TBOT = ', TBOT
-     print*, 'a  Z0BRD = ', Z0BRD
-     print*, 'a  Z0 = ', Z0
-     print*, 'a  EMISSI = ', EMISSI
-!              print*, 'a  EMBRD = ', EMBRD
-     print*, 'a  CMC = ', CMC
-     print*, 'a  T1 = ', T1
-     print*, 'a  STC = ', STC
-     print*, 'a  SMC = ', SMC
-     print*, 'a  SH2O = ', SH2O
-     print*, 'a  SNOWH = ', SNOWH
-     print*, 'a  SNEQV = ', SNEQV
-     print*, 'a  ALBEDO = ', ALBEDO
-     print*, 'a  CH = ', CH
-     print*, 'a  CM = ', CM
-     print*, 'a  ETA = ', ETA
-     print*, 'a  SHEAT = ', SHEAT
-     print*, 'a  ETAKIN = ', ETAKIN
-     print*, 'a  FDOWN = ', FDOWN
-     print*, 'a  EC = ', EC
-     print*, 'a  EDIR = ', EDIR
-     print*, 'a  ET = ', ET
-     print*, 'a  ETT = ', ETT
-     print*, 'a  ESNOW = ', ESNOW
-     print*, 'a  DRIP = ', DRIP
-     print*, 'a  DEW = ', DEW
-     print*, 'a  BETA = ', BETA
-     print*, 'a  ETP = ', ETP
-     print*, 'a  SSOIL = ', SSOIL
-     print*, 'a  FLX1 = ', FLX1
-     print*, 'a  FLX2 = ', FLX2
-     print*, 'a  FLX3 = ', FLX3
-     print*, 'a  SNOMLT = ', SNOMLT
-     print*, 'a  SNCOVR = ', SNCOVR
-     print*, 'a  RUNOFF1 = ', RUNOFF1
-     print*, 'a  RUNOFF2 = ', RUNOFF2
-     print*, 'a  RUNOFF3 = ', RUNOFF3
-     print*, 'a  RC = ', RC
-     print*, 'a  PC = ', PC
-     print*, 'a  RSMIN = ', RSMIN
-!              write(*, '("XLAI = ", F7.5)') XLAI
-     print*, 'a  RCS = ', RCS
-     print*, 'a  RCT = ', RCT
-     print*, 'a  RCQ = ', RCQ
-     print*, 'a  RCSOIL = ', RCSOIL
-     print*, 'a  SOILW = ', SOILW
-     print*, 'a  SOILM = ', SOILM
-     print*, 'a  Q1 = ', Q1
-#if 0
-     print*, 'a  RDLAI2D = ', RDLAI2D
-     print*, 'a  USEMONALB = ', USEMONALB
-     print*, 'a  SNOTIME1 = ', SNOTIME1
-     print*, 'a  RIBB = ', RIBB
-#endif
-     print*, 'a  SMCWLT = ', SMCWLT
-     print*, 'a  SMCDRY = ', SMCDRY
-     print*, 'a  SMCREF = ', SMCREF
-     print*, 'a  SMCMAX = ', SMCMAX
-     print*, 'a  NROOT = ', NROOT
-#endif
      !
      ! Compute some diagnostics for output.
      !
 
-     qfx = edir + ec + ett + esnow
+!     qfx = edir + ec + ett + esnow
 
      !
      ! Residual of surface energy balance equation terms
      !
 
-     f = solnet + lwdn
-     fup = emissi * STBOLT * (t1**4)
-     res = f - sheat + ssoil - eta - fup - flx1 - flx2 - flx3
+!     f = solnet + lwdn
+!     fup = emissi * STBOLT * (t1**4)
+!     res = f - sheat + ssoil - eta - fup - flx1 - flx2 - flx3
 
      !
      ! Write the output data for this timestep.
      !
 
-!=======hchun==============================================================================
-!     if (ktime == 1) then
-!        if ( loop_for_a_while > 0 ) then
-!           write(teststr,'(A,"/OUTPUT.",I4.4)') trim(output_dir), reloop_count
-!           call initialize_output(trim(teststr), nsoil, 0, 0, 0, dt, iz0tlnd, sfcdif_option)
-!        else
-!           call initialize_output(trim(output_dir)//"/OUTPUT", nsoil, 0, 0, 0, dt, iz0tlnd, sfcdif_option)
-!        endif
-!     endif
 
-     ! Time variable
-!     call output_time(ktime, nowdate,   "Times",   "UTC time of data output",                           "YYYYMMDD HH:mm"  )
+ENDDO
+ENDDO
 
-     ! Multi-layer variables
-!     call output_levels(ktime, nsoil, "num_soil_layers", stc,   "STC",    "Soil temperature",                                  "K"              )
-!     call output_levels(ktime, nsoil, "num_soil_layers", smc,   "SMC",    "Soil moisture content",                             "m{3} m{-3}"     )
-!     call output_levels(ktime, nsoil, "num_soil_layers", sh2o,  "SH2O",   "Liquid soil moisture content",                      "m{3} m{-3}"     )
-!     call output_levels(ktime, nsoil, "num_soil_layers", et,    "ET",     "Plant transpiration from a particular root layer",  "W m{-2}"        )
-!     call output_levels(ktime, nsoil, "num_soil_layers", smav,  "SMAV",   "Soil level Moisture Availability",                  "fraction"       )
-
-     ! Single-layer variables
-!     call output_var(ktime, lwdn,      "LWDN",    "Downward long-wave radiation flux at the surface",  "W m{-2}"       )
-!     call output_var(ktime, soldn,     "SOLDN",   "Downward short-wave radiation flux at the surface", "W m{-2}"       )
-!     call output_var(ktime, emissi,    "EMISSI",  "Emissivity",                                        "fraction"      )
-!     call output_var(ktime, z0brd,     "Z0BRD",   "Background roughness length (not including snow-cover effect)", "m" )
-!     call output_var(ktime, z0,        "Z0",      "Roughness length (including snow-cover effect)",    "m"             )
-!     call output_var(ktime, sfcprs,    "SFCPRS",  "Atmospheric pressure at ZLVL m AGL",                "Pa"            )
-!     call output_var(ktime, prcp,      "PRCP",    "Precipitation rate",                                "kg m{-2} s{-1}")
-!     call output_var(ktime, sfctmp,    "SFCTMP",  "Air temperature at ZLVL m AGL",                     "K"             )
-!     call output_var(ktime, q2,        "Q2",      "Mixing ratio at ZLVL m AGL",                        "kg kg{-1}"     )
-!     call output_var(ktime, sfcspd,    "SFCSPD",  "Wind speed",                                        "m s{-1}"       )
-!     call output_var(ktime, t1,        "T1",      "Skin Temperature",                                  "K"             )
-!     call output_var(ktime, snowh,     "SNOWH",   "Snow depth",                                        "m"             )
-!     call output_var(ktime, sneqv,     "SNEQV",   "Liquid equivalent of accumulated snow depth",       "m"             )
-!     call output_var(ktime, albedo,    "ALBEDO",  "Surface albedo (including snow-cover effect)",      "fraction"      )
-!     call output_var(ktime, shdfac,    "SHDFAC",  "shdfac",                                            "fraction"      )
-!     call output_var(ktime, ch,        "CH",      "Surface exchange coefficient for heat and moisture","m s{-1}"       )
-!     call output_var(ktime, cm,        "CM",      "Surface exchange coefficient for momentum",         "m s{-1}"       )
-!     call output_var(ktime, eta,       "ETA",     "Actual latent heat flux",                           "W m{-2}"       )
-!     call output_var(ktime, sheat,     "SHEAT",   "Sensible heat flux",                                "W m{-2}"       )
-!     call output_var(ktime, qfx,       "QFX",     "Latent heat flux",                                  "W m{-2}"       )
-!     call output_var(ktime, res,       "RES",     "Residual of surface energy balance equation",       "W m{-2}"       )
-!     call output_var(ktime, etakin,    "ETAKIN",  "Actual latent heat flux",                           "kg m{-2} s{-1}")
-!     call output_var(ktime, fdown,     "FDOWN",   "Radiation forcing at the surface",                  "W m{-2}"       )
-!     call output_var(ktime, ec,        "EC",      "Canopy water evaporation",                          "W m{-2}"       )
-!     call output_var(ktime, edir,      "EDIR",    "Direct soil evaporation",                           "W m{-2}"       )
-!     call output_var(ktime, ett,       "ETT",     "Total plant transpiration",                         "W m{-2}"       )
-!     call output_var(ktime, esnow,     "ESNOW",   "Sublimation from snowpack",                         "W m{-2}"       )
-!     if ( ICE == 0 ) THEN
-!        ! Convert DRIP from m/timestep to kg m{-2} s{-1} (mm/s)
-!        drip = 1.E3 * drip / dt
-!     endif
-!     call output_var(ktime, drip,      "DRIP",    "Throughfall of precipitation from canopy",          "kg m{-2} s{-1}")
-!     ! Convert DEW from m s{-1} to kg m{-2} s{-1}
-!     dew = dew * 1.E3
-!     call output_var(ktime, dew,       "DEW",     "Dewfall (or frostfall for T < 273.15)",             "kg m{-2} s{-1}")
-!     call output_var(ktime, beta,      "BETA",    "Ratio of actual to potential evaporation",          "dimensionless" )
-!     call output_var(ktime, etp,       "ETP",     "Potential evaporation",                             "W m{-2}"       )
-!     call output_var(ktime, ssoil,     "SSOIL",   "Soil heat flux",                                    "W m{-2}"       )
-!     call output_var(ktime, flx1,      "FLX1",    "Heat flux from snow surface to accumulating precip","W m{-2}"       )
-!     call output_var(ktime, flx2,      "FLX2",    "Freezing rain latent heat flux",                    "W m{-2}"       )
-!     call output_var(ktime, flx3,      "FLX3",    "Phase-change heat flux from snowmelt",              "W m{-2}"       )
-!     call output_var(ktime, snomlt,    "SNOMLT",  "Water equivalent snow melt",                        "m"             )
-!     call output_var(ktime, sncovr,    "SNCOVR",  "Fractional snow cover",                             "fraction"      )
-!     call output_var(ktime, runoff1,   "SFRUNOFF","Surface runoff",                                    "m s{-1}"       )
-!     call output_var(ktime, runoff2,   "UDRUNOFF","Underground runoff",                                "m s{-1}"       )
-!     call output_var(ktime, rc,        "RC",      "Canopy resistance",                                 "s m{-2}"       )
-!     call output_var(ktime, pc,        "PC",      "Plant coefficient (PC * ETP = TRANSP)",             "fraction"      )
-!     call output_var(ktime, rsmin,     "RSMIN",   "Minimum canopy resistance",                         "s m{-1}"       )
-!     call output_var(ktime, xlai,      "LAI",     "Leaf Area Index",                                   "dimensionless" )
-!     call output_var(ktime, rcs,       "RCS",     "Incoming solar RC factor",                          "dimensionless" )
-!     call output_var(ktime, rct,       "RCT",     "Air temperature RC factor",                         "dimensionless" )
-!     call output_var(ktime, rcq,       "RCQ",     "Atmospheric vapor deficit RC factor",               "dimensionless" )
-!     call output_var(ktime, rcsoil,    "RCSOIL",  "Soil moisture RC factor",                           "dimensionless" )
-!     call output_var(ktime, soilw,     "SOILW",   "Available soil moisture in root zone",              "fraction"      )
-!     call output_var(ktime, soilm,     "SOILM",   "Total column moisture content",                     "m"             )
-!     call output_var(ktime, q1,        "Q1",      "Effective mixing ratio at surface",                 "kg kg{-1}"     )
-!     call output_var(ktime, smcwlt,    "SMCWLT",  "Wilting-point soil moisture threshold",             "m{3} m{-3}"    )
-!     call output_var(ktime, smcdry,    "SMCDRY",  "Dry-soil soil moisture threshold",                  "m{3} m{-3}"    )
-!     call output_var(ktime, smcref,    "SMCREF",  "Soil moisture threshold for transpiration stress",  "m{3} m{-3}"    )
-!     call output_var(ktime, smcmax,    "SMCMAX",  "Saturated value of soil moisture (Porosity)",       "m{3} m{-3}"    )
-!     call finish_output_for_time(ktime)
-
-!     if (nowdate(7:10) == "0100") then
-!        print '(I10, 3x, A4,"-", A2, "-", A2, " ", A2, ":", A2, 20(2x,F9.4))', ktime, &
-!             nowdate(1:4), nowdate(5:6), nowdate(7:8), nowdate(9:10), nowdate(11:12), &
-!             stc(1:nsoil)
-!     endif
-!  enddo TIMELOOP
-
-  !
-  ! Shut down the output streams
-  !
-
-!  call output_close()
-!==========================================================================================
-
-!  write(*, FMT=trim(infotext))
-
-  ! All done.
-!====hchun===================
-!end program simple_driver
-!write(*,*) 'before end subroutine LSM_DRV'
 END SUBROUTINE LSM_DRV
 SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  & 
-                       ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ1  )
+                       ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ1,     &
+                       ALBEDO,EMISSI,T1,ST,SM,SL,ET,SMAV)
+
       
    real(kind=dbl_kind), intent(in):: dt1
    integer (kind=int_kind), dimension(mi1,mj1), intent(IN):: LU1,SOIL1,SLOPE1
    real (kind=int_kind), dimension(mi1,mj1), intent(IN):: &
-      ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ
+      ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ1
+
+   real (kind=int_kind), dimension(mi1,mj1), intent(OUT):: &
+      ALBEDO,EMISSI,T1
+
+  REAL (KIND=int_kind),dimension(MI1,MJ1,4), intent(INOUT) :: &
+     ST,SM,SL,ET,SMAV
+
 
    real(kind=int_kind),dimension(4):: &
     STinout_ini,   &! soil temperature
     SMinout_ini,   &! soil moisture
-    SLinout_ini    &! soil liquid
+    SLinout_ini     ! soil liquid
 
-   real(kind=int_kind) :: cmc1,t11,showh1,sneqv1,sneqv1
+  real, pointer,     dimension(:) :: STC1   ! Soil temperature (K)
+  real, pointer,     dimension(:) :: SMC1   ! Total soil moisture content (m3 m-3)
+  real, pointer,     dimension(:) :: SH2O1  ! Liquid soil moisture content (m3 m-3)
 
-   integer (kind=int_kind):: i,j
+   real(kind=int_kind) :: cmc1,t11,showh1,sneqv1,sdmx1,sdmn1
 
+   integer (kind=int_kind):: i,j,slop1
    
    dt = dt1
    LU = LU1
@@ -1032,22 +664,41 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
    SLOPE = SLOPE1
 
    ALBEDOM    = ALBEDOM1
-   GREENFRACM = GREENFRACM 
-   LAIM       = LAIM
-   SHDMAX     = SHDMAX
-   SHDMIN     = SHDMIN
-   SFCPRS     = SFCPRS
+   SHDFAC     = GREENFRACM 
+   LAIM       = LAIM1
+   SHDMAX     = SHDMAX1
+   SHDMIN     = SHDMIN1
+   SFCPRS     = P2
    ZZ         = ZZ1
 
-  call open_forcing_file(iunit, output_dir, forcing_filename, nsoil, startdate, enddate,          &
+  DO J=1,MJ1
+  DO I=1,MI1
+  
+  call open_forcing_file(iunit, output_dir, forcing_filename, nsoil(I,J), startdate, enddate,          &
        loop_for_a_while, latitude, longitude, &
-       forcing_timestep, noahlsm_timestep, ice, t1, stc, smc, sh2o, sldpth, cmc1, snowh1, sneqv1, tbot,     &
-       vegtyp, soiltyp, slopetyp, snoalb, zlvl, zlvl_wind, albedo_monthly, shdfac_monthly,                  &
-       z0brd_monthly, lai_monthly, use_urban_module, isurban, shdmin, shdmax, usemonalb, rdlai2d, llanduse, &
+       forcing_timestep, noahlsm_timestep, ice, t11, stc1, smc1, sh2o1, sldpth, cmc1, &
+       snowh1, sneqv1, tbot,     &
+       vegtyp, soiltyp, slop1, snoalb, zlvl(I,J), zlvl_wind(I,J), albedo_monthly, shdfac_monthly,   &
+       z0brd_monthly, lai_monthly, use_urban_module, isurban(I,J), sdmn1, sdmx1,  &
+       usemonalb, rdlai2d, llanduse, &
        iz0tlnd, sfcdif_option,STinout_ini,SMinout_ini,SLinout_ini)
 
-  dt = real(noahlsm_timestep)
 
+  ST(I,J,:) = STinout_int
+  SM(I,J,:) = SMinout_int
+  SL(I,J,:) = SLinout_int
+
+  ENDDO
+  ENDDO
+
+  dt = real(noahlsm_timestep)
+  nsoil = 4
+  shdmax                    = shdmax1/100.0
+  shdmin                    = shdmin1/100.0
+  zlvl                      = zz1
+  zlvl_wind                 = zz1
+  T1                        = t11
+  isurban                   = 0 
   if (use_urban_module) STOP "This is not urban code."
 
   !
@@ -1055,10 +706,10 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   ! we will need for SFLX.
   !
 
-  allocate( et ( nsoil ) )
+!  allocate( et ( nsoil ) )
   et = -1.E36
 
-  allocate( smav ( nsoil ) )
+!  allocate( smav ( nsoil ) )
   smav = -1.E36
 
   LLANDUSE = "USGS"
@@ -1114,16 +765,20 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   ! previous call to SFLX:
   !
 
-  ALBEDO = month_d (albedo_monthly, startdate)
-  ALBEDO = ALBEDO1/100.0
+!  ALBEDO = month_d (albedo_monthly, startdate)
+  ALBEDO = ALBEDOM1/100.0
 
   !
   ! For the initial value of Z0 (used in SFCDIF_off to compute CH and CM),
   ! just use a snow-free background value.  Subsequent timesteps use this
   ! value as computed in the previous call to SFLX:
   !
+  DO j=1,MJ1
+  DO i=1,MI1
+  Z0(I,J) =  0. 
+! with initial condition. 
+! month_d(z0brd_monthly, startdate)
 
-  Z0 = month_d(z0brd_monthly, startdate)
 !-----
   !
   ! Z0BRD is computed within SFLX.  But we need an initial value, so the call to
@@ -1131,11 +786,14 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   ! value as returned from SFLX in the previous timestep.
   !
 
-  if ( sfcdif_option == 1 ) then
-     z0brd  = z0
-  else
-     z0brd = badval
-  endif
+!  if ( sfcdif_option == 1 ) then
+     z0brd(I,J) = z0(I,J)
+!  else
+!     z0brd(I,J) = badval
+!  endif
+
+  enddo
+  enddo
 
   !
   ! CZIL is needed for the SFCDIF_OFF step.  This comes from CZIL_DATA, as read
@@ -1165,12 +823,12 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   nowdate = startdate
 
 !---hchun
-     if (USEMONALB) then
-        alb    = month_d(albedo_monthly, nowdate)
-     else
+!     if (USEMONALB) then
+!        alb    = month_d(albedo_monthly, nowdate)
+!     else
 !        alb = badval
-        alb = albedo1/100.0
-     endif
+!        alb = albedom1/100.0
+!     endif
 
      !
      ! If the RDLAI2D flag is .TRUE., we want to provide XLAI from the
@@ -1178,17 +836,14 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
      ! trend through the year, rather than let SFLX calculate it for us.
      !
 
-     if (RDLAI2D) then
-        xlai = month_d(lai_monthly, nowdate)
-     else
+!     if (RDLAI2D) then
+!        xlai = month_d(lai_monthly, nowdate)
+!     else
 !        xlai = badval
         xlai = lai1
-     endif
+!     endif
 
 !-----
-
-
-
 
 END SUBROUTINE LSM_DRV_INI
 !============================

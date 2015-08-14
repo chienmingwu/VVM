@@ -16,10 +16,10 @@ PRIVATE
 #if defined (LSM)
 
 ! four level variables for LSM with output to nc file
-  REAL (KIND=int_kind),dimension(MI1,MJ1,4), PRIVATE :: &
+  REAL (KIND=int_kind),dimension(MI1,MJ1,4), PUBLIC :: &
      lST,lSM,lSL,lET,lSMAV
 ! one level variables for LSM with output to nc file
-  REAL (KIND=int_kind),dimension(MI1,MJ1), PRIVATE :: &
+  REAL (KIND=int_kind),dimension(MI1,MJ1), PUBLIC :: &
      lEMISSI,lCMC,lT1,lSNOWH,&
      lSNEQV,lALBEDO,lCH,&
      lETA,lFDOWN,lEC,lEDIR,&
@@ -32,7 +32,7 @@ PRIVATE
      lRCSOIL,lSOILW,lSOILM,lQ1,&
      lSMCWLT,lSMCDRY,&
      lSMCREF,lSMCMAX,lCM
-  INTEGER (KIND=int_kind), dimension(MI1,MJ1), PRIVATE::lNROOT
+  INTEGER (KIND=int_kind), dimension(MI1,MJ1), PUBLIC::lNROOT
 
 #endif
 #endif
@@ -45,7 +45,6 @@ CONTAINS
 
 !=======================================================================
    SUBROUTINE land_interface(T2,Q2,swD,lwD,SPREC,WT,WQ,VNE2D,SFCSPD) 
-#if defined (LSM)
 
 !=======================================================================
 ! land model interface for LSM_DRV 
@@ -59,22 +58,47 @@ CONTAINS
 !             water vapro flux         WQ
 !             surface speed            VNE2D
 ! local variables
-      REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::    &
-         T2(MI1,MJ1),            &
-         Q2(MI1,MJ1),            &
-         swD(MI1,MJ1),           &
-         lwD(MI1,MJ1),           &
-         SPREC(MI1,MJ1),         &
-         WT(MI1,MJ1),            &
-         WQ(MI1,MJ1),            &
-         SPCSPD(MI1,MJ1),        &
-         SPREC(mim:mip,mjm,mjp), &
-         VEN2D(mim:mip,mjm:mjp)
+      REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(IN) ::    &
+         T2,            &
+         Q2,            &
+         swD,           &
+         lwD,           &
+         SPREC,         &
+         SFCSPD 
+
+      REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(OUT) ::    &
+         WT,            &
+         WQ            
+        
+      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(OUT) ::    &
+         VNE2D
+
+      REAL (KIND=int_kind), DIMENSION(MI1,MJ1) ::    &
+         T2i,            &
+         Q2i,            &
+         swDi,           &
+         lwDi,           &
+         SPRECi,         &
+         WTi,            &
+         WQi,            &
+         SFCSPDi
+
+
+
          
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
+#if defined (LSM)
 
-        CALL LSM_DRV(SFCSPD,T2,Q2,swD,lw3D,SPREC(1:MI1,1:MJ1),WQ,WT, &
+      
+      T2i = real(T2)
+      Q2i = real(Q2)            
+      swDi = real(swD) 
+      lwDi = real(lwD)
+      SPRECi = real(SPREC)
+      SFCSPDi =real(SFCSPD)
+
+      CALL LSM_DRV(SFCSPDi,T2i,Q2i,swDi,lwDi,SPRECi,WQi,WTi, &
 ! LSM inout variables
            lCM,lST,lSM,lSL,lEMISSI,lCMC,lT1,lSNOWH,lSNEQV,&
            lALBEDO,lCH,lETA,lFDOWN,lEC,lEDIR,lET,lETT,lESNOW,lDRIP,&
@@ -86,31 +110,44 @@ CONTAINS
       DO 200 J = 1,MJ1
       DO 200 I = 1,MI1
 
-      VEN2D(I,J) = lCM(I,J)
+      VNE2D(I,J) = lCM(I,J)
   200 CONTINUE
+
+      WT = dble(WTi)
+      WQ = dble(WQi)
+
+
+!       WT = 0.
+!       WQ = 0.
+!       VNE2D = 0.
 
 #endif
 
    END SUBROUTINE land_interface
 
 !-----7---------------------------------------------------------------72
-   SUBROUTINE land_ini
+   SUBROUTINE land_ini(hx)
 
 #if defined (LSM)
+
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(IN) :: hx
 
 ! input the following varibles to lsm routine
    integer (kind=int_kind), dimension(mi1,mj1):: LU,SOIL,SLOPE
    real (kind=int_kind), dimension(mi1,mj1):: & 
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
-  REAL (KIND=int_kind), dimension(MI1,MJ1) :: P2,ZZ
-! surface pressure
+   REAL (KIND=int_kind), dimension(MI1,MJ1) :: P2,ZZ
+   INTEGER (KIND=int_kind):: i,j,hxp
+   CHARACTER(50):: FILENAME
 
+! surface pressure
+      IF (.false.) then
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/LULU',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
 
       PRINT*,FILENAME
-
+      
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
       READ(99) ((LU(I,J),I=1,MI1),J=1,MJ1)
       CLOSE(99)
@@ -176,6 +213,18 @@ CONTAINS
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
       READ(99) ((SHDMIN(I,J),I=1,MI1),J=1,MJ1)
       CLOSE(99)
+      ENDIF
+
+      LU = 1
+      SOIL = 1
+      SLOPE = 1
+      ALBEDOM = 30.
+      GREENFRACM = .1
+      LAIM = 4.
+      SHDMAX = 50.
+      SHDMIN = 20.      
+
+
 !      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
 !      'RUNDATA/SM1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
 
@@ -253,7 +302,8 @@ CONTAINS
           
          ZZ(I,J)          = DZ/FNZ(hxp)
          P2(I,J)          = PBAR(hxp)
-         TG1              = thbar(hxp-1)*pibar(hxp-1)
+!        TG1              = thbar(hxp-1)*pibar(hxp-1)
+         lT1(I,J)         = thbar(hx(I,J))*pibar(hx(I,J))
          lST(I,J,1)       = 297.0995
          lST(I,J,2)       = 298.0445
          lST(I,J,3)       = 297.8954
@@ -284,7 +334,7 @@ CONTAINS
          lCM         = -9.9999996E+35
          lEMISSI     = -9.9999996E+35
          lCMC        = -9.9999996E+35
-         lT1         = -9.9999996E+35
+!         lT1         = -9.9999996E+35
          lSNOWH      = -9.9999996E+35
          lSNEQV      = -9.9999996E+35
          lALBEDO     = -9.9999996E+35
@@ -320,15 +370,17 @@ CONTAINS
          lSOILW      = -9.9999996E+35
          lSOILM      = -9.9999996E+35
          lQ1         = -9.9999996E+35
-         lSMAV     = -9.9999996E+35
+         lSMAV       = -9.9999996E+35
          lSMCWLT     = -9.9999996E+35
          lSMCDRY     = -9.9999996E+35
          lSMCREF     = -9.9999996E+35
          lSMCMAX     = -9.9999996E+35
          lNROOT      = -999999
-
+               
       call LSM_DRV_ini(DT,LU,SOIL,SLOPE, &
-                       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ)
+                       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ,&
+                       lALBEDO,lEMISSI,lT1,lST,lSM,lSL,lET,lSMAV)
+
 
 #endif
 

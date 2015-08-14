@@ -508,7 +508,11 @@ CONTAINS
       VTMN0 = VTMN
       
       IF(itt == 0) CALL UPDATE_TRACER_init
-      
+     
+#if defined (DIFFUSION)
+      call turb_3d_ini
+#endif
+ 
    END SUBROUTINE ini_3d
 
 
@@ -528,7 +532,7 @@ CONTAINS
 #if defined (TOPOGRAPHY) 
 
 !      DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
-
+      IF (.false.) THEN
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
 
@@ -543,6 +547,9 @@ CONTAINS
       maxtopo=INT(H) + 1
 
       call bound_arb(1,HX)
+      ENDIF
+!le for debug 
+      HX = 2
 
       DO I=1,MI1
       DO J=1,MJ1
@@ -590,10 +597,6 @@ CONTAINS
 #else
       hx=1
       maxtopo=2
-#endif
-
-#if defined (DIFFUSION)
-      call turb_3d_ini
 #endif
 
       ENDSUBROUTINE PTSPEC

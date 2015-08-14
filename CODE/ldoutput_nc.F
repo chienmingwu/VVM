@@ -39,7 +39,7 @@ PRIVATE
 
       INTEGER (KIND=int_kind), PARAMETER ::             &
          IVAR1=6,IVAR2=6,IVAR3=1,IVAR4=ntracer,IVAR5=7, & ! number of fields in
-         IVAR6=6,IVAR7=3,IVAR8=2,IVAR9=15,IVAR10=64        !  each output variable class
+         IVAR6=6,IVAR7=3,IVAR8=2,IVAR9=15,IVAR10=62        !  each output variable class
 
 ! *** FOR DATA STORAGE FILE MANAGEMENT
       CHARACTER*50 F_HEADER
@@ -79,8 +79,7 @@ PRIVATE
          STD_RAD(mi1,mj1,nk2,8)
 #if defined (DIFFUSION) 
 #if defined (LSM)
-      REAL (KIND=tm_kind) ::
-         STD_LSM(mi1,mj1,IVAR10)
+      REAL (KIND=tm_kind) :: STD_LSM(mi1,mj1,IVAR10)
 #endif
 #endif
 
@@ -943,14 +942,14 @@ CONTAINS
       DO 227 J=1,mj1
       DO 227 I=1,mi1
 !===hchun
-      STD_LSM(I,J,1)=ST_lsm(I,J,1)
-      STD_LSM(I,J,2)=ST_lsm(I,J,2)
-      STD_LSM(I,J,3)=ST_lsm(I,J,3)
-      STD_LSM(I,J,4)=ST_lsm(I,J,4)
-      STD_LSM(I,J,5)=SM_lsm(I,J,1)
-      STD_LSM(I,J,6)=SM_lsm(I,J,2)
-      STD_LSM(I,J,7)=SM_lsm(I,J,3)
-      STD_LSM(I,J,8)=SM_lsm(I,J,4)
+      STD_LSM(I,J,1)=lST(I,J,1)
+      STD_LSM(I,J,2)=lST(I,J,2)
+      STD_LSM(I,J,3)=lST(I,J,3)
+      STD_LSM(I,J,4)=lST(I,J,4)
+      STD_LSM(I,J,5)=lSM(I,J,1)
+      STD_LSM(I,J,6)=lSM(I,J,2)
+      STD_LSM(I,J,7)=lSM(I,J,3)
+      STD_LSM(I,J,8)=lSM(I,J,4)
 !=======
   227 CONTINUE
 #endif
@@ -1075,8 +1074,8 @@ CONTAINS
       STD_LSM(I,J,60)=STD_LSM(I,J,60)+lSMCDRY(I,J)
       STD_LSM(I,J,61)=STD_LSM(I,J,61)+lSMCREF(I,J)
       STD_LSM(I,J,62)=STD_LSM(I,J,62)+lSMCMAX(I,J)
-      STD_LSM(I,J,63)=STD_LSM(I,J,63)+lNROOT(I,J)
-      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
+!      STD_LSM(I,J,63)=STD_LSM(I,J,63)+lNROOT(I,J)
+!      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
 !========
  1227 CONTINUE
 #endif
@@ -1394,8 +1393,6 @@ CONTAINS
         call pCDF_WRITE_xy(ncid_lsm, 'smcdry', TIME_C, time_start, std_lsm(:,:,60) )
         call pCDF_WRITE_xy(ncid_lsm, 'smcref', TIME_C, time_start, std_lsm(:,:,61) )
         call pCDF_WRITE_xy(ncid_lsm, 'smcmax', TIME_C, time_start, std_lsm(:,:,62) )
-        call pCDF_WRITE_xy(ncid_lsm, 'nroot', TIME_C, time_start, std_lsm(:,:,63) )
-        call pCDF_WRITE_xy(ncid_lsm, 'lu', TIME_C, time_start, std_lsm(:,:,64) )
 
 #endif
 #endif

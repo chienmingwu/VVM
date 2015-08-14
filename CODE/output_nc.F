@@ -946,12 +946,6 @@ CONTAINS
       CALL pCDF_INI_XY_VAR(ncid_lsm, 'smcmax_lsm', 'porosity', &
                           'porosity', 'm3 m-3', &
                           'yt','xt')
-      CALL pCDF_INI_XY_VAR(ncid_lsm, 'nroot_lsm', 'number of root layers', &
-                          'number_of_root_layer', 'count', &
-                          'yt','xt')
-      CALL pCDF_INI_XY_VAR(ncid_lsm, 'lu_lsm', 'land use', &
-                          'landuse', 'index', &
-                          'yt','xt')
 #endif 
 #endif
 

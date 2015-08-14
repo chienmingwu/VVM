@@ -1303,7 +1303,7 @@ SUBROUTINE TURB_3D_INI
       ENDDO
 
 #if defined (LSM)
-      call land_ini
+      call land_ini(hx)
 #endif
 #endif
 
