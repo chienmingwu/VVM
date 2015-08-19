@@ -549,7 +549,7 @@ CONTAINS
       call bound_arb(1,HX)
       ENDIF
 !le for debug 
-      HX = 2
+      HX = 1
 
       DO I=1,MI1
       DO J=1,MJ1

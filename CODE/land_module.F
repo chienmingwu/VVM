@@ -15,6 +15,7 @@ PRIVATE
 #if defined (DIFFUSION)
 #if defined (LSM)
 
+
 ! four level variables for LSM with output to nc file
   REAL (KIND=int_kind),dimension(MI1,MJ1,4), PUBLIC :: &
      lST,lSM,lSL,lET,lSMAV
@@ -83,9 +84,6 @@ CONTAINS
          WQi,            &
          SFCSPDi
 
-
-
-         
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 #if defined (LSM)
@@ -215,14 +213,14 @@ CONTAINS
       CLOSE(99)
       ENDIF
 
-      LU = 1
+      LU = 16
       SOIL = 1
       SLOPE = 1
-      ALBEDOM = 30.
-      GREENFRACM = .1
+      ALBEDOM = 16.
+      GREENFRACM = 0.
       LAIM = 4.
-      SHDMAX = 50.
-      SHDMIN = 20.      
+      SHDMAX = 0.
+      SHDMIN = 0.      
 
 
 !      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &

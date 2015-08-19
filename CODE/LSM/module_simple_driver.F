@@ -684,12 +684,14 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
        iz0tlnd, sfcdif_option,STinout_ini,SMinout_ini,SLinout_ini)
 
 
-  ST(I,J,:) = STinout_int
-  SM(I,J,:) = SMinout_int
-  SL(I,J,:) = SLinout_int
+!  ST(I,J,:) = STinout_int
+!  SM(I,J,:) = SMinout_int
+!  SL(I,J,:) = SLinout_int
 
   ENDDO
   ENDDO
+  PRINT* , STinout_int,SMinout_int,SLinout_int
+
 
   dt = real(noahlsm_timestep)
   nsoil = 4
