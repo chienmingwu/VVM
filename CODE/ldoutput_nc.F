@@ -931,8 +931,8 @@ CONTAINS
       STD_TM5(I,J,3)=WTH(I,J)
       STD_TM5(I,J,4)=WQV(I,J)
       STD_TM5(I,J,5)=SPREC(I,J)
-      STD_TM5(I,J,6)=OLR(I,J)
-      STD_TM5(I,J,7)=PREC25(I,J)
+      STD_TM5(I,J,6)=PREC25(I,J)
+      STD_TM5(I,J,7)=OLR(I,J)
       
   226 CONTINUE
 
@@ -1003,8 +1003,8 @@ CONTAINS
       STD_TM5(I,J,3)=STD_TM5(I,J,3)+WTH(I,J)
       STD_TM5(I,J,4)=STD_TM5(I,J,4)+WQV(I,J)
       STD_TM5(I,J,5)=STD_TM5(I,J,5)+SPREC(I,J)
-      STD_TM5(I,J,6)=STD_TM5(I,J,6)+OLR(I,J)
-      STD_TM5(I,J,7)=STD_TM5(I,J,7)+PREC25(I,J)
+      STD_TM5(I,J,6)=STD_TM5(I,J,6)+PREC25(I,J)
+      STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)
  1226 CONTINUE
 
 #if defined (DIFFUSION)
