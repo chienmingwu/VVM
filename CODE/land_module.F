@@ -12,10 +12,6 @@ USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 IMPLICIT NONE
 PRIVATE
 
-#if defined (DIFFUSION)
-#if defined (LSM)
-
-
 ! four level variables for LSM with output to nc file
   REAL (KIND=int_kind),dimension(MI1,MJ1,4), PUBLIC :: &
      lST,lSM,lSL,lET,lSMAV
@@ -35,8 +31,6 @@ PRIVATE
      lSMCREF,lSMCMAX,lCM
   INTEGER (KIND=int_kind), dimension(MI1,MJ1), PUBLIC::lNROOT
 
-#endif
-#endif
 !public member functions
 PUBLIC ::      &
    land_interface,    &
@@ -126,9 +120,9 @@ CONTAINS
 !-----7---------------------------------------------------------------72
    SUBROUTINE land_ini(hx)
 
-#if defined (LSM)
 
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(IN) :: hx
+#if defined (LSM)
 
 ! input the following varibles to lsm routine
    integer (kind=int_kind), dimension(mi1,mj1):: LU,SOIL,SLOPE
