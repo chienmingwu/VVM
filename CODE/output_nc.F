@@ -741,6 +741,209 @@ CONTAINS
                           'yt','xt')
 #endif
 #endif
+
+!===hchun
+#if defined (DIFFUSION)
+#if defined (LSM)
+      call fname_nc(itp2, EXPHDR, 'lsm', filnam_nc)
+#if defined (PARALLELIO) 
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_lsm)
+      CALL pCDF_INI_XY (ncid_lsm, time_len, &
+                           mj_glob, mj_glob, mi_glob, mi_glob,  &
+                      yz(1:mj_glob), yt(1:mj_glob), xz(1:mi_glob), xt(1:mi_glob))
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'emissi_lsm', 'emissivity', &
+                          'emissivity', 'fractional', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'cmc_lsm', 'canopy moisture content', &
+                          'canopy_moisture_content', 'kg m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 't1_lsm', 'skin temperature', &
+                          'skin_temperature', 'K', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'ST1', 'soil temperature layer 1', &
+                          'soilt0_1lev', 'K', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'ST2', 'soil temperature layer 2', &
+                          'soilt0_2lev', 'K', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'ST3', 'soil temperature layer 3', &
+                          'soilt0_3lev', 'K', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'ST4', 'soil temperature layer 4', &
+                          'soilt0_4lev', 'K', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'SM1', 'soil moisture layer 1', &
+                          'soilm0_1lev', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'SM2', 'soil moisture layer 2', &
+                          'soilm0_2lev', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'SM3', 'soil moisture layer 3', &
+                          'soilt0_3lev', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'SM4', 'soil moisture layer 4', &
+                          'soilt0_4lev', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'SL1', 'soil liquid layer 1', &
+                          'soill0_1lev', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'SL2', 'soil liquid layer 2', &
+                          'soill0_2lev', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'SL3', 'soil liquid layer 3', &
+                          'soill0_3lev', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'SL4', 'soil liquid layer 4', &
+                          'soill0_4lev', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'snowh_lsm', 'snow depth', &
+                          'snow_depth', 'm', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'sneqv_lsm', 'water equivalent snow depth', &
+                          'water_equivalent_snow_depth', 'm', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'albedo_lsm', 'surface albedo(including snow-cover effects)', &
+                          'surface_albedo', 'fractional', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'ch_lsm', 'surface exchange coefficient for heat and moisture', &
+                          'sfc_exchange_coef_heat', 'm-1', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'cm_lsm', 'surface exchange coefficient for momentum', &
+                          'sfc_exchange_coef_momentum', 'm s-1', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'eta_lsm', 'latent heat flux(evapotranspiration)', &
+                          'latent_heat_flux', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'fdown_lsm', 'radiation forcing at the surface', &
+                          'sfc_rad_forcing', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'ec_lsm', 'canopy water evaporation', &
+                          'canopy_water_evaporation', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'edir_lsm', 'direct soil evaporation', &
+                          'direct_soil_evaporation', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'et1_lsm', 'plant transpiration layer 1', &
+                          'plant_transpiration_1lev', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'et2_lsm', 'plant transpiration layer 2', &
+                          'plant_transpiration_2lev', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'et3_lsm', 'plant transpiration layer 3', &
+                          'plant_transpiration_3lev', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'et4_lsm', 'plant transpiration layer 4', &
+                          'plant_transpiration_4lev', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'ett_lsm', 'total plant transpiration', &
+                          'total_plant_transpiration', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'esnow_lsm', 'sublimation from snowpack', &
+                          'sublimation_from_snowpack', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'drip_lsm', 'precipitation falling through canopy', &
+                          'precipitation_fall_through_canopy', 'm', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'dew_lsm', 'dewfall', &
+                          'dewfall', 'm', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'beta_lsm', 'ratio of actual to potential evapotranspiration', &
+                          'ratio_of_actual_to_potential_evapotranspiration', 'fraction', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'etp_lsm', 'potentail evapotranspiration', &
+                          'potential_evapotranspiration', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'ssoil_lsm', 'soil heat flux', &
+                          'soil_heat_flux', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'flx1_lsm', 'latent heat flux from precipitation accumulating as snow', &
+                          'latent_heat_flux_from_precipitation', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'flx2_lsm', 'latent heat flux from freezing rain converting to ice', &
+                          'latent_heat_flux_from_rain_to_ice', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'flx3_lsm', 'latent heat flux from melting snow', &
+                          'latent_heat_flux_from_snow', 'W m-2', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'snomlt_lsm', 'snow melt water', &
+                          'snow_melt_water', 'm', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'sncovr_lsm', 'fractional snow cover', &
+                          'fractional_snow_cover', 'fraction', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'runoff1_lsm', 'surface runoff', &
+                          'sfc_runoff', 'm s-1', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'runoff2_lsm', 'subsurface runoff', &
+                          'subsurface_runoff', 'm s-1', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'runoff3_lsm', 'internal soil layer runoff', &
+                          'internal_soil_layer_runoff', 'm s-1', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'rc_lsm', 'canopy resistance', &
+                          'canopy_resistance', 's m-1', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'pc_lsm', 'plant coefficient', &
+                          'plant_coefficient', 'fraction', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'rsmin_lsm', 'minimum canopy resistance', &
+                          'minimum_canopy_resistance', 's m-1', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'xlai_lsm', 'leaf area index', &
+                          'leaf_area_index', 'dimensionless', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'rcs_lsm', 'incoming solar rc factor', &
+                          'incoming_solar_rc_factor', 'dimensionless', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'rct_lsm', 'air temperature rc factor', &
+                          'air_temperature_rc_factor', 'dimensionless', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'rcq_lsm', 'atmospheric water vapor deficit rc factor', &
+                          'atmospheric_water_vapor_deficit_rc_factor', 'dimensionless', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'rcsoil_lsm', 'soil moisture rc factor', &
+                          'soil_moisture_rc_factor', 'dimensionless', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'soilw_lsm', 'available soil moisture in the root zone', &
+                          'available_soil_moisture_in_root_zone', 'fraction', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'soilm_lsm', 'total soil column moisture content', &
+                          'total_soil_column_moisture_content', 'm', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'q1_lsm', 'effective mixing ratio at the surface', &
+                          'sfc_effective_mixing_ratio', 'kg kg-1', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'smav1_lsm', 'soil moisture availability at level 1', &
+                          'soil_moisture_availability_1lev', 'fraction', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'smav2_lsm', 'soil moisture availability at level 2', &
+                          'soil_moisture_availability_2lev', 'fraction', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'smav3_lsm', 'soil moisture availability at level 3', &
+                          'soil_moisture_availability_3lev', 'fraction', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'smav4_lsm', 'soil moisture availability at level 4', &
+                          'soil_moisture_availability_4lev', 'fraction', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'smcwlt_lsm', 'wilting point', &
+                          'wilting_point', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'smcdry_lsm', 'dry soil moisture threshold where direct evaporation from the top layer ends', &
+                          'dry_soil_moisture_threshold', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'smcref_lsm', 'soil moisture threshold where transpiration begins to stress', &
+                          'soil_moisture_threshold', 'm3 m-3', &
+                          'yt','xt')
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'smcmax_lsm', 'porosity', &
+                          'porosity', 'm3 m-3', &
+                          'yt','xt')
+#endif 
+#endif
+
+#endif
+
+!========
 !      if(my_task == 0) then
 !        write(6,*) 'ncid_th, ncid_qv, ncid_qc, ncid_qr, ncid_qi, ncid_qs, &
 !                   &ncid_qg, ncid_z3dx, ncid_z3dy, ncid_z3dz, ncid_u, &

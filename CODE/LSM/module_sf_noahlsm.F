@@ -2053,12 +2053,13 @@ CONTAINS
 ! ----------------------------------------------------------------------
 !
                IF (SOILTYP .gt. SLCATS) THEN
-                        CALL wrf_error_fatal ( 'Warning: too many input soil types' )
+                     CALL wrf_error_fatal ( 'Warning: too many input soil types' )
                END IF
                IF (VEGTYP .gt. LUCATS) THEN
                      CALL wrf_error_fatal ( 'Warning: too many input landuse types' )
                END IF
                IF (SLOPETYP .gt. SLPCATS) THEN
+                     PRINT*,SLOPETYP
                      CALL wrf_error_fatal ( 'Warning: too many input slope types' )
                END IF
 

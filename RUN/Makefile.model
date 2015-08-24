@@ -272,6 +272,7 @@ parrrtm.o: parkind.o
 rad.o: parkind.o
 
 rad_driver.o: shr_orb_mod.o cam_rad_parameterizations.o rrtmg_sw_rad.o rrtmg_lw_rad.o parrrtm.o parrrsw.o parkind.o rrtmg_sw_init.o rrtmg_lw_init.o rrlw_ncpar.o
+
 driver.o: kinds.o mph.o error_handler.o global_time_manager.o params_global_MPH.o sendrecv.o
 
 rad_error.o: rad_error.f90
@@ -419,6 +420,28 @@ rrtm_params.o: parkind.o rrtm_grid.o
 rrtm_vars.o: parkind.o rrtm_grid.o
 
 trace_gases.o: kinds.o rrtm_grid.o rrtm_params.o domain_decomposition.o
+#=====hchun=============================================
+
+module_io.o: module_ascii_io.o module_netcdf_io.o
+
+module_ascii_io.o: module_ascii_io.F kwm_date_utilities.o
+
+module_netcdf_io.o: module_netcdf_io.F
+
+module_noahlsm_utility.o: module_noahlsm_utility.F
+
+module_sf_noahlsm.o: module_model_constants.o
+
+module_model_constants.o: module_model_constants.F
+
+module_sf_noahlsm_glacial_only.o: module_model_constants.o module_sf_noahlsm.o
+
+module_sfcdif_wrf.o: module_model_constants.o
+
+kwm_date_utilities.o: kwm_date_utilities.F
+
+module_simple_driver.o: kinds.o PARMSLD.o module_io.o module_noahlsm_utility.o module_sf_noahlsm.o module_sf_noahlsm_glacial_only.o module_sfcdif_wrf.o kwm_date_utilities.o
+#=======================================================
 
 CONST3D.o: kinds.o PARMSLD.o
 
@@ -492,7 +515,9 @@ time_interp_module.o: kinds.o PARMSLD.o TIMEINTERP.o CONST3D.o CONSTLD.o workcom
 
 time_manager_module.o: kinds.o PARMSLD.o TIMEINFO.o CONSTLD.o ldinput.o TIMEINTERP.o CONST3D.o workcom.o domain_decomposition.o
 
-turb_3d_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o workcom.o bound.o utils.o
+turb_3d_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o workcom.o bound.o utils.o land_module.o
+
+land_module.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o module_simple_driver.o
 
 turb_1d_module.o: kinds.o PARMSLD.o CONSTLD.o bound.o
 
