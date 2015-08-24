@@ -13,34 +13,47 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = t01
+set expname = g01_PASSDT
 set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
 
-make INTEL_COMP=true CASENAME=${expname} CODEDIR=${codedir} -f ../makefile 
-
-setenv EXPHDR_tmp ${expname}" "${subdir}
+make INTEL_COMP=true CASENAME=${expname} CODEDIR=${codedir} -f ../makefile
 
 #for restart ----------------------------------------
 # setenv EXPHDR_INI1 ${subdir}"/GPTB02"
 # setenv EXPHDR_INI2 ${subdir}"/GPTE01"
 # For restart ----------------------------------------
 #-------------------------------------------------------------------
+
 cd ${subdir}
 
 set file = ${subdir}/PARMSLD.f
 
 set nx = `grep "nsbdm_x = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_x = //g'`
 set ny = `grep "nsbdm_y = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_y = //g'`
+@ ntask = $nx * $ny
+@ pth = 12
+@ ppn = $ntask % $pth
+
+while ( $ppn != 0 || $pth  == 0)
+@ pth --
+@ ppn = $ntask % $pth
+end
+@ ppn = $ntask / $pth
+
+if ( $pth < 4 || $ppn >= 36) then
+echo 'bad cores.'
+exit
+endif
 
 sed -e 's/expname/'${expname}'/g' \
-    -e 's/np_nodes/4/g' \
-    -e 's/np_threads/4/g' \
-    -e 's/total_cores/16/g' ../../RUN/run.sh > run.sh
+    -e 's/np_nodes/'$ppn'/g' \
+    -e 's/np_threads/'$pth'/g' \
+    -e 's/total_cores/'$ntask'/g' ../../RUN/run.sh > run.sh
 
-#bsub < run.sh
 qsub run.sh
+#rm run.sh
 
 exit
 

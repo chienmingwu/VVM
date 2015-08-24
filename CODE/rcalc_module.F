@@ -82,11 +82,9 @@ CONTAINS
       call timer_stop('advection')
 
       call timer_start('forcing')
-!ccwu      IF ( START .AND. ITT .LT. ITSTOP )   &
-!           CALL FORCE_3D (DTHMAX,DTPERT,Z1PERT,Z2PERT,l)
 
-!     IF ( START .AND. ITT .LT. ITSTOP )   &
-!           CALL FORCE_3D (DTHMAX,DTPERT,Z1PERT,Z2PERT,l)
+     IF ( START .AND. ITT .LT. ITSTOP )   &
+           CALL FORCE_3D (DTHMAX,DTPERT,Z1PERT,Z2PERT,l)
 
 !   HERE Q1LS IS DEFINED AS 'ADVECTIVE HEATING' SUCH 
 !   THAT NEGATIVE VALUES COOL THE UPPER LEVELS AND

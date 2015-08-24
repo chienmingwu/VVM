@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = t01
+set expname = g01_PASSDT
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -29,6 +29,7 @@ cd ${subdir}"/DATA/"${expname}
 
 alias rm rm
 rm *
+#rm -rf RUNDATA
 
 cat > COMMENTS << 'END'
 cloud street
@@ -42,9 +43,7 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
-#define TOPOGRAPHY
 #define RADCODE
-#define AREAMN
 'END1'
 cat definesld.com
 
@@ -53,10 +52,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/512/' \
-    -e '1,$s/merid_dimension/512/' \
-    -e '1,$s/zonal_decomposition/4/' \
-    -e '1,$s/merid_decomposition/4/' \
+sed -e '1,$s/zonal_dimension/128/' \
+    -e '1,$s/merid_dimension/128/' \
+    -e '1,$s/zonal_decomposition/2/' \
+    -e '1,$s/merid_decomposition/2/' \
     -e '1,$s/vert_dimension/34/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
@@ -68,11 +67,11 @@ sed -e '1,$s/zonal_dimension/512/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=1 /
- &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=1,NWR11=1,NFLPRT=1,NRESTART=1 /
- &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
+ &INPUT1 NEWRUN=T, ITTADD=1728 /
+ &INPUT2 RLAT=15. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=50.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT4 NXS=1,NXSAVG=24,NWR11=1,NFLPRT=1,NRESTART=24 /
+ &INPUT5 IX=3182073,ITINIT=6,ITSTOP=24,SCALE=6.,Q1Q2=T,DTRAD=1200.,SOLVAR=F /
 'END6'
 cat INPUT
 
@@ -86,34 +85,12 @@ endif
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
-cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
+cp -r ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO/
+rm ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO/data
+ln -s /media/wk2/easy/ASTER_GDEM_TWTOPO/data/ ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO/.
 cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
-
-exit
-
-# GLDAS
-#set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
-#set soil2 = (SOILM0_1lev SOILM0_2lev SOILM0_3lev SOILM0_4lev \
-#             SOILT0_1lev SOILT0_2lev SOILT0_3lev SOILT0_4lev)
-#@ num = 1
-#while($num <= 8)
-#sed -e 's/SM1/'$soil[$num]'/g' \
-#    -e 's/SOILM0_1lev/'$soil2[$num]'/g' GLDAS_tmp.F > GLDAS.F
-#make
-#./GLDAS
-#@ num = $num + 1
-#end
-#mv makefile makefile_gldas
-#mv makefile_topo makefile
-
 make
 ./nc2fortranBinary
-
-# for LSM
-cd ../${subdir}
-cp ${subdir}/CODE/LSM/GENPARM.TBL .
-cp ${subdir}/CODE/LSM/SOILPARM.TBL .
-cp ${subdir}/CODE/LSM/VEGPARM.TBL .
 
 exit
 

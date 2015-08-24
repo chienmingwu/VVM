@@ -10,9 +10,6 @@ USE workcom
 USE bound
 USE utils
 USE domain_decomposition
-#if defined (LSM)
-USE land_module
-#endif
 
 IMPLICIT NONE
 PRIVATE
@@ -88,7 +85,7 @@ CONTAINS
 
 
       POWE=1._dbl_kind/3._dbl_kind
-      DELD=(DX*DYNEW*DZ)**POWE
+      DELD=(DX*DYNEW*DZ/FNZ(1))**POWE
 
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
 !      CRITMN=100.
@@ -240,10 +237,10 @@ CONTAINS
       DO 248 J=1,MJ1
       DO 248 I=1,MI1
 
-      hxp =INT( hx(I,J))+1
-      ztmp = ZT(hxp-1)
-!      hxp = 1
-!      ztmp = 0.
+!      hxp =INT( hx(I,J))+1
+!      ztmp = ZT(hxp-1)
+      hxp = 2
+      ztmp = 0.
       DO 248 K=hxp,NK2
       DDX(I,J,K)= RAMD0S*(VK*VK*(ZT(K)-ztmp+ZROUGH(I,J))**2)   &
                  /(RAMD0S+(VK*VK*(ZT(K)-ztmp+ZROUGH(I,J))**2))
@@ -330,8 +327,6 @@ CONTAINS
   110    CONTINUE
       ELSE
 !         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
-!      print*,"before call sflux_3d"
-!      print*,"ITT = ",ITT
       CALL SFLUX_3D ! call sflux every time step 
       END IF
 
@@ -834,14 +829,6 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          hxp, hx1, hxup, hxvp, hxu1, hxv1, topo       ! do loop indices for zonal, meridional and vertical dimensions
 
-#if defined (LSM)
-
-      call land_interface(WT,WQ(I,j),VEN2D(I,J))
-
-#else
-      CP = 1004.5
-!==========================================================
-
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
       hxp=INT(hx(I,J))+1
@@ -861,7 +848,7 @@ CONTAINS
       hx1=INT(hx(I,J))
 
       ES1  = ES ( TG(I,J) )
-      QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 )
+      QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 ) 
       TS   = CP * TG(I,J) + GRAV * ZW(hx1)
 
 !     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
@@ -869,25 +856,27 @@ CONTAINS
       T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)   &
              -(HLF+HLM)*QI3D(I,J,hxp)
 
-
       ZROUGH1 = ZROUGH(I,J)
       SPEEDM  = SPEEDTP(I,J)
       THVSM   = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
 
-      if(hx1 .ge. 2) then  ! apply fluxes over land only
 
       CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ZT(hxp),ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
-      else
-      WT(I,J)=0.
-      WQ(I,j)=0.
-      VEN2D(I,J)=0.
-      endif
+      if(psfx) THEN
+        WT(I,J) = fss(i,j) 
+        WQ(I,J) = fws(i,j) / hlf
+      ELSE
+        WT(I,J) = VENTFC(2) * (TS-T)
+        WQ(I,J) = VENTFC(2) * ABS(GWET(I,J))*(QSFC-Q)
+      ENDIF
+
+      VEN2D(I,J) = VENTFC(1)
+
 
   110 CONTINUE
 
-#endif
 
       CALL BOUND_ARB (1,VEN2D)
 
@@ -926,12 +915,8 @@ CONTAINS
       hxu1=INT(hxu(I,J))
       hxv1=INT(hxv(I,J))
 
-!====hchun
-      WQV(I,J) = WQ(I,J)
-      WTH(I,J) = WT(I,J)/(1004.5*PIBAR(hx1))
-!      WQV(I,J) = WQ(I,J)*RHOZ(hx1)
-!      WTH(I,J) = WT(I,J)*RHOZ(hx1)/(CP*PIBAR(hx1))
-!=========
+      WQV(I,J) = WQ(I,J)*RHOZ(hx1)
+      WTH(I,J) = WT(I,J)*RHOZ(hx1)/(CP*PIBAR(hx1))
 !      WQV(I,J)=0.
 !      WTH(I,J)=0. !turn on momentum drag, not surface fluxes
 
@@ -946,12 +931,6 @@ CONTAINS
       WV(I,J)  = WV(I,J)*RHOZ(hx1)
       endif
   130 CONTINUE
-!      print*,"WQV(1,1) = ",WQV(1,1)
-!      print*,"WQV(120,240) = ",WQV(120,240)
-!      print*,"WTH(120,240) = ",WTH(120,240)
-!      print*,"CP = ",CP
-!      print*,"PIBAR = ",PIBAR(int(hx(120,240)))
-!   print*,"sflux_3d done"
 
    END SUBROUTINE sflux_3d
 

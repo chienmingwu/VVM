@@ -81,26 +81,12 @@ CONTAINS
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 0.0
   CASE DEFAULT
-! TWP-ICE comparison study (0Z 18 Jan 2006)
-!====hchun===(00Z 03 SEP 2013)      
-!      iyear0 = 2013
-!      imonth0 = 9
-!      iday0 = 2
-! Specify hour in fractional UTC time (Greenwich)
-!      hour0 = 18.0
-!====hchun===(00Z 07 AUG 2014)====KTW3kmA,B,C
-      iyear0 = 2014
-      imonth0 = 8
-      iday0 = 7
+! TWP-ICE comparison study (0Z 18 Jan 2006)      
+      iyear0 = 1
+      imonth0 = 1
+      iday0 = 1
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 0.0
-!====hchun===(12Z 06 AUG 2014)====KTW3kmD
-!      iyear0 = 2014
-!      imonth0 = 8
-!      iday0 = 6
-! Specify hour in fractional UTC time (Greenwich)
-!      hour0 = 12.0
-!=============================
   END SELECT 
 
 !  Get Julian day
@@ -110,7 +96,7 @@ CONTAINS
       rjday0 = REAL(jday0) + hour0/24._dbl_kind
 
 !  Julian day of current time step
-      rjday = rjday0 + (ITT-1) * DT / SECDAY
+      rjday = rjday0 + ( (ITT-1) * PASS_BIG_DT + PASS_SMALL_DT )  / SECDAY
       iyr = iyear0
       
       IF (rjday .GE. 366._dbl_kind) THEN
