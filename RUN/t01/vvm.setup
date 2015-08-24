@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = g01_PASSDT
+set expname = t01
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -71,7 +71,7 @@ sed -e '1,$s/zonal_dimension/512/' \
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=17280 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=5.,NOTURB=F,NOSFX=F,NSFLUX=30,ALADV=1. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=5.,NOTURB=F,NOSFX=F,NSFLUX=24,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360 /
  &INPUT5 IX=3182073,ITINIT=1,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
 'END6'
