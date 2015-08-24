@@ -114,15 +114,7 @@ CONTAINS
       call turb_1d_driver(TH3D, qv3d, u3dx, u3dy, qc3d,   &
                           w3d, pbar, pibar, itt,          &
                           THAD3,QVAD3,QCAD3,              &
-                          sprec, cldfrc )
-
-! get curl of momentum tendencies to get vorticity tendencies.
-      fztopb(1:mi1,1:mj1) = (v_sgs_tend(1:mi1,1:mj1,nk2) - v_sgs_tend(0:mi1-1,1:mj1,nk2)) / dx - &
-                            (u_sgs_tend(1:mi1,1:mj1,nk2) - u_sgs_tend(1:mi1,0:mj1-1,nk2)) / dynew
-      do k = 2,nk1
-         fzxtb(1:mi1,1:mj1,k) = (v_sgs_tend(1:mi1,1:mj1,k) - v_sgs_tend(1:mi1,1:mj1,k+1))*FNT(K) /DZ
-         fzytb(1:mi1,1:mj1,k) = (u_sgs_tend(1:mi1,1:mj1,k) - u_sgs_tend(1:mi1,1:mj1,k+1))*FNT(K) /DZ
-      enddo
+                          sprec, cldfrc, fztopb, fzxtb, fzytb)
 #else
 !default diffusion/turbulence scheme
       CALL TURB_3D ( ITT )
