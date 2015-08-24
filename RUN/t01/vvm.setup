@@ -83,13 +83,10 @@ if( ! -d RUNDATA ) then
   mkdir RUNDATA
 endif
 
-# for RADCODE
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
-cp -r ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO/
-rm ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO/data
-ln -s /media/wk2/easy/ASTER_GDEM_TWTOPO/data/ ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO/.
+cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
 cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
 
@@ -107,9 +104,13 @@ cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 #end
 #mv makefile makefile_gldas
 #mv makefile_topo makefile
-
 make
 ./nc2fortranBinary
 
+# for LSM
+cd ../${subdir}
+cp ${subdir}/CODE/LSM/GENPARM.TBL .
+cp ${subdir}/CODE/LSM/SOILPARM.TBL .
+cp ${subdir}/CODE/LSM/VEGPARM.TBL .
 exit
 
