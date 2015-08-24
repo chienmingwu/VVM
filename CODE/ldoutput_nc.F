@@ -23,6 +23,12 @@ USE gather_scatter
 USE timeinterp
 USE output_nc
 USE ldoutput
+#if defined (DIFFUSION)
+USE TURB_3D_module
+#if defined (LSM)
+USE land_module
+#endif
+#endif
 USE petscsys
 
 
