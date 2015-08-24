@@ -39,6 +39,15 @@ PRIVATE
           ncid_z3dx, ncid_z3dy, ncid_z3dz, ncid_u, ncid_v, ncid_w, ncid_tc, &
           ncid_rad, ncid_phys
 
+!===hchun
+#if defined (DIFFUSION)
+#if defined (LSM)
+      integer (KIND=int_kind), public :: &
+          ncid_lsm
+#endif
+#endif
+!========
+
 ! Missing data and fill value
       real (KIND=tm_kind), parameter, public :: &
           realval = 9.96921e+36
