@@ -2112,6 +2112,7 @@ enddo
       wth = w_thl_sfc
       wqv = w_qt_sfc
 
+     print*,wth
 END SUBROUTINE turb_1d_driver
 
 #endif

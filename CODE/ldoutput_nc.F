@@ -1070,6 +1070,7 @@ CONTAINS
 !      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
 !========
  1227 CONTINUE
+
 #endif
 #endif
 
@@ -1318,7 +1319,8 @@ CONTAINS
 !===hchun
 #if defined (PARALLELIO)
 #if defined (DIFFUSION)
-#if defined (LSM) 
+#if defined (LSM)
+
         call pCDF_WRITE_xy(ncid_lsm, 'emissi', TIME_C, time_start, std_lsm(:,:,1) )
         call pCDF_WRITE_xy(ncid_lsm, 'cmc', TIME_C, time_start, std_lsm(:,:,2) )
         call pCDF_WRITE_xy(ncid_lsm, 't1', TIME_C, time_start, std_lsm(:,:,3) )

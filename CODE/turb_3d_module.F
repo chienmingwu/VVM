@@ -89,7 +89,7 @@ CONTAINS
 
 
       POWE=1._dbl_kind/3._dbl_kind
-      DELD=(DX*DYNEW*DZ/FNZ(1))**POWE
+      DELD=(DX*DYNEW*DZ)**POWE
 
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
 !      CRITMN=100.
