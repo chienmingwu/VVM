@@ -1837,12 +1837,12 @@ REAL (KIND=dbl_kind), INTENT(IN) :: w_thl_sfc, w_qt_sfc, u_star
 	ELSE
 		w_star = 0.0
     END IF
-	u_var(2,i,j) = (u_star*u_star) + 0.3*(w_star*w_star)
+    u_var(2,i,j) = (u_star*u_star) + 0.3*(w_star*w_star)
     v_var(2,i,j) = (u_star*u_star) + 0.3*(w_star*w_star)
     zeta = zw(2)/(-u_star*u_star*u_star/(von_Karman*g_alpha*w_thl_sfc))
         
     IF( zeta < 0.0) THEN
-		w_var(2,i,j) = (1.75 + 2*(-1*zeta)**(2/3.0))*(u_star*u_star)
+	w_var(2,i,j) = (1.75 + 2*(-1*zeta)**(2/3.0))*(u_star*u_star)
         zeta_term = (1.0 - 8.3*zeta)**(-2/3.0)
 		thl_var(2,i,j) = (4.0*zeta_term)/((u_star*u_star)/(w_thl_sfc*w_thl_sfc))
 	ELSE
@@ -2112,7 +2112,8 @@ enddo
       wth = w_thl_sfc
       wqv = w_qt_sfc
 
-     print*,wth
+      PRINT*,cldfrc(10,10,20)
+
 END SUBROUTINE turb_1d_driver
 
 #endif

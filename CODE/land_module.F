@@ -210,12 +210,11 @@ CONTAINS
       LU = 16
       SOIL = 1
       SLOPE = 1
-      ALBEDOM = 16.
+      ALBEDOM = 30.
       GREENFRACM = 0.
       LAIM = 4.
       SHDMAX = 0.
       SHDMIN = 0.      
-
 
 !      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
 !      'RUNDATA/SM1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
