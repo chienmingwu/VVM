@@ -535,7 +535,7 @@ DO I=1,MI1
              SOLDN(I,J), SOLNET, SFCPRS(I,J), PRCP(I,J), SFCTMP(I,J),  &
              Q2(I,J), SFCSPD(I,J), COSZ, PRCPRAIN, SOLARDIRECT,        &  ! F
              TH2, Q2SAT, DQSDT2, LU(I,J), SOIL(I,J), SLOPE(I,J),       &
-             SHDFAC(I,J), SHDMIN(I,J), SHDMAX(I,J), ALBEDO(I,J),       &
+             SHDFAC(I,J), SHDMIN(I,J), SHDMAX(I,J), ALBEDOM(I,J),      &
              SNOALB, TBOT, Z0BRD(I,J), Z0(I,J),                        &
              EMISSI(I,J), EMBRD, CMC(I,J), T1(I,J), STC(I,J,:),        &
              SMC(I,J,:), SH2O(I,J,:), SNOWH(I,J), SNEQV(I,J),          &
@@ -663,7 +663,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
    SOIL = SOIL1 
    SLOPE = SLOPE1
 
-   ALBEDOM    = ALBEDOM1
+   ALBEDOM    = ALBEDOM1/100.
    SHDFAC     = GREENFRACM 
    LAIM       = LAIM1
    SHDMAX     = SHDMAX1
@@ -690,7 +690,6 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
 
   ENDDO
   ENDDO
-  PRINT* , STinout_int,SMinout_int,SLinout_int
 
 
 !  dt = real(noahlsm_timestep)
@@ -769,7 +768,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   !
 
 !  ALBEDO = month_d (albedo_monthly, startdate)
-  ALBEDO = ALBEDOM1/100.0
+  ALBEDO = ALBEDOM1
 
   !
   ! For the initial value of Z0 (used in SFCDIF_off to compute CH and CM),
