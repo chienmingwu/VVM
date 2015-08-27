@@ -5,6 +5,7 @@ USE kinds
 USE parmsld
 USE constld
 USE domain_decomposition
+USE rrtm_vars, only: sstxy,albedo
 !===hchun=================================
 USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
@@ -371,10 +372,10 @@ CONTAINS
       call LSM_DRV_ini(DT*NSFLUX,LU,SOIL,SLOPE, &
                        ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ,&
                        lALBEDO,lEMISSI,lT1,lST,lSM,lSL,lET,lSMAV)
-
+   albedo = ALBEDOM / 100.
+   sstxy = lT1
 
 #endif
-
 
    END SUBROUTINE land_ini
 

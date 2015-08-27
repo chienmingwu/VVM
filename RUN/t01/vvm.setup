@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = t01
+set expname = rad
 
 # hardscrabble configuration
 set subdir = '../..'

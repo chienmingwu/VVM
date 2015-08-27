@@ -28,7 +28,7 @@
       
       USE rrtm_params, only: latitude, longitude
       USE rrtm_grid, only: day, day0, iyear
-      USE rrtm_vars, only: sstxy
+      USE rrtm_vars, only: sstxy,albedo
       USE profoutld
       USE radoutld
       USE const3d
