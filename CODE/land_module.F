@@ -207,14 +207,14 @@ CONTAINS
       CLOSE(99)
       ENDIF
 
-      LU = 16
+      LU = 1
       SOIL = 1
       SLOPE = 1
       ALBEDOM = 30.
-      GREENFRACM = 0.
+      GREENFRACM = 80.
       LAIM = 4.
-      SHDMAX = 0.
-      SHDMIN = 0.      
+      SHDMAX = 90.
+      SHDMIN = 70.      
 
 !      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
 !      'RUNDATA/SM1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
@@ -370,7 +370,7 @@ CONTAINS
                
       call LSM_DRV_ini(DT*NSFLUX,LU,SOIL,SLOPE, &
                        ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ,&
-                       lALBEDO,lEMISSI,lT1,lST,lSM,lSL,lET,lSMAV)
+                       lALBEDO,lEMISSI,lCMC,lT1,lST,lSM,lSL,lET,lSMAV)
 
 
 #endif

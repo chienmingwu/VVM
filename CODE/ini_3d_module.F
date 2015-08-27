@@ -518,7 +518,7 @@ CONTAINS
       call bound_arb(1,HX)
       ENDIF
 !le for debug 
-      HX = 1
+      HX = 2
 
       DO I=1,MI1
       DO J=1,MJ1
@@ -564,8 +564,8 @@ CONTAINS
       ENDDO
 
 #else
-      hx=1
-      maxtopo=2
+      hx=2
+      maxtopo=3
 #endif
 
       ENDSUBROUTINE PTSPEC

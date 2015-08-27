@@ -115,6 +115,9 @@ real                :: DT               ! Time step (seconds).
 
 real                :: CZIL             ! Zilitinkevich constant, read from GENPARM.TBL
                                         ! and used to compute surface
+real                :: COSZ             ! Unused if we're not using urban canopy model.
+real                :: PRCPRAIN         ! Unused
+real                :: SOLARDIRECT      ! Unused.
 
 real, dimension(12) :: albedo_monthly   ! Monthly values of background (i.e., snow-free) albedo
                                         ! ( Fraction [0.0-1.0] )
@@ -258,9 +261,6 @@ CONTAINS
   real    :: FFROZP,       &! Fraction of precip which is frozen (0.0 - 1.0).
              LWDN,         &! Downward longwave radiation flux at surface (W m-2) [Forcing]
              SOLNET,       &! Net downward shortwave radiation flux at the surface (W m-2)
-             COSZ,         &! Unused if we're not using urban canopy model.
-             PRCPRAIN,     &! Unused
-             SOLARDIRECT,  &! Unused.
              TH2,          &! Potential temperature at level ZLVL (K) 
              T1V,          &! Virtual skin temperature (K).  Used in SFCDIF_off for
                             ! computing CM and CH, but not passed to SFLX
@@ -407,7 +407,6 @@ DO I=1,MI1
         CALL SFCDIF_MYJ ( ZLVL(I,J), ZLVL_WIND(I,J) , Z0(I,J) , Z0BRD(I,J) , SFCPRS(I,J) ,&
               T1(I,J) , SFCTMP(I,J) , Q1(I,J) , Q2(I,J) , SFCSPD(I,J) , CZIL , RIBB , &
               CM(I,J) , CH(I,J) , LU(I,J) , ISURBAN(I,J) , IZ0TLND )
-
 !     endif
 
      !
@@ -550,6 +549,14 @@ DO I=1,MI1
              SNOTIME1, RIBB, SMCWLT(I,J), SMCDRY(I,J), SMCREF(I,J),    &
              SMCMAX(I,J), NROOT(I,J))
 
+!     if (I .eq. 10 .and. J .eq. 10) &
+!     PRINT*, '===', CH(I,J),      &
+!             ETP(I,J)
+!      PRINT*, SNOMLT(I,J), SNCOVR(I,J), RUNOFF1(I,J), RUNOFF2(I,J),     &
+!             RUNOFF3(I,J), RC(I,J), PC(I,J), RCT(I,J), RCQ(I,J), Q1(I,J), RIBB,'==='
+
+
+
      ELSEIF ( ICE == -1 ) THEN
 
         !
@@ -627,10 +634,14 @@ DO I=1,MI1
 ENDDO
 ENDDO
 
+     PRINT*,CMC(10,10),ET(10,10,:),ETT(10,10),DRIP(10,10),RC(10,10),ETAKIN(10,10),LU(10,10)
+
+
+
 END SUBROUTINE LSM_DRV
 SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  & 
                        ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ1,     &
-                       ALBEDO,EMISSI,T1,ST,SM,SL,ET,SMAV)
+                       ALBEDO,EMISSI,CMC,T1,ST,SM,SL,ET,SMAV)
 
       
    real(kind=dbl_kind), intent(in):: dt1
@@ -638,8 +649,8 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
    real (kind=int_kind), dimension(mi1,mj1), intent(IN):: &
       ALBEDOM1,GREENFRACM1,LAIM1,SHDMAX1,SHDMIN1,P2,ZZ1
 
-   real (kind=int_kind), dimension(mi1,mj1), intent(OUT):: &
-      ALBEDO,EMISSI,T1
+   real (kind=int_kind), dimension(mi1,mj1), intent(INOUT):: &
+      ALBEDO,EMISSI,T1,CMC
 
   REAL (KIND=int_kind),dimension(MI1,MJ1,4), intent(INOUT) :: &
      ST,SM,SL,ET,SMAV
@@ -664,7 +675,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
    SLOPE = SLOPE1
 
    ALBEDOM    = ALBEDOM1/100.
-   SHDFAC     = GREENFRACM 
+   SHDFAC     = GREENFRACM1 
    LAIM       = LAIM1
    SHDMAX     = SHDMAX1
    SHDMIN     = SHDMIN1
@@ -676,7 +687,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   
   call open_forcing_file(iunit, output_dir, forcing_filename, nsoil(I,J), startdate, enddate,          &
        loop_for_a_while, latitude, longitude, &
-       forcing_timestep, noahlsm_timestep, ice, t11, stc1, smc1, sh2o1, sldpth, cmc1, &
+       forcing_timestep, noahlsm_timestep, ice, t11, stc1, smc1, sh2o1, sldpth, cmc(I,J), &
        snowh1, sneqv1, tbot,     &
        vegtyp, soiltyp, slop1, snoalb, zlvl(I,J), zlvl_wind(I,J), albedo_monthly, shdfac_monthly,   &
        z0brd_monthly, lai_monthly, use_urban_module, isurban(I,J), sdmn1, sdmx1,  &
@@ -691,16 +702,15 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   ENDDO
   ENDDO
 
-
 !  dt = real(noahlsm_timestep)
   nsoil = 4
-  shdfac                    = shdfac/100.
+  shdfac                    = shdfac
   shdmax                    = shdmax1/100.0
   shdmin                    = shdmin1/100.0
   zlvl                      = zz1
   zlvl_wind                 = zz1
   T1                        = t11
-  isurban                   = 0 
+  isurban                   = 1 
   if (use_urban_module) STOP "This is not urban code."
 
   !
@@ -768,7 +778,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   !
 
 !  ALBEDO = month_d (albedo_monthly, startdate)
-  ALBEDO = ALBEDOM1
+  ALBEDO = ALBEDOM1/100.
 
   !
   ! For the initial value of Z0 (used in SFCDIF_off to compute CH and CM),
