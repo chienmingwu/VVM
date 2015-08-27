@@ -1,6 +1,6 @@
 #include "definesld.com"
-SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, DYNEW, &
-                            RLAT, RLON, DT, ZZ, ZT, RHO)
+SUBROUTINE RADIATION_RRTMG(ITT, NRADD, albdo, tg, PBAR, PIBAR, DX, &
+                            DYNEW, RLAT, RLON, DT, ZZ, ZT, RHO)
 
 !------------------------------------------------------------------
 !  This is the interface code between the Vector Vorticity Model
@@ -47,7 +47,8 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, DYNEW, &
           DT        ! Dynamic time step increment (seconds)
 
       REAL (KIND=dbl_kind), INTENT(IN), DIMENSION(nx,ny) :: &
-          tg        ! sfc boundary temperature (K)
+          tg, &     ! sfc boundary temperature (K)
+          albdo    ! sfc albedo (0.0-1.0)       
 
       REAL (KIND=dbl_kind), INTENT(IN), DIMENSION(NK3) :: &
           ZZ, &     ! Heights of model interfaces (m)
