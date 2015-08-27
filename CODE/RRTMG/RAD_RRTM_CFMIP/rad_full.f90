@@ -401,6 +401,7 @@
 !$omp              swUp, swDown, swUpClearSky, swDownClearSky,                 &
 !$omp              swHeatingRate, swHeatingRateClearSky, lwHeatingRate, lwHeatingRateClearSky, &
 !$omp              LWP, IWP, liquidRe, iceRe)
+
     do 1000 j = 1,ny
 
       ! extract a slice from the three-dimensional domain on this processor.
@@ -441,7 +442,7 @@
 ! Make call to wrapper routine for RRTMG (v.4.8 for LW, v.3.8 for SW)
 
       call rad_driver_rrtm(nx,nzrad,j,pres_input,presi_input, &
-           tabs_slice,qv_slice,qcl_slice,qci_slice,tg_slice, &
+           tabs_slice,qv_slice,qcl_slice,qci_slice,tg_slice, albedo_slice, &
            o3_slice,co2_slice,ch4_slice,n2o_slice,o2_slice, &
            cfc11_slice,cfc12_slice,cfc22_slice,ccl4_slice, &
            dolongwave,doshortwave,doperpetual,doseasons, &
