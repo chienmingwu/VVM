@@ -70,6 +70,7 @@
        qcl, &     ! cloud mixing ratio
        qci, &     ! ice mixing ratio
        sstxy, &   ! sea surface temperature
+       albdo, &   ! given albedo from land surface model.
        pres, &    ! model layer pressure (mb)
        presi, &   ! model interface pressure (mb)
 !       rho, &     ! density profile.  In this anelastic model, rho=rho(z).
@@ -300,6 +301,7 @@
              qcl_slice(nx,nzrad), &
              qci_slice(nx,nzrad), &
              tg_slice(nx), &
+             albedo_slice(nx), &
              o3_slice(nzrad+1), &
              co2_slice(nzrad+1), &
              ch4_slice(nzrad+1), &
@@ -410,6 +412,7 @@
       qcl_slice(1:nx,1:nzm) = qcl(1:nx,j,1:nzm)
       qci_slice(1:nx,1:nzm) = qci(1:nx,j,1:nzm)
       tg_slice(1:nx) = sstxy(1:nx,j)
+      albedo_slice(1:nx) = albdo(1:nx,j)
       o3_slice(1:nzm) = o3(1,j,1:nzm)
       co2_slice(1:nzm) = co2(1,j,1:nzm)
       ch4_slice(1:nzm) = ch4(1,j,1:nzm)

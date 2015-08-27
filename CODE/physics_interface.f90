@@ -28,7 +28,7 @@
       
       USE rrtm_params, only: latitude, longitude
       USE rrtm_grid, only: day, day0, iyear
-      USE rrtm_vars, only: sstxy,albedo
+      USE rrtm_vars, only: sstxy,albdo
       USE profoutld
       USE radoutld
       USE const3d
@@ -232,7 +232,7 @@
       call timer_start('radiation')
       first_rad = .FALSE.
 
-      CALL RADIATION_RRTMG(ITT, NRADD, albedo, SSTxy, PBAR, PIBAR, DX, &
+      CALL RADIATION_RRTMG(ITT, NRADD, SSTxy, PBAR, PIBAR, DX, &
                            DYNEW, RLAT, RLON, DT, ZZ, ZT, RHO)
 ! Update theta tendency term for TWP-ICE output
       DO 230 K=2,NK2

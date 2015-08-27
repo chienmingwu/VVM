@@ -24,7 +24,7 @@
           
       REAL (KIND=kind_rb), DIMENSION(nx,ny) :: &
           sstxy, &   ! sea surface temperature (K)
-          albedo
+          albdo
 
       REAL (KIND=kind_rb), DIMENSION(nzm) :: &
           pres    ! model layer pressure (hPa)
