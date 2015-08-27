@@ -253,6 +253,7 @@
              qcl_slice, &
              qci_slice, &
              tg_slice, &
+             albedo_slice, &
              o3_slice, &
              co2_slice, &
              ch4_slice, &
