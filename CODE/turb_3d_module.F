@@ -840,21 +840,26 @@ CONTAINS
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 !ccwu
       INTEGER (KIND=int_kind) ::   &
-         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo       ! do loop indices for zonal, meridional and vertical dimensions
+         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo, tempim       ! do loop indices for zonal, meridional and vertical dimensions
 
       CP = 1004.5
+      pi = 4._8 * atan(1._8)
 
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
+      tempim=dble(mim_glob(my_task+1)+i-1)
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
 
       SPEEDTP(I,J)=0.5*SQRT((U3DX(I-1,J,hxp)+U3DX(I,J,hxp))**2  &
                            +(U3DY(I,J-1,hxp)+U3DY(I,J,hxp))**2)
-      if(hx1 .ge. 2) then
-      tg(i,j)=thbar(hx1)*pibar(hx1)   !specify the ground temp. at the corresponding level
-      gwet(i,j)=0.8
-      endif
+!      if(hx1 .ge. 2) then
+!      tg(i,j)=thbar(hx1)*pibar(hx1)   !specify the ground temp. at the corresponding level
+!      gwet(i,j)=0.8
+!      endif
+
+!ccwu for sst gradient test
+      tg(i,j)=297.-8.*cos(2*pi*tempim/6144.)   !6144 points in x direction
   100 CONTINUE
 
 #if defined (LSM)
