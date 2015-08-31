@@ -191,7 +191,7 @@ SUBROUTINE petsc_solver_initialize
 
     DO I = nlevel,2,-1
     call DMDAGetCorners(da3(I),ixx,iy,iz,mx,my,mz,ierr)
-    call DMDASetRefinementFactor(da3(I),2,2,1,ierr)
+    call DMDASetRefinementFactor(da3(I),2,1,1,ierr)
     call DMRefine(da3(I), PETSC_COMM_WORLD, da3(I-1),ierr)
     call DMDASetUniformCoordinates(da3(I-1),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
     ENDDO
@@ -285,7 +285,7 @@ SUBROUTINE petsc_solver_initialize
     call DMDASetUniformCoordinates(da2(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
 
     DO I = nlevel,2,-1
-    call DMDASetRefinementFactor(da2(I),2,2,1,ierr)
+    call DMDASetRefinementFactor(da2(I),2,1,1,ierr)
     call DMRefine(da2(I), PETSC_COMM_WORLD, da2(I-1),ierr)
     call DMDASetUniformCoordinates(da2(I-1),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
 
