@@ -1070,7 +1070,6 @@ CONTAINS
 !      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
 !========
  1227 CONTINUE
-
 #endif
 #endif
 
@@ -1129,6 +1128,9 @@ CONTAINS
       std_rad = std_rad * fac
       std_tm5 = std_tm5 * fac
       out_tm9 = out_tm9 * fac
+#if defined (LSM)
+      std_lsm = std_lsm * fac
+#endif
    END SELECT
 #endif
 
@@ -1532,7 +1534,9 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
-      
+#if defined (LSM)     
+      std_lsm = 0.0
+#endif
 !==============================================================================
    END SUBROUTINE XSEC_CDF
 !==============================================================================

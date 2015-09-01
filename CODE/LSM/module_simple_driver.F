@@ -634,7 +634,7 @@ DO I=1,MI1
 ENDDO
 ENDDO
 
-     PRINT*,CMC(10,10),ET(10,10,:),ETT(10,10),DRIP(10,10),RC(10,10),ETAKIN(10,10),LU(10,10)
+!     PRINT*,CMC(10,10),ET(10,10,:),ETT(10,10),DRIP(10,10),RC(10,10),ETAKIN(10,10),LU(10,10)
 
 
 
@@ -710,7 +710,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   zlvl                      = zz1
   zlvl_wind                 = zz1
   T1                        = t11
-  isurban                   = 1 
+  isurban                   = 0
   if (use_urban_module) STOP "This is not urban code."
 
   !
