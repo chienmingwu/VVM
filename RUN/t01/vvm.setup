@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = mjo
+set expname = lsm
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -52,11 +52,11 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/6144/' \
-    -e '1,$s/merid_dimension/32/' \
-    -e '1,$s/zonal_decomposition/96/' \
-    -e '1,$s/merid_decomposition/2/' \
-    -e '1,$s/vert_dimension/45/' \
+sed -e '1,$s/zonal_dimension/128/' \
+    -e '1,$s/merid_dimension/128/' \
+    -e '1,$s/zonal_decomposition/4/' \
+    -e '1,$s/merid_decomposition/4/' \
+    -e '1,$s/vert_dimension/34/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -102,4 +102,15 @@ cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 #end
 #mv makefile makefile_gldas
 #mv makefile_topo makefile
+
+-make
+-./nc2fortranBinary
+-
+ -# for LSM
+-cd ../${subdir}
+-cp ${subdir}/CODE/LSM/GENPARM.TBL .
+-cp ${subdir}/CODE/LSM/SOILPARM.TBL .
+-cp ${subdir}/CODE/LSM/VEGPARM.TBL .
+-exit
+
 
