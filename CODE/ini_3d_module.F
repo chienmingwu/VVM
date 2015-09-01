@@ -564,8 +564,8 @@ CONTAINS
       ENDDO
 
 #else
-      hx=2
-      maxtopo=3
+      hx=1
+      maxtopo=2
 #endif
 
       ENDSUBROUTINE PTSPEC
