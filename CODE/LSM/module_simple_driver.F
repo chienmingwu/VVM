@@ -710,7 +710,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   zlvl                      = zz1
   zlvl_wind                 = zz1
   T1                        = t11
-  isurban                   = 0
+  isurban                   = 1 
   if (use_urban_module) STOP "This is not urban code."
 
   !
