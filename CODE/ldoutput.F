@@ -500,8 +500,8 @@ CONTAINS
       do i=1, NK3
       UG_s(i)=UG(i)
       vG_s(i)=vG(i)
-      Q1LS_s(i)=Q1LS(i)
-      Q2LS_s(i)=Q2LS(i)
+      Q1LS_s(i)=Q1LS(i,1)
+      Q2LS_s(i)=Q2LS(i,1)
       write(98,'(i3,2F12.3,3E12.3)') i,UG_s(i), vg_s(i),              &
                                  Q1LS_s(i),Q2LS_s(i)
       enddo

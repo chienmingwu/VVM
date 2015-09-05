@@ -54,9 +54,9 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -e '1,$s/zonal_dimension/6144/' \
     -e '1,$s/merid_dimension/32/' \
-    -e '1,$s/zonal_decomposition/96/' \
+    -e '1,$s/zonal_decomposition/48/' \
     -e '1,$s/merid_decomposition/2/' \
-    -e '1,$s/vert_dimension/45/' \
+    -e '1,$s/vert_dimension/34/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -67,10 +67,10 @@ sed -e '1,$s/zonal_dimension/6144/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=8640 /
+ &INPUT1 NEWRUN=T, ITTADD=432000 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=20.,NOTURB=F,NOSFX=F,NSFLUX=1,ALADV=1. /
+ &INPUT4 NXS=1,NXSAVG=540,NWR11=1,NFLPRT=1,NRESTART=540 /
  &INPUT5 IX=3182073,ITINIT=30,ITSTOP=1200,SCALE=6.,Q1Q2=F,DTRAD=1200.,SOLVAR=F, RRTMRC=T/
 'END6'
 cat INPUT
@@ -84,8 +84,6 @@ endif
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
-cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
-cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
 
 # GLDAS
@@ -102,4 +100,6 @@ cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 #end
 #mv makefile makefile_gldas
 #mv makefile_topo makefile
+ln -s /data/mog/mjolong/q1mjo.dat
+ln -s /data/mog/mjolong/q2mjo.dat
 

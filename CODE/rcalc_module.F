@@ -37,7 +37,9 @@ CONTAINS
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3) :: term4
       INTEGER (KIND=int_kind) ::  &
          i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
-         l, nt      ! time level index, tracer index
+         l, nt, &   ! time level index, tracer index
+         hour,time  ! ccwu for q1q2
+
       REAL (KIND=dbl_kind) :: fntddz
 
 !-----------------------------------------------------------------------
@@ -97,11 +99,15 @@ CONTAINS
 !   FORCING BY THE LARGE SCALE VERTICAL WIND.
 !   (Modified June 2009, TRJ)
       IF (Q1Q2) THEN
+      hour=int(itt*10./21600.)+1
+      time=mod(itt*10.,21600.)
       DO 300 K = 2, NK2
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
-      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)
-      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K,hour) + &
+                     time/21600.*(Q1LS(K,hour+1)-Q1LS(K,hour))
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K,hour) + &
+                     time/21600.*(Q2LS(K,hour+1)-Q2LS(K,hour))
   309 CONTINUE
   SELECT CASE (TRIM(casename))
   CASE ('TWP-ICE','BOMEX')

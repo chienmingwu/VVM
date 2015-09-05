@@ -82,9 +82,9 @@ CONTAINS
       hour0 = 0.0
   CASE DEFAULT
 ! TWP-ICE comparison study (0Z 18 Jan 2006)      
-      iyear0 = 1
-      imonth0 = 1
-      iday0 = 1
+      iyear0 = 2009
+      imonth0 = 3
+      iday0 = 16
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 0.0
   END SELECT 
@@ -237,8 +237,8 @@ CONTAINS
       THBAR(K)=THBAR(K)+THINC(K)
       QVBAR(K)=QVBAR(K)+QVINC(K)
       WLS(K)=WLS(K)+WLSINC(K)
-      Q1LS(K)=Q1LS(K)+Q1INC(K)
-      Q2LS(K)=Q2LS(K)+Q2INC(K)
+      Q1LS(K,1)=Q1LS(K,1)+Q1INC(K)
+      Q2LS(K,1)=Q2LS(K,1)+Q2INC(K)
   100 CONTINUE  
       
       DO 101 K=1,NK2

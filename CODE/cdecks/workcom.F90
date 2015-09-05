@@ -17,10 +17,11 @@ PRIVATE
 
    REAL (KIND=dbl_kind), DIMENSION(nk3), PUBLIC ::            &
       ug,       & ! a given profile of zonal velocity (m/s)
-      vg,       & ! a given profile of meridional velocity (m/s)
-      q1ls,     & ! large scale forcing for potential temp. (K/s) 
+      vg          ! a given profile of meridional velocity (m/s)
+   REAL (KIND=dbl_kind), DIMENSION(nk3,368), PUBLIC ::            &
+      q1ls,     & ! large scale forcing for potential temp. (K/s)
       q2ls        ! large scale forcing for water vapor (kg/kg/s)
-      
+
 !*****************************
 ! formerly common/comp2ld/
 

@@ -54,7 +54,7 @@ CONTAINS
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
 
-      integer nu1, nt1, k1, k2, it
+      integer nu1, nt1, k1, k2, it,num
       logical lf
       DATA NU1/33/,NT1/21/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
@@ -75,12 +75,10 @@ CONTAINS
       DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
               ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
       DATA QC1/21*0./
+!mjo forcing 
+      REAL (KIND=real_kind) ::  Q1temp(15,148),Q2temp(15,148)
+      REAL (KIND=dbl_kind) ::  Q1OBS(15,148),Q2OBS(15,148)
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
 !     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
 !     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
 !     PU1 (MB) , U1(M/S)
@@ -97,6 +95,29 @@ CONTAINS
                -2.9,  -4.3,  -4.5,  -2.8,  -0.6,  -0.5,  -2.2,  -2.5,   &
                -3.0 / 
 
+       Q1OBS(:,:)=0.
+       Q2OBS(:,:)=0.
+       Q1temp(:,:)=0.
+       Q2temp(:,:)=0.
+       OPEN(UNIT=99,FILE='q1mjo.dat',FORM='unformatted', &
+       STATUS='OLD',access='direct',recl=15)
+       num=1
+       do k=1,148
+       READ(99,rec=num) q1temp(:,k)
+       num=num+1
+       enddo
+       CLOSE(99)
+       OPEN(UNIT=99,FILE='q2mjo.dat',FORM='unformatted', &
+       STATUS='OLD',access='direct',recl=15)
+       num=1
+       do k=1,148
+       READ(99,rec=num) q2temp(:,k)
+       num=num+1
+       enddo
+       CLOSE(99)
+       Q1OBS=q1temp
+       Q2OBS=q2temp
+ 
       casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
@@ -109,8 +130,8 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T1(1) * 0.1 + 273.16 + DSST
-      
+!      SST = T1(1) * 0.1 + 273.16 + DSST
+      SST = 302.756     
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
@@ -271,33 +292,42 @@ CONTAINS
       RHOW(K)=RHOZ(K)  ! This line added with removal of equivalence in constld
   102 CONTINUE
 
+      DO I=1,148  !whole dynamo period
+
       DO 200 K = 2, NK3
-      IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,20,PQ1,LF)
+      IF ( ZT(K) .LT. 12000. ) THEN !ccwu change to 12000 from 15000
+      K1 = INDEXR(PBAR(K)*0.01,15,PQ1,LF) !ccwu change with pq1 accordingly
       K2 = K1 + 1
-      Q1LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
-      Q2LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
+      Q1LS (K,I) =  &
+        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1,I),PQ1(K2),Q1OBS(K2,I))
+      Q2LS (K,I) =  &
+        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1,I),PQ1(K2),Q2OBS(K2,I))
       ELSE
-      Q1LS (K) = 0.0
-      Q2LS (K) = 0.0
+      Q1LS (K,I) = 0.0
+      Q2LS (K,I) = 0.0
       END IF
   200 CONTINUE
+
+      ENDDO
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
 !     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
 
       IF ( Q1Q2 ) SCALEQ = SCALE
 
+      DO I=1,148
+
       DO 210 K = 1, NK3
-      Q1LS (K) = -1.* SCALEQ * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = SCALEQ * Q2LS (K) / (GAMFAC * SECDAY)
+!      Q1LS (K,I) = -1.* SCALEQ * Q1LS (K,I) / PIBAR(K) / SECDAY
+!      Q2LS (K,I) = SCALEQ * Q2LS (K,I) / (GAMFAC * SECDAY)
+      Q1LS(K,I) =0.
+      Q2LS(K,I) =0.
   210 CONTINUE
+      ENDDO
 
 #if !defined (RADCODE)
       DO 212 K = 1, NK3
-      Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
+      Q1LS (K,I) = Q1LS (K,I) + RAD1 / PIBAR(K) / SECDAY
   212 CONTINUE
 #endif
 
@@ -331,7 +361,7 @@ CONTAINS
       WRITE(95,*) 
       WRITE(95,*) '************* LS FORCING **********************'
       WRITE(95,403)
-      WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),K=2,NK2)
+      WRITE(95,404) (ZT(K),Q1LS(K,I),Q2LS(K,I),K=2,NK2)
 
 
   401 FORMAT (7X,'Z(m)',2X,'PBAR(mb)',4X,'T(K)',4X,'THBAR(K)',2X,  &
@@ -518,7 +548,7 @@ CONTAINS
       call bound_arb(1,HX)
       ENDIF
 !le for debug 
-      HX = 2
+      HX = 1
 
       DO I=1,MI1
       DO J=1,MJ1

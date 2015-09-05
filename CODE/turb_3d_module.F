@@ -330,10 +330,10 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
+!         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
-!      CALL SFLUX_3D ! call sflux every time step 
+      CALL SFLUX_3D ! call sflux every time step 
       END IF
 
 #endif
@@ -836,6 +836,10 @@ CONTAINS
          ts,      & !
          ustar,   & !
          zrough1    !
+
+      REAL (KIND=dbl_kind) ::    &
+         pi
+
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 !ccwu
@@ -847,7 +851,9 @@ CONTAINS
 
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
-      tempim=dble(mim_glob(my_task+1)+i-1)
+      tempim=dble(mi1*ni_sbdm+i)
+
+
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
 
