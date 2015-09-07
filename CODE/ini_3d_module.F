@@ -120,7 +120,7 @@ CONTAINS
 
       DO 100 K = 1, NT1
       T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04 * 0.1 ! for dry case
+      QV1(K)= QV1(K) * 1.E-04 
   100 CONTINUE
 
       RBCP = RGAS / CP

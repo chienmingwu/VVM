@@ -330,10 +330,10 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
+!         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
-!      CALL SFLUX_3D ! call sflux every time step 
+      CALL SFLUX_3D ! call sflux every time step 
       END IF
 
 #endif
