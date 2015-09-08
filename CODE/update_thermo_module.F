@@ -118,13 +118,17 @@ CONTAINS
                   + A*FQG3D(I,J,K,N2)+B*FQG3D(I,J,K,N1))
    70 CONTINUE
 
-      DO 71 nt = 1,ntracer
       DO 71 K = 2, NK2
       DO 71 J = 1, MJ1
       DO 71 I = 1, MI1
 
-      TC3D(I,J,K,nt) = TC3D(I,J,K,nt)          &
-                  + A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt)
+      TC3D(I,J,K,1) = TC3D(I,J,K,1)          &
+                  + DT * NRAD_MICRO(I,J,K) &
+                  + A*FTC3D(I,J,K,N2,1)+B*FTC3D(I,J,K,N1,1)
+
+      TC3D(I,J,K,2) = TC3D(I,J,K,2)          &
+                  + DT * NCAD_MICRO(I,J,K) &
+                  + A*FTC3D(I,J,K,N2,2)+B*FTC3D(I,J,K,N1,2)
      
    71 CONTINUE
 
