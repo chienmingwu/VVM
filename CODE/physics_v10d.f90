@@ -2584,3 +2584,351 @@ end subroutine surface_flux
 
 !--------------------------------------------------------------------------------------------------|
 !--------------------------------------------------------------------------------------------------|  
+Subroutine kk2000
+
+!  INPUT:
+!     theta,qv,qc,qi,qr,qs,qg,nr,nc                            in
+!     pil0,rho_int,rhol,dzl                                     in
+!
+!     OUTPUT:
+!        tendency_microphysics_theta,tendency_microphysics_qv
+!        tendency_microphysics_qc,
+!        tendency_microphysics_qr,
+!        tendency_rain, (Adams-Bashforth tendencies of
+!                                                        precipitation
+!                                                        )
+!        Surface_rain,
+!        VTR_int
+!        latent_heating_rate
+!------------------------------------------------------------------------------------------
+
+USE kinds
+Use general_parameters, ONLY: dt, im, jm, km
+use physics_parameters
+Use basic_state_parameters, ONLY: pl0, pil0, rho_int, rhol, dzl
+Use main_variables, ONLY: theta, qv, qc, qi, qr, qs, qg, nr, nc, w
+Use physics_tendencies
+
+IMPLICIT NONE
+      real (kind=dbl_kind) :: T,w1d, THRESH, PRESS_mb, VTERMS, VTERMG,  &
+                           VTERMR, QMIX(8), TSS(9), PSS(26)
+      real (kind=dbl_kind) :: VTR(km), VTS(km), VTG(km)
+      real (kind=dbl_kind) :: TLHR
+      real (kind=dbl_kind) :: VTNR(km),VTERMNR !ccwu for C&L
+
+      Logical lmicro
+      INTEGER (KIND=int_kind) :: i, j, k  ! do loop indices
+
+      lmicro = .True.
+
+      THRESH = 1.E-15
+
+        tendency_microphysics_QV    = 0.0_8
+        tendency_microphysics_QC    = 0.0_8
+        tendency_microphysics_QI    = 0.0_8
+        tendency_microphysics_QS    = 0.0_8
+        tendency_microphysics_QG    = 0.0_8
+        tendency_microphysics_QR    = 0.0_8
+        tendency_microphysics_theta = 0.0_8
+        tendency_microphysics_NR    = 0.0_8
+        tendency_microphysics_NC    = 0.0_8
+
+        tendency_rain    = 0.0
+        tendency_snow    = 0.0
+        tendency_graupel = 0.0
+        tendency_nr      = 0.0
+
+        latent_heating_rate = 0.0_8
+  do i=1,im
+
+    do k=1,km
+      W1D     = W(I,K)*100.
+      T       = pil0(K) * theta(I,K)
+      QMIX(1) = QV(I,K);  QMIX(2) = QC(I,K);  QMIX(3) = QI(I,K)
+      QMIX(4) = QS(I,K);  QMIX(5) = QG(I,K);  QMIX(6) = QR(I,K)
+      QMIX(7) = NR(I,K);  QMIX(8) = NC(I,K)
+
+!      LMICRO  =  QMIX(2) .GT. THRESH .OR.     &
+!                 QMIX(6) .GT. THRESH
+!ccwu
+      LMICRO = .TRUE.
+    if ( LMICRO ) then
+
+        QMIX(7) = QMIX(7) * 1.E6 / rhol(k)
+        QMIX(8) = QMIX(8) * 1.E6 / rhol(k)
+
+        Call kk20001d(qmix,t,pl0(k),rhol(k),tss,vtermr,vtermnr,w1d,dt)
+
+        TSS(8) = TSS(8) / 1.E6 * rhol(k)
+        TSS(9) = TSS(9) / 1.E6 * rhol(k)
+
+        tendency_microphysics_QV(I,K)    = TSS(1)
+        tendency_microphysics_QC(I,K)    = TSS(2)
+        tendency_microphysics_QR(I,K)    = TSS(6)
+        tendency_microphysics_theta(I,K) = TSS(7) / pil0(K)
+        tendency_microphysics_NR(I,K)    = TSS(8)
+        tendency_microphysics_NC(I,K)    = TSS(9)
+
+        VTR(K)  = vtermr
+        VTNR(K) = vtermnr
+    else
+
+        VTR(K) = 0.0_8
+        VTNR(K) = 0.0_8
+
+    endif
+
+    enddo
+
+!---- Rain, snow, graupel and sedimentation fluxes ----------------------------
+
+      VTR_int(i,km) = 0.0_8
+      VTNR_int(i,km) = 0.0_8
+
+      VTSed_int(i,km) = 0.0_8
+
+      VTR_int(i,0) = rho_int(0) * VTR(1) * QR(I,1)
+      VTNR_int(i,0) = rho_int(0) * VTNR(1) * NR(I,1)
+
+      do K = km-1,1,-1
+        VTR_int(i,K) = rho_int(k) * 0.5_8 * (VTR(K+1)+VTR(K)) * QR(I,K+1)
+        VTNR_int(i,K) = rho_int(k) * 0.5_8 * (VTNR(K+1)+VTNR(K)) * NR(I,K+1)
+      enddo
+
+      do K = 1,km
+        tendency_rain(I,K)    = tendency_rain(I,K) &
+                                      +(VTR_int(i,K)-VTR_int(i,K-1))/(rhol(k)*dzl(K))
+        tendency_nr(I,K)    = tendency_nr(I,K) &
+                                      +(VTNR_int(i,K)-VTNR_int(i,K-1))/(rhol(k)*dzl(K))
+      enddo
+
+
+!---- Surface rain --------------------------------------------
+
+      Surface_rain(I)    = VTR_int(i,0)
+
+  enddo
+
+
+RETURN
+END Subroutine kk2000
+      SUBROUTINE kk20001d(qmix,tk4,p4,dn4,tss,vtermr,vtermnr,wcm,dt)
+USE kinds
+IMPLICIT NONE
+
+      real (KIND=dbl_kind)::  &
+           TK4     &        ! air temperature              [   K  ]
+         , BQV     &        ! water vapor mixing ratio     [ kg/kg]
+         , BQC     &        ! cloud water mixing ratio     [ kg/kg]
+         , BQR     &        ! rain  water mixing ratio     [ kg/kg]
+         , BZC     &        ! total cloud drop #           [  #/kg]
+         , BZR     &        ! total rain  drop #           [  #/kg]
+         , P4      &        ! air pressure                 [  Pa  ]
+         , DN4     &        ! air density                  [kg/m^3]
+         , PSW4    &        ! saturated vapor pressure     [  Pa  ]
+         , SS4     &        ! water vapor supersaturation  [   %  ]
+         , ELV     &        ! latent heat                  [ J/kg ]
+         , WCM     &        ! vertical velocity            [ cm/s ]
+         , PAIR0,TK0C,CRV,CCPD  &! 101325 Pa; 273.15 K; 461 J/kg-K
+         , C4XPV3,DN50C,PH2O,S4,TC4,qmix(8),tss(9),ESATW,vtermr,vtermnr &
+         , ACTK,ACTC,NACac0,dt,tmp,rhow,pi
+
+
+!
+!----- OUTPUT
+      real (KIND=dbl_kind)::  &
+           QREVAP    &     ! evaporation of rain
+         , NREVAP    &     ! evaporation of rain number
+         , QCAUT     &     ! autoconversion
+         , QCACR     &     ! accretion
+         , NCAUT     &     ! cloud number autoconversion
+         , NCACR     &     ! cloud number accretion
+         , NRAUT     &     ! rain number  autoconversion
+         , NACac          ! cloud number activation
+
+!
+!----- WORKING VARIABLES
+      real (KIND=dbl_kind)::  &
+      RC,RR,LZC,LZR,LRC,LRR,LQC,LQR,LRC2,LRR2,LRC3,LRR3, &
+      QC,QR,ZC,ZR
+      real (KIND=dbl_kind)::  &
+      FUC,FUR,O1,O5,QCMEAN,QRMEAN,BCOND,A5DR1,ADFV,A5DR2,ATC4, &
+      GUC,GUR,QDN4
+!
+!----- COEFFICIENTS DATA
+      real (KIND=dbl_kind)::  &
+           AQ1,BQ1,CQ1 ,AQ2,BQ2,CQ2 &
+          ,AN3,BN3,CN3 ,AN4,BN4,CN4 ,AQ4,BQ4 &
+          ,AN5,BN5,CN5 ,AQ5,BQ5,CQ5 &
+          ,AN6,BN6,CN6 ,AN7,BN7,CN7 &
+          ,AN8,BN8,CN8 ,AQ8,BQ8,CQ8 &
+          ,AN9,BN9,CN9 ,        DN9 ,AQ9 &
+          ,AN10,BN10,CN10, AQ10     &
+          ,AFU,BFU,CFU ,AFU2,BFU2,CFU2 &
+          ,AQ13,BQ13,CQ13, &
+           AN13,BN13,CN13
+
+      DATA AQ1,BQ1,CQ1 /  6.6793E+0,  1.0090E+0,  1.4095E+0 /
+      DATA AQ2,BQ2,CQ2 /  9.9912E+0, -4.7678E-1, -3.1388E-2 /
+      DATA AN3,BN3,CN3 / -4.3561E+0,  1.9934E+0,  1.6465E-2 /
+      DATA AN4,BN4,CN4 / -4.0731E+1,  5.3720E+5, -2.0139E-5 /
+      DATA AQ4,BQ4     / -2.1370E+1,  1.9899E+9             /
+      DATA AN5,BN5,CN5 /  1.5519E+1,  3.1491E-0,  4.3989E-1 /
+      DATA AQ5,BQ5,CQ5 /  2.0090E+1,  2.9626E+0,  3.2358E+0 /
+      DATA AN6,BN6,CN6 / -1.8239E+1,  2.2956E+0, -2.3261E-4 /
+      DATA AN7,BN7,CN7 / -1.7431E+2,  2.6031E+5, -9.3613E+7 /
+      DATA AN8,BN8,CN8 / -1.6185E+2,  2.2786E+5, -7.6988E+7 /
+      DATA AQ8,BQ8,CQ8 / -2.3531E+1,  9.8271E-1, -1.3202E-1 /
+      DATA AN9,BN9,CN9 / -1.0593E+0,  8.9774E-1, -2.8403E-1 /
+      DATA         DN9 /  1.6328E+0                         /
+      DATA AQ9         /  4.1888E-15                        /
+      DATA AN10,BN10,CN10 / 8.2841E+0,  9.7219E-1, -5.0808E-1 /
+      DATA AQ10        /  5.236E-10                          /
+      DATA AFU,BFU,CFU /  3.1250E-1,  1.0552E-3, -2.4023E+0 /
+      DATA AFU2,BFU2,CFU2 /  0.14895843,  0.0023841344,   -2.4054139 /
+      DATA AQ13,BQ13,CQ13 /  4.8023468,   1.1898005 , 4.0072712  /
+      DATA AN13,BN13,CN13 /  6.4606385,   0.9760685 , 1.0857552  /
+
+      ELV   = 2.5E6 ! [J/KG] latent heat of vaporization
+      PAIR0 = 1.01325E5 ! [pa] air pressure
+      TK0C  = 273.15  ! [K]Kelvin
+      CRV   = 461.51  ! water vapor gas constant Rv
+      C4XPV3= 4.188790205 ! Pi*4/3
+      RHOW  = 999.8396  ! liquid water density
+      CCPD  = 1005. ! dry air specific heat at const P.
+      PI    = 4._8 * atan(1._8)
+
+      qrevap=0.
+      nrevap=0.
+      qcaut=0.
+      qcacr=0.
+      ncaut=0.
+      ncacr=0.
+      nraut=0.
+      nacac=0.
+      vtermr=0.
+      vtermnr=0.
+
+!read from input
+
+      BQV=qmix(1)
+      BQC=qmix(2)
+      BQR=qmix(6)
+      BZR=qmix(7)
+      BZC=qmix(8)
+
+!Calculate relative humidity
+
+      PSW4 = ESATW (TK4)               !saturation vapor pressure
+      S4   = BQV/(0.622*PSW4/(P4/100.-PSW4))  !relative humidity
+      SS4  = S4-1.                     !saturation deficit
+      TC4  = TK4-TK0C                  !temp in degree
+
+!CCN Activation
+
+         IF (BQC .GE. 1e-6 .and. WCM .GE. 0.1) THEN
+!ccwu marine
+! NCCN = C*S^K, NCCN IS IN CM-3, S IS SUPERSATURATION RATIO IN %
+                  ACTK = 0.4; ACTC = 50                             ! Morrison et al. 2005
+
+!ccwu continental
+!                 ACTK = 0.5; ACTC = 1000                            ! Morrison
+!                 scheme
+!
+
+               NACac0 = 0.88*ACTC**(2./(ACTK+2.))*(7.E-2*WCM**   &
+                        1.5)**(ACTK/(ACTK+2.))*1.E6/DN4
+               NACac  = MAX((NACac0-BZC)/DT,0.)
+            ENDIF
+
+! autoconversion for rain
+
+      IF( BQC .GE. 1.E-6) THEN
+       QC        = MAX(BQC,1.e-15)                           ! cloud water mixing ratio
+       ZC        = MAX(BZC,1.e+03)                          ! cloud drop number
+       QCAUT = 1350.*(QC**2.47)*(ZC/1.E6*DN4)**(-1.79)
+       NCAUT = QCAUT / (QC/ZC)
+       TMP   = 4./3.*PI*(RHOW)*(25.E-6)**3
+       NRAUT = QCAUT / TMP
+
+       NCAUT = MIN(NCAUT,BZC/DT)
+       NRAUT = MIN(NRAUT,NCAUT)
+      ENDIF
+
+! accretion for rain
+
+      IF (BQR .GE. 1.E-8 .AND. BQC .GE. 1.E-8) THEN
+       QC        = MAX(BQC,1.e-15)                           ! cloud water mixing ratio
+       QR        = MAX(BQR,1.e-15)                           ! rain water mixing ratio
+       ZC        = MAX(BZC,1.e+03)                          ! cloud drop number
+       QCACR = 67.*(QC*QR)**1.15
+       NCACR = QCACR / (QC/ZC)
+
+      ENDIF
+
+! evaporation of rain
+
+      IF (BQR .GT. 1.e-8 .AND. SS4 .LE. -1.E-2) THEN
+! got rain or not
+      ATC4   = 2.3823E-2 + 7.11756E-5 * TC4             ! AIR THERMO CONDUCTIVITY
+      ADFV   = 2.11E-5*(TK4/TK0C)**1.94*PAIR0/P4        ! VAPOR DIFFUSIVITY
+      O1   = ELV  / TK4                                 ! [J/kg/K]
+      A5DR1= TK4 * CRV / PSW4                           ! [m^3/kg]
+      A5DR2= O1*(O1/CRV-1.)                             ! [J/kg/K]
+      BCOND = SS4 / ( (A5DR1/ADFV+A5DR2/ATC4) )         ![ kg/m/s ]
+      QR     = BQR                                      ! rainwater mixing ratio
+      ZR     = MAX(BZR,1.E+01)                          ! raindrop number
+      QRMEAN = MAX(4.189E-15,MIN(1.796E-4,QR/ZR))       !
+      RR     = (QRMEAN/C4XPV3/RHOW)**(1./3.)            ! [m] mean volumn radius of raindrops
+      RR     = MIN( 3.5E-3,MAX(RR,1.E-5))               ! 3.5mm > RR > 10.0um
+      LZR    = LOG(ZR)                                  !
+      LRR    = LOG(RR)                                  !
+      LRR2   = LRR*LRR                                  !
+      QREVAP = BCOND*ZR*EXP(AQ2+(BQ2+CQ2*LRR)*LRR2 )    ! evaporation of raindrops
+      QREVAP = MIN(QREVAP, 0.)
+      TMP    = MAX(-1.,QREVAP*DT/BQR)
+      NREVAP = TMP*BZR/DT
+      ENDIF
+
+
+
+      IF ( BQR.GE.1.E-9) THEN
+!...... air density adjustment for fall speeds  .....
+         QR     = BQR                                      ! rainwater mixing ratio
+         ZR     = MAX(BZR,1.E+01)                           ! raindrop number 
+         QRMEAN = MAX(4.189E-15,MIN(1.796E-4,QR/ZR))       !
+         RR     = (QRMEAN/C4XPV3/RHOW)**(1./3.)           ! mean volumn radius of raindrops
+         RR     = MIN( 3.5E-3,MAX(RR,1.E-5))               ! 3.5mm > RR > 10.0um
+         vtermr  = 0.012*RR*1.E6-0.2   ! V of raindrop mass  [m/s]
+         vtermnr = 0.007*RR*1.E6-0.1   ! V of raindrop #     [m/s]
+         vtermr  = MIN ( vtermr,  20. )                ! less than  20 m/s
+         vtermnr = MIN ( vtermnr, 20. )                ! less than  20 m/s
+         ELSE
+            vtermr   = 0.
+            vtermnr  = 0.
+         ENDIF
+
+!ccwu output for kk2000
+! dqv=-f1 condensation of qv
+! dqv=-f2 evaporation of qr
+! dqv=-f9 cloud deactivation
+
+! dqc=f1 - f9 + f4 + f5 + f8 +f10  autoconversion, accretion, raindrop
+! breakup,rain drop evaporates
+! dqr=f2 - f4 -f5 -f8 -f10
+! dtemp= L/cp * f2
+! dnr=autoconversion,self-collection, raindrop breakup,rain drop evaprate
+!
+      TSS(1) = -QREVAP
+      TSS(2) = -QCAUT-QCACR
+      TSS(3) = 0.
+      TSS(4) = 0.
+      TSS(5) = 0.
+      TSS(6) = QREVAP+QCAUT+QCACR
+      TSS(7) = ELV * (QREVAP) / CCPD
+      TSS(8) = NREVAP+NRAUT
+      TSS(9) = -NCAUT-NCACR+NACac
+      RETURN
+      END Subroutine kk20001d
+
+
