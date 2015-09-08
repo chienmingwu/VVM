@@ -21,7 +21,7 @@
       USE general_parameters, only: dt, im, jm, km
       USE physics_parameters
       USE basic_state_parameters
-      USE main_variables, only: theta, qv, qc, qi, qr, qs, qg, w
+      USE main_variables, only: theta, qv, qc, qi, qr, qs, qg, nr, nc, w
       USE physics_tendencies
       USE turb_surflx_variables, only: dz_mean, thetaS
 !      USE rad_variables_tendencies
@@ -257,6 +257,8 @@
       tendency_microphysics_qr    = 0.0_dbl_kind
       tendency_microphysics_qs    = 0.0_dbl_kind
       tendency_microphysics_qg    = 0.0_dbl_kind
+      tendency_microphysics_nr    = 0.0_dbl_kind
+      tendency_microphysics_nc    = 0.0_dbl_kind
       latent_heating_rate         = 0.0_dbl_kind
       
 !-----------------------------------------------------------------------
@@ -272,6 +274,8 @@
         qr(i,k)    = QR3D(i,j,k+1)
         qs(i,k)    = QS3D(i,j,k+1)
         qg(i,k)    = QG3D(i,j,k+1)
+        nr(i,k)    = TC3D(i,j,k+1,1)
+        nc(i,k)    = TC3D(i,j,K+1,2)
         thetaS(i)  = tg(i,j)
   100 CONTINUE
 
@@ -302,27 +306,18 @@
 
 #if defined (MICROCODE)      
       call timer_start('microphysics')
-      CALL Microphysics
-      
-! Surface precipitation
-!      DO 201 K=1,NK3
-!        IF (ZT(K) .LT. 2500.) THEN
-!          Z25B=ZT(K)
-!          Z25BK=K
-!          Z25T=ZT(K+1)
-!          Z25TK=K+1
-!        END IF
-!  201 CONTINUE
+! call C&L scheme
+
+      CALL kk2000
 
 !ccwu calculate using the location of mountain
 
       DO 200 I=1,im
 !ccwu for total prec(rain+snow+graupel)
-!        SPREC(I,J)  = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
-         hxp=INT(hx(I,J))
-        SPREC(I,J) =  VTR_int(I,hxp)+VTS_int(I,hxp)+VTG_int(I,hxp)
-!
-        PREC25(I,J) = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
+
+        hxp=INT(hx(I,J))
+        SPREC(I,J) =VTR_int(I,hxp)+VTS_int(I,hxp)+VTG_int(I,hxp)
+
   200 CONTINUE
 
       call timer_stop('microphysics')
@@ -337,74 +332,18 @@
 ! Check for negative value in moisture fields
 
 #if defined (MICROCODE)
-!      Call fill_negative (qv,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qc,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qi,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qs,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qg,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qr,0.0_dbl_kind,rhol,dzl)
-
-!tac -- Fill negative values in TWP-ICE tracers
-!      Call fill_negative (tracer1,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (tracer2,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (tracer3,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (tracer4,0.0_dbl_kind,rhol,dzl)
-
-!-----------------------------------------------------------------------
-! Adjust theta, qv, qc and qi for condensation, sublimation, 
-! freezing and melting      
-
-!      call timer_start('sat_adj')
-!      Call Saturation_adjustment
-!      call timer_stop('sat_adj')
-#endif
-
-!-----------------------------------------------------------------------
-! Assign adjusted values back into model arrays
-
-! Thermodynamic variables
-      DO 500 k = 2, NK2
-      DO 500 i = 1, MI1
-!        if(abs(th3d(i,j,k)-theta(i,j,k-1))/th3d(i,j,k) > 1.e-7_dbl_kind) then
-!          print *,'t ',th3d(i,j,k)* pil0(K-1), theta(i,j,k-1)* pil0(K-1)
-!          print *,'qv',qv3d(i,j,k), qv(i,j,k-1)
-!          print *,'qc ',qc3d(i,j,k), qc(i,j,k-1)
-!          print *,'qi ',qi3d(i,j,k), qi(i,j,k-1)
-!          stop
-!        endif
-        qb4 = QV3D(i,j,k) + QC3D(i,j,k) +QI3D(i,j,k) +QS3D(i,j,k) +QG3D(i,j,k) +QR3D(i,j,k) 
-        qafter = QV(i,k-1) + QC(i,k-1) +QI(i,k-1) +QS(i,k-1) +QG(i,k-1) +QR(i,k-1) 
-        if(abs(qafter-qb4)/qb4 > 1.e-10_dbl_kind) then
-          print *,'t ',th3d(i,j,k)* pil0(K-1), theta(i,k-1)* pil0(K-1)
-          print *,'q ',qb4, qafter
-          print *,'qv',qv3d(i,j,k), qv(i,k-1)
-          print *,'qc ',qc3d(i,j,k), qc(i,k-1)
-          print *,'qi ',qi3d(i,j,k), qi(i,k-1)
-          print *,'qs ',qs3d(i,j,k), qs(i,k-1)
-          print *,'qg ',qg3d(i,j,k), qg(i,k-1)
-          print *,'qr ',qr3d(i,j,k), qr(i,k-1)
-          stop
-        endif
-        TH3D(i,j,k) = theta(i,k-1)
-        QV3D(i,j,k) = qv(i,k-1)
-        QC3D(i,j,k) = qc(i,k-1)
-        QI3D(i,j,k) = qi(i,k-1)
-        QS3D(i,j,k) = qs(i,k-1)
-        QG3D(i,j,k) = qg(i,k-1)
-        QR3D(i,j,k) = qr(i,k-1)
-  500 CONTINUE
-
-#if defined (MICROCODE)
 ! Microphysics tendency terms & latent heating rate
       DO 510 k = 2, NK2
       DO 510 i = 1, MI1
         THAD_MICRO(i,j,k) = tendency_microphysics_theta(I,K-1)
         QVAD_MICRO(i,j,k) = tendency_microphysics_qv(I,K-1)
         QCAD_MICRO(i,j,k) = tendency_microphysics_qc(I,K-1)
-        QIAD_MICRO(i,j,k) = tendency_microphysics_qi(I,K-1)
-        QSAD_MICRO(i,j,k) = tendency_microphysics_qs(I,K-1)
-        QGAD_MICRO(i,j,k) = tendency_microphysics_qg(I,K-1)
+        QIAD_MICRO(i,j,k) = 0.
+        QSAD_MICRO(i,j,k) = 0.
+        QGAD_MICRO(i,j,k) = 0. !form C&L scheme
         QRAD_MICRO(i,j,k) = tendency_microphysics_qr(I,K-1)
+        NRAD_MICRO(i,j,k) = tendency_microphysics_nr(I,K-1)
+        NCAD_MICRO(i,j,k) = tendency_microphysics_nc(I,K-1)
         RLHR3D(i,j,k)     = latent_heating_rate(i,k-1)
   510 CONTINUE
 
@@ -413,8 +352,9 @@
       DO 520 k = 2, NK2
       DO 520 i = 1, MI1
         FQR3D(i,j,k,L) = FQR3D(i,j,k,L) + tendency_rain(i,k-1)
-        FQS3D(i,j,k,L) = FQS3D(i,j,k,L) + tendency_snow(i,k-1)
-        FQG3D(i,j,k,L) = FQG3D(i,j,k,L) + tendency_graupel(i,k-1)
+        FTC3D(I,J,K,L,1) = FTC3D(I,J,K,L,1)+ tendency_nr(i,k-1)
+        FQS3D(i,j,k,L) = FQS3D(i,j,k,L) + 0.
+        FQG3D(i,j,k,L) = FQG3D(i,j,k,L) + 0.
         FSED3D(i,j,k)  = tendency_sedimentation(i,k-1)
   520 CONTINUE
 
@@ -425,31 +365,12 @@
 #if defined (MICROCODE)
       CALL BOUND_ARB (1,SPREC)
       CALL BOUND_ARB (1,PREC25)
-
 #endif
-
-! TWP-ICE tracers
-!      DO 530 k = 2, NK2
-!      DO 530 j = 1, MJ1
-!      DO 530 i = 1, MI1
-!        TC3D1(i,j,k) = tracer1(i,j,k-1)
-!        TC3D2(i,j,k) = tracer2(i,j,k-1)
-!        TC3D3(i,j,k) = tracer3(i,j,k-1)
-!        TC3D4(i,j,k) = tracer4(i,j,k-1)
-!  530 CONTINUE
-
-!-----------------------------------------------------------------------
-! Wrap to ghost points for parallel computation
-! Call wrap_layer (theta,IWW,IW,IEE,IE)
-! Call wrap_layer (qv,IWW,IW,IEE,IE)
-! Call wrap_layer (qc,IWW,IW,IEE,IE)
-! Call wrap_layer (qi,IWW,IW,IEE,IE)
 
 ! Periodic continuation for serial code
       CALL BOUND_3D
-  
-!======================================================================
 
+!======================================================================
       RETURN
       END SUBROUTINE physics_interface
       
