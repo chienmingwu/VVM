@@ -58,7 +58,7 @@ Module main_variables
 Use general_parameters
   IMPLICIT NONE
 
-REAL (KIND=dbl_kind) :: theta(im,km),qv(im,km),qc(im,km),qi(im,km),qr(im,km),qs(im,km),qg(im,km)
+REAL (KIND=dbl_kind) :: theta(im,km),qv(im,km),qc(im,km),qi(im,km),qr(im,km),qs(im,km),qg(im,km),nr(im,km),nc(im,km)
 REAL (KIND=dbl_kind) :: u(im,km), v(im,km), w(im,0:km)
 
 !real*8 ksi(im,jm,0:km),eta(im,jm,0:km)
@@ -77,7 +77,12 @@ REAL (KIND=dbl_kind) ::   &
        tendency_microphysics_qr(im,km),tendency_microphysics_qs(im,km),                     &
        tendency_microphysics_qg(im,km),tendency_rain(im,km),tendency_snow(im,km),        &
        tendency_graupel(im,km),VTR_int(im,0:km),VTS_int(im,0:km),VTG_int(im,0:km),    & 
-       Surface_rain(im), Surface_snow(im), Surface_graupel(im)
+       Surface_rain(im), Surface_snow(im), Surface_graupel(im), &
+ !ccwu for C&L
+       tendency_microphysics_NR(im,km),tendency_nr(im,km),VTNR_int(im,0:km), &
+       tendency_microphysics_NC(im,km)
+
+
 
 REAL (KIND=dbl_kind) :: tendency_sedimentation(im,km),VTSed_int(im,0:km)
 REAL (KIND=dbl_kind) :: latent_heating_rate(im,km)
