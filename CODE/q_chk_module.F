@@ -69,6 +69,11 @@ CONTAINS
          tcpos
       REAL (KIND=dbl_kind) :: tstar, qvstar, qcstar,qistar,qfreeze,   &
           area, qtottem 
+!ccwu for activation
+
+      REAL (KIND=dbl_kind) ::  W1D, WCM, ACTK, ACTC, NC1D, NACac0, NACac
+
+!ccwu
 
       INTEGER (KIND=int_kind), PARAMETER :: nb = 5+ntracer
       REAL (KIND=dbl_kind), DIMENSION(2*nb) :: qsendbuf,qrecvbuf
@@ -343,6 +348,14 @@ CONTAINS
       QV3D(I,J,K) = QVSTAR
       QC3D(I,J,K) = QCSTAR
       QI3D(I,J,K) = QISTAR
+!ccwu
+      if (QC3D(I,J,K) .LT. 1.E-20) then
+      TC3D(I,J,K,2) = 0.
+      endif
+
+      if (QR3D(I,J,K) .LT. 1.E-15) then
+      TC3D(I,J,K,1) = 0.
+      endif
 !-----------------------------------------------------------------------
       
 !   Complete latent heating rate calculation by adding saturation
