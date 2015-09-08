@@ -56,46 +56,100 @@ CONTAINS
 
       integer nu1, nt1, k1, k2, it
       logical lf
-      DATA NU1/33/,NT1/21/
+      DATA NU1/10000/,NT1/10000/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(21),T1(21),QV1(21),QC1(21)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
-             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
-             ,133.6,111.3,92.6/
-      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
-             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
-             ,-726.4,-755.8,-749.0/
-      DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
-              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
-      DATA QC1/21*0./
+      REAL (KIND=dbl_kind) :: ZT1(10000),PI1(10000),TV1(10000),PILOG1(10000)
+      REAL (KIND=dbl_kind) :: PQ1(10000),P1(10000),T1(10000),QV1(10000),QC1(10000)
+      REAL (KIND=dbl_kind) :: Q1OBS(10000),Q2OBS(10000)
+      REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),V1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
+      DELZ=1.
+      sfcp=1015.4
 
-      REAL (KIND=dbl_kind) ::  PU1(33),U1(33)
-      DATA PU1/1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
-                858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
-                618.6, 581.3, 543.9, 506.8, 470.2, 434.1, 398.9,   &
-                364.6, 331.4, 299.4, 268.7, 239.5, 211.8, 185.8,   &
-                161.6, 139.4, 119.2, 101.4,  85.8 /
-      DATA U1/ -1.0,  -1.0,  -1.4,  -1.7,  -1.8,  -2.1,  -2.6,  -3.6,   &
-               -4.9,  -6.7,  -8.7, -10.6, -12.2, -13.2, -13.1, -12.0,   &
-               -9.7,  -6.6,  -3.2,  -0.3,   1.3,   1.3,   0.4,  -1.0,   &
-               -2.9,  -4.3,  -4.5,  -2.8,  -0.6,  -0.5,  -2.2,  -2.5,   &
-               -3.0 / 
+      DO K=1,NT1
+      HEIGHT(K)=(K-1)*DELZ
+      ENDDO
+
+      do k=1,NT1
+      u1(k)=-9.9+2.0e-3*height(k)
+      enddo
+      do k=1,NT1
+      v1(k)=-3.8
+      enddo
+
+
+      do k=1,NT1
+      if(height(k) .le. 740.) then
+      qv1(k)=16.0+(13.8-16.0)/(740.)*height(k)
+      elseif(height(k) .le. 3260.) then
+      qv1(k)=13.8+(2.4-13.8)/(3260.-740.)*(height(k)-740.)
+      else
+      qv1(k)=2.4+(1.8-2.4)/(4000.-3260.)*(height(k)-3260.)
+      endif
+      enddo
+
+      do k=1,NT1
+      qv1(k)=qv1(k)/1000.
+      enddo
+
+      do k=1,NT1
+      q1obs(k)=-2.5/86400. ! K/s
+      enddo
+
+      do k=1,NT1
+      if(height(k) .le. 2980.) then
+      q2obs(k)=-1.0/86400.+(1.3456/86400.)*height(k)/2980.
+      else
+      q2obs(k)=4.*1.e-6
+      endif
+      enddo
+
+      do k=1,NT1
+      q2obs(k)=q2obs(k)/1000. ! g/g/s
+      enddo
+
+
+      do k=1,NT1
+      if(height(k) .le. 740) then
+      t1(k)=297.9
+      else
+      t1(k)=297.9+(317.0-297.9)/(4000-740)*(height(k)-740)
+      endif
+      enddo
+
+      do k=1,nt1
+      qc1(k)=0.
+      enddo
+
+      do k=1,nt1
+      t1(k)=t1(k)+2.5e6/1004.5*qc1(k)
+      qv1(k)=qv1(k)-qc1(k)
+      enddo
+
+      do k=1,nt1
+      thv(k)=t1(k)*(1+0.608*qv1(k)-qc1(k))
+      enddo
+
+
+      PI1(1)=(sfcp/1000.)**(rgas/CP)
+      DO K=2,NT1
+      THVAVG=0.5*(THV(K)+THV(K-1))
+      PI1(K)=PI1(K-1)-GRAV*DELZ/(CP*THVAVG)
+      ENDDO
+
+      DO K=1,nt1
+      p1(k)=exp(cp/rgas*log(pi1(K))+log(1000.))
+      PU1(K)=P1(K)
+      PQ1(K)=P1(K)
+      ENDDO
+
+      do k=1,nt1
+      t1(k)=t1(k)*pi1(k)
+      enddo
+
 
       casename= 'GATE_PHASE_III'
 
@@ -119,8 +173,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04
+      T1(K) =  T1(K) 
+      QV1(K)= QV1(K) * 1.E-03
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -291,13 +345,17 @@ CONTAINS
       IF ( Q1Q2 ) SCALEQ = SCALE
 
       DO 210 K = 1, NK3
-      Q1LS (K) = -1.* SCALEQ * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = SCALEQ * Q2LS (K) / (GAMFAC * SECDAY)
+!      Q1LS (K) = -1.* SCALEQ * Q1LS (K) / PIBAR(K) / SECDAY
+!      Q2LS (K) = SCALEQ * Q2LS (K) / (GAMFAC * SECDAY)
+      Q1LS (K) = Q1LS(K)
+      Q2LS (K) = Q2LS (K)
   210 CONTINUE
 
 #if !defined (RADCODE)
       DO 212 K = 1, NK3
-      Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
+!ccwu for rico case
+!      Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
+      Q1LS(K) = 0.
   212 CONTINUE
 #endif
 
@@ -372,7 +430,7 @@ CONTAINS
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
       QV3D(I,J,K) = QVBAR(K)
-      QC3D(I,J,K) = 0.
+      QC3D(I,J,K) = QCBAR(K)
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
       QS3D(I,J,K) = 0.
@@ -476,8 +534,10 @@ CONTAINS
       UTMN0 = UTMN
       VTMN0 = VTMN
       
-      IF(itt == 0) CALL UPDATE_TRACER_init
-     
+!      IF(itt == 0) CALL UPDATE_TRACER_init
+ 
+      tc3d(:,:,:,:)=0. !this variable is now used for NR
+    
 #if defined (DIFFUSION)
       call turb_3d_ini
 #endif
