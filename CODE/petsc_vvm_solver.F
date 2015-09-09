@@ -150,7 +150,7 @@ KSP sksp_Conti(2*nlevel-1),sksp_topChi(2*nlevel-1),sksp_topPsi(2*nlevel-1)
 Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
-PetscInt, PRIVATE:: MXIT = 2000
+PetscInt, PRIVATE:: MXIT = 1000
 PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
 PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-5,dtol_TopPsi = 1.d2
 PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-5,dtol_TopChi = 1.d2

@@ -34,6 +34,45 @@ CONTAINS
 ! local variables
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
+
+!add simple subsidence effects
+!wbar=-omega/(rho*g)
+!dT/dt= -wbar*(dT/dz)
+!dqv/dt=-wbar*(dqv/dz)
+!dqc/dt=-wbar*(dqc/dz)
+      REAL (KIND=dbl_kind) :: &
+      omega(nk3),     &!omega from su et al. 2000
+      wbar(mi1,nk3),  &!subsidence/dz 
+      pi,             &!pi
+      tempim
+
+      pi = 4._8 * atan(1._8)
+      omega=0.
+
+      do k=1,nk3
+      if(pbar(k) .gt. 15000. .and. pbar(k) .lt. 90000.) then
+      omega(k)=0.1*sin(pi*(90000.-pbar(k))/75000.) 
+      endif
+      enddo
+
+      do  i=1,mi1
+      do  k=1,nk3
+      tempim=dble(mi1*ni_sbdm+i)
+      wbar(i,k)=-omega(k)/rho(k)/9.8*FNZ(K)/DZ*(-cos(2*pi*tempim/3072)) !3072 points
+      enddo
+      enddo
+       
+
+      do k=2,nk2
+      do j=1,mj1
+      do i=1,mi1
+      TH3D(I,J,K)=TH3D(I,J,K)-DT*WBAR(I,K)*(TH3D(I,J,K+1)-TH3D(I,J,K))
+      QV3D(I,J,K)=QV3D(I,J,K)-DT*WBAR(I,K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
+      QC3D(I,J,K)=QC3D(I,J,K)-DT*WBAR(I,K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
+      enddo
+      enddo
+      enddo
+
 ! Update theta from dynamics tendency term
       DO 50 K = 2, NK2
       DO 50 J = 1, MJ1
