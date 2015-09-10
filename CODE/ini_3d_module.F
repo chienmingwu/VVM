@@ -130,8 +130,9 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-!      SST = T1(1) * 0.1 + 273.16 + DSST
-      SST = 302.756     
+      SST = T1(1) * 0.1 + 273.16
+!      SST = 302.756     
+
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND

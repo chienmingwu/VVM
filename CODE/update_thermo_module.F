@@ -61,7 +61,7 @@ CONTAINS
       wbar(i,k)=-omega(k)/rho(k)/9.8*FNZ(K)/DZ*(-cos(2*pi*tempim/3072)) !3072 points
       enddo
       enddo
-       
+      if(my_task==0) print *, wbar(1,:) 
 
       do k=2,nk2
       do j=1,mj1
