@@ -675,7 +675,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
    SLOPE = SLOPE1
 
    ALBEDOM    = ALBEDOM1/100.
-   SHDFAC     = GREENFRACM1 
+   SHDFAC     = GREENFRACM1/100. 
    LAIM       = LAIM1
    SHDMAX     = SHDMAX1
    SHDMIN     = SHDMIN1

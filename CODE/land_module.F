@@ -207,14 +207,28 @@ CONTAINS
       CLOSE(99)
       ENDIF
 
-      LU = 7
+!ccwu
+      if (ni_sbdm .ge. nsbdm_x/2 ) then
+      LU = 1
+      SOIL = 9
+      SLOPE = 3
+      ALBEDOM = 15.
+      GREENFRACM = 0.
+      LAIM = 4.
+      SHDMAX = 0.
+      SHDMIN = 0.
+
+      else 
+
+      LU = 7 
       SOIL = 1
       SLOPE = 1
       ALBEDOM = 19.
       GREENFRACM = 80.
       LAIM = 4.
       SHDMAX = 80.
-      SHDMIN = 80.      
+      SHDMIN = 80.
+      endif 
 
 !      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
 !      'RUNDATA/SM1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
