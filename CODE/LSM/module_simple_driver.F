@@ -707,8 +707,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   ENDDO
   ENDDO
 
-!  dt = real(noahlsm_timestep)
-   dt =1.
+  dt = real(noahlsm_timestep)
   nsoil = 4
   shdfac                    = shdfac
   shdmax                    = shdmax1/100.0
