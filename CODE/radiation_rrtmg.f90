@@ -1,6 +1,6 @@
 #include "definesld.com"
-SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, DYNEW, &
-                            RLAT, RLON, DT, ZZ, ZT, RHO)
+SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
+                            DYNEW, RLAT, RLON, DT, ZZ, ZT, RHO)
 
 !------------------------------------------------------------------
 !  This is the interface code between the Vector Vorticity Model

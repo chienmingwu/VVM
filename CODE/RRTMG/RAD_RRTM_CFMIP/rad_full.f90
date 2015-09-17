@@ -70,6 +70,7 @@
        qcl, &     ! cloud mixing ratio
        qci, &     ! ice mixing ratio
        sstxy, &   ! sea surface temperature
+       albdo, &   ! given albedo from land surface model.
        pres, &    ! model layer pressure (mb)
        presi, &   ! model interface pressure (mb)
 !       rho, &     ! density profile.  In this anelastic model, rho=rho(z).
@@ -253,6 +254,7 @@
              qcl_slice, &
              qci_slice, &
              tg_slice, &
+             albedo_slice, &
              o3_slice, &
              co2_slice, &
              ch4_slice, &
@@ -299,6 +301,7 @@
              qcl_slice(nx,nzrad), &
              qci_slice(nx,nzrad), &
              tg_slice(nx), &
+             albedo_slice(nx), &
              o3_slice(nzrad+1), &
              co2_slice(nzrad+1), &
              ch4_slice(nzrad+1), &
@@ -398,6 +401,7 @@
 !$omp              swUp, swDown, swUpClearSky, swDownClearSky,                 &
 !$omp              swHeatingRate, swHeatingRateClearSky, lwHeatingRate, lwHeatingRateClearSky, &
 !$omp              LWP, IWP, liquidRe, iceRe)
+
     do 1000 j = 1,ny
 
       ! extract a slice from the three-dimensional domain on this processor.
@@ -409,6 +413,7 @@
       qcl_slice(1:nx,1:nzm) = qcl(1:nx,j,1:nzm)
       qci_slice(1:nx,1:nzm) = qci(1:nx,j,1:nzm)
       tg_slice(1:nx) = sstxy(1:nx,j)
+      albedo_slice(1:nx) = albdo(1:nx,j)
       o3_slice(1:nzm) = o3(1,j,1:nzm)
       co2_slice(1:nzm) = co2(1,j,1:nzm)
       ch4_slice(1:nzm) = ch4(1,j,1:nzm)
@@ -437,7 +442,7 @@
 ! Make call to wrapper routine for RRTMG (v.4.8 for LW, v.3.8 for SW)
 
       call rad_driver_rrtm(nx,nzrad,j,pres_input,presi_input, &
-           tabs_slice,qv_slice,qcl_slice,qci_slice,tg_slice, &
+           tabs_slice,qv_slice,qcl_slice,qci_slice,tg_slice, albedo_slice, &
            o3_slice,co2_slice,ch4_slice,n2o_slice,o2_slice, &
            cfc11_slice,cfc12_slice,cfc22_slice,ccl4_slice, &
            dolongwave,doshortwave,doperpetual,doseasons, &
