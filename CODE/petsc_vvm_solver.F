@@ -417,6 +417,10 @@ SUBROUTINE petsc_solver_finalize
 !    call KSPDestroy(sksp_toppsi(I),ierr)
 !    call KSPDestroy(sksp_topchi(I),ierr)
 !    enddo
+
+    call VecDestroy(v,ierr)
+    call VecDestroy(v1,ierr)
+    call VecDestroy(v2,ierr)
     call KSPDestroy(Conti,ierr)
     call KSPDestroy(Toppsi,ierr)
     call KSPDestroy(Topchi,ierr)
