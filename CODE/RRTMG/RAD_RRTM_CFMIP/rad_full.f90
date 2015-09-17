@@ -402,7 +402,7 @@
 !$omp              swHeatingRate, swHeatingRateClearSky, lwHeatingRate, lwHeatingRateClearSky, &
 !$omp              LWP, IWP, liquidRe, iceRe)
 
-    print*,albdo(10,10),sstxy(10,10),'rad'
+!    print*,albdo(10,10),sstxy(10,10),'rad'
 
     do 1000 j = 1,ny
 
