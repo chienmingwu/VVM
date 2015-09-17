@@ -49,8 +49,8 @@ endif
 
 sed -e 's/expname/'${expname}'/g' \
     -e 's/np_nodes/2/g' \
-    -e 's/np_threads/8/g' \
-    -e 's/total_cores/16/g' ../../RUN/run.sh > run.sh
+    -e 's/np_threads/12/g' \
+    -e 's/total_cores/24/g' ../../RUN/run.sh > run.sh
 
 qsub run.sh
 #rm run.sh
