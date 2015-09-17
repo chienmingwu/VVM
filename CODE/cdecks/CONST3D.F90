@@ -136,7 +136,9 @@ PRIVATE
       qcad_micro,   &  ! tendency of cloud water due to microphysics (kg/kg/s)
       qiad_micro,   &  ! tendency of cloud ice due to microphysics (kg/kg/s)
       qsad_micro,   &  ! tendency of snow due to microphysics (kg/kg/s)
-      qgad_micro       ! tendency of graupel due to microphysics(kg/kg/s)
+      qgad_micro,   &  ! tendency of graupel due to microphysics(kg/kg/s)
+      nrad_micro,   &  ! tendency of rain # due to microphysics(#/kg/s)
+      ncad_micro       ! tendency of cloud water # due to microphysics(#/kg/s)
 
 !*****************************
 ! Mainly used in UVTOP_3D.

@@ -44,6 +44,7 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define PARALLELIO
 #define AREAMN
+#define LSM
 #define RADCODE
 'END1'
 cat definesld.com
@@ -53,8 +54,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/128/' \
-    -e '1,$s/merid_dimension/128/' \
+sed -e '1,$s/zonal_dimension/256/' \
+    -e '1,$s/merid_dimension/256/' \
     -e '1,$s/zonal_decomposition/4/' \
     -e '1,$s/merid_decomposition/4/' \
     -e '1,$s/vert_dimension/100/' \
@@ -88,7 +89,6 @@ cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
 #cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
 #cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
-
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
 #set soil2 = (SOILM0_1lev SOILM0_2lev SOILM0_3lev SOILM0_4lev \
@@ -108,7 +108,7 @@ cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
 #./nc2fortranBinary
 
 # for LSM
-cd ../${subdir}
+#cd ../${subdir}
 cp ${subdir}/CODE/LSM/GENPARM.TBL .
 cp ${subdir}/CODE/LSM/SOILPARM.TBL .
 cp ${subdir}/CODE/LSM/VEGPARM.TBL .
