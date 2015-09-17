@@ -108,7 +108,9 @@ CONTAINS
 
       WT = dble(WTi)
       WQ = dble(WQi)
-
+      PRINT*, lALBEDO(10,10),lT1(10,10),'land'
+      albdo = lALBEDO
+      sstxy = lT1
 
 !       WT = 0.
 !       WQ = 0.

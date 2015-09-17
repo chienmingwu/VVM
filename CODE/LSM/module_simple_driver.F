@@ -557,8 +557,6 @@ DO I=1,MI1
 !      PRINT*, SNOMLT(I,J), SNCOVR(I,J), RUNOFF1(I,J), RUNOFF2(I,J),     &
 !             RUNOFF3(I,J), RC(I,J), PC(I,J), RCT(I,J), RCQ(I,J), Q1(I,J), RIBB,'==='
 
-     IF ( i .eq. 10 .and. j .eq. 10 )  PRINT*, Z0(I,J),'-----'
-
 
      ELSEIF ( ICE == -1 ) THEN
 
