@@ -105,8 +105,8 @@ cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 #mv makefile makefile_gldas
 #mv makefile_topo makefile
 
-make
-./nc2fortranBinary
+#make
+#./nc2fortranBinary
 
 # for LSM
 cd ../${subdir}

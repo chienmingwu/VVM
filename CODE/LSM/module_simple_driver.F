@@ -526,8 +526,6 @@ DO I=1,MI1
      !    NROOT       -- Number of root layers ( count )
      !
 
-     IF ( i .eq. 10 .and. j .eq. 10 )  PRINT*, Z0(I,J)
-
 
 
 !     if ( ICE == 0 ) THEN
@@ -703,7 +701,6 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
        usemonalb, rdlai2d, llanduse, &
        iz0tlnd, sfcdif_option,STinout_ini,SMinout_ini,SLinout_ini)
 
-
   ST(I,J,:) = STinout_ini
   SM(I,J,:) = SMinout_ini
   SL(I,J,:) = SLinout_ini
@@ -711,7 +708,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   ENDDO
   ENDDO
 
-!  dt = real(noahlsm_timestep)
+  dt = real(noahlsm_timestep)
   nsoil = 4
   shdfac                    = shdfac
   shdmax                    = shdmax1/100.0
@@ -719,7 +716,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   zlvl                      = zz1
   zlvl_wind                 = zz1
   T1                        = t11
-  isurban                   = 0
+  isurban                   = 1 
   if (use_urban_module) STOP "This is not urban code."
 
   !
