@@ -25,9 +25,6 @@
       USE physics_tendencies
       USE turb_surflx_variables, only: dz_mean, thetaS
 !      USE rad_variables_tendencies
-#if defined (LSM)
-      USE land_module, only: lT1
-#endif      
       USE rrtm_params, only: latitude, longitude
       USE rrtm_grid, only: day, day0, iyear
       USE rrtm_vars, only: sstxy,albdo
