@@ -5,6 +5,7 @@ USE kinds
 USE parmsld
 USE constld
 USE domain_decomposition
+USE rrtm_vars, only: sstxy,albdo
 !===hchun=================================
 USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
@@ -107,7 +108,9 @@ CONTAINS
 
       WT = dble(WTi)
       WQ = dble(WQi)
-
+      PRINT*, lALBEDO(10,10),lT1(10,10),'land'
+      albdo = lALBEDO
+      sstxy = lT1
 
 !       WT = 0.
 !       WQ = 0.
@@ -207,14 +210,15 @@ CONTAINS
       CLOSE(99)
       ENDIF
 
+!ccwu
       LU = 1
       SOIL = 1
-      SLOPE = 1
+      SLOPE =  1 
       ALBEDOM = 15.
       GREENFRACM = 10.
       LAIM = 4.
       SHDMAX = 10.
-      SHDMIN = 10.      
+      SHDMIN = 10.
 
 !      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
 !      'RUNDATA/SM1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
@@ -372,9 +376,10 @@ CONTAINS
                        ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZZ,&
                        lALBEDO,lEMISSI,lCMC,lT1,lST,lSM,lSL,lET,lSMAV)
 
+   albdo = lALBEDO 
+   sstxy = lT1
 
 #endif
-
 
    END SUBROUTINE land_ini
 
