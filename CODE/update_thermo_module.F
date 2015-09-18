@@ -58,8 +58,7 @@ CONTAINS
       do  i=1,mi1
       do  k=1,nk3
       tempim=dble(mi1*ni_sbdm+i)
-      !wbar(i,k)=-omega(k)/rho(k)/9.8*FNZ(K)/DZ*(sin(2*pi*tempim/3072.)) !3072 points
-      wbar(i,k)=-omega(k)/rho(k)/9.8*FNZ(K)/DZ !no horizontal variations
+      wbar(i,k)=-omega(k)/rho(k)/9.8*FNZ(K)/DZ*(sin(2*pi*tempim/3072.)) !3072 points
       enddo
       enddo
 

@@ -327,9 +327,11 @@ CONTAINS
       ENDDO
 
 #if !defined (RADCODE)
+      DO 212 I = 1, 148
       DO 212 K = 1, NK3
       Q1LS (K,I) = Q1LS (K,I) + RAD1 / PIBAR(K) / SECDAY
   212 CONTINUE
+      
 #endif
 
       DO 220 K = 2, NK2
