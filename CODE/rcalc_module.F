@@ -202,7 +202,7 @@ CONTAINS
 
 
 ! Update thermodynamic variables -- Replaces call to CLOUD_3D
-      CALL update_thermodynamics (N1,N2)
+      CALL update_thermodynamics (N1,N2,ITT)
 
 ! Nudge mean water vapor and mean potential temperature to mean (if so defined in nudge)
       CALL NUDGE

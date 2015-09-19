@@ -18,7 +18,7 @@ PUBLIC :: update_thermodynamics
 CONTAINS
 
 !-----7---------------------------------------------------------------72
-      SUBROUTINE update_thermodynamics (N1,N2)
+      SUBROUTINE update_thermodynamics (N1,N2,ITT)
       
 !     Updating the thermodynamic variables.
 !
@@ -28,6 +28,7 @@ CONTAINS
 
 ! Argument list variables
       INTEGER (KIND=int_kind), INTENT(IN) ::  &
+         itt,       & ! time step count
          n1,        & ! AB forcing time index for previous timestep
          n2           ! AB forcing time index for current timestep
      
@@ -49,6 +50,7 @@ CONTAINS
       pi = 4._8 * atan(1._8)
       omega=0.
 
+      if(itt*dt .gt. 864000) then
       do k=1,nk3
       if(pbar(k) .gt. 15000. .and. pbar(k) .lt. 90000.) then
       omega(k)=0.1*sin(pi*(90000.-pbar(k))/75000.) 
@@ -62,8 +64,11 @@ CONTAINS
       enddo
       enddo
 
-!ccwu
-!      wbar=0.
+      else
+
+      wbar=0.
+
+      endif
 
       do k=2,nk2
       do j=1,mj1
