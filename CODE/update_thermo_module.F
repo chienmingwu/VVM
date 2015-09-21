@@ -50,25 +50,7 @@ CONTAINS
       pi = 4._8 * atan(1._8)
       omega=0.
 
-      if(itt*dt .gt. 864000) then
-      do k=1,nk3
-      if(pbar(k) .gt. 15000. .and. pbar(k) .lt. 90000.) then
-      omega(k)=0.1*sin(pi*(90000.-pbar(k))/75000.) 
-      endif
-      enddo
-
-      do  i=1,mi1
-      do  k=1,nk3
-      tempim=dble(mi1*ni_sbdm+i)
-      wbar(i,k)=-omega(k)/rho(k)/9.8*FNZ(K)/DZ*(sin(2*pi*tempim/3072.)) !3072 points
-      enddo
-      enddo
-
-      else
-
       wbar=0.
-
-      endif
 
       do k=2,nk2
       do j=1,mj1
