@@ -49,8 +49,8 @@ CONTAINS
 
       pi = 4._8 * atan(1._8)
       omega=0.
-
-      if(itt*dt .gt. 864000) then
+      !use DT from INPUT
+      if(itt*20 .gt. 864000) then
       do k=1,nk3
       if(pbar(k) .gt. 15000. .and. pbar(k) .lt. 90000.) then
       omega(k)=0.1*sin(pi*(90000.-pbar(k))/75000.) 
