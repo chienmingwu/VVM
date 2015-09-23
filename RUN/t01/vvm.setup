@@ -42,7 +42,6 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
-#define TOPOGRAPHY
 #define RADCODE
 #define AREAMN
 'END1'
