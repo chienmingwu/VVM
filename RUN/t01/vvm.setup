@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rce3
+set expname = rce1d
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -52,10 +52,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/768/' \
-    -e '1,$s/merid_dimension/768/' \
-    -e '1,$s/zonal_decomposition/12/' \
-    -e '1,$s/merid_decomposition/12/' \
+sed -e '1,$s/zonal_dimension/256/' \
+    -e '1,$s/merid_dimension/256/' \
+    -e '1,$s/zonal_decomposition/8/' \
+    -e '1,$s/merid_decomposition/4/' \
     -e '1,$s/vert_dimension/45/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
