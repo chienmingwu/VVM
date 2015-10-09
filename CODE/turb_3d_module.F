@@ -94,7 +94,7 @@ CONTAINS
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
 !      CRITMN=100.
 !      New Value for TWP-ICE
-      CRITMN=100._dbl_kind !ccwu for LES run
+      CRITMN=0._dbl_kind !ccwu for LES run
 
       RAMD0S=(0.23_dbl_kind*DELD)**2
 
@@ -902,7 +902,7 @@ CONTAINS
              -(HLF+HLM)*QI3D(I,J,hxp)
 
       ZROUGH1 = ZROUGH(I,J)
-      SPEEDM  = SPEEDTP(I,J)
+      SPEEDM  = MAX( SPEEDTP(I,J), 5.) !ccwu add min surface fluxes
       THVSM   = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
 
