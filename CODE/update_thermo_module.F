@@ -36,9 +36,8 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
-!add simple subsidence effects using wls
+!add simple subsidence effects using wls (1/s)
 
-      print *, wls
       do k=2,nk2
       do j=1,mj1
       do i=1,mi1

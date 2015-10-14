@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = mjoshallow
+set expname = mjoshallow2
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -71,7 +71,7 @@ cat > INPUT << 'END6'
  &INPUT2 RLAT=5.,RLON=75. /
  &INPUT3 DX=250.,DYNEW=250.,DZ=250.,DZ1=50.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
- &INPUT5 IX=3182073,ITINIT=60,ITSTOP=2400,SCALE=1.,Q1Q2=T,DTRAD=600.,SOLVAR=F /
+ &INPUT5 IX=3182073,ITINIT=60,ITSTOP=2400,SCALE=0.,Q1Q2=F,DTRAD=600.,SOLVAR=F /
 'END6'
 cat INPUT
 

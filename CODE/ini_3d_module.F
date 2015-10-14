@@ -84,8 +84,8 @@ CONTAINS
                0.001/
       DATA QC1/40*0./
 !mjo forcing 
-      REAL (KIND=real_kind) ::  Q1temp(40),Q2temp(40),wlstemp(40)
-      REAL (KIND=dbl_kind) ::  Q1OBS(40,148),Q2OBS(40,148)
+      REAL (KIND=real_kind) ::  Q1temp(40),Q2temp(40)
+      REAL (KIND=dbl_kind) ::  Q1OBS(40,148),Q2OBS(40,148),wlstemp(40)
 
       DATA Q1temp/-0.0461976,  -0.0874221,  -0.00396465, -0.00718882, 0.221355,     0.580574,  1.05289,    1.39567, & 
                    1.55116,     1.16169,     0.873257,    0.794424,   0.753731,     0.660938,  0.69349,    0.875129, & 
@@ -326,9 +326,8 @@ CONTAINS
       WLS (K) =  &
         FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLStemp(K1),PQ1(K2),wlstemp(K2))
   201 CONTINUE
-!ccwu change omega pa/hr to w m/s
-      WLS=-WLS/RHO/9.8*FNZ/DZ/3600.
-      print *, wls
+!ccwu change omega mb/hr to w/dz 1/s
+      WLS=-WLS/RHO/9.8*FNZ/DZ*100./3600.
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
 !     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
