@@ -36,28 +36,15 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
-!add simple subsidence effects
-!wbar=-omega/(rho*g)
-!dT/dt= -wbar*(dT/dz)
-!dqv/dt=-wbar*(dqv/dz)
-!dqc/dt=-wbar*(dqc/dz)
-      REAL (KIND=dbl_kind) :: &
-      omega(nk3),     &!omega from su et al. 2000
-      wbar(mi1,nk3),  &!subsidence/dz 
-      pi,             &!pi
-      tempim
+!add simple subsidence effects using wls
 
-      pi = 4._8 * atan(1._8)
-      omega=0.
-
-      wbar=0.
-
+      print *, wls
       do k=2,nk2
       do j=1,mj1
       do i=1,mi1
-      TH3D(I,J,K)=TH3D(I,J,K)-DT*WBAR(I,K)*(TH3D(I,J,K+1)-TH3D(I,J,K))
-      QV3D(I,J,K)=QV3D(I,J,K)-DT*WBAR(I,K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
-      QC3D(I,J,K)=QC3D(I,J,K)-DT*WBAR(I,K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
+      TH3D(I,J,K)=TH3D(I,J,K)-DT*WLS(K)*(TH3D(I,J,K+1)-TH3D(I,J,K))
+      QV3D(I,J,K)=QV3D(I,J,K)-DT*WLS(K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
+      QC3D(I,J,K)=QC3D(I,J,K)-DT*WLS(K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
       enddo
       enddo
       enddo

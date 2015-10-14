@@ -80,11 +80,11 @@ CONTAINS
                6.98327, 6.0754, 5.18795, 4.33168, 3.70437, 3.7297, 3.55533, 3.44587, &
                2.97186, 2.56648, 2.13208, 1.86848, 1.49753, 1.08326, 0.805023, 0.65239, &
                0.553536, 0.39866, 0.311286, 0.239822, 0.188651, 0.149561, 0.110421, 0.0656687, &
-               0.0394533, 0.0188147, 0.0107617, 0.00443963, 0.00408595, 0.0033537, 0.0064358, &
-               0.0201492/
+               0.0394533, 0.0188147, 0.0107617, 0.00443963, 0.00408595, 0.001, 0.001, &
+               0.001/
       DATA QC1/40*0./
 !mjo forcing 
-      REAL (KIND=real_kind) ::  Q1temp(40),Q2temp(40)
+      REAL (KIND=real_kind) ::  Q1temp(40),Q2temp(40),wlstemp(40)
       REAL (KIND=dbl_kind) ::  Q1OBS(40,148),Q2OBS(40,148)
 
       DATA Q1temp/-0.0461976,  -0.0874221,  -0.00396465, -0.00718882, 0.221355,     0.580574,  1.05289,    1.39567, & 
@@ -98,6 +98,11 @@ CONTAINS
                   -0.639732,   -0.740723,   -0.541441,   -0.319487,  -0.24155,     -0.12725,  -0.0701748, -0.04884, &
                   -0.00844292, -0.00366469, -0.00637728, -0.00674063, 0.000827067, -0.000639146, 0., 0./
 
+      DATA wlstemp /0.0343545, 0.0927297, 0.172472, 0.324288, 0.515959, 0.6879, 0.811584, 0.879516, & 
+                    0.888672, 0.829908, 0.730529, 0.633793, 0.564814, 0.572337, 0.654776, 0.758846, &
+                    0.880946, 1.00178, 1.081, 1.135, 1.18224, 1.23365, 1.26958, 1.24045, & 
+                    1.16669, 1.10064, 1.06492, 1.05095, 1.01345, 0.909781, 0.753409, 0.577628, & 
+                    0.376965, 0.164785, 0.0179518, -0.0192874, 8.13033e-07, 0., 0., 0./
 !     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
 !     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
 !     PU1 (MB) , U1(M/S)
@@ -299,8 +304,8 @@ CONTAINS
       DO I=1,148  !whole dynamo period
 
       DO 200 K = 2, NK3
-      IF ( ZT(K) .LT. 12000. ) THEN !ccwu change to 12000 from 15000
-      K1 = INDEXR(PBAR(K)*0.01,15,PQ1,LF) !ccwu change with pq1 accordingly
+      IF ( ZT(K) .LT. 15000. ) THEN 
+      K1 = INDEXR(PBAR(K)*0.01,NT1,PQ1,LF) !ccwu change with pq1 accordingly
       K2 = K1 + 1
       Q1LS (K,I) =  &
         FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1,I),PQ1(K2),Q1OBS(K2,I))
@@ -313,6 +318,17 @@ CONTAINS
   200 CONTINUE
 
       ENDDO
+!ccwu for subsidence 
+      DO 201 K = 2, NK3
+
+      K1 = INDEXR(PBAR(K)*0.01,NT1,PQ1,LF) !ccwu change with pq1 accordingly
+      K2 = K1 + 1
+      WLS (K) =  &
+        FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLStemp(K1),PQ1(K2),wlstemp(K2))
+  201 CONTINUE
+!ccwu change omega pa/hr to w m/s
+      WLS=-WLS/RHO/9.8*FNZ/DZ/3600.
+      print *, wls
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
 !     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
@@ -323,7 +339,7 @@ CONTAINS
 
       DO 210 K = 1, NK3
       Q1LS (K,I) = SCALEQ * Q1LS (K,I) /  SECDAY
-      Q2LS (K,I) = SCALEQ * Q2LS (K,I) /  SECDAY
+      Q2LS (K,I) = SCALEQ * Q2LS (K,I) / 1000. / SECDAY
   210 CONTINUE
       ENDDO
 
