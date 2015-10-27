@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rce25305
+set expname = rce25
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -67,7 +67,7 @@ sed -e '1,$s/zonal_dimension/256/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=216000 /
+ &INPUT1 NEWRUN=T, ITTADD=432000 /
  &INPUT2 RLAT=25., RLON=120.95 /
  &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=20.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=180,NWR11=1,NFLPRT=1,NRESTART=180 /
