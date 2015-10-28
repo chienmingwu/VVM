@@ -902,7 +902,7 @@ CONTAINS
              -(HLF+HLM)*QI3D(I,J,hxp)
 
       ZROUGH1 = ZROUGH(I,J)
-      SPEEDM  = MAX( SPEEDTP(I,J), 5.) !ccwu add min surface fluxes
+      SPEEDM  = SPEEDTP(I,J) 
       THVSM   = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
 
