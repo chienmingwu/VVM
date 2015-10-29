@@ -457,14 +457,21 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
       U3DX(I,J,K)=0.
-      U3DY(I,J,K)=5.
+      U3DY(I,J,K)=0.
   610 CONTINUE
+      call RANKINE(mi_glob/2+128,mj_glob/2,30,30000.,30.)
+      call bound_arb(nk3,u3dx)
+      call bound_arb(nk3,u3dy)
 
       DO 660 K = 2, NK1
       DO 660 J = 1, MJ1
       DO 660 I = 1, MI1
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
+      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
+                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
+      Z3DZ(I,J,K)=(U3DY(I+1,J,K)-U3DY(I,J,K))/DX &
+                 -(U3DX(I,J+1,K)-U3DX(I,J,K))/DYNEW
   660 CONTINUE
 
 
@@ -517,7 +524,57 @@ CONTAINS
  
    END SUBROUTINE ini_3d
 
+      SUBROUTINE RANKINE(IC,JC,KT,RMAX,VMAX)
+!     SETUP THE RANKINE WIND FIELD I.C.
+      REAL UXY(mim:mip,mjm:mjp),VXY(mim:mip,mjm:mjp)
+      REAL GRIDX(mim:mip),GRIDY(mjm:mjp)
+      REAL PI,THETA,RMAX,VMAX,RVOR,VTEMP,R0
+      INTEGER I,J,K,IC,JC,KT
+! IC, JC the center of vortex; KT the level of vertical grid size
 
+      PI = 3.141592653589793
+      DO I = mim,mip
+      GRIDX(I) = (I+ni_sbdm*MI1-IC)*DX
+!      PRINT*,GRIDX(I),ni_sbdm,mi_glob,DX
+      ENDDO
+      DO J = mjm,mjp
+      GRIDY(J) = (J+nj_sbdm*MJ1-JC)*DYNEW
+      ENDDO
+
+      R0 = 200000.0
+      DO J = mjm,mjp
+      DO I = mim,mip
+      RVOR = SQRT(GRIDX(I)**2+GRIDY(J)**2)
+! Original
+      IF (RVOR .LE. RMAX) THEN
+      VTEMP = VMAX*RVOR/RMAX
+      ELSEIF (RVOR .GT. RMAX .AND. RVOR .LT. 5.*RMAX) THEN
+      VTEMP = VMAX*RMAX/RVOR
+      ELSE
+      VTEMP = max(VMAX/5.*(1-(RVOR-5.*RMAX)/(5.*RMAX)),0.)
+      END IF
+
+      IF (GRIDX(I) .GE. 0.) THEN
+      THETA = (3.*PI/2.) - ATAN2(GRIDY(J),MAX(GRIDX(I),0.000001))
+      UXY(I,J) = VTEMP*COS(THETA)
+      VXY(I,J) = -VTEMP*SIN(THETA)
+      ELSE
+      THETA = (3.*PI/2.) + ATAN2(GRIDY(J),GRIDX(I))
+      UXY(I,J) = -VTEMP*COS(THETA)
+      VXY(I,J) = -VTEMP*SIN(THETA)
+      END IF
+
+      ENDDO
+      ENDDO
+
+      DO 620 K = 1, KT
+      DO 620 J = 1,MJ1
+      DO 620 I = 1,MI1
+!ccwu_ini_wind
+      U3DX(I,J,K)=(UXY(I+1,J)+UXY(I,J))/2.*COS(pi*ZZ(K)/2./ZZ(KT+1))
+      U3DY(I,J,K)=(VXY(I,J+1)+VXY(I,J))/2.*COS(pi*ZZ(K)/2./ZZ(KT+1))
+  620 CONTINUE
+  END SUBROUTINE RANKINE
       SUBROUTINE PTSPEC
       REAL(kind=dbl_kind) :: &
       height,L,H,HT,tmp
@@ -533,8 +590,6 @@ CONTAINS
 
 #if defined (TOPOGRAPHY) 
 
-!      DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
-      IF (.false.) THEN
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
 
@@ -549,9 +604,6 @@ CONTAINS
       maxtopo=INT(H) + 1
 
       call bound_arb(1,HX)
-      ENDIF
-!le for debug 
-      HX = 1
 
       DO I=1,MI1
       DO J=1,MJ1
