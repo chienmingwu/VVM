@@ -152,8 +152,8 @@ CONTAINS
 
 #if defined (AREAMN)
       IF (UVTAU.EQ.0.) THEN
-      UTMN = UTMN0
-      VTMN = VTMN0
+      UTMN = -5.
+      VTMN = 0.
       RETURN
       END  IF
 #endif
