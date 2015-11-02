@@ -56,25 +56,27 @@ CONTAINS
 
       integer nu1, nt1, k1, k2, it,num
       logical lf
-      DATA NU1/33/,NT1/21/
+      DATA NU1/33/,NT1/28/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(21),T1(21),QV1(21),QC1(21)
+
+      REAL (KIND=dbl_kind) :: ZT1(28),PI1(28),TV1(28),PILOG1(28)
+      REAL (KIND=dbl_kind) :: PQ1(20),P1(28),T1(28),QV1(28),QC1(28)
       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
               ,111.3,92.6/
-      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
-             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
-             ,133.6,111.3,92.6/
-      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
-             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
-             ,-726.4,-755.8,-749.0/
-      DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
-              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.0/
-      DATA QC1/21*0./
+      DATA P1/1015.1,1000.,950.,900.,850.,800.,750.,700.,650.,600.,    &
+                550.,500.,450.,400.,350.,300.,250.,200.,175.,150.,125.,&
+                100.,80.,60.,50.,40.,30.,8./
+      DATA T1/26.3,26.0,23.0,19.8,17.3,14.6,11.8,8.6,5.1,1.4,-2.5,-6.9,&
+             -11.9,-17.7,-24.8,-33.2,-43.3,-55.2,-61.5,-67.6,-72.2,-73.5,&
+              -69.8,-63.9,-60.6,-57.3,-54.0,-66.2/
+      DATA QV1/18.2,17.6,15.3,13.0,11.0,8.4,7.1,5.8,4.6,3.6,3.2,2.1,1.4,&
+               15*0./
+      DATA QC1/28*0./
+
 !mjo forcing 
       REAL (KIND=real_kind) ::  Q1temp(15,148),Q2temp(15,148)
       REAL (KIND=dbl_kind) ::  Q1OBS(15,148),Q2OBS(15,148)
@@ -131,7 +133,7 @@ CONTAINS
 !SST=299.88K
 
 !      SST = T1(1) * 0.1 + 273.16
-      SST = 302.756    
+      SST = 302.  
 
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -141,8 +143,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04
+      T1(K) =  T1(K) + 273.16
+      QV1(K)= QV1(K) * 1.E-03
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -459,7 +461,7 @@ CONTAINS
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
-      call RANKINE(mi_glob/2+128,mj_glob/2,30,30000.,30.)
+      call RANKINE(mi_glob/2,mj_glob/2,30,50000.,30.)
       call bound_arb(nk3,u3dx)
       call bound_arb(nk3,u3dy)
 
