@@ -229,7 +229,10 @@ Use physics_parameters
       RMI50 = 3.84E-6;  RMI40 = 2.46E-7; RI50 = 1.E-4;  QS0   = 1.E-3;  QI0   = 0.6E-3
 
       QL0      = 0.5E-3
-      CRAUT(1) = 1.2E-1;  CRAUT(2) = 1.064E-2
+      CRAUT(1) = 1.2E-1;
+!NIC  CRAUT(2) = 1.064E-2
+!     for number concentration 50cm^-3
+       CRAUT(2) = 5.32E-4
 
 !-----------------------------
       TDT = DT;  DTL = DT;  RHOSFC = SFCRHO

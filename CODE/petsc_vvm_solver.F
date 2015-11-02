@@ -118,7 +118,7 @@ USE petscdmda
 
 IMPLICIT NONE
 PRIVATE
-PetscInt, PARAMETER, PRIVATE:: nlevel = 6, nlv = nlevel-1
+PetscInt, PARAMETER, PRIVATE:: nlevel = 3, nlv = nlevel-1
 PetscInt, PRIVATE:: i,j,k,kt,npt,np
 PetscInt, PRIVATE:: ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
 PetscInt, PRIVATE:: ctx3,ctx2
