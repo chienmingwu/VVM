@@ -58,7 +58,7 @@ sed -e '1,$s/zonal_dimension/768/' \
     -e '1,$s/merid_dimension/768/' \
     -e '1,$s/zonal_decomposition/12/' \
     -e '1,$s/merid_decomposition/12/' \
-    -e '1,$s/vert_dimension/45/' \
+    -e '1,$s/vert_dimension/34/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
