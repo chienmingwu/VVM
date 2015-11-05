@@ -83,9 +83,9 @@ CONTAINS
 !************************************
         do k=1,NT1
         if (height(k) .le. 69.) then
-        u1(k)=0.+ height(k)*(4./69.)
+        u1(k)=0.+ height(k)*(3./69.)
         else
-        u1(k)=4.
+        u1(k)=3.
         endif
         enddo
 
@@ -180,7 +180,7 @@ CONTAINS
 !      SST = T1(1) * 0.1 + 273.16
 
 !NIC
-       SST = 291.0
+       SST = 289.0
 
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
