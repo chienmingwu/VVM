@@ -38,9 +38,9 @@ contains
      result(rel)
     real,           intent(in) :: temperature, landfrac
     real, optional, intent(in) :: icefrac, snowh  ! Snow depth over land, water equivalent (m)
-
+!ccwu change rliqocean to 8
     real, parameter ::  rliqland  =  8.0, & ! liquid drop size if over land
-                        rliqocean = 14.0, & ! liquid drop size if over ocean
+                        rliqocean = 8.0, & ! liquid drop size if over ocean
                         rliqice   = 14.0    ! liquid drop size if over sea ice
  
     ! jrm Reworked effective radius algorithm

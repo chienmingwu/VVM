@@ -230,9 +230,13 @@ Use physics_parameters
 
       QL0      = 0.5E-3
       CRAUT(1) = 1.2E-1;
-!NIC  CRAUT(2) = 1.064E-2
+!NIC
+!     for number concentration 1000cm^-3
+!      CRAUT(2) = 1.064E-2
 !     for number concentration 50cm^-3
        CRAUT(2) = 5.32E-4
+!     for number concentration 500 cm^-3
+!       CRAUT(2) = 5.32E-3
 
 !-----------------------------
       TDT = DT;  DTL = DT;  RHOSFC = SFCRHO
