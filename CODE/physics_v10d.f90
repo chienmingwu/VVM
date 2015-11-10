@@ -1667,8 +1667,9 @@ enddo
         SW = QVK/QSW      
         REVP = CREVP(1)*TSQ*QSW*(1.0_8-SW)*(CREVP(2)*DSQRT(QRR)+CREVP(3)*QRR**0.725000)        &
                                           /(CREVP(4)*TSQ+CREVP(5)*QSW*RHO)
-        PREVP = min(REVP,SRMAX)
-
+!ccwu turn off prevp
+!        PREVP = min(REVP,SRMAX)
+        PREVP = 0.
   300 IF (TC .LT. 0.0)  GOTO 400
 
 
