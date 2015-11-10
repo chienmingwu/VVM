@@ -97,6 +97,8 @@ CONTAINS
                -2.9,  -4.3,  -4.5,  -2.8,  -0.6,  -0.5,  -2.2,  -2.5,   &
                -3.0 / 
 
+      character(50) FILENAME
+
        Q1OBS(:,:)=0.
        Q2OBS(:,:)=0.
        Q1temp(:,:)=0.
@@ -402,6 +404,14 @@ CONTAINS
 !*********************************************************
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
+! turn on the if for restarting
+      IF (.true.) then
+      WRITE(FILENAME,'(A26,I3.3,A1,I3.3,A4)') &
+      '../rank01/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+      READ(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
+      CLOSE(99)
+      ELSE
       DO 500 K = 1, NK3
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
@@ -413,7 +423,7 @@ CONTAINS
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.
   500 CONTINUE
-
+      ENDIF
 
       DO 515 K = 1, NK2
       DO 515 J = 1, MJ1
@@ -461,7 +471,7 @@ CONTAINS
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
-      call RANKINE(mi_glob/2,mj_glob/2,30,50000.,30.)
+      call RANKINE(mi_glob/2+192,mj_glob/2,30,30000.,30.)
       call bound_arb(nk3,u3dx)
       call bound_arb(nk3,u3dy)
 

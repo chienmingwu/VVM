@@ -44,7 +44,7 @@ PRIVATE
 ! *** FOR DATA STORAGE FILE MANAGEMENT
       CHARACTER*50 F_HEADER
       CHARACTER*8 FILNAM
-
+      CHARACTER*50 FILENAME
       REAL (KIND=real_kind) :: C_s(80)
 !      INTEGER (KIND=int_kind), public :: IC_s(60)
 !      REAL (KIND=dbl_kind), public :: C_8(80)
@@ -831,6 +831,15 @@ CONTAINS
 
       ENDIF      
 !sync L files when restart is done
+      IF (ITT .EQ. ITTADD) THEN
+
+      WRITE(FILENAME,'(A16,I3.3,A1,I3.3,A4)') &
+      'RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='UNKNOWN')
+      WRITE(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
+      CLOSE(99)
+
+      ENDIF
 #if defined (PARALLELIO) 
       call output_nc_sync
 #else

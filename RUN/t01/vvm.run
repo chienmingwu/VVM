@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = rank01
+set expname = rank02
 set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
@@ -48,9 +48,9 @@ exit
 endif
 
 sed -e 's/expname/'${expname}'/g' \
-    -e 's/np_nodes/3/g' \
-    -e 's/np_threads/12/g' \
-    -e 's/total_cores/36/g' ../../RUN/run.sh > run.sh
+    -e 's/np_nodes/8/g' \
+    -e 's/np_threads/8/g' \
+    -e 's/total_cores/64/g' ../../RUN/run.sh > run.sh
 
 qsub run.sh
 #rm run.sh
