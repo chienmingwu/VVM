@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rcenof
+set expname = rcenofnoe
 
 # hardscrabble configuration
 set subdir = '../..'
