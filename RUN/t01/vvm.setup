@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = lsm
+set expname = lsm1
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -69,10 +69,10 @@ sed -e '1,$s/zonal_dimension/128/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=17280 /
+ &INPUT1 NEWRUN=T, ITTADD=600 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=500.,DYNEW=500.,DZ=250.,DZ1=50.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
+ &INPUT4 NXS=1,NXSAVG=10,NWR11=1,NFLPRT=1,NRESTART=10 /
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
 'END6'
 cat INPUT

@@ -1004,6 +1004,8 @@ CONTAINS
 
 #if defined (DIFFUSION)
 #if defined (LSM)
+      PRINT*,lT1(10,10)
+
       DO 1227 J=1,mj1
       DO 1227 I=1,mi1
 !===hchun
