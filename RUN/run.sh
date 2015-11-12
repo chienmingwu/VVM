@@ -11,10 +11,7 @@ export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
 
-/opt/openmpi/bin/mpirun -np total_cores ./vvm < INPUT | tee OUTPUT
-
-#/opt/openmpi/bin/mpirun -np total_cores ./vvm -ksp_monitor_short -mg_levels_ksp_monitor_short < INPUT | tee OUTPUT
-
+/cluster/intel13/mvapich2-2.1a/bin/mpirun -np total_cores ./vvm < INPUT | tee OUTPUT
 
 date >> runtime
 

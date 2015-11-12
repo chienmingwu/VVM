@@ -18,6 +18,7 @@ set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
 
+module load vvm
 make INTEL_COMP=true CASENAME=${expname} CODEDIR=${codedir} -f ../makefile 
 
 setenv EXPHDR_tmp ${expname}" "${subdir}
