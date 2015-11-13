@@ -831,6 +831,7 @@ CONTAINS
 
       ENDIF      
 !sync L files when restart is done
+!ccwu out put restart file
       IF (ITT .EQ. ITTADD) THEN
 
       WRITE(FILENAME,'(A16,I3.3,A1,I3.3,A4)') &

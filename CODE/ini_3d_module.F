@@ -135,7 +135,7 @@ CONTAINS
 !SST=299.88K
 
 !      SST = T1(1) * 0.1 + 273.16
-      SST = 302.  
+      SST = T1(1) +273.16  
 
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -404,10 +404,10 @@ CONTAINS
 !*********************************************************
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
-! turn on the if for restarting
+!ccwu turn on the if for restarting
       IF (.true.) then
-      WRITE(FILENAME,'(A26,I3.3,A1,I3.3,A4)') &
-      '../rank01/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      WRITE(FILENAME,'(A27,I3.3,A1,I3.3,A4)') &
+      '../rank01bw/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
       READ(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
       CLOSE(99)
@@ -454,7 +454,12 @@ CONTAINS
 !*******************************************
 !     3. SET UP CIRCULATION
 !*******************************************
+!ccwu if true, then restart
+      if (.true.) then
+      
+      Call bound_3d_xy
 
+      ELSE
       DO 600 K = 1, NK2
       DO 600 J = mjm,mjp
       DO 600 I = mim,mip
@@ -471,7 +476,7 @@ CONTAINS
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
-      call RANKINE(mi_glob/2+192,mj_glob/2,30,30000.,30.)
+      call RANKINE(mi_glob/2+192,mj_glob/2,30,50000.,25.)
       call bound_arb(nk3,u3dx)
       call bound_arb(nk3,u3dy)
 
@@ -486,9 +491,9 @@ CONTAINS
                  -(U3DX(I,J+1,K)-U3DX(I,J,K))/DYNEW
   660 CONTINUE
 
+      call bound_3d_xy
 
-      CALL BOUND_3D_XY
-
+      endif
 
 #if defined (AREAMN)
 !-------------------
