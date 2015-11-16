@@ -352,32 +352,39 @@ CONTAINS
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       vG(:)   = 0.
+
 !ccwu apply new profiles here
-!    NIC
-     DO 250 K=1,Nk3
-     T(K) = THBAR(K) * PIBAR(K)
-     ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
-     ES1=ESW
-     QVSBAR(K)=ES1 *0.622/ ( PBAR(K) - ES1 )
-!!!!!!!!!!
-     IF (ZT(K) .LE. 70.) THEN
-       H(K) = 1.0
-     ELSE
-       H(K) = 1.0-(ZT(K)-70.)*0.15/340.
-     END IF
-!))))))))
-     QVBAR(K) = H(K) * QVSBAR(K)
 
-  250 CONTINUE
-!    NIC  qc
-     DO 260 K=1,Nk3
-       IF (ZT(K) .LE. 70.) THEN
-        QCBAR(K) = 0.08*0.001
-       ELSE
-        QCBAR(K) = 0.
-      ENDIF
- 260 CONTINUE
+      do k=1,NK3
+      if(ZT(k) .le. 840.) then
+      QVBAR(k)=9.0/1000.
+      else
+      QVBAR(k)=1.5/1000.
+      endif
+      enddo
 
+      do k=1,NK3
+      if(ZT(k) .le. 840.) then
+      THBAR(k)=289.0
+      else
+      THBAR(k)=297.5+(ZT(k)-840.)**(1./3.)
+      endif
+      enddo
+
+      do k=1,NK3
+      if(ZT(k) .le. 600) then
+      QCBAR(k)=0.
+      elseif(ZT(k) .gt. 600 .and. ZT(k) .le. 840) then
+      QCBAR(k)=(0.5-0.5*(840.-ZT(k))/240.)/1000.
+      else
+      QCBAR(k)=0.
+      endif
+      enddo
+
+      do k=1,NK3
+      THBAR(k)=(k)+2.5e6/1004.5*QCBAR(k)
+      QVBAR(k)=QVBAR(k)-QCBAR(k)
+      enddo
 
 
 !     OCEAN POINTS

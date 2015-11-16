@@ -42,15 +42,20 @@ CONTAINS
 !dqv/dt=-wbar*(dqv/dz)
 !dqc/dt=-wbar*(dqc/dz)
       REAL (KIND=dbl_kind) :: &
-      omega(nk3),     &!omega from su et al. 2000
-      wbar(mi1,nk3),  &!subsidence/dz 
-      pi,             &!pi
-      tempim
+      wbar(nk3)  !subsidence in m/s unit
 
-      pi = 4._8 * atan(1._8)
-      omega=0.
+      REAL (KIND=dbl_kind) :: &
+      lwp0, &  !liquid water path from z to inf.
+      lwp1, &  !liquid water path from 0 to z
+      flx(nk3), &  !radiative flux
+      fr0,      &  !F0 constant
+      fr1,      &  !F1 constant
+      xka          !alpha constant
 
-      wbar=0.
+      do  k=1,nk3
+      wbar(k)=-3.75e-6*zt(k)*FNZ(K)/DZ
+      enddo
+
 
       do k=2,nk2
       do j=1,mj1
