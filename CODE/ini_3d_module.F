@@ -73,7 +73,7 @@ CONTAINS
       REAL (KIND=dbl_kind) :: ESW
 
        DELZ=1.
-       sfcp=1006.8
+       sfcp=1000.
        DO K=1,NT1
        HEIGHT(K)=(K-1)*DELZ
        ENDDO
@@ -82,56 +82,16 @@ CONTAINS
 !* Kinmen  (2014.03.29 01Z) case    *
 !************************************
         do k=1,NT1
-        if (height(k) .le. 69.) then
-        u1(k)=0.+ height(k)*(3./69.)
-        else
-        u1(k)=3.
-        endif
+        u1(k)=0.
         enddo
 
         do k=1,NT1
-        if(height(k) .le. 88.) then
-        qv1(k)=13.2475+0.02791*(height(k)-1.)
-        elseif(height(k) .ge. 89. .and. height(k) .le. 150.) then
-        qv1(k)=qv1(88)+7.284e-3*(height(k)-88.)
-        else
-        qv1(k)=qv1(150)-2.953e-3*(height(k)-150.)
-        endif
+        qv1(k)=0.
         enddo
 
         do k=1,NT1
-        if(height(k) .le. 69.) then
-        qv1(k)=qv1(k)
-        else
-        qv1(k)=qv1(k)*0.95
-        endif
+        t1(k)=300. 
         enddo
-
-        do k=1,NT1
-        qv1(k)=qv1(k)/1000.
-        enddo
-
-        do k=1,NT1
-        if(height(k) .le. 70.) then
-        t1(k)=291.0+height(k)/26.8892  !potential Temp
-!        elseif(height(k) .ge. 89. .and. height(k) .le. 400.) then
-        else
-        t1(k)=t1(70)+(height(k)-70.)/52.1298
-        endif
-        enddo
-
-        do k=1,NT1
-!        if(height(k) .le. 60.) then
-!        qc1(k)=0.08
-!        else
-        qc1(k)=0.
-!        endif
-        enddo
-!       g/kg  ->  kg/kg
-!        do k=1,NT1
-!        qc1(k)=qc1(k)/1000.
-!        enddo
-
 
         do k=1,nt1
         t1(k)=t1(k)+2.5e6/1004.5*qc1(k)
@@ -392,7 +352,7 @@ CONTAINS
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       vG(:)   = 0.
-
+!ccwu apply new profiles here
 !    NIC
      DO 250 K=1,Nk3
      T(K) = THBAR(K) * PIBAR(K)
