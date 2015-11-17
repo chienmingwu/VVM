@@ -149,7 +149,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T1(1) * 0.1 + 273.16 + DSST
+      SST = 302.
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -159,8 +159,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04
+      T1(K) =  T1(K) 
+      QV1(K)= QV1(K)
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -170,7 +170,7 @@ CONTAINS
 
 !     *** MIXED LAYER PROFILE ***
 
-      T1(3) = PI1(3) * T1(2) / PI1(2)
+!      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
@@ -398,11 +398,11 @@ CONTAINS
       CLOSE(99)
       endif
 
-
-
-!      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
-!      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
-
+      WRITE(FILENAME,'(A21,I3.3,A1,I3.3,A4)') &
+      '../j00/RUNDATA/PHASE0',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+      READ(99) THBAR,QVBAR
+      CLOSE(99)
 
 !*********************************************************
 !     2. SET UP the thermodynamic variables for 3D-frame
@@ -466,10 +466,15 @@ CONTAINS
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
+     
+      call wind_ini
+
 
       DO 660 K = 2, NK1
       DO 660 J = 1, MJ1
       DO 660 I = 1, MI1
+      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
+                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
@@ -527,6 +532,60 @@ CONTAINS
 #endif
  
    END SUBROUTINE ini_3d
+
+      SUBROUTINE WIND_INI
+
+      REAL(kind=dbl_kind) :: P(mim:mip,mjm:mjp,NK3),GD,GD2,YL,TMP,ZD
+      INTEGER I,J,K,KT
+      KT = NK2
+      PI = 3.141592653589793
+      GD = mj_glob*DYNEW
+      GD2 = GD*GD
+      ZD = 8000.
+
+      DO 100 K = 1, KT
+      DO 100 J = mjm,mjp
+      DO 100 I = 1,MI1
+      YL = (nj_sbdm*mj1+j-1)*dynew
+      IF (YL .LT. 3./8.*GD) THEN
+
+      P(i,j,K) = -YL*YL/8.+.25*(GD/8./pi)**2+5.*GD2/512.
+
+      ELSEIF (YL .GT. 5./8.*GD) THEN
+
+      P(i,j,K) = -YL*YL/8. + GD*YL/4. +.25*(GD/8./pi)**2-59.*GD2/512.
+
+      ELSE
+      P(i,j,K) = -(GD/8./pi)**2*(cos(8*pi*(YL-GD/2)/GD)+3./4.)+3.*YL**2/8.
+      P(i,j,K) = P(I,J,K)-3.*GD*YL/8.+41.*GD2/512.
+
+      ENDIF
+
+      TMP = .5*pi/ZD*exp(-ZZ(K)/ZD)*sin(pi*exp(1-ZZ(k)/ZD))
+      TH3D(I,J,K) = TH3D(I,J,K)*(1+2.e-5*F/GRAV*P(I,J,K)*TMP)
+
+      P(I,J,K) = 2.e-5* P(I,J,K )*0.5*(cos(pi*(1.-exp(-ZZ(k)/ZD))))
+
+
+  100 CONTINUE
+
+      CALL BOUND_ARB(NK3,P)
+      DO 200 K = 1,KT
+      DO 200 J = 1,MJ1
+      DO 200 I = 1,MI1
+!ccwu_ini_wind
+      U3DX(I,J,K) = -(P(I,J+1,K)-P(I,J,K))/DYNEW
+
+!      Z3DZ(I,J,K) = P(I,J,K)
+
+  200 CONTINUE
+
+      call bound_arb(NK3,TH3D)
+      call bound_arb(NK3,U3DX)
+
+
+  END SUBROUTINE WIND_INI
+
 
 
       SUBROUTINE PTSPEC
