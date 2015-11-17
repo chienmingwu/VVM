@@ -1273,7 +1273,7 @@ IMPLICIT NONE
       LMICRO  =  QMIX(2) .GT. THRESH .OR. QMIX(3) .GT. THRESH .OR.                   &
                  QMIX(4) .GT. THRESH .OR. QMIX(5) .GT. THRESH .OR.                   &
                  QMIX(6) .GT. THRESH           
-                       
+    LMICRO = .false. !ccwu turn off precipitation                   
     if ( LMICRO ) then
       
         PRESS_mb = pl0(K) * 0.01

@@ -60,9 +60,9 @@ CONTAINS
       do k=2,nk2
       do j=1,mj1
       do i=1,mi1
-      TH3D(I,J,K)=TH3D(I,J,K)-DT*WBAR(I,K)*(TH3D(I,J,K+1)-TH3D(I,J,K))
-      QV3D(I,J,K)=QV3D(I,J,K)-DT*WBAR(I,K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
-      QC3D(I,J,K)=QC3D(I,J,K)-DT*WBAR(I,K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
+      TH3D(I,J,K)=TH3D(I,J,K)-DT*WBAR(K)*(TH3D(I,J,K+1)-TH3D(I,J,K))
+      QV3D(I,J,K)=QV3D(I,J,K)-DT*WBAR(K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
+      QC3D(I,J,K)=QC3D(I,J,K)-DT*WBAR(K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
       enddo
       enddo
       enddo

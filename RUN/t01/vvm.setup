@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = s05289s3r8
+set expname = dycoms02
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -44,7 +44,6 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define PARALLELIO
 #define RADCODE
-#define AREAMN
 'END1'
 cat definesld.com
 
@@ -57,7 +56,7 @@ sed -e '1,$s/zonal_dimension/64/' \
     -e '1,$s/merid_dimension/64/' \
     -e '1,$s/zonal_decomposition/4/' \
     -e '1,$s/merid_decomposition/4/' \
-    -e '1,$s/vert_dimension/64/' \
+    -e '1,$s/vert_dimension/120/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -68,11 +67,11 @@ sed -e '1,$s/zonal_dimension/64/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=90000 /
+ &INPUT1 NEWRUN=T, ITTADD=4320/
  &INPUT2 RLAT=24.5 /
- &INPUT3 DX=4.,DYNEW=4.,DZ=4.,DZ1=4.,DT=0.2,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=300,NWR11=1,NFLPRT=1,NRESTART=300 /
- &INPUT5 IX=3182073,ITINIT=30,ITSTOP=1200,SCALE=0.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
+ &INPUT3 DX=35.,DYNEW=35.,DZ=10.,DZ1=10.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
+ &INPUT5 IX=3182073,ITINIT=30,ITSTOP=60,SCALE=0.,Q1Q2=F,DTRAD=60.,SOLVAR=F, RRTMRC=T/
 'END6'
 cat INPUT
 

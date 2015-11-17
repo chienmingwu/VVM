@@ -82,7 +82,7 @@ CONTAINS
 !* Kinmen  (2014.03.29 01Z) case    *
 !************************************
         do k=1,NT1
-        u1(k)=0.
+        u1(k)=6.
         enddo
 
         do k=1,NT1
@@ -140,7 +140,7 @@ CONTAINS
 !      SST = T1(1) * 0.1 + 273.16
 
 !NIC
-       SST = 289.0
+       SST = 292.0
 
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -382,8 +382,9 @@ CONTAINS
       enddo
 
       do k=1,NK3
-      THBAR(k)=(k)+2.5e6/1004.5*QCBAR(k)
+      THBAR(k)=THBAR(k)+2.5e6/1004.5*QCBAR(k)
       QVBAR(k)=QVBAR(k)-QCBAR(k)
+      T(K)=THBAR(K)*PIBAR(K)
       enddo
 
 
