@@ -302,7 +302,7 @@ CONTAINS
       
 ! SET DEFAULT VALUES FOR FORCING PARAMTERS (INPUT6)
 
-      F = 2. * OMEGA * SIN ( RLAT * PI / 180._dbl_kind )
+      F = 1.e-4!2. * OMEGA * SIN ( RLAT * PI / 180._dbl_kind )
       NRAD = NINT ( DTRAD / DT ) !Time steps between CEMRAD calls
       DT8  = DT
 

@@ -88,7 +88,7 @@ CONTAINS
 
       PI1(1)=(sfcp/1000.)**(rgas/CP)
 
-      t1(1)=300
+      t1(1)=300.
       p1(1)=exp(cp/rgas*log(pi1(1))+log(1000.))
 !      qv1(1) = .9 * .622*2.53e11*exp(-5420/t1(1))/p1(1)
       qv1(1) = .9 * 6.11* 10**(7.5*(t1(1)-273.15)/(t1(k)-35.8))/p1(1)*.622
@@ -100,11 +100,11 @@ CONTAINS
       do k=2,NT1
       qv1(k)=0.
       t1(k)=300.*(height(k)-15.)*(height(k)-7.5)/15./7.5
-      t1(k)=t1(k)+210.*height(k)*(height(k)-7.5)/15/7.5
+      t1(k)=t1(k)+210.*height(k)*(height(k)-7.5)/15./7.5
       t1(k)=t1(k)-255.*height(k)*(height(k)-15.)/7.5/7.5
 
       rh=90.*(height(k)-15.)*(height(k)-7.5)/15./7.5
-      rh=rh+50.*height(k)*(height(k)-7.5)/15/7.5
+      rh=rh+50.*height(k)*(height(k)-7.5)/15./7.5
       rh=rh-60.*height(k)*(height(k)-15.)/7.5/7.5
       if (height(k) .GT. 15.) Then
       t1(k) = 210.
@@ -149,7 +149,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T1(1) * 0.1 + 273.16 + DSST
+      SST = 302.
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -159,8 +159,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04
+      T1(K) =  T1(K) 
+      QV1(K)= QV1(K) 
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -170,7 +170,7 @@ CONTAINS
 
 !     *** MIXED LAYER PROFILE ***
 
-      T1(3) = PI1(3) * T1(2) / PI1(2)
+!      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
@@ -517,9 +517,9 @@ CONTAINS
       VTMN0 = VTMN
       
       IF(itt == 0) CALL UPDATE_TRACER_init
-  
+#if defined (RADCODE) 
       albdo = 0.30
-   
+#endif
 #if defined (DIFFUSION)
       call turb_3d_ini
 #endif

@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = lsm1
+set expname = j00
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -39,13 +39,11 @@ cat COMMENTS
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
-#define DIFFUSION
+#define PARALLELIO
+#define CORIOLIS
 #define PHYSICS
 #define MICROCODE
-#define PARALLELIO
-#define RADCODE
-#define LSM
-#define AREAMN
+#define DIFFUSION
 'END1'
 cat definesld.com
 
@@ -54,11 +52,11 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/128/' \
-    -e '1,$s/merid_dimension/128/' \
-    -e '1,$s/zonal_decomposition/4/' \
-    -e '1,$s/merid_decomposition/4/' \
-    -e '1,$s/vert_dimension/34/' \
+sed -e '1,$s/zonal_dimension/1024/' \
+    -e '1,$s/merid_dimension/1024/' \
+    -e '1,$s/zonal_decomposition/8/' \
+    -e '1,$s/merid_decomposition/8/' \
+    -e '1,$s/vert_dimension/45/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -69,10 +67,10 @@ sed -e '1,$s/zonal_dimension/128/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=600 /
+ &INPUT1 NEWRUN=T, ITTADD=720 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=500.,DYNEW=500.,DZ=250.,DZ1=50.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=10,NWR11=1,NFLPRT=1,NRESTART=10 /
+ &INPUT3 DX=3000.,DYNEW=3000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1. /
+ &INPUT4 NXS=1,NXSAVG=180,NWR11=1,NFLPRT=1,NRESTART=180 /
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
 'END6'
 cat INPUT
@@ -86,8 +84,11 @@ endif
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
-cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
-cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
+
+exit
+
+#cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
+#cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
 
 # GLDAS
