@@ -44,6 +44,8 @@ PRIVATE
 ! *** FOR DATA STORAGE FILE MANAGEMENT
       CHARACTER*50 F_HEADER
       CHARACTER*8 FILNAM
+      character(25) FILENAME
+
 
       REAL (KIND=real_kind) :: C_s(80)
 !      INTEGER (KIND=int_kind), public :: IC_s(60)
@@ -834,6 +836,40 @@ CONTAINS
 #if defined (PARALLELIO) 
       call output_nc_sync
 #else
+      IF (ITT .EQ. ITTADD) THEN
+      tmp = 1./dble(mi_glob*mj_glob)
+      DO K = 1,NK3
+      tem(k) = 0.
+      DO J = 1, MJ1
+      DO I = 1, MI1
+      tem(K) = tem(K) + tmp*TH3D(I,J,K)
+      enddo
+      enddo
+      enddo
+
+      CALL MPI_ALLREDUCE(tem,thbar,nk3,MPI_dbl_kind, MPI_SUM, MPI_COMM_WORLD,
+mpierr)
+
+      DO K = 1,NK3
+      tem(k) = 0.
+      DO J = 1, MJ1
+      DO I = 1, MI1
+      tem(K) = tem(K) + tmp*QV3D(I,J,K)
+      enddo
+      enddo
+      enddo
+
+      CALL MPI_ALLREDUCE(tem,qvbar,nk3,MPI_dbl_kind, MPI_SUM, MPI_COMM_WORLD,
+mpierr)
+
+      WRITE(FILENAME,'(A14,I3.3,A1,I3.3,A4)') &
+      'RUNDATA/PHASE0',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='UNKNOWN')
+      WRITE(99) THBAR,QVBAR
+      CLOSE(99)
+
+      ENDIF
+
       if (my_task == 0) call output_nc_sync
 #endif
 

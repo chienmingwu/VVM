@@ -72,8 +72,8 @@ CONTAINS
 
       character(50) FILENAME
 
-      DELZ=2.5
-      sfcp=1015.4
+      DELZ=5.
+      sfcp=1012.0
 
       DO K=1,NT1
       HEIGHT(K)=(K-1)*DELZ/1000.
@@ -100,11 +100,11 @@ CONTAINS
       do k=2,NT1
       qv1(k)=0.
       t1(k)=300.*(height(k)-15.)*(height(k)-7.5)/15./7.5
-      t1(k)=t1(k)+210.*height(k)*(height(k)-7.5)/15/7.5
+      t1(k)=t1(k)+210.*height(k)*(height(k)-7.5)/15./7.5
       t1(k)=t1(k)-255.*height(k)*(height(k)-15.)/7.5/7.5
 
       rh=90.*(height(k)-15.)*(height(k)-7.5)/15./7.5
-      rh=rh+50.*height(k)*(height(k)-7.5)/15/7.5
+      rh=rh+50.*height(k)*(height(k)-7.5)/15./7.5
       rh=rh-60.*height(k)*(height(k)-15.)/7.5/7.5
       if (height(k) .GT. 15.) Then
       t1(k) = 210.
@@ -517,9 +517,11 @@ CONTAINS
       VTMN0 = VTMN
       
       IF(itt == 0) CALL UPDATE_TRACER_init
+#if defined (RADCODE)
   
       albdo = 0.30
-   
+#endif 
+  
 #if defined (DIFFUSION)
       call turb_3d_ini
 #endif
