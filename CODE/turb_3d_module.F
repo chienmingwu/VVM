@@ -76,7 +76,7 @@ CONTAINS
          itype       !
 
       DATA ITYPE/3/ !ccwu for topography we don't know how to deal with turbulence yet
-      DATA RNU/100._dbl_kind/,RKD/0.21_dbl_kind/,RKB/0.7_dbl_kind/
+      DATA RNU/0._dbl_kind/,RKD/0.21_dbl_kind/,RKB/0.7_dbl_kind/
 
 !for topography
       INTEGER (KIND=int_kind) ::                &

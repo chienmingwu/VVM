@@ -34,7 +34,7 @@ CONTAINS
      
 ! local variables
       INTEGER (KIND=int_kind) ::   &
-         i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
+         i, j, k, kk ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
 !add simple subsidence effects
 !wbar=-omega/(rho*g)
@@ -64,6 +64,42 @@ CONTAINS
       QV3D(I,J,K)=QV3D(I,J,K)-DT*WBAR(K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
       QC3D(I,J,K)=QC3D(I,J,K)-DT*WBAR(K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
       enddo
+      enddo
+      enddo
+
+! add simple radiative cooling
+! following Stevens(2001)
+! Frad=F0*exp(-alpha*lwp) from z to inf +F1*exp(-alpha*lwp) from 0 to z
+! d Trad= - d Frad/ dz
+
+!      fr0=74._dbl_kind
+!      xka=130._dbl_kind ! from xiao et al. 2010
+
+      fr0=70._dbl_kind
+      fr1=22._dbl_kind
+      xka=85._dbl_kind ! from uclales
+
+      do j=1,mj1
+      do i=1,mi1
+      flx(:)=0.
+      do k=2,nk2
+      lwp0=0.
+      lwp1=0.
+      do kk=k,nk2
+      lwp0=lwp0+qc3d(i,j,kk)*rho(kk)*fnt(kk)*dz
+      enddo
+      do kk=2,k
+      lwp1=lwp1+qc3d(i,j,kk)*rho(kk)*fnt(kk)*dz
+      enddo
+      flx(k)=fr0*exp(-1.*xka*lwp0)+fr1*exp(-1.*xka*lwp1)
+      enddo
+
+      flx(nk3)=flx(nk2) !zero gradient at the top
+      do k=2,nk2
+!      TH3D(I,J,K)=TH3D(I,J,K)-DT*(flx(K+1)-flx(K))/PIBAR(K)*fnz(k)/dz/cp
+!      DTRADLW(I,J,K)=-(flx(K+1)-flx(K))/PIBAR(K)*fnz(k)/dz/cp
+      enddo
+
       enddo
       enddo
 
