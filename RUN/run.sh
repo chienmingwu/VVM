@@ -6,7 +6,7 @@
 NPROCS=`wc -l < $PBS_NODEFILE`
 
 cd $PBS_O_WORKDIR
-
+module load vvm
 export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
