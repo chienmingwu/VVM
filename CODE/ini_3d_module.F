@@ -359,7 +359,7 @@ CONTAINS
       if(ZT(k) .le. 840.) then
       QVBAR(k)=9.0/1000.
       else
-      QVBAR(k)=4.5/1000.
+      QVBAR(k)=1.5/1000.
       endif
       enddo
 

@@ -95,8 +95,8 @@ CONTAINS
 !      CRITMN=100.
 !      New Value for TWP-ICE
       CRITMN=0._dbl_kind !ccwu for LES run
-
-      RAMD0S=(0.23_dbl_kind*DELD)**2
+!ccwu change cs to 0.18
+      RAMD0S=(0.18_dbl_kind*DELD)**2
 
       DXSQ=DX*DX
       DYSQ=DYNEW*DYNEW
@@ -310,7 +310,11 @@ CONTAINS
 
 !ccwut
 
+!ccwu turn off rkm only
 
+      RKM=0.
+
+!ccwu
 
       CALL BOUND_ARB (NK2,RKM)
       CALL BOUND_ARB (NK2,RKH)
