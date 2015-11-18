@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rank02bws2
+set expname = rank02bwn2
 
 # hardscrabble configuration
 set subdir = '../..'
