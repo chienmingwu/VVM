@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = mjowave4
+set expname = wave01
 
 # hardscrabble configuration
 set subdir = '../..'
