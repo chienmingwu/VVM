@@ -225,8 +225,8 @@ CONTAINS
 #endif
 #endif
  
-      UTMN = UTMN + A*FUTMN(N2) + B*FUTMN(N1)
-      VTMN = VTMN + A*FVTMN(N2) + B*FVTMN(N1)
+!      UTMN = UTMN + A*FUTMN(N2) + B*FUTMN(N1)
+!      VTMN = VTMN + A*FVTMN(N2) + B*FVTMN(N1)
 
 #if defined (AREAMN)
       UTMN = (1.-DT/UVTAU)*UTMN + UTMN0*DT/UVTAU
