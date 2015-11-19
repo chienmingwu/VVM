@@ -359,7 +359,7 @@ CONTAINS
       if(ZT(k) .le. 840.) then
       QVBAR(k)=9.0/1000.
       else
-      QVBAR(k)=1.5/1000.
+      QVBAR(k)=4.5/1000.
       endif
       enddo
 
@@ -380,12 +380,12 @@ CONTAINS
       QCBAR(k)=0.
       endif
       enddo
-
       do k=1,NK3
       THBAR(k)=THBAR(k)+2.5e6/1004.5*QCBAR(k)
       QVBAR(k)=QVBAR(k)-QCBAR(k)
       T(K)=THBAR(K)*PIBAR(K)
       enddo
+      THBAR(NK3)=600.
 
 
 !     OCEAN POINTS

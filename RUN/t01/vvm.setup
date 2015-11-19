@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = dycoms01cs
+set expname = dycoms02cst
 
 # hardscrabble configuration
 set subdir = '../..'
