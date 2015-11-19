@@ -399,9 +399,9 @@ CONTAINS
       endif
 
       WRITE(FILENAME,'(A21,I3.3,A1,I3.3,A4)') &
-      '../j00/RUNDATA/PHASE0',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      '../j01/RUNDATA/PHASE1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) THBAR,QVBAR
+      READ(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D
       CLOSE(99)
 
 !*********************************************************
@@ -449,6 +449,7 @@ CONTAINS
 !*******************************************
 !     3. SET UP CIRCULATION
 !*******************************************
+      IF (.false.) THEN
 
       DO 600 K = 1, NK2
       DO 600 J = mjm,mjp
@@ -478,7 +479,7 @@ CONTAINS
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
-
+      ENDIF
 
       CALL BOUND_3D_XY
 
