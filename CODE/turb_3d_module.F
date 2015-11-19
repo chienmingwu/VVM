@@ -310,12 +310,6 @@ CONTAINS
 
 !ccwut
 
-!ccwu turn off rkm only
-
-      RKM=0.
-
-!ccwu
-
       CALL BOUND_ARB (NK2,RKM)
       CALL BOUND_ARB (NK2,RKH)
 
