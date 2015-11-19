@@ -44,7 +44,7 @@ PRIVATE
 ! *** FOR DATA STORAGE FILE MANAGEMENT
       CHARACTER*50 F_HEADER
       CHARACTER*8 FILNAM
-      CHARACTER*50 FILENAME
+
       REAL (KIND=real_kind) :: C_s(80)
 !      INTEGER (KIND=int_kind), public :: IC_s(60)
 !      REAL (KIND=dbl_kind), public :: C_8(80)
@@ -831,16 +831,6 @@ CONTAINS
 
       ENDIF      
 !sync L files when restart is done
-!ccwu out put restart file
-      IF (ITT .EQ. ITTADD) THEN
-
-      WRITE(FILENAME,'(A16,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='UNKNOWN')
-      WRITE(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
-      CLOSE(99)
-
-      ENDIF
 #if defined (PARALLELIO) 
       call output_nc_sync
 #else
@@ -885,7 +875,7 @@ CONTAINS
       REAL (KIND=real_kind) :: TIME_P
       
       
-      REAL (KIND=dbl_kind) ::  sfmn, fac
+      REAL (KIND=dbl_kind) ::  sfmn, fac, dtfac
 
       INTEGER (KIND=int_kind)     ::   ibnew, kvar , out_itt   ! mars add
       LOGICAL first 
@@ -923,6 +913,9 @@ CONTAINS
       out_tm9 = 0.0
    endif
 
+   dtfac = PASS_SMALL_DT / DT 
+
+
 ! accumulate physical variables all timesteps (except twp-ice case)
    SELECT CASE (TRIM(casename))
    CASE('TWP-ICE')
@@ -935,7 +928,7 @@ CONTAINS
       STD_TM5(I,J,3)=WTH(I,J)
       STD_TM5(I,J,4)=WQV(I,J)
       STD_TM5(I,J,5)=SPREC(I,J)
-      STD_TM5(I,J,6)=TG(I,J)
+      STD_TM5(I,J,6)=PREC25(I,J)
       STD_TM5(I,J,7)=OLR(I,J)
       
   226 CONTINUE
@@ -1000,13 +993,13 @@ CONTAINS
 !     Store the real-time raw-vectors into output-arrays for dataset C
       DO 1226 J=1,mj1
       DO 1226 I=1,mi1
-      STD_TM5(I,J,1)=STD_TM5(I,J,1)+UW(I,J)        * PASS_SMALL_DT / DT
-      STD_TM5(I,J,2)=STD_TM5(I,J,2)+WV(I,J)        * PASS_SMALL_DT / DT
-      STD_TM5(I,J,3)=STD_TM5(I,J,3)+WTH(I,J)       * PASS_SMALL_DT / DT
-      STD_TM5(I,J,4)=STD_TM5(I,J,4)+WQV(I,J)       * PASS_SMALL_DT / DT
-      STD_TM5(I,J,5)=STD_TM5(I,J,5)+SPREC(I,J)     * PASS_SMALL_DT / DT
-      STD_TM5(I,J,6)=STD_TM5(I,J,6)+TG(I,J)    * PASS_SMALL_DT / DT
-      STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       * PASS_SMALL_DT / DT
+      STD_TM5(I,J,1)=STD_TM5(I,J,1)+UW(I,J)        *  dtfac
+      STD_TM5(I,J,2)=STD_TM5(I,J,2)+WV(I,J)        *  dtfac
+      STD_TM5(I,J,3)=STD_TM5(I,J,3)+WTH(I,J)       *  dtfac
+      STD_TM5(I,J,4)=STD_TM5(I,J,4)+WQV(I,J)       *  dtfac
+      STD_TM5(I,J,5)=STD_TM5(I,J,5)+SPREC(I,J)     *  dtfac
+      STD_TM5(I,J,6)=STD_TM5(I,J,6)+PREC25(I,J)    *  dtfac
+      STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       *  dtfac
  1226 CONTINUE
 
 #if defined (DIFFUSION)
@@ -1014,92 +1007,91 @@ CONTAINS
       DO 1227 J=1,mj1
       DO 1227 I=1,mi1
 !===hchun
-      STD_LSM(I,J,1)=STD_LSM(I,J,1)+lEMISSI(I,J)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,2)=STD_LSM(I,J,2)+lCMC(I,J)      * PASS_SMALL_DT / DT
-      STD_LSM(I,J,3)=STD_LSM(I,J,3)+lT1(I,J)       * PASS_SMALL_DT / DT
-      STD_LSM(I,J,4)=STD_LSM(I,J,4)+lST(I,J,1)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,5)=STD_LSM(I,J,5)+lST(I,J,2)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,6)=STD_LSM(I,J,6)+lST(I,J,3)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,7)=STD_LSM(I,J,7)+lST(I,J,4)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,8)=STD_LSM(I,J,8)+lSM(I,J,1)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,9)=STD_LSM(I,J,9)+lSM(I,J,2)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,10)=STD_LSM(I,J,10)+lSM(I,J,3)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,11)=STD_LSM(I,J,11)+lSM(I,J,4)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,12)=STD_LSM(I,J,12)+lSL(I,J,1)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,13)=STD_LSM(I,J,13)+lSL(I,J,2)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,14)=STD_LSM(I,J,14)+lSL(I,J,3)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,15)=STD_LSM(I,J,15)+lSL(I,J,4)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,16)=STD_LSM(I,J,16)+lSNOWH(I,J)  * PASS_SMALL_DT / DT
-      STD_LSM(I,J,17)=STD_LSM(I,J,17)+lSNEQV(I,J)  * PASS_SMALL_DT / DT
-      STD_LSM(I,J,18)=STD_LSM(I,J,18)+lALBEDO(I,J) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,19)=STD_LSM(I,J,19)+lCH(I,J)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,20)=STD_LSM(I,J,20)+lCM(I,J)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,21)=STD_LSM(I,J,21)+lETA(I,J)    * PASS_SMALL_DT / DT
-      STD_LSM(I,J,22)=STD_LSM(I,J,22)+lFDOWN(I,J)  * PASS_SMALL_DT / DT
-      STD_LSM(I,J,23)=STD_LSM(I,J,23)+lEC(I,J)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,24)=STD_LSM(I,J,24)+lEDIR(I,J)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,25)=STD_LSM(I,J,25)+lET(I,J,1)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,26)=STD_LSM(I,J,26)+lET(I,J,2)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,27)=STD_LSM(I,J,27)+lET(I,J,3)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,28)=STD_LSM(I,J,28)+lET(I,J,4)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,29)=STD_LSM(I,J,29)+lETT(I,J)    * PASS_SMALL_DT / DT
-      STD_LSM(I,J,30)=STD_LSM(I,J,30)+lESNOW(I,J)  * PASS_SMALL_DT / DT
-      STD_LSM(I,J,31)=STD_LSM(I,J,31)+lDRIP(I,J)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,32)=STD_LSM(I,J,32)+lDEW(I,J)    * PASS_SMALL_DT / DT
-      STD_LSM(I,J,33)=STD_LSM(I,J,33)+lBETA(I,J)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,34)=STD_LSM(I,J,34)+lETP(I,J)    * PASS_SMALL_DT / DT
-      STD_LSM(I,J,35)=STD_LSM(I,J,35)+lSSOIL(I,J)  * PASS_SMALL_DT / DT 
-      STD_LSM(I,J,36)=STD_LSM(I,J,36)+lFLX1(I,J)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,37)=STD_LSM(I,J,37)+lFLX2(I,J)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,38)=STD_LSM(I,J,38)+lFLX3(I,J)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,39)=STD_LSM(I,J,39)+lSNOMLT(I,J) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,40)=STD_LSM(I,J,40)+lSNCOVR(I,J) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,41)=STD_LSM(I,J,41)+lRUNOFF1(I,J)* PASS_SMALL_DT / DT
-      STD_LSM(I,J,42)=STD_LSM(I,J,42)+lRUNOFF2(I,J)* PASS_SMALL_DT / DT
-      STD_LSM(I,J,43)=STD_LSM(I,J,43)+lRUNOFF3(I,J)* PASS_SMALL_DT / DT
-      STD_LSM(I,J,44)=STD_LSM(I,J,44)+lRC(I,J)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,45)=STD_LSM(I,J,45)+lPC(I,J)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,46)=STD_LSM(I,J,46)+lRSMIN(I,J)  * PASS_SMALL_DT / DT
-      STD_LSM(I,J,47)=STD_LSM(I,J,47)+lXLAI(I,J)   * PASS_SMALL_DT / DT
-      STD_LSM(I,J,48)=STD_LSM(I,J,48)+lRCS(I,J)    * PASS_SMALL_DT / DT
-      STD_LSM(I,J,49)=STD_LSM(I,J,49)+lRCT(I,J)    * PASS_SMALL_DT / DT
-      STD_LSM(I,J,50)=STD_LSM(I,J,50)+lRCQ(I,J)    * PASS_SMALL_DT / DT
-      STD_LSM(I,J,51)=STD_LSM(I,J,51)+lRCSOIL(I,J) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,52)=STD_LSM(I,J,52)+lSOILW(I,J)  * PASS_SMALL_DT / DT
-      STD_LSM(I,J,53)=STD_LSM(I,J,53)+lSOILM(I,J)  * PASS_SMALL_DT / DT
-      STD_LSM(I,J,54)=STD_LSM(I,J,54)+lQ1(I,J)     * PASS_SMALL_DT / DT
-      STD_LSM(I,J,55)=STD_LSM(I,J,55)+lSMAV(I,J,1) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,56)=STD_LSM(I,J,56)+lSMAV(I,J,2) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,57)=STD_LSM(I,J,57)+lSMAV(I,J,3) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,58)=STD_LSM(I,J,58)+lSMAV(I,J,4) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,59)=STD_LSM(I,J,59)+lSMCWLT(I,J) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,60)=STD_LSM(I,J,60)+lSMCDRY(I,J) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,61)=STD_LSM(I,J,61)+lSMCREF(I,J) * PASS_SMALL_DT / DT
-      STD_LSM(I,J,62)=STD_LSM(I,J,62)+lSMCMAX(I,J) * PASS_SMALL_DT / DT
+      STD_LSM(I,J,1)=STD_LSM(I,J,1)+lEMISSI(I,J)   *  dtfac 
+      STD_LSM(I,J,2)=STD_LSM(I,J,2)+lCMC(I,J)      *  dtfac 
+      STD_LSM(I,J,3)=STD_LSM(I,J,3)+lT1(I,J)       *  dtfac 
+      STD_LSM(I,J,4)=STD_LSM(I,J,4)+lST(I,J,1)     *  dtfac 
+      STD_LSM(I,J,5)=STD_LSM(I,J,5)+lST(I,J,2)     *  dtfac 
+      STD_LSM(I,J,6)=STD_LSM(I,J,6)+lST(I,J,3)     *  dtfac 
+      STD_LSM(I,J,7)=STD_LSM(I,J,7)+lST(I,J,4)     *  dtfac 
+      STD_LSM(I,J,8)=STD_LSM(I,J,8)+lSM(I,J,1)     *  dtfac 
+      STD_LSM(I,J,9)=STD_LSM(I,J,9)+lSM(I,J,2)     *  dtfac 
+      STD_LSM(I,J,10)=STD_LSM(I,J,10)+lSM(I,J,3)   *  dtfac 
+      STD_LSM(I,J,11)=STD_LSM(I,J,11)+lSM(I,J,4)   *  dtfac 
+      STD_LSM(I,J,12)=STD_LSM(I,J,12)+lSL(I,J,1)   *  dtfac 
+      STD_LSM(I,J,13)=STD_LSM(I,J,13)+lSL(I,J,2)   *  dtfac 
+      STD_LSM(I,J,14)=STD_LSM(I,J,14)+lSL(I,J,3)   *  dtfac 
+      STD_LSM(I,J,15)=STD_LSM(I,J,15)+lSL(I,J,4)   *  dtfac 
+      STD_LSM(I,J,16)=STD_LSM(I,J,16)+lSNOWH(I,J)  *  dtfac 
+      STD_LSM(I,J,17)=STD_LSM(I,J,17)+lSNEQV(I,J)  *  dtfac 
+      STD_LSM(I,J,18)=STD_LSM(I,J,18)+lALBEDO(I,J) *  dtfac 
+      STD_LSM(I,J,19)=STD_LSM(I,J,19)+lCH(I,J)     *  dtfac 
+      STD_LSM(I,J,20)=STD_LSM(I,J,20)+lCM(I,J)     *  dtfac 
+      STD_LSM(I,J,21)=STD_LSM(I,J,21)+lETA(I,J)    *  dtfac 
+      STD_LSM(I,J,22)=STD_LSM(I,J,22)+lFDOWN(I,J)  *  dtfac 
+      STD_LSM(I,J,23)=STD_LSM(I,J,23)+lEC(I,J)     *  dtfac 
+      STD_LSM(I,J,24)=STD_LSM(I,J,24)+lEDIR(I,J)   *  dtfac 
+      STD_LSM(I,J,25)=STD_LSM(I,J,25)+lET(I,J,1)   *  dtfac 
+      STD_LSM(I,J,26)=STD_LSM(I,J,26)+lET(I,J,2)   *  dtfac 
+      STD_LSM(I,J,27)=STD_LSM(I,J,27)+lET(I,J,3)   *  dtfac 
+      STD_LSM(I,J,28)=STD_LSM(I,J,28)+lET(I,J,4)   *  dtfac 
+      STD_LSM(I,J,29)=STD_LSM(I,J,29)+lETT(I,J)    *  dtfac 
+      STD_LSM(I,J,30)=STD_LSM(I,J,30)+lESNOW(I,J)  *  dtfac 
+      STD_LSM(I,J,31)=STD_LSM(I,J,31)+lDRIP(I,J)   *  dtfac 
+      STD_LSM(I,J,32)=STD_LSM(I,J,32)+lDEW(I,J)    *  dtfac 
+      STD_LSM(I,J,33)=STD_LSM(I,J,33)+lBETA(I,J)   *  dtfac 
+      STD_LSM(I,J,34)=STD_LSM(I,J,34)+lETP(I,J)    *  dtfac 
+      STD_LSM(I,J,35)=STD_LSM(I,J,35)+lSSOIL(I,J)  *  dtfac  
+      STD_LSM(I,J,36)=STD_LSM(I,J,36)+lFLX1(I,J)   *  dtfac 
+      STD_LSM(I,J,37)=STD_LSM(I,J,37)+lFLX2(I,J)   *  dtfac 
+      STD_LSM(I,J,38)=STD_LSM(I,J,38)+lFLX3(I,J)   *  dtfac 
+      STD_LSM(I,J,39)=STD_LSM(I,J,39)+lSNOMLT(I,J) *  dtfac 
+      STD_LSM(I,J,40)=STD_LSM(I,J,40)+lSNCOVR(I,J) *  dtfac 
+      STD_LSM(I,J,41)=STD_LSM(I,J,41)+lRUNOFF1(I,J)*  dtfac 
+      STD_LSM(I,J,42)=STD_LSM(I,J,42)+lRUNOFF2(I,J)*  dtfac 
+      STD_LSM(I,J,43)=STD_LSM(I,J,43)+lRUNOFF3(I,J)*  dtfac 
+      STD_LSM(I,J,44)=STD_LSM(I,J,44)+lRC(I,J)     *  dtfac 
+      STD_LSM(I,J,45)=STD_LSM(I,J,45)+lPC(I,J)     *  dtfac 
+      STD_LSM(I,J,46)=STD_LSM(I,J,46)+lRSMIN(I,J)  *  dtfac 
+      STD_LSM(I,J,47)=STD_LSM(I,J,47)+lXLAI(I,J)   *  dtfac 
+      STD_LSM(I,J,48)=STD_LSM(I,J,48)+lRCS(I,J)    *  dtfac 
+      STD_LSM(I,J,49)=STD_LSM(I,J,49)+lRCT(I,J)    *  dtfac 
+      STD_LSM(I,J,50)=STD_LSM(I,J,50)+lRCQ(I,J)    *  dtfac 
+      STD_LSM(I,J,51)=STD_LSM(I,J,51)+lRCSOIL(I,J) *  dtfac 
+      STD_LSM(I,J,52)=STD_LSM(I,J,52)+lSOILW(I,J)  *  dtfac 
+      STD_LSM(I,J,53)=STD_LSM(I,J,53)+lSOILM(I,J)  *  dtfac 
+      STD_LSM(I,J,54)=STD_LSM(I,J,54)+lQ1(I,J)     *  dtfac 
+      STD_LSM(I,J,55)=STD_LSM(I,J,55)+lSMAV(I,J,1) *  dtfac 
+      STD_LSM(I,J,56)=STD_LSM(I,J,56)+lSMAV(I,J,2) *  dtfac 
+      STD_LSM(I,J,57)=STD_LSM(I,J,57)+lSMAV(I,J,3) *  dtfac 
+      STD_LSM(I,J,58)=STD_LSM(I,J,58)+lSMAV(I,J,4) *  dtfac 
+      STD_LSM(I,J,59)=STD_LSM(I,J,59)+lSMCWLT(I,J) *  dtfac 
+      STD_LSM(I,J,60)=STD_LSM(I,J,60)+lSMCDRY(I,J) *  dtfac 
+      STD_LSM(I,J,61)=STD_LSM(I,J,61)+lSMCREF(I,J) *  dtfac 
+      STD_LSM(I,J,62)=STD_LSM(I,J,62)+lSMCMAX(I,J) *  dtfac 
 !      STD_LSM(I,J,63)=STD_LSM(I,J,63)+lNROOT(I,J)
 !      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
 !========
  1227 CONTINUE
-
 #endif
 #endif
 
       DO 3226 k=1,nk2
       DO 3226 J=1,mj1
       DO 3226 I=1,mi1
-      STD_RAD(I,J,k,1)=STD_RAD(I,J,k,1)+FUSWO(I,J,k)
-      STD_RAD(I,J,k,2)=STD_RAD(I,J,k,2)+FDSWO(I,J,k)
-      STD_RAD(I,J,k,3)=STD_RAD(I,J,k,3)+FULWO(I,J,k)
-      STD_RAD(I,J,k,4)=STD_RAD(I,J,k,4)+FDLWO(I,J,k)
-      STD_RAD(I,J,k,5)=STD_RAD(I,J,k,5)+DTRADSW(I,J,k)
-      STD_RAD(I,J,k,6)=STD_RAD(I,J,k,6)+DTRADLW(I,J,k)
-      STD_RAD(I,J,k,7)=STD_RAD(I,J,k,7)+cldfrc(I,J,k)
+      STD_RAD(I,J,k,1)=STD_RAD(I,J,k,1)+FUSWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,2)=STD_RAD(I,J,k,2)+FDSWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,3)=STD_RAD(I,J,k,3)+FULWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,4)=STD_RAD(I,J,k,4)+FDLWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,5)=STD_RAD(I,J,k,5)+DTRADSW(I,J,k) *  dtfac
+      STD_RAD(I,J,k,6)=STD_RAD(I,J,k,6)+DTRADLW(I,J,k) *  dtfac
+      STD_RAD(I,J,k,7)=STD_RAD(I,J,k,7)+cldfrc(I,J,k) *  dtfac
  3226 CONTINUE
       DO 3227 J=1,mj1
       DO 3227 I=1,mi1
-      STD_RAD(I,J,1,8)=STD_RAD(I,J,1,8)+FUSWTOA(I,J)
-      STD_RAD(I,J,2,8)=STD_RAD(I,J,2,8)+FDSWTOA(I,J)
-      STD_RAD(I,J,3,8)=STD_RAD(I,J,3,8)+FULWTOA(I,J)
+      STD_RAD(I,J,1,8)=STD_RAD(I,J,1,8)+FUSWTOA(I,J) *  dtfac
+      STD_RAD(I,J,2,8)=STD_RAD(I,J,2,8)+FDSWTOA(I,J) *  dtfac
+      STD_RAD(I,J,3,8)=STD_RAD(I,J,3,8)+FULWTOA(I,J) *  dtfac
  3227 CONTINUE
 
       DO 1041 K=1, NK2
@@ -1139,6 +1131,9 @@ CONTAINS
       std_rad = std_rad * fac
       std_tm5 = std_tm5 * fac
       out_tm9 = out_tm9 * fac
+#if defined (LSM)
+      std_lsm = std_lsm * fac
+#endif
    END SELECT
 #endif
 
@@ -1542,7 +1537,9 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
-      
+#if defined (LSM)     
+      std_lsm = 0.0
+#endif
 !==============================================================================
    END SUBROUTINE XSEC_CDF
 !==============================================================================
