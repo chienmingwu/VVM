@@ -385,7 +385,6 @@ CONTAINS
       QVBAR(k)=QVBAR(k)-QCBAR(k)
       T(K)=THBAR(K)*PIBAR(K)
       enddo
-      THBAR(NK3)=600.
 
 
 !     OCEAN POINTS
