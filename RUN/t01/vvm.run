@@ -18,6 +18,7 @@ set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
 
+module load vvm
 make INTEL_COMP=true CASENAME=${expname} CODEDIR=${codedir} -f ../makefile 
 
 setenv EXPHDR_tmp ${expname}" "${subdir}
@@ -35,12 +36,11 @@ set nx = `grep "nsbdm_x = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_x = //g'`
 set ny = `grep "nsbdm_y = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_y = //g'`
 
 sed -e 's/expname/'${expname}'/g' \
-    -e 's/np_nodes/4/g' \
+    -e 's/np_nodes/1/g' \
     -e 's/np_threads/4/g' \
-    -e 's/total_cores/16/g' ../../RUN/run.sh > run.sh
-
+    -e 's/total_cores/4/g' ../../RUN/run.sh > run.sh
 #bsub < run.sh
-qsub run.sh
+#qsub run.sh
 
 exit
 

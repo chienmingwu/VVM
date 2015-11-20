@@ -42,7 +42,6 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
-#define TOPOGRAPHY
 #define RADCODE
 #define AREAMN
 'END1'
@@ -53,10 +52,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/512/' \
-    -e '1,$s/merid_dimension/512/' \
-    -e '1,$s/zonal_decomposition/4/' \
-    -e '1,$s/merid_decomposition/4/' \
+sed -e '1,$s/zonal_dimension/64/' \
+    -e '1,$s/merid_dimension/64/' \
+    -e '1,$s/zonal_decomposition/2/' \
+    -e '1,$s/merid_decomposition/2/' \
     -e '1,$s/vert_dimension/34/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
