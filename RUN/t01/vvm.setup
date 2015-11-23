@@ -44,8 +44,6 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define PARALLELIO
 #define RADCODE
-#define LSM
-#define AREAMN
 'END1'
 cat definesld.com
 
