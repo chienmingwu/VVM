@@ -217,9 +217,12 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, DYNEW, &
       DO k = 1, NK2-1
 !        o3(:,:,k) = O3BAR_gate(NK2-k+1)
       o3(:,:,k)= .4800E-07
-      co2(:,:,k)=0.54e-3
-      ch4(:,:,k)=0.94e-6
-      n2o(:,:,k)=0.486e-6
+!ccwu      co2(:,:,k)=0.54e-3
+      co2(:,:,k)=0.3e-3
+!      ch4(:,:,k)=0.94e-6
+!      n2o(:,:,k)=0.486e-6
+      ch4(:,:,k)=0.
+      n2o(:,:,k)=0.
       o2(:,:,k)=0.23
       ENDDO
       END SELECT
