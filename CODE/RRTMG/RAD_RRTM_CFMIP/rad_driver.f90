@@ -354,7 +354,8 @@
     interfaceT(:, 2:nzm+1) = (layerT(:, 1:nzm) + layerT(:, 2:nzm+1)) / 2. 
 
 ! Extrapolate temperature at top from lapse rate within the layer
-    interfaceT(:, nzm+2) = 2.*layerT(:, nzm+1) - interfaceT(:, nzm+1)
+!ccwu    interfaceT(:, nzm+2) = 2.*layerT(:, nzm+1) - interfaceT(:, nzm+1)
+    interfaceT(:, nzm+2) = 210.
 
 ! Use SST as interface temperature of atmosphere at surface.
     interfaceT(:, 1)  = tg(1:nx) !bloss layerT(:, 1)   + (layerT(:, 1)   - interfaceT(:, 2))   
