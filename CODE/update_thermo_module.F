@@ -69,6 +69,9 @@ CONTAINS
       wbar=0.
 
       endif
+!ccwu turn off wbar
+
+      wbar=0.
 
       do k=2,nk2
       do j=1,mj1
