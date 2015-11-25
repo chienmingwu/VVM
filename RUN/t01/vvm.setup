@@ -51,8 +51,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/64/' \
-    -e '1,$s/merid_dimension/64/' \
+sed -e '1,$s/zonal_dimension/128/' \
+    -e '1,$s/merid_dimension/128/' \
     -e '1,$s/zonal_decomposition/4/' \
     -e '1,$s/merid_decomposition/4/' \
     -e '1,$s/vert_dimension/120/' \
@@ -66,9 +66,9 @@ sed -e '1,$s/zonal_dimension/64/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=4320/
+ &INPUT1 NEWRUN=T, ITTADD=21600/
  &INPUT2 RLAT=24.5 /
- &INPUT3 DX=35.,DYNEW=35.,DZ=10.,DZ1=10.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=35.,DYNEW=35.,DZ=10.,DZ1=10.,DT=2,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=20,SCALE=0.,Q1Q2=F,DTRAD=20.,SOLVAR=F, RRTMRC=T/
 'END6'
