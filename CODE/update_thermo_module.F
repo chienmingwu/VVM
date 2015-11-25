@@ -96,8 +96,8 @@ CONTAINS
 
       flx(nk3)=flx(nk2) !zero gradient at the top
       do k=2,nk2
-!      TH3D(I,J,K)=TH3D(I,J,K)-DT*(flx(K+1)-flx(K))/PIBAR(K)*fnz(k)/dz/cp
-!      DTRADLW(I,J,K)=-(flx(K+1)-flx(K))/PIBAR(K)*fnz(k)/dz/cp
+      TH3D(I,J,K)=TH3D(I,J,K)-DT*(flx(K+1)-flx(K))/PIBAR(K)*fnz(k)/dz/cp
+      DTRADLW(I,J,K)=-(flx(K+1)-flx(K))/PIBAR(K)*fnz(k)/dz/cp
       enddo
 
       enddo
