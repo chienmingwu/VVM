@@ -72,6 +72,7 @@ CONTAINS
 ! Frad=F0*exp(-alpha*lwp) from z to inf +F1*exp(-alpha*lwp) from 0 to z
 ! d Trad= - d Frad/ dz
 
+      IF (.false.) then
 !      fr0=74._dbl_kind
 !      xka=130._dbl_kind ! from xiao et al. 2010
 
@@ -102,6 +103,8 @@ CONTAINS
 
       enddo
       enddo
+    
+      ENDIF
 
 ! Update theta from dynamics tendency term
       DO 50 K = 2, NK2
