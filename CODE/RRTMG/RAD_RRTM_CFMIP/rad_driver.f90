@@ -335,11 +335,10 @@
 ! Fill out 2D arrays needed by RRTMG 
 
     layerP(:, 1:nzm) = spread(pres (:), dim = 1, ncopies = nx) 
-    layerP(:, nzm+1) = 0.5*spread(presi(nzm+1), dim = 1, ncopies = nx) ! add layer
+    layerP(:, nzm+1) = spread((2.*pres(nzm+1)-pres(nzm)), dim = 1, ncopies = nx) ! add layer
 
     interfaceP(:, 1:nzm+1) = spread(presi(:), dim = 1, ncopies = nx) 
-    interfaceP(:, nzm+2) = MIN(1.e-4_kind_rb,0.25*layerP(1,nzm+1)) ! near-zero pressure at top of extra layer
-
+    interfaceP(:, nzm+2) = MAX(1.e-4_kind_rb,2.*layerP(1,nzm+1)-interfaceP(1,nzm+1)) ! near-zero pressure at top of extra layer
 ! Convert hPa to Pa in layer mass calculation (kg/m2) 
     layerMass(:, 1:nzm+1) = &
          100. * (interfaceP(:,1:nzm+1) - interfaceP(:,2:nzm+2))/ ggr
