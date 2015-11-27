@@ -835,7 +835,6 @@ CONTAINS
 !sync L files when restart is done
 #if defined (PARALLELIO) 
       call output_nc_sync
-#else
 
       IF (ITT .EQ. ITTADD) THEN
 
@@ -846,7 +845,7 @@ CONTAINS
       CLOSE(99)
 
       ENDIF
-
+#else
       if (my_task == 0) call output_nc_sync
 #endif
 
