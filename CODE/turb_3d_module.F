@@ -572,7 +572,9 @@ CONTAINS
       DO 650 K=2,NK2
       DO 650 J=1,MJ1
       DO 650 I=1,MI1
-      THAD3(I,J,K)=DDX(I,J,K)
+!      THAD3(I,J,K)=DDX(I,J,K)
+!The potential temperature is updated only through the advection.
+      THAD3(I,J,K) = 0. 
   650 CONTINUE
 
   
