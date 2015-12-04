@@ -428,8 +428,8 @@ SUBROUTINE petsc_solver_finalize
     call DMDestroy(da2(i),ierr)
     enddo
 END SUBROUTINE petsc_solver_finalize
-SUBROUTINE petsc_solve_3d(F,X)
-REAL (KIND=dbl_kind), INTENT(INOUT)::F(mi1,mj1,nk2-2)
+SUBROUTINE petsc_solve_3d(YTEM,X)
+REAL (KIND=dbl_kind), INTENT(INOUT)::YTEM(mi1,mj1,nk2-2)
 REAL (KIND=dbl_kind), INTENT(INOUT)::X(mi1+2,mj1+2,nk2)
 PetscInt its
 PetscReal norm
@@ -441,7 +441,7 @@ PetscReal norm
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + (k - izg)*mxg*myg + 1
-      tmp(ip+kt)=-F(I-ixx+1,J-iy+1,K+1)
+      tmp(ip+kt)=-YTEM(I-ixx+1,J-iy+1,K+1)
       enddo
       enddo
       enddo
