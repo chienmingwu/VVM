@@ -53,6 +53,8 @@ CONTAINS
       ENDDO
       ENDDO
 !ccwut
+! easy force close all the physical update
+IF (.false.) THEN
 
 #if defined (PHYSICS)
 ! Update theta from microphysics tendency
@@ -127,7 +129,7 @@ CONTAINS
                   + A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt)
      
    71 CONTINUE
-
+ENDIF
 
 !ccwut set physics variables on topo to zero
       DO K = 2, maxtopo

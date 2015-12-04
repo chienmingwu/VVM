@@ -188,12 +188,11 @@ CONTAINS
 
 
 ! Physics calculations
-      CALL physics_interface(N1,N2,ITT,DT,ZZ,ZT,PBAR,PIBAR,  &
-                             RHO,PSFC,NOTHERM,NRAD,tg(1:mi1,1:mj1),      &
-                             DX,DYNEW,RLAT,RLON,THBAR,THBARZ)
-      call timer_stop('physics')
-
-
+! easy do not update physic for phase 1 
+!      CALL physics_interface(N1,N2,ITT,DT,ZZ,ZT,PBAR,PIBAR,  &
+!                             RHO,PSFC,NOTHERM,NRAD,tg(1:mi1,1:mj1),      &
+!                             DX,DYNEW,RLAT,RLON,THBAR,THBARZ)
+!      call timer_stop('physics')
 
 ! Update thermodynamic variables -- Replaces call to CLOUD_3D
       CALL update_thermodynamics (N1,N2)

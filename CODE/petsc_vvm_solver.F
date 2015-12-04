@@ -131,12 +131,12 @@ PC, PRIVATE::PC_Conti,PC_Toppsi,PC_Topchi
 DM, PRIVATE::da3(nlevel),da2(nlevel)
 KSP Conti,Toppsi,Topchi
 ! Set method and preconditioning
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPFBCGS, pc_type_Conti = PCMG
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCNONE
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCNONE
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCNONE
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPFBCGS, pc_type_Conti = PCMG
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCNONE
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCNONE
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCNONE
 
 
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_conti = KSPCG, spc_type_Conti = PCBJACOBI
@@ -428,8 +428,8 @@ SUBROUTINE petsc_solver_finalize
     call DMDestroy(da2(i),ierr)
     enddo
 END SUBROUTINE petsc_solver_finalize
-SUBROUTINE petsc_solve_3d(F,X)
-REAL (KIND=dbl_kind), INTENT(INOUT)::F(mi1,mj1,nk2-2)
+SUBROUTINE petsc_solve_3d(YTEM,X)
+REAL (KIND=dbl_kind), INTENT(INOUT)::YTEM(mi1,mj1,nk2-2)
 REAL (KIND=dbl_kind), INTENT(INOUT)::X(mi1+2,mj1+2,nk2)
 PetscInt its
 PetscReal norm
@@ -441,7 +441,7 @@ PetscReal norm
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + (k - izg)*mxg*myg + 1
-      tmp(ip+kt)=-F(I-ixx+1,J-iy+1,K+1)
+      tmp(ip+kt)=-YTEM(I-ixx+1,J-iy+1,K+1)
       enddo
       enddo
       enddo

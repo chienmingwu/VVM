@@ -164,12 +164,15 @@ CONTAINS
       ENDIF
 
       if(my_task == 0) write(6,*) 'RANDOM',K1,K2
-      DO 12 K = K1, K2
+!      DO 12 K = K1, K2
       DO 12 J = 1, MJ1
       DO 12 I = 1, MI1
       LO = I +1 + (J-1)*(MI1 + 2*NHALO)
       DTH = PERT(LO)
-      FTH3D(I,J,K,L) = FTH3D(I,J,K,L) + DTH / DT
+! easy qv forcing
+!      FTH3D(I,J,K,L) = FTH3D(I,J,K,L) + DTH / DT
+      FQV3D(I,J,2,L) = FQV3D(I,J,2,L) + DTH / DT /10000.
+
    12 CONTINUE
 
       ISTEP = ISTEP + 1

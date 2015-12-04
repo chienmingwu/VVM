@@ -1197,7 +1197,7 @@ CONTAINS
         call CDF_WRITE_4D(ncid_z3dy, 'eta', TIME_L, time_start, out_glob, (/ 1,1,1,time_start(1) /))
 #endif
 
-      OUT_tm1(:,:,1:nk2) = z3dz(1:mi1,1:mj1,1:nk2)
+      OUT_tm1(:,:,1:nk2) = z3dz(1:mi1,1:mj1,1:nk2) + f
 #if defined (PARALLELIO) 
         call pCDF_WRITE_4D(ncid_z3dz, 'zeta', TIME_L, time_start, out_tm1, nk2 )
 #else
