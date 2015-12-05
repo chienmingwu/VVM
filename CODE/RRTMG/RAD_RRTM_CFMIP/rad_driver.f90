@@ -122,7 +122,7 @@
       CONTAINS 
 !==============================================================================
 
-      subroutine rad_driver_rrtm(nx,nzm,lat,pres,presi,tabs,qv,qcl,qci,tg, &
+      subroutine rad_driver_rrtm(nx,nzm,lat,pres,presi,tabs,qv,qcl,qci,tg,albdo, &
                                  o3, co2, ch4, n2o, o2, cfc11, cfc12, cfc22, ccl4, &
                                  dolongwave,doshortwave,doperpetual,doseasons, &
                                  dosolarconstant,solar_constant,zenith_angle, &
@@ -191,6 +191,7 @@
       
       real, intent(in), dimension(nx) :: &
           tg, &              ! ground (or sea surface) temperature (K)
+          albdo, &           ! slice albedo
           latitude, &        ! latitude (degrees)
           longitude, &       ! longitude (degrees)
           p_factor_slice, &  ! perpetual factor
@@ -498,9 +499,10 @@
       if(all(solarZenithAngleCos(:) >= tiny(solarZenithAngleCos))) then 
 
 !        if(lat.eq.1.AND.masterproc) print *, "Let's do some shortwave" 
-
-        call albedo(ocean, real(solarZenithAngleCos(:)), &
+!        print*, albdo(10)
+        call albedo(ocean, albdo, real(solarZenithAngleCos(:)), &
              asdir(:), aldir(:), asdif(:), aldif(:))
+               
 
         call rrtmg_sw(nx, nzm+1, overlap,                     & 
              layerP, interfaceP, layerT, interfaceT, surfaceT, &
