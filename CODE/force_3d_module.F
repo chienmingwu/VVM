@@ -164,7 +164,7 @@ CONTAINS
       ENDIF
 
       if(my_task == 0) write(6,*) 'RANDOM',K1,K2
-      DO 12 K = K1, K2
+!      DO 12 K = K1, K2
       DO 12 J = 1, MJ1
       DO 12 I = 1, MI1
       LO = I +1 + (J-1)*(MI1 + 2*NHALO)

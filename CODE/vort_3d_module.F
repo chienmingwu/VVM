@@ -409,7 +409,6 @@ CONTAINS
                   +TERM1(I,J,K)+TERM2(I,J,K)+TERM3(I,J,K)
   500 CONTINUE
 
-
 #if defined (CORIOLIS)
 !=====================
 !     Coriolis Force
