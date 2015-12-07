@@ -583,7 +583,6 @@ CONTAINS
       call bound_arb(NK3,TH3D)
       call bound_arb(NK3,U3DX)
 
-
   END SUBROUTINE WIND_INI
 
 
