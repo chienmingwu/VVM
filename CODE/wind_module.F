@@ -150,13 +150,13 @@ CONTAINS
       REAL (KIND=dbl_kind), DIMENSION(mi1,mj1) :: &
          temu, temv
 
-#if defined (AREAMN)
-      IF (UVTAU.EQ.0.) THEN
+!#if defined (AREAMN)
+!      IF (UVTAU.EQ.0.) THEN
       UTMN = UTMN0
       VTMN = VTMN0
       RETURN
-      END  IF
-#endif
+!      END  IF
+!#endif
 
       L = N2
       AREA = FLOAT(MI_glob*mj_glob)

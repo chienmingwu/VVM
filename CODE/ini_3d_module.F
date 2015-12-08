@@ -477,6 +477,9 @@ CONTAINS
                  -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
+      Z3DZ(I,J,K)=(U3DY(I+1,J,K)-U3DY(I,J,K))/DX &
+                 -(U3DX(I,J+1,K)-U3DX(I,J,K))/DYNEW
+
   660 CONTINUE
 
 
@@ -556,7 +559,7 @@ CONTAINS
       P(i,j,K) = -YL*YL/8. + GD*YL/4. +.25*(GD/8./pi)**2-59.*GD2/512.
 
       ELSE
-      P(i,j,K) = -(GD/8./pi)**2*(cos(8*pi*(YL-GD/2)/GD)+3./4.)+3.*YL**2/8.
+      P(i,j,K) = -(GD/8./pi)**2*(cos(8*pi*(YL-GD/2)/GD)+.75)+3.*YL**2/8.
       P(i,j,K) = P(I,J,K)-3.*GD*YL/8.+41.*GD2/512.
 
       ENDIF
