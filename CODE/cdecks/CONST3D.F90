@@ -154,10 +154,10 @@ PRIVATE
 ! Initially obtained values (constant with time)
 !  formerly common/d3comp2/
 
-   REAL (KIND=dbl_kind), DIMENSION(nk2), PUBLIC ::       &
+   REAL (KIND=dbl_kind), DIMENSION(J,nk2), PUBLIC ::       &
       z3dx0,    &  ! area mean of x-component of vorticity (1/s)
       z3dy0        ! area mean of y-component of vorticity (1/s)
-   REAL (KIND=dbl_kind), PUBLIC ::       &
+   REAL (KIND=dbl_kind), DIMENSION(J), PUBLIC ::       &
       z3dz0,    &  ! area mean of z-component of vorticity at k=NK2 (1/s)
       utmn0,    &  ! area mean zonal velocity at k=NK2 (m/s)
       vtmn0        ! area mean meridional velocity at k=NK2 (m/s)

@@ -54,7 +54,7 @@ CONTAINS
 
       DO 210 J=1,MJ1
       DO 210 I=1,MI1
-      U3DX(I,J,NK2) = UTMN + (UTOP(I,J) - UTOPM) 
+      U3DX(I,J,NK2) = UTMN0(J) + (UTOP(I,J) - UTOPM) 
   210 CONTINUE
 
       DO 212 K=NK1,1,-1
@@ -81,7 +81,7 @@ CONTAINS
 
       DO 310 J=1,MJ1
       DO 310 I=1,MI1
-      U3DY(I,J,NK2) = VTMN + VTOP(I,J) - VTOPM
+      U3DY(I,J,NK2) = VTMN0(J) + VTOP(I,J) - VTOPM
   310 CONTINUE
 
       DO 312 K=NK1,1,-1

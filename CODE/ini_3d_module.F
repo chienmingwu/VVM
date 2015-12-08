@@ -484,17 +484,34 @@ CONTAINS
       CALL BOUND_3D_XY
 
 
-#if defined (AREAMN)
 !-------------------
 !     INSTANT NUDGING
 !     OF THE AREA MEAN OF HORIZONTAL WIND TO THE INITIAL VALUE.
 
-      CALL XYAVG2(Z3DX,nhalo,MI1,MJ1,NK2,2,NK1,Z3DX0)
-      CALL XYAVG2(Z3DY,nhalo,MI1,MJ1,NK2,2,NK1,Z3DY0)
 
-      CALL xyavg1(Z3DZ(:,:,nk2), nhalo, mi1, mj1, Z3DZ0)
+! easy ZoanlMN 
+
+!      CALL XYAVG2(Z3DX,nhalo,MI1,MJ1,NK2,2,NK1,Z3DX0)
+!      CALL XYAVG2(Z3DY,nhalo,MI1,MJ1,NK2,2,NK1,Z3DY0)
+
+!      CALL xyavg1(Z3DZ(:,:,nk2), nhalo, mi1, mj1, Z3DZ0)
+      DO K = 1,NK1
+      DO J = 1,MJ1
+      Z3DX0(J,K) = 0.
+      Z3DY0(J,K) = 0.
+      DO I = 1,MI1
+      Z3DX0(J,K) = Z3DX0(J,K)+Z3DX(I,J,NK2)/DBLE(MI1)
+      Z3DY0(J,K) = Z3DY0(J,K)+Z3DY(I,J,NK2)/DBLE(MI1)
+      ENDDO
+      ENDDO
+      ENDDO
+      DO J = 1,MJ1
+      Z3DZ0(J) = 0.
+      DO I = 1,MI1
+      Z3DZ0(J) = Z3DZ0(J)+Z3DZ(I,J,NK2)/DBLE(MI1)
+      ENDDO
+      ENDDO
 !-------------------
-#endif
 
       DO 700 K = 1, NK3
       DO 700 J = 1, MJ1
@@ -517,11 +534,19 @@ CONTAINS
       CALL BOUND_ARB (NK2,DEFYZ)
 #endif
 
-      CALL xyavg1(u3dx(:,:,nk2), nhalo, mi1, mj1, utmn)
-      CALL xyavg1(u3dy(:,:,nk2), nhalo, mi1, mj1, vtmn)
-      UTMN0 = UTMN
-      VTMN0 = VTMN
+!      CALL xyavg1(u3dx(:,:,nk2), nhalo, mi1, mj1, utmn)
+!      CALL xyavg1(u3dy(:,:,nk2), nhalo, mi1, mj1, vtmn)
       
+      DO J = 1,MJ1
+       
+      UTMN0(J) = 0.
+      VTMN0(J) = 0.
+      DO I = 1,MI1
+      UTMN0(J) = UTMN0(J) + U3DX(I,J,NK2)/DBLE(MI1)
+      VTMN0(J) = VTMN0(J) + U3DY(I,J,NK2)/DBLE(MI1)
+      ENDDO
+      ENDDO      
+
       IF(itt == 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
