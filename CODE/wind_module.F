@@ -151,13 +151,14 @@ CONTAINS
          temu, temv
 
 #if defined (AREAMN)
-      IF (UVTAU.EQ.0.) THEN
-      UTMN = UTMN0
-      VTMN = VTMN0
-      RETURN
-      END  IF
+!      IF (UVTAU.EQ.0.) THEN
+!      UTMN = UTMN0
+!      VTMN = VTMN0
+!      RETURN
+!      END  IF
 #endif
 
+      RETURN
       L = N2
       AREA = FLOAT(MI_glob*mj_glob)
 
@@ -225,12 +226,12 @@ CONTAINS
 #endif
 #endif
  
-      UTMN = UTMN + A*FUTMN(N2) + B*FUTMN(N1)
-      VTMN = VTMN + A*FVTMN(N2) + B*FVTMN(N1)
+!      UTMN = UTMN + A*FUTMN(N2) + B*FUTMN(N1)
+!      VTMN = VTMN + A*FVTMN(N2) + B*FVTMN(N1)
 
 #if defined (AREAMN)
-      UTMN = (1.-DT/UVTAU)*UTMN + UTMN0*DT/UVTAU
-      VTMN = (1.-DT/UVTAU)*VTMN + VTMN0*DT/UVTAU
+!      UTMN = (1.-DT/UVTAU)*UTMN + UTMN0*DT/UVTAU
+!      VTMN = (1.-DT/UVTAU)*VTMN + VTMN0*DT/UVTAU
 #endif
 
    END SUBROUTINE uvtmn_3d

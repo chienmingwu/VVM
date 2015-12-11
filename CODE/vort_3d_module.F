@@ -150,17 +150,17 @@ CONTAINS
       CALL XYAVG2(Z3DX,nhalo,mi1,mj1,NK2,2,NK1,SUMX)
       CALL XYAVG2(Z3DY,nhalo,mi1,mj1,NK2,2,NK1,SUMY)
 
-      IF(UVTAU.EQ.0.) THEN
-      DO 400 K = 2,NK1
-      SUMXN(K) = Z3DX0(K)
-      SUMYN(K) = Z3DY0(K)
-  400 CONTINUE
-      ELSE
-      DO 410 K = 2,NK1
-      SUMXN(K) = (1.-DT/UVTAU)*SUMX(K) + Z3DX0(K)*DT/UVTAU
-      SUMYN(K) = (1.-DT/UVTAU)*SUMY(K) + Z3DY0(K)*DT/UVTAU
-  410 CONTINUE
-      END IF
+!      IF(UVTAU.EQ.0.) THEN
+!      DO 400 K = 2,NK1
+!      SUMXN(K) = Z3DX0(K)
+!      SUMYN(K) = Z3DY0(K)
+!  400 CONTINUE
+!      ELSE
+!      DO 410 K = 2,NK1
+!      SUMXN(K) = (1.-DT/UVTAU)*SUMX(K) + Z3DX0(K)*DT/UVTAU
+!      SUMYN(K) = (1.-DT/UVTAU)*SUMY(K) + Z3DY0(K)*DT/UVTAU
+!  410 CONTINUE
+!      END IF
 
    SELECT CASE (TRIM(casename))
    CASE ('TWP-ICE')
@@ -174,8 +174,8 @@ CONTAINS
       IF ( ZZ(K) .GE. nudgelim) THEN
       DO 421 J = 1,MJ1
       DO 421 I = 1,MI1
-      Z3DX(I,J,K) = Z3DX(I,J,K) - SUMX(K) + SUMXN(K)
-      Z3DY(I,J,K) = Z3DY(I,J,K) - SUMY(K) + SUMYN(K) 
+      Z3DX(I,J,K) = Z3DX(I,J,K) - SUMX(K) + Z3DX0(J,K)
+      Z3DY(I,J,K) = Z3DY(I,J,K) - SUMY(K) + Z3DY0(J,K) 
   421 CONTINUE
       END IF
   420 CONTINUE
@@ -190,7 +190,7 @@ CONTAINS
 
       DO 440 J = 1,MJ1
       DO 440 I = 1,MI1
-      Z3DZ(I,J,NK2) = Z3DZ(I,J,NK2) - SUMZ + Z3DZ0
+      Z3DZ(I,J,NK2) = Z3DZ(I,J,NK2) - SUMZ + Z3DZ0(J)
   440 CONTINUE
 !-------------------
 #endif

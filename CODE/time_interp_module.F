@@ -84,10 +84,10 @@ CONTAINS
       fssinc = (sdata2(2) - sdata1(2))/NSTPS
       fssinc = (sdata2(3) - sdata1(3))/NSTPS
       
-      DO 110 K=1,NK2
-      DX0INC(K)=(SUMX2(K)-Z3DX0(K))/NSTPS
-      DY0INC(K)=(SUMY2(K)-Z3DY0(K))/NSTPS
-  110 Continue
+!      DO 110 K=1,NK2
+!      DX0INC(K)=(SUMX2(K)-Z3DX0(K))/NSTPS
+!      DY0INC(K)=(SUMY2(K)-Z3DY0(K))/NSTPS
+!  110 Continue
 
    END SUBROUTINE time_interp
 

@@ -275,8 +275,8 @@ CONTAINS
         comp_buffer%G_in3dk2(3,:,:,in_k)   =  fzxtb(:,:,out_k)
         comp_buffer%G_in3dk2(4,:,:,in_k)   =  fzytb(:,:,out_k)
 
-        comp_buffer%G_nk2(1,in_k)          =  z3dx0(out_k)
-        comp_buffer%G_nk2(2,in_k)          =  z3dy0(out_k)
+!        comp_buffer%G_nk2(1,in_k)          =  z3dx0(out_k)
+!        comp_buffer%G_nk2(2,in_k)          =  z3dy0(out_k)
         comp_buffer%G_nk2(3,in_k)          =  rhoz(out_k)
         comp_buffer%G_nk2(4,in_k)          =  rhow(out_k)
 
@@ -380,8 +380,8 @@ CONTAINS
         fzxtb(:,:,out_k)     =        comp_buffer%G_in3dk2(3,:,:,in_k)   
         fzytb(:,:,out_k)     =        comp_buffer%G_in3dk2(4,:,:,in_k)   
 
-        z3dx0(out_k)         =        comp_buffer%G_nk2(1,in_k)          
-        z3dy0(out_k)         =        comp_buffer%G_nk2(2,in_k)          
+!        z3dx0(out_k)         =        comp_buffer%G_nk2(1,in_k)          
+!        z3dy0(out_k)         =        comp_buffer%G_nk2(2,in_k)          
         rhoz(out_k)          =        comp_buffer%G_nk2(3,in_k)          
         rhow(out_k)          =        comp_buffer%G_nk2(4,in_k)            
 
