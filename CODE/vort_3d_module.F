@@ -99,22 +99,22 @@ CONTAINS
 !  Updating the vertical component of vorticity.
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
-      Z3DZ(I,J,NK2)=Z3DZ(I,J,NK2) !+A*FZTOP(I,J,N2)+B*FZTOP(I,J,N1)
+      Z3DZ(I,J,NK2)=Z3DZ(I,J,NK2) +A*FZTOP(I,J,N2)+B*FZTOP(I,J,N1)
   100 CONTINUE
 
       DO 110 K=NK1,1,-1
       DO 110 J=1,MJ1
       DO 110 I=1,MI1
-      Z3DZ(I,J,K)=Z3DZ(I,J,K+1)   !                    &
-!       +(Z3DX(I+1,J,K)-Z3DX(I,J,K))*DZ/(DX*FNZ(K))    &
-!       -(Z3DY(I,J+1,K)-Z3DY(I,J,K))*DZ/(DYNEW*FNZ(K))
+      Z3DZ(I,J,K)=Z3DZ(I,J,K+1)                       &
+       +(Z3DX(I+1,J,K)-Z3DX(I,J,K))*DZ/(DX*FNZ(K))    &
+       -(Z3DY(I,J+1,K)-Z3DY(I,J,K))*DZ/(DYNEW*FNZ(K))
   110 CONTINUE
 
       DO 150 J=1,MJ1
       DO 150 I=1,MI1
-      Z3DZ(I,J,NK3)=Z3DZ(I,J,NK2)                      !   &
-!       -(Z3DX(I+1,J,NK2)-Z3DX(I,J,NK2))*DZ/(DX*FNZ(NK2))  &
-!       +(Z3DY(I,J+1,NK2)-Z3DY(I,J,NK2))*DZ/(DYNEW*FNZ(NK2))
+      Z3DZ(I,J,NK3)=Z3DZ(I,J,NK2)                         &
+       -(Z3DX(I+1,J,NK2)-Z3DX(I,J,NK2))*DZ/(DX*FNZ(NK2))  &
+       +(Z3DY(I,J+1,NK2)-Z3DY(I,J,NK2))*DZ/(DYNEW*FNZ(NK2))
   150 CONTINUE
 
       CALL BOUND_3D_Z
@@ -136,7 +136,7 @@ CONTAINS
 
       DO 200 J=1,MJ1
       DO 200 I=1,MI1
-      Z3DZ(I,J,NK2)=Z3DZ(I,J,NK2)! + DT*FZTOPB(I,J)
+      Z3DZ(I,J,NK2)=Z3DZ(I,J,NK2) + DT*FZTOPB(I,J)
   200 CONTINUE
 #endif
 
@@ -174,8 +174,8 @@ CONTAINS
       IF ( ZZ(K) .GE. nudgelim) THEN
       DO 421 J = 1,MJ1
       DO 421 I = 1,MI1
-      Z3DX(I,J,K) = Z3DX(I,J,K) - SUMX(K) + SUMXN(K)
-      Z3DY(I,J,K) = Z3DY(I,J,K) - SUMY(K) + SUMYN(K) 
+      Z3DX(I,J,K) = Z3DX(I,J,K) !- SUMX(K) + SUMXN(K)
+      Z3DY(I,J,K) = Z3DY(I,J,K) !- SUMY(K) + SUMYN(K) 
   421 CONTINUE
       END IF
   420 CONTINUE
@@ -190,7 +190,7 @@ CONTAINS
 
       DO 440 J = 1,MJ1
       DO 440 I = 1,MI1
-      Z3DZ(I,J,NK2) = Z3DZ(I,J,NK2) - SUMZ + Z3DZ0
+      Z3DZ(I,J,NK2) = Z3DZ(I,J,NK2)! - SUMZ + Z3DZ0
   440 CONTINUE
 !-------------------
 #endif
@@ -200,16 +200,16 @@ CONTAINS
       DO 500 K=NK1,1,-1
       DO 500 J=1,MJ1
       DO 500 I=1,MI1
-      Z3DZ(I,J,K)=Z3DZ(I,J,K+1)     !                &
-!       +(Z3DX(I+1,J,K)-Z3DX(I,J,K))*DZ/(DX*FNZ(K))  &
-!       -(Z3DY(I,J+1,K)-Z3DY(I,J,K))*DZ/(DYNEW*FNZ(K))
+      Z3DZ(I,J,K)=Z3DZ(I,J,K+1)                     &
+       +(Z3DX(I+1,J,K)-Z3DX(I,J,K))*DZ/(DX*FNZ(K))  &
+       -(Z3DY(I,J+1,K)-Z3DY(I,J,K))*DZ/(DYNEW*FNZ(K))
   500 CONTINUE
 
       DO 550 J=1,MJ1
       DO 550 I=1,MI1
-      Z3DZ(I,J,NK3)=Z3DZ(I,J,NK2)                   !      &
-!       -(Z3DX(I+1,J,NK2)-Z3DX(I,J,NK2))*DZ/(DX*FNZ(NK2))  &
-!       +(Z3DY(I,J+1,NK2)-Z3DY(I,J,NK2))*DZ/(DYNEW*FNZ(NK2))
+      Z3DZ(I,J,NK3)=Z3DZ(I,J,NK2)                         &
+       -(Z3DX(I+1,J,NK2)-Z3DX(I,J,NK2))*DZ/(DX*FNZ(NK2))  &
+       +(Z3DY(I,J+1,NK2)-Z3DY(I,J,NK2))*DZ/(DYNEW*FNZ(NK2))
   550 CONTINUE
 
       CALL BOUND_3D_Z
@@ -407,6 +407,7 @@ CONTAINS
       DO 500 I = 1,MI1
       FZX(I,J,K,L)=FZX(I,J,K,L)                       &
                   +TERM1(I,J,K)+TERM2(I,J,K)+TERM3(I,J,K)
+      FZX(I,J,K,L)=0.
   500 CONTINUE
 
 
@@ -643,6 +644,7 @@ CONTAINS
       DO 500 I = 1,MI1
       FZY(I,J,K,L)=FZY(I,J,K,L)                            &
                   +TERM1(I,J,K)+TERM2(I,J,K)+TERM3(I,J,K)
+       FZY(I,J,K,L) =0.
   500 CONTINUE
 
 #if defined (CORIOLIS)
@@ -923,6 +925,7 @@ CONTAINS
       DO 960 I=1,MI1
       FZTOP(I,J,L)=FZTOP(I,J,L)         &
                   +TERM1(I,J,1)+TERM2(I,J,1)+TERM3(I,J,1)
+      FZTOP(I,J,L) = 0.
   960 CONTINUE
 
 #if defined (CORIOLIS)
@@ -1154,9 +1157,9 @@ CONTAINS
       DO 10 K = 2,NK1
       DO 10 J = 1,MJ1
       DO 10 I = 1,MI1
-      Z3DX(I,J,K) = Z3DX(I,J,K)                   !    &
+      Z3DX(I,J,K) = Z3DX(I,J,K)                       &
 !                  + DT*FZXBU(I,J,K)                   &
-!                  + A*FZX(I,J,K,N2) + B*FZX(I,J,K,N1)
+                  + A*FZX(I,J,K,N2) + B*FZX(I,J,K,N1)
    10 CONTINUE
 
       DO 20 J = 1,MJ1
@@ -1168,9 +1171,9 @@ CONTAINS
       DO 30 K = 2,NK1
       DO 30 J = 1,MJ1
       DO 30 I = 1,MI1
-      Z3DY(I,J,K) = Z3DY(I,J,K)                    !   &
+      Z3DY(I,J,K) = Z3DY(I,J,K)                       &
 !                  + DT*FZYBU(I,J,K)                   &
-!                  + A*FZY(I,J,K,N2) + B*FZY(I,J,K,N1)
+                  + A*FZY(I,J,K,N2) + B*FZY(I,J,K,N1)
    30 CONTINUE
 
       DO 40 J = 1,MJ1
@@ -1188,7 +1191,7 @@ CONTAINS
       DO 100 K = 2,NK1
       DO 100 J = 1,MJ1
       DO 100 I = 1,MI1
-      Z3DX(I,J,K) = Z3DX(I,J,K) !+ DT*FZXTB(I,J,K)
+      Z3DX(I,J,K) = Z3DX(I,J,K) + DT*FZXTB(I,J,K)
   100 CONTINUE
 
       DO 200 J = 1,MJ1
@@ -1200,7 +1203,7 @@ CONTAINS
       DO 300 K = 2,NK1
       DO 300 J = 1,MJ1
       DO 300 I = 1,MI1
-      Z3DY(I,J,K) = Z3DY(I,J,K) !+ DT*FZYTB(I,J,K)
+      Z3DY(I,J,K) = Z3DY(I,J,K) + DT*FZYTB(I,J,K)
   300 CONTINUE
 
       DO 400 J = 1,MJ1

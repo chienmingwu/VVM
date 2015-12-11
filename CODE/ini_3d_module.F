@@ -479,7 +479,6 @@ CONTAINS
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
       Z3DZ(I,J,K)=(U3DY(I+1,J,K)-U3DY(I,J,K))/DX &
                  -(U3DX(I,J+1,K)-U3DX(I,J,K))/DYNEW
-
   660 CONTINUE
 
 
@@ -568,6 +567,7 @@ CONTAINS
       TH3D(I,J,K) = TH3D(I,J,K)*(1+2.e-5*F/GRAV*P(I,J,K)*TMP)
 
       P(I,J,K) = 2.e-5* P(I,J,K )*0.5*(cos(pi*(1.-exp(-ZZ(k)/ZD))))
+!     P(I,J,K) = 0.5*(cos(pi*(1.-exp(-ZZ(k)/ZD))))
 
 
   100 CONTINUE
@@ -577,7 +577,7 @@ CONTAINS
       DO 200 J = 1,MJ1
       DO 200 I = 1,MI1
 !ccwu_ini_wind
-      U3DX(I,J,K) = -(P(I,J+1,K)-P(I,J,K))/DYNEW
+      U3DX(I,J,K) =-(P(I,J+1,K)-P(I,J,K))/DYNEW
 
 !      Z3DZ(I,J,K) = P(I,J,K)
 
