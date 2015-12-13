@@ -1158,7 +1158,7 @@ CONTAINS
       DO 10 J = 1,MJ1
       DO 10 I = 1,MI1
       Z3DX(I,J,K) = Z3DX(I,J,K)                       &
-!                  + DT*FZXBU(I,J,K)                   &
+                  + DT*FZXBU(I,J,K)                   &
                   + A*FZX(I,J,K,N2) + B*FZX(I,J,K,N1)
    10 CONTINUE
 
@@ -1172,7 +1172,7 @@ CONTAINS
       DO 30 J = 1,MJ1
       DO 30 I = 1,MI1
       Z3DY(I,J,K) = Z3DY(I,J,K)                       &
-!                  + DT*FZYBU(I,J,K)                   &
+                  + DT*FZYBU(I,J,K)                   &
                   + A*FZY(I,J,K,N2) + B*FZY(I,J,K,N1)
    30 CONTINUE
 
