@@ -70,8 +70,8 @@
 # specify the shell to avoid surprises in weird environments
 SHELL	= /bin/csh
 
-PETSC_DIR        = /cluster/intel13/petsc-3.6.2
-include ${PETSC_DIR}/lib/petsc/conf/variables
+PETSC_DIR        = /opt/petsc-intel
+include ${PETSC_DIR}/conf/variables
 #-----------------------------------------------------------------------------
 # Read the universal makefile to define the processor-dependent information
 #-----------------------------------------------------------------------------

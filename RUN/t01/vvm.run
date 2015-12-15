@@ -18,7 +18,6 @@ set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
 
-module load vvm
 make INTEL_COMP=true CASENAME=${expname} CODEDIR=${codedir} -f ../makefile 
 
 setenv EXPHDR_tmp ${expname}" "${subdir}
@@ -35,7 +34,7 @@ set file = ${subdir}/PARMSLD.f
 set nx = `grep "nsbdm_x = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_x = //g'`
 set ny = `grep "nsbdm_y = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_y = //g'`
 @ ntask = $nx * $ny
-@ pth = 12
+@ pth = 16
 @ ppn = $ntask % $pth
 
 while ( $ppn != 0 || $pth  == 0)
