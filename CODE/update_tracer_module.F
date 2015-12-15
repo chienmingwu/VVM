@@ -45,10 +45,10 @@ CONTAINS
 ! Tracer 1 is initialized to 3x3 square columns set inside each corner of the domain.
 ! Tracer 2 is initialized to fill the 2km to 4km layer
 ! The tracers are advected without sources or sinks
-      tc3d(3:5,3:5,:,1) = 1.                ! SW corner column
-      tc3d(3:5,mj1-2:mj1,:,1) = 1.          ! NW corner column
-      tc3d(mi1-2:mi1,mj1-2:mj1,:,1) = 1.    ! NE corner column
-      tc3d(mi1-2:mi1,3:5,:,1) = 1.          ! SE corner column
+!      tc3d(3:5,3:5,:,1) = 1.                ! SW corner column
+!      tc3d(3:5,mj1-2:mj1,:,1) = 1.          ! NW corner column
+!      tc3d(mi1-2:mi1,mj1-2:mj1,:,1) = 1.    ! NE corner column
+!      tc3d(mi1-2:mi1,3:5,:,1) = 1.          ! SE corner column
       
       DO 123 K = 1, NK3
       DO 123 J = mjm,mjp
