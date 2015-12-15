@@ -449,6 +449,7 @@ CONTAINS
 !*******************************************
 !     3. SET UP CIRCULATION
 !*******************************************
+      W3D =0.
       IF (.false.) THEN
 
       DO 600 K = 1, NK2
@@ -471,6 +472,8 @@ CONTAINS
       call wind_ini
 
 
+      ENDIF
+
       DO 660 K = 2, NK1
       DO 660 J = 1, MJ1
       DO 660 I = 1, MI1
@@ -479,7 +482,6 @@ CONTAINS
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
-      ENDIF
 
       CALL BOUND_3D_XY
 
@@ -547,7 +549,7 @@ CONTAINS
       ENDDO
       ENDDO      
 
-      IF(itt == 0) CALL UPDATE_TRACER_init
+!      IF(itt == 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
       albdo = 0.30
