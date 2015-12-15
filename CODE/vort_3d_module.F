@@ -407,7 +407,6 @@ CONTAINS
       DO 500 I = 1,MI1
       FZX(I,J,K,L)=FZX(I,J,K,L)                       &
                   +TERM1(I,J,K)+TERM2(I,J,K)+TERM3(I,J,K)
-      FZX(I,J,K,L)=0.
   500 CONTINUE
 
 
@@ -644,7 +643,6 @@ CONTAINS
       DO 500 I = 1,MI1
       FZY(I,J,K,L)=FZY(I,J,K,L)                            &
                   +TERM1(I,J,K)+TERM2(I,J,K)+TERM3(I,J,K)
-       FZY(I,J,K,L) =0.
   500 CONTINUE
 
 #if defined (CORIOLIS)
@@ -1172,8 +1170,8 @@ CONTAINS
       DO 30 J = 1,MJ1
       DO 30 I = 1,MI1
       Z3DY(I,J,K) = Z3DY(I,J,K)                       &
-                  + DT*FZYBU(I,J,K)                   &
-                  + A*FZY(I,J,K,N2) + B*FZY(I,J,K,N1)
+                  + DT*FZYBU(I,J,K)                 !  &
+!                  + A*FZY(I,J,K,N2) + B*FZY(I,J,K,N1)
    30 CONTINUE
 
       DO 40 J = 1,MJ1
