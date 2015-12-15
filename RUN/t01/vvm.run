@@ -17,7 +17,7 @@ set expname = t01
 set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
-
+  
 make INTEL_COMP=true CASENAME=${expname} CODEDIR=${codedir} -f ../makefile 
 
 setenv EXPHDR_tmp ${expname}" "${subdir}
