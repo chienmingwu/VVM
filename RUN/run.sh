@@ -11,7 +11,7 @@ export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
 
-/cluster/intel13/mvapich2-2.1a/bin/mpirun -np total_cores ./vvm < INPUT | tee OUTPUT
+mpirun -np total_cores ./vvm < INPUT | tee OUTPUT
 
 date >> runtime
 
