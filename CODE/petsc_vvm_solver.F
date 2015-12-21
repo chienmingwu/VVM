@@ -151,9 +151,9 @@ Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
 PetscInt, PRIVATE:: MXIT = 600
-PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
-PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-5,dtol_TopPsi = 1.d2
-PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-5,dtol_TopChi = 1.d2
+PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-6,dtol_Conti = 1.d2
+PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-4,dtol_TopPsi = 1.d2
+PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-4,dtol_TopChi = 1.d2
 !PetscViewer viewer
 
 PUBLIC :: petsc_solver_initialize,petsc_solver_finalize,petsc_solve_3d, &
