@@ -128,11 +128,8 @@ CONTAINS
       ELSE
 ! OCEAN part      
 
-      zzz = 24.1525423728813
-      ttt = 297.869357172528
-
-      CALL SFLUX_2D (0._dbl_kind,ttt,THVSMD(I,J),SFCSPD(I,J), &
-                     zzz,ZROUGH(I,J),USTAR,VENTFC,MOLEN)
+      CALL SFLUX_2D (0._dbl_kind,lT1(I,J),THVSMD(I,J),SFCSPD(I,J), &
+                     ZL(I,J),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
 
 
       WT(I,J) = VENTFC(2)*TD(I,J)
