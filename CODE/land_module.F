@@ -131,7 +131,6 @@ CONTAINS
       CALL SFLUX_2D (0._dbl_kind,dble(lT1(I,J)),THVSMD(I,J),SFCSPD(I,J), &
                      dble(ZL(I,J)),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
 
-
       WT(I,J) = VENTFC(2)*TD(I,J)
       WQ(I,J) = VENTFC(2)*QD(I,J)
       VNE2D(I,J) = VENTFC(1)
