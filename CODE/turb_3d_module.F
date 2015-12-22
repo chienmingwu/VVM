@@ -295,7 +295,6 @@ CONTAINS
 
  5000 CONTINUE
 
-
 !ccwut rkh
       DO K=2,maxtopo
       DO J=1,mj1
@@ -330,6 +329,9 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
+
+      if (my_task .eq. 0 ) PRINT*,CP,TH3D(10,10,2)
+
          IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
@@ -825,6 +827,9 @@ CONTAINS
          T2(MI1,MJ1),            & ! second lv tmperature for LSM
          swD(MI1,MJ1),           & ! surface short wave flux input for LSM
          lwD(MI1,MJ1),           & ! surface long wave flux input fof LSM
+         TD(MI1,MJ1),            &
+         QD(MI1,MJ1),            &
+         THVSMD(MI1,MJ1),        &
          VEN2D(mim:mip,mjm:mjp)    ! surface spd factor output fof LSM
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
@@ -867,14 +872,33 @@ CONTAINS
       DO 105 I = 1,MI1
 
       hxp=INT(hx(I,J))+1
+      hx1=INT(hx(I,J))
+
       T2(I,J) = TH3D(I,J,hxp)*PIBAR(hxp)
       QG(I,J) = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
       swD(I,J) = swDown_3D(I,J,hxp)
       lwD(I,J) = lwDown_3D(I,J,hxp)
 
+
+      ES1  = ES ( TG(I,J) )
+      QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 )
+      TS   = CP * TG(I,J) + GRAV * ZW(hx1)
+
+!     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
+      Q    = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
+      T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)   &
+             -(HLF+HLM)*QI3D(I,J,hxp)
+
+!      if (my_task .eq. 0 .and. (J .eq. 10 .and. I .eq. 10)) &
+!      PRINT*,CP,TH3D(I,J,hxp)
+      TD(I,J) = TS-T 
+      QD(I,J) = ABS(GWET(I,J))*(QSFC-Q)
+      THVSMD(I,J) = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
+               +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
   105 CONTINUE
 
-      call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ,VEN2D,SPEEDTP)
+      call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ, &
+                          VEN2D,SPEEDTP,ZROUGH,TG,TD,QD,THVSMD)
 
 #else
 !==========================================================
@@ -910,7 +934,10 @@ CONTAINS
       ENDIF
 
       VEN2D(I,J) = VENTFC(1)
+!      if (my_task .eq. 0 .and. (J .eq. 10 .and. I .eq. 10)) &
+!      PRINT*,CP,TH3D(I,J,hxp)
 
+!PRINT*,TS,T,WQ(I,J),VEN2D(I,J)
 
   110 CONTINUE
 
@@ -1298,10 +1325,12 @@ SUBROUTINE TURB_3D_INI
       ENDDO
       ENDDO
 
+
 #if defined (LSM)
       call land_ini(hx)
 #endif
 #endif
+
 
    END SUBROUTINE TURB_3D_INI
 

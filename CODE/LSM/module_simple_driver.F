@@ -350,6 +350,8 @@ DO I=1,MI1
      ! FFROZP indicates the fraction of the total precipitation which is considered to be
      ! frozen.
      !
+! easy if water body skip LSM
+     IF (LU(I,J) .NE. 16) THEN
 
      if ( (PRCP(I,J) > 0) .and. (SFCTMP(I,J) < 273.15) ) then
         FFROZP = 1.0
@@ -631,7 +633,7 @@ DO I=1,MI1
      ! Write the output data for this timestep.
      !
 
-
+     ENDIF
 ENDDO
 ENDDO
 
