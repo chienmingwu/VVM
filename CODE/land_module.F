@@ -139,7 +139,7 @@ CONTAINS
       WQ(I,J) = VENTFC(2)*QD(I,J)
       VNE2D(I,J) = VENTFC(1)
       ENDIF
-      if (J .eq. 10 .and. I .eq. 10) PRINT*,WT(I,J),WQ(I,J),VNE2D(I,J)
+!      if (J .eq. 10 .and. I .eq. 10) PRINT*,WT(I,J),WQ(I,J),VNE2D(I,J)
 
   200 CONTINUE
 
