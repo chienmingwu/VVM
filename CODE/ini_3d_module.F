@@ -143,6 +143,7 @@ CONTAINS
       QV8 = QV1(K)
       QC8 = 0.D0
       QI8 = 0.D0
+      if (my_task .eq. 0) print*, T8,P8,QV8,K
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
       QC1(K) = 0.
