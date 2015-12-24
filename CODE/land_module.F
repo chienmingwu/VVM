@@ -394,14 +394,28 @@ CONTAINS
       ENDIF
 
 !ccwu
-      LU = 16
+      if (ni_sbdm .ge. nsbdm_x/2 ) then
+      LU = 1
       SOIL = 1
-      SLOPE =  1 
+      SLOPE =  1
       ALBEDOM = 15.
       GREENFRACM = 10.
       LAIM = 4.
       SHDMAX = 10.
       SHDMIN = 10.
+      else
+      LU = 16
+      SOIL = 1
+      SLOPE =  1
+      ALBEDOM = 15.
+      GREENFRACM = 10.
+      LAIM = 4.
+      SHDMAX = 10.
+      SHDMIN = 10.
+      endif
+
+
+
 
 !      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
 !      'RUNDATA/SM1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
@@ -560,8 +574,8 @@ CONTAINS
                        ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZL,&
                        lALBEDO,lEMISSI,lCMC,lT1,lST,lSM,lSL,lET,lSMAV)
 
-   albdo = .30!lALBEDO
-   sstxy = SST!lT1
+   albdo = lALBEDO
+   sstxy = lT1
 
 #endif
 
