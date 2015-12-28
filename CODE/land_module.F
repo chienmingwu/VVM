@@ -33,8 +33,10 @@ PRIVATE
   REAL (KIND=int_kind),dimension(MI1,MJ1), PUBLIC :: &
      ZL,P2
 
-
   INTEGER (KIND=int_kind), dimension(MI1,MJ1), PUBLIC::lNROOT,LU
+
+  REAL (KIND=dbl_kind),dimension(MI1,MJ1) :: TB,ZBT
+
 
 !public member functions
 PUBLIC ::      &
@@ -128,9 +130,8 @@ CONTAINS
       ELSE
 ! OCEAN part      
 
-      CALL SFLUX_2D (0._dbl_kind,dble(lT1(I,J)),THVSMD(I,J),SFCSPD(I,J), &
-                     dble(ZL(I,J)),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
-
+      CALL SFLUX_2D (0._dbl_kind,TB(I,J),THVSMD(I,J),SFCSPD(I,J), &
+                     ZBT(I,J),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
 
       WT(I,J) = VENTFC(2)*TD(I,J)
       WQ(I,J) = VENTFC(2)*QD(I,J)
@@ -402,10 +403,8 @@ CONTAINS
       ALBEDOM = 15.
       GREENFRACM = 10.
       LAIM = 4.
-      SHDMAX = 80.
-      SHDMIN = 80.
-      endif
-
+      SHDMAX = 10.
+      SHDMIN = 10.
       else
       LU = 16
       SOIL = 1
@@ -492,7 +491,10 @@ CONTAINS
       DO 100 I = 1,MI1
       hxp=INT(hx(I,J))+1
 
-          
+! INPUT for SFLX_2D
+         ZBT(I,J)         = DZ/FNT(hxp)
+         TB(I,J)          = THBAR(hxp)
+                
          ZL(I,J)          = DZ/FNT(hxp)
          P2(I,J)          = PBAR(hxp)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)

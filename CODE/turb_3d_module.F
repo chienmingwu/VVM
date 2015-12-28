@@ -330,8 +330,6 @@ CONTAINS
   110    CONTINUE
       ELSE
 
-      if (my_task .eq. 0 ) PRINT*,CP,TH3D(10,10,2)
-
          IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
