@@ -449,7 +449,6 @@ CONTAINS
 !*******************************************
 !     3. SET UP CIRCULATION
 !*******************************************
-      W3D =0.
       IF (.false.) THEN
 
       DO 600 K = 1, NK2
@@ -470,7 +469,6 @@ CONTAINS
   610 CONTINUE
      
       call wind_ini
-
 
       ENDIF
 
