@@ -13,7 +13,8 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = gradient
+set expname = seabreeze
+
 set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
