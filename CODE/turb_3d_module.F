@@ -838,7 +838,8 @@ CONTAINS
          thvsm,   & !
          ts,      & !
          ustar,   & !
-         zrough1    !
+         zrough1, & !
+         ztmp
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 !ccwu
@@ -871,6 +872,7 @@ CONTAINS
 
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
+      ztmp = .5*DZ/FNT(hxp)
 
       T2(I,J) = TH3D(I,J,hxp)*PIBAR(hxp)
       QG(I,J) = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
@@ -884,7 +886,7 @@ CONTAINS
 
 !     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
       Q    = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
-      T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)   &
+      T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ztmp   &
              -(HLF+HLM)*QI3D(I,J,hxp)
 
 !      if (my_task .eq. 0 .and. (J .eq. 10 .and. I .eq. 10)) &
@@ -905,6 +907,7 @@ CONTAINS
       DO 110 I=1,MI1
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
+      ztmp = .5*DZ/FNT(hxp)
 
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 ) 
@@ -912,7 +915,7 @@ CONTAINS
 
 !     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
       Q    = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
-      T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)   &
+      T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ztmp   &
              -(HLF+HLM)*QI3D(I,J,hxp)
 
       ZROUGH1 = ZROUGH(I,J)
@@ -921,8 +924,9 @@ CONTAINS
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
 
 
-      CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ZT(hxp),ZROUGH1,   &
+      CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ztmp,ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
+
       if(psfx) THEN
         WT(I,J) = fss(i,j) 
         WQ(I,J) = fws(i,j) / hlf

@@ -495,10 +495,10 @@ CONTAINS
       hxp=INT(hx(I,J))+1
 
 ! INPUT for SFLX_2D
-         ZBT(I,J)         = DZ/FNT(hxp)
+         ZBT(I,J)         = .5*DZ/FNT(hx(I,J)+1)
          TB(I,J)          = THBAR(hxp)
                 
-         ZL(I,J)          = DZ/FNT(hxp)
+         ZL(I,J)          = DZ/FNT(hx(I,J)+1)
          P2(I,J)          = PBAR(hxp)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
          lT1(I,J)         = thbar(hx(I,J))*pibar(hx(I,J))
