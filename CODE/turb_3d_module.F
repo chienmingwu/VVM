@@ -241,10 +241,10 @@ CONTAINS
       DO 248 J=1,MJ1
       DO 248 I=1,MI1
 
-!      hxp =INT( hx(I,J))+1
-!      ztmp = ZT(hxp-1)
-      hxp = 2
-      ztmp = 0.
+      hxp =INT( hx(I,J))+1
+      ztmp = ZT(hxp-1)
+!      hxp = 2
+!      ztmp = 0.
       DO 248 K=hxp,NK2
       DDX(I,J,K)= RAMD0S*(VK*VK*(ZT(K)-ztmp+ZROUGH(I,J))**2)   &
                  /(RAMD0S+(VK*VK*(ZT(K)-ztmp+ZROUGH(I,J))**2))
