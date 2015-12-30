@@ -14,7 +14,6 @@
 
 set echo  # echoes the commands
 set expname = seabreeze
-
 set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
