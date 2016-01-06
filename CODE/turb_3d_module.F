@@ -323,10 +323,12 @@ CONTAINS
       IF(NOSFX) THEN
          DO 110 J=mjm,mjp
          DO 110 I=mim,mip
+      tempim=dble(mi1*ni_sbdm+i)
+      tempjm=dble(mj1*nj_sbdm+j)
          UW(I,J)  = 0.
          WV(I,J)  = 0.
-         WTH(I,J) = 0.
-         WQV(I,J) = 0.
+         WTH(I,J) = dsign(dsign(1.,tempim-256),tempjm)-256.).*50.+100./1004./pibar(1)
+         WQV(I,J) = dsign(dsign(1.,tempim-256),tempjm)-256.)*50.+250./2.5e6
   110    CONTINUE
       ELSE
 
