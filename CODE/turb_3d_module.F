@@ -65,7 +65,9 @@ CONTAINS
          rnu,       & !
          rkd,       & !
          rkb,       & !
-         ztmp  !
+         ztmp,      & !
+         tempim,    & !
+         tempjm
    REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1,NK2) ::       &
       term1    ! temporary variable used in dynamics, turbulence, and filling
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3) ::       &
@@ -327,8 +329,8 @@ CONTAINS
       tempjm=dble(mj1*nj_sbdm+j)
          UW(I,J)  = 0.
          WV(I,J)  = 0.
-         WTH(I,J) = dsign(dsign(1.,tempim-256),tempjm)-256.).*50.+100./1004./pibar(1)
-         WQV(I,J) = dsign(dsign(1.,tempim-256),tempjm)-256.)*50.+250./2.5e6
+         WTH(I,J) = dsign(dsign(1.,tempim-256.),tempjm-256.)*50.+100./1004./pibar(1)
+         WQV(I,J) = dsign(dsign(1.,tempim-256.),tempjm-256.)*50.+250./2.5e6
   110    CONTINUE
       ELSE
 
@@ -841,19 +843,19 @@ CONTAINS
          ts,      & !
          ustar,   & !
          zrough1, & !
-         ztmp
+         ztmp     
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 !ccwu
       INTEGER (KIND=int_kind) ::   &
-         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo, tempim       ! do loop indices for zonal, meridional and vertical dimensions
+         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo       ! do loop indices for zonal, meridional and vertical dimensions
 
       CP = 1004.5
       pi = 4._8 * atan(1._8)
 
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
-      tempim=dble(mim_glob(my_task+1)+i-1)
+
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
 

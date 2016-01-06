@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = seabreeze2
+set expname = hetero
 
 # hardscrabble configuration
 set subdir = '../..'
