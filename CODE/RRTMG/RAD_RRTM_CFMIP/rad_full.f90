@@ -432,12 +432,12 @@
       p_coszrs_slice(1) = p_coszrs_xy(i,j)
 
 ! patch sounding on top of model sounding for more complete radiation calculation.
-!      if(nzpatch.gt.0) then
-!        tabs_slice(1:nx,nzm+1:nzrad) = spread( tsnd(npatch_start:npatch_end), dim=1, ncopies=nx )
-!        qv_slice(1:nx,nzm+1:nzrad) = spread( qsnd(npatch_start:npatch_end), dim=1, ncopies=nx )
-!        qcl_slice(1:nx,nzm+1:nzrad) = 0.
-!        qci_slice(1:nx,nzm+1:nzrad) = 0.
-!      end if
+      if(nzpatch.gt.0) then
+        tabs_slice(1,nzm+1:nzrad) = tsnd(npatch_start:npatch_end)
+        qv_slice(1,nzm+1:nzrad) = qsnd(npatch_start:npatch_end)
+        qcl_slice(1,nzm+1:nzrad) = 0.
+        qci_slice(1,nzm+1:nzrad) = 0.
+      end if
 
 !------------------------------------------------------------------------------
 ! Make call to wrapper routine for RRTMG (v.4.8 for LW, v.3.8 for SW)
