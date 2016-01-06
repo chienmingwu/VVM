@@ -170,7 +170,7 @@ CONTAINS
       DO 12 I = 1, MI1
       LO = I +1 + (J-1)*(MI1 + 2*NHALO)
       DTH = PERT(LO)
-      FTH3D(I,J,K,L) = FTH3D(I,J,K,L) + .1 / DT
+      FTH3D(I,J,K,L) = FTH3D(I,J,K,L) + DTH / DT
    12 CONTINUE
       endif
 
