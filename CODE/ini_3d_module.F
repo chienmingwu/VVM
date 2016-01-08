@@ -537,7 +537,7 @@ CONTAINS
       enddo
       enddo  
 
- 
+      maxtopo = 6
 
       DO I=1,MI1
       DO J=1,MJ1
