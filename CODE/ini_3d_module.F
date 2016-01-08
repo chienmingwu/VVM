@@ -320,6 +320,7 @@ CONTAINS
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
+      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
