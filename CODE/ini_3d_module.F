@@ -531,7 +531,7 @@ CONTAINS
       midi = MI1*ni_sbdm + I
       midj = MJ1*nj_sbdm + J
 
-      if (midi .gt. 48 .and. midi .lt. 80  .and. midj .gt. 48 .and. midj .lt. 80)  hx(i,j) = 5
+      if (midi .gt. 48 .and. midi .lt. 81  .and. midj .gt. 48 .and. midj .lt. 81)  hx(i,j) = 5
 
 
       enddo
