@@ -321,17 +321,20 @@ CONTAINS
 !==================================================
 ! Calculate the surface fluxes
 !===================================================
-
+    
       IF(NOSFX) THEN
+         pi = 4._8 * atan(1._8)
          DO 110 J=mjm,mjp
          DO 110 I=mim,mip
          UW(I,J)  = 0.
          WV(I,J)  = 0.
          tempim=dble(mi1*ni_sbdm+i)
          tempjm=dble(mj1*nj_sbdm+j)
-         WTH(I,J) = (dsign(1.,128.-tempim)*dsign(1.,tempjm-128.)*50. &
+         WTH(I,J) = sin(dble(pi*itt*10./43200.)) &
+                  *(dsign(1.,128.-tempim)*dsign(1.,tempjm-128.)*50. &
                   + 100.)/1004./pibar(1)
-         WQV(I,J) = (dsign(1.,128.-tempim)*dsign(1.,tempjm-128.)*50. &
+         WQV(I,J) = sin(dble(pi*itt*10./43200.)) &
+                  *(dsign(1.,128.-tempim)*dsign(1.,tempjm-128.)*50. &
                   + 250.)/2.5e6
   110    CONTINUE
       ELSE

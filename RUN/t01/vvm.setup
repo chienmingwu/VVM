@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = hetero
+set expname = hetero1
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -43,6 +43,7 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
+#define RADCODE
 'END1'
 cat definesld.com
 
@@ -66,9 +67,9 @@ sed -e '1,$s/zonal_dimension/256/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=8640 /
+ &INPUT1 NEWRUN=T, ITTADD=4320 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=250.,DYNEW=250.,DZ=250.,DZ1=50.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=100.,DYNEW=100.,DZ=250.,DZ1=50.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
  &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
 'END6'
