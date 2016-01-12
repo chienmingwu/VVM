@@ -525,7 +525,7 @@ CONTAINS
       ENDIF
 !le for debug 
       HX = 1
-      if (.false.) then
+      if (.true.) then
       do J=MJM,MJP
       do I=MIM,MIP
 
@@ -533,7 +533,6 @@ CONTAINS
       midj = MJ1*nj_sbdm + J
 
       if (midi .gt. 48 .and. midi .lt. 81  .and. midj .gt. 48 .and. midj .lt. 81)  hx(i,j) = 5
-
 
       enddo
       enddo  
