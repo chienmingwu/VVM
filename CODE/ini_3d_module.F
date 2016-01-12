@@ -525,7 +525,7 @@ CONTAINS
       ENDIF
 !le for debug 
       HX = 1
-
+      if (.false.) then
       do J=MJM,MJP
       do I=MIM,MIP
 
@@ -539,6 +539,8 @@ CONTAINS
       enddo  
 
       maxtopo = 6
+      endif
+
 
       DO I=1,MI1
       DO J=1,MJ1
