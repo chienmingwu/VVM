@@ -4,7 +4,7 @@
 # Bassi, which calls the executable rrtm_*.run.
 #--------------------------------------------------------------------- 
 
-set echo  # echoes the commands
+#set echo  # echoes the commands
 set expname = hetero1
 
 # hardscrabble configuration
@@ -54,11 +54,44 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -e '1,$s/zonal_dimension/256/' \
     -e '1,$s/merid_dimension/256/' \
-    -e '1,$s/zonal_decomposition/8/' \
-    -e '1,$s/merid_decomposition/8/' \
+    -e '1,$s/zonal_decomposition/4/' \
+    -e '1,$s/merid_decomposition/4/' \
     -e '1,$s/vert_dimension/70/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
+
+
+# check grid 
+
+set file = PARMSLD.f90
+set nx = `grep "nsbdm_x = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_x = //g'`
+set ny = `grep "nsbdm_y = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_y = //g'`
+set mx = `grep "MI_glob = " ${file} |sed 's/, .*$//g' |sed 's/^.*MI_glob = //g'`
+set my = `grep "MJ_glob = " ${file} |sed 's/, .*$//g' |sed 's/^.*MJ_glob = //g'`
+
+set nl = `grep "nlevel = " ../../CODE/petsc_vvm_solver.F |sed 's/^.*nlevel = //g'|sed 's/, .*$//g'`
+
+@ px = $mx / $nx
+@ py = $my / $ny 
+
+@ n = 1
+
+while ( $n != $nl )
+@ n ++
+@ px = $px / 2
+@ py = $py / 2
+if ($px < 3 || $py < 3) then
+echo '---*******-------------------------'
+echo 'Too many multigrid levels or too less grid-points for multi-grid preconditioner in petsc_vvm_solver.F.'
+echo '1. To reduce multigrid levels, reduce the nlevel value in petsc_vvm_solver.F.'
+echo '2. To increases grid-points, double the number of zonal_dimension or merid_dimension.'
+echo 'For example, nlevel = 4 rquires more than 32 grid-points on each nodes, and nlevel = 5 requires 64.'
+echo 'If you do not plan use multi-grid preconditionor please comment this block.'
+echo 'Please go to petsc_vvm_solver.F and change pc_type_Conti, pc_type_psi and pc_type_chi. '
+echo '---*******-------------------------'
+exit
+endif
+end
 
 # For restart --------------------
 # INPUT1 NEWRUN=F, ITTGET= 3600
@@ -85,8 +118,7 @@ cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
 #cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
-cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
-
+#cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
@@ -107,10 +139,11 @@ cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 #./nc2fortranBinary
 
 # for LSM
-cd ../${subdir}
-cp ${subdir}/CODE/LSM/GENPARM.TBL .
-cp ${subdir}/CODE/LSM/SOILPARM.TBL .
-cp ${subdir}/CODE/LSM/VEGPARM.TBL .
+#cd ../${subdir}
+#cp ${subdir}/CODE/LSM/GENPARM.TBL .
+#cp ${subdir}/CODE/LSM/SOILPARM.TBL .
+#cp ${subdir}/CODE/LSM/VEGPARM.TBL .
+
 exit
 
 

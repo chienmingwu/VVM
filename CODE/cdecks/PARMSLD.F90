@@ -45,11 +45,13 @@ PRIVATE
         mj1 = (mj_glob - 1) / nsbdm_y + 1     ! meridional dimension of subdomain 
 #else
     INTEGER (KIND=int_kind), PARAMETER, PUBLIC ::  &
-        nsbdm_x = 1,      &  ! number of subdomains in zonal direction
-        nsbdm_y = 1,      &  ! number of subdomains in meridional direction
+        nxbdm_x = 1,      &  ! number of subdomains in zonal direction
+        nxbdm_y = 1,      &  ! number of subdomains in meridional direction
         ntasks = 1,          & ! number of mpi tasks
-        mi1 = mi_glob,       & ! zonal dimension of subdomain
-        mj1 = mj_glob          ! meridional dimension of subdomain
+        mxi1 = mi_glob,       & ! zonal dimension of subdomain
+        mxj1 = mj_glob          ! meridional dimension of subdomain
+     ! intend change variable name of nbdm_x, nbdm_y, mi1 and mj1 when undefined
+     ! MPI
 #endif
       
     ! define total horizontal extent based on halo size
