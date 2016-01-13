@@ -131,13 +131,12 @@ PC, PRIVATE::PC_Conti,PC_Toppsi,PC_Topchi
 DM, PRIVATE::da3(nlevel),da2(nlevel)
 KSP Conti,Toppsi,Topchi
 ! Set method and preconditioning
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPFBCGS, pc_type_Conti = PCMG
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCNONE
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCNONE
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCNONE
-
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPFBCGS, pc_type_Conti = PCMG
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCNONE
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCNONE
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCNONE
 
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_conti = KSPCG, spc_type_Conti = PCBJACOBI
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_toppsi = KSPCG, spc_type_toppsi = PCBJACOBI
@@ -184,7 +183,7 @@ SUBROUTINE petsc_solver_initialize
 
     call DMDACreate3d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                       &
       DM_BOUNDARY_PERIODIC,DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,MI_glob/(2**nlv), &
-      MJ_glob,NK2-2,nsbdm_x,nsbdm_y,1,1,nhalo,PETSC_NULL_INTEGER,      &
+      MJ_glob/(2**nlv),NK2-2,nsbdm_x,nsbdm_y,1,1,nhalo,PETSC_NULL_INTEGER,      &
       PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da3(nlevel),ierr)
 
     call DMDASetUniformCoordinates(da3(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
@@ -279,7 +278,7 @@ SUBROUTINE petsc_solver_initialize
 ! The grid information can be used in both 2d and 3d grid.
 
     call DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                &
-      DM_BOUNDARY_PERIODIC,DMDA_STENCIL_BOX,MI_glob/(2**nlv),MJ_glob, &
+      DM_BOUNDARY_PERIODIC,DMDA_STENCIL_BOX,MI_glob/(2**nlv),MJ_glob/(2**nlv), &
       nsbdm_x,nsbdm_y,1,nhalo,PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da2(nlevel),ierr)
 
     call DMDASetUniformCoordinates(da2(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)

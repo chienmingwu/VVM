@@ -531,8 +531,8 @@ CONTAINS
       do I=MIM,MIP
 
       midi = MI1*ni_sbdm + I
-!      if (midi .gt. 128 .and. midi .lt. 385)  hx(i,j) =INT((-2000*abs(256-midi)/200*2+2000)/DZ)+1
-
+      if (midi .gt. 128 .and. midi .lt. 385) &
+       hx(i,j) = INT(max((-(abs(256-real(midi)))/512+.125)/.125*10,0.))+1
       enddo
       enddo  
 
