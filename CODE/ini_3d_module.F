@@ -321,6 +321,7 @@ CONTAINS
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
+      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
@@ -525,7 +526,7 @@ CONTAINS
       ENDIF
 !le for debug 
       HX = 1
-
+      if (.true.) then
       do J=MJM,MJP
       do I=MIM,MIP
 
@@ -534,11 +535,12 @@ CONTAINS
 
       if (midi .gt. 48 .and. midi .lt. 81  .and. midj .gt. 48 .and. midj .lt. 81)  hx(i,j) = 5
 
-
       enddo
       enddo  
 
       maxtopo = 6
+      endif
+
 
       DO I=1,MI1
       DO J=1,MJ1
