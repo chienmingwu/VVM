@@ -396,8 +396,8 @@ CONTAINS
       ENDIF
 
 !ccwu
-      if (ni_sbdm .ge. nsbdm_x/2 ) then
-      LU = 1
+      if (ni_sbdm .eq. 0 .or. ni_sbdm .eq. 3 ) then
+      LU = 16
       SOIL = 1
       SLOPE =  1
       ALBEDOM = 15.
@@ -406,7 +406,7 @@ CONTAINS
       SHDMAX = 10.
       SHDMIN = 10.
       else
-      LU = 16
+      LU = 1
       SOIL = 1
       SLOPE =  1
       ALBEDOM = 15.

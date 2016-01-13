@@ -531,14 +531,12 @@ CONTAINS
       do I=MIM,MIP
 
       midi = MI1*ni_sbdm + I
-      midj = MJ1*nj_sbdm + J
-
-      if (midi .gt. 48 .and. midi .lt. 81  .and. midj .gt. 48 .and. midj .lt. 81)  hx(i,j) = 5
+!      if (midi .gt. 128 .and. midi .lt. 385)  hx(i,j) =INT((-2000*abs(256-midi)/200*2+2000)/DZ)+1
 
       enddo
       enddo  
 
-      maxtopo = 6
+      maxtopo = 12
       endif
 
 

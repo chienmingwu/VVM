@@ -55,10 +55,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/768/' \
-    -e '1,$s/merid_dimension/256/' \
-    -e '1,$s/zonal_decomposition/12/' \
-    -e '1,$s/merid_decomposition/4/' \
+sed -e '1,$s/zonal_dimension/512/' \
+    -e '1,$s/merid_dimension/128/' \
+    -e '1,$s/zonal_decomposition/8/' \
+    -e '1,$s/merid_decomposition/2/' \
     -e '1,$s/vert_dimension/70/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
@@ -70,10 +70,10 @@ sed -e '1,$s/zonal_dimension/768/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=43200 /
+ &INPUT1 NEWRUN=T, ITTADD=1 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=500.,DYNEW=500.,DZ=250.,DZ1=50.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=200.,DZ1=200.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT4 NXS=1,NXSAVG=1,NWR11=1,NFLPRT=1,NRESTART=1 /
  &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
 'END6'
 cat INPUT
