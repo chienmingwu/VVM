@@ -526,6 +526,20 @@ CONTAINS
 !le for debug 
       HX = 1
 
+      do J=MJM,MJP
+      do I=MIM,MIP
+
+      midi = MI1*ni_sbdm + I
+      midj = MJ1*nj_sbdm + J
+
+      if (midi .gt. 48 .and. midi .lt. 81  .and. midj .gt. 48 .and. midj .lt. 81)  hx(i,j) = 5
+
+
+      enddo
+      enddo  
+
+      maxtopo = 6
+
       DO I=1,MI1
       DO J=1,MJ1
       if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
