@@ -54,6 +54,10 @@ MODULE petsc_vvm_solver
 ! PCBJACOBI, but there exsist flaw around the parallelization boundary with respect to your 
 ! tolerance. (Omega default 1.65d0)
 !
+! For the PCMG, the grid-points configration requires additional consideration.
+! For the square domain, the mi1 and mj1 must be the factor of 2^nlevel. For
+! example, if nlevel=3, the minimium mi1 should be 16, and 24 is acceptable.  
+!
 !-------------------------------------------------------------------------------------------
 ! Tolerances 	  : Tol_Conti, Tol_TopPsi, Tol_TopChi
 !                  aTol_Conti, aTol_TopPsi, aTol_TopChi  
