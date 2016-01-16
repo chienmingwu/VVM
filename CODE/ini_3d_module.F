@@ -78,8 +78,12 @@ CONTAINS
       DATA QC1/28*0./
 
 !mjo forcing 
-      REAL (KIND=real_kind) ::  Q1temp(15,148),Q2temp(15,148)
-      REAL (KIND=dbl_kind) ::  Q1OBS(15,148),Q2OBS(15,148)
+      REAL (KIND=real_kind) ::  Q1temp(20),Q2temp(20)
+      REAL (KIND=dbl_kind) ::  Q1OBS(20,148),Q2OBS(20,148)
+      DATA Q1temp/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
+                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
+      DATA Q2temp/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
+                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
 
 !     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
 !     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
@@ -99,28 +103,10 @@ CONTAINS
 
       character(50) FILENAME
 
-       Q1OBS(:,:)=0.
-       Q2OBS(:,:)=0.
-       Q1temp(:,:)=0.
-       Q2temp(:,:)=0.
-       OPEN(UNIT=99,FILE='q1mjo.dat',FORM='unformatted', &
-       STATUS='OLD',access='direct',recl=15)
-       num=1
        do k=1,148
-       READ(99,rec=num) q1temp(:,k)
-       num=num+1
+       Q1OBS(:,k)=q1temp(:)
+       Q2OBS(:,k)=q2temp(:)
        enddo
-       CLOSE(99)
-       OPEN(UNIT=99,FILE='q2mjo.dat',FORM='unformatted', &
-       STATUS='OLD',access='direct',recl=15)
-       num=1
-       do k=1,148
-       READ(99,rec=num) q2temp(:,k)
-       num=num+1
-       enddo
-       CLOSE(99)
-       Q1OBS=q1temp
-       Q2OBS=q2temp
  
       casename= 'GATE_PHASE_III'
 
@@ -301,7 +287,7 @@ CONTAINS
 
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 12000. ) THEN !ccwu change to 12000 from 15000
-      K1 = INDEXR(PBAR(K)*0.01,15,PQ1,LF) !ccwu change with pq1 accordingly
+      K1 = INDEXR(PBAR(K)*0.01,20,PQ1,LF) !ccwu change with pq1 accordingly
       K2 = K1 + 1
       Q1LS (K,I) =  &
         FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1,I),PQ1(K2),Q1OBS(K2,I))
@@ -323,10 +309,8 @@ CONTAINS
       DO I=1,148
 
       DO 210 K = 1, NK3
-!      Q1LS (K,I) = -1.* SCALEQ * Q1LS (K,I) / PIBAR(K) / SECDAY
-!      Q2LS (K,I) = SCALEQ * Q2LS (K,I) / (GAMFAC * SECDAY)
-      Q1LS(K,I) =0.
-      Q2LS(K,I) =0.
+      Q1LS (K,I) = -1.* SCALEQ * Q1LS (K,I) / PIBAR(K) / SECDAY
+      Q2LS (K,I) = SCALEQ * Q2LS (K,I) / (GAMFAC * SECDAY)
   210 CONTINUE
       ENDDO
 
