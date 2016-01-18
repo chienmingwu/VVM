@@ -102,8 +102,8 @@ CONTAINS
       DO 300 K = 2, NK2
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
-      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K,hour) 
-      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K,hour)
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K,1) 
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K,1)
   309 CONTINUE
 
   SELECT CASE (TRIM(casename))
