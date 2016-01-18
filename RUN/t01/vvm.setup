@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = shadow
+set expname = shadow_nc
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -86,10 +86,15 @@ endif
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
-cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
-cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
+#cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
+#cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
-
+cd ${subdir}"/RUN/t01"
+make topography CASENAME=${expname} -f ../makefile
+ln -s ${subdir}/DATA/${expname}/INPUT
+./nc2fortranBinary
+rm INPUT
+exit
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
 #set soil2 = (SOILM0_1lev SOILM0_2lev SOILM0_3lev SOILM0_4lev \
