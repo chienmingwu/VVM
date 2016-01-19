@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rank02bws3
+set expname = rank02bws3q1q2_testtopo
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -74,7 +74,7 @@ cat > INPUT << 'END6'
  &INPUT2 RLAT=25., RLON=120.95 /
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
- &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=0.,Q1Q2=F,DTRAD=1200.,SOLVAR=F, RRTMRC=T/
+ &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=1.,Q1Q2=T,DTRAD=1200.,SOLVAR=F, RRTMRC=T/
 'END6'
 cat INPUT
 
@@ -90,12 +90,15 @@ cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
 cp /data/mog/mjolong/q1mjo.dat q1mjo.dat
 cp /data/mog/mjolong/q2mjo.dat q2mjo.dat
 rm -rf RUNDATA/ASTER_GDEM_TWTOPO
-cp -r /data/mog/topotw/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO/
-cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
-make
+#cp -r /data/mog/topotw/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO/
+#cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
+#make
+#./nc2fortranBinary
+cd ${subdir}"/RUN/t01"
+make topography CASENAME=${expname} -f ../makefile
+cd ${subdir}"/DATA/"${expname}
 ./nc2fortranBinary
-
-
+exit
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
 #set soil2 = (SOILM0_1lev SOILM0_2lev SOILM0_3lev SOILM0_4lev \
