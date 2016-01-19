@@ -8,7 +8,7 @@
       parameter (FILE_NAME=
      1 '../../RUNDATA/ASTER_GDEM_TWTOPO/data/Taiwan_30m_topo.nc')
 
-      character(21) FILENAME,EXPNAME
+      character(23) FILENAME
 
       integer NX, NY
       parameter (NX = 14401, NY = 18001)
@@ -48,9 +48,6 @@
       PI = 3.14159265358979323846264338327 
       NAMELIST /INPUT3/ DT,DX,DYNEW,DZ,DZ1,DOMAIN,ZB,NOTURB,NOSFX 
      1                 ,NSFLUX,ALADV,UVTAU,BUOY,NOTHERM,WRXMU
-
-      CALL GETENV("expname", EXPNAME)
-      PRINT*, EXPNAME,'======'
 
       OPEN(unit=15,file='INPUT',form='formatted')
       READ (15, INPUT3)
@@ -190,7 +187,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   800 CONTINUE
 
 
-      OPEN(unit=16,file='../../TOPO.dat',form='unformatted')
+      OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
       WRITE(16)HX 
       CLOSE(16)
 
@@ -200,15 +197,15 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       DO 900 IP = 1,nsbdm_x
       II = (IP-1)*MI1+1
       IE = (IP)*MI1
-      WRITE(FILENAME,'(A10,I3.3,A1,I3.3,A4)')
-     1 '../../TOPO',IP,'_',JP,'.dat'
+      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)')
+     1 'RUNDATA/TOPO',IP,'_',JP,'.dat'
       OPEN(unit=16,file=FILENAME,form='unformatted')
       WRITE(16) ((DBLE(HX(I,J)),I=II,IE),J=JI,JE)
       CLOSE(16)
 
   900 CONTINUE
 
-      ierr = nf_create('../../../TOPO.nc', NF_CLOBBER, ncid)
+      ierr = nf_create('TOPO.nc', NF_CLOBBER, ncid)
       print*,'ERRor', nf_strerror(ierr)
 
 
