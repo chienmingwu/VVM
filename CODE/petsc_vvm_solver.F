@@ -132,11 +132,11 @@ DM, PRIVATE::da3(nlevel),da2(nlevel)
 KSP Conti,Toppsi,Topchi
 ! Set method and preconditioning
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPFBCGS, pc_type_Conti = PCMG
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
 !Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCNONE
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCBJACOBI
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCBJACOBI
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCBJACOBI
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCBJACOBI
 
 
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_conti = KSPCG, spc_type_Conti = PCBJACOBI
@@ -150,7 +150,7 @@ KSP sksp_Conti(2*nlevel-1),sksp_topChi(2*nlevel-1),sksp_topPsi(2*nlevel-1)
 Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
-PetscInt, PRIVATE:: MXIT = 2000
+PetscInt, PRIVATE:: MXIT = 1000
 PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
 PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-5,dtol_TopPsi = 1.d2
 PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-5,dtol_TopChi = 1.d2

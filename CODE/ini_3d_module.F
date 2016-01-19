@@ -73,7 +73,7 @@ CONTAINS
              ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
              ,-726.4,-755.8,-749.0/
       DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
-              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
+              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.0/
       DATA QC1/21*0./
 !mjo forcing 
       REAL (KIND=real_kind) ::  Q1temp(15,148),Q2temp(15,148)
@@ -130,8 +130,9 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-!      SST = T1(1) * 0.1 + 273.16 + DSST
+!      SST = T1(1) * 0.1 + 273.16
       SST = 302.756     
+
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
@@ -326,9 +327,11 @@ CONTAINS
       ENDDO
 
 #if !defined (RADCODE)
+      DO 212 I = 1, 148
       DO 212 K = 1, NK3
       Q1LS (K,I) = Q1LS (K,I) + RAD1 / PIBAR(K) / SECDAY
   212 CONTINUE
+      
 #endif
 
       DO 220 K = 2, NK2
@@ -454,7 +457,7 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
       U3DX(I,J,K)=0.
-      U3DY(I,J,K)=0.
+      U3DY(I,J,K)=5.
   610 CONTINUE
 
       DO 660 K = 2, NK1
