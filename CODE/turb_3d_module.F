@@ -851,7 +851,7 @@ CONTAINS
 
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
-      tempim=dble(mi1*ni_sbdm+i)
+      tempim=dble(mi1*ni_sbdm+i)-mi_glob/2.-.5
 
 
       hxp=INT(hx(I,J))+1
@@ -865,7 +865,7 @@ CONTAINS
 !      endif
 
 !ccwu for sst gradient test
-      tg(i,j)=297.-8.*cos(2*pi*tempim/2048.)   !1536 points in x direction
+      tg(i,j)=298.+4.*cos(.5*pi*tempim*2/12288.)**2   !1536 points in x direction
 
   100 CONTINUE
 
