@@ -865,7 +865,7 @@ CONTAINS
 !      endif
 
 !ccwu for sst gradient test
-      tg(i,j)=297.-8.*cos(2*pi*tempim/1536.)   !1536 points in x direction
+      tg(i,j)=297.-8.*cos(2*pi*tempim/2048.)   !1536 points in x direction
 
   100 CONTINUE
 

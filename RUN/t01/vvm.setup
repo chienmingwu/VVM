@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = sstgradient1
+set expname = sstgradient4
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -51,8 +51,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/3072/' \
-    -e '1,$s/merid_dimension/32/' \
+sed -e '1,$s/zonal_dimension/2048/' \
+    -e '1,$s/merid_dimension/16/' \
     -e '1,$s/zonal_decomposition/16/' \
     -e '1,$s/merid_decomposition/2/' \
     -e '1,$s/vert_dimension/45/' \
@@ -66,7 +66,7 @@ sed -e '1,$s/zonal_dimension/3072/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=216000 /
+ &INPUT1 NEWRUN=T, ITTADD=4320 /
  &INPUT2 RLAT=0., RLON=120.95 /
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=20.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=180,NWR11=1,NFLPRT=1,NRESTART=180 /

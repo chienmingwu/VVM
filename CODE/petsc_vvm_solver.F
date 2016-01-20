@@ -118,7 +118,7 @@ USE petscdmda
 
 IMPLICIT NONE
 PRIVATE
-PetscInt, PARAMETER, PRIVATE:: nlevel = 6, nlv = nlevel-1
+PetscInt, PARAMETER, PRIVATE:: nlevel = 7, nlv = nlevel-1
 PetscInt, PRIVATE:: i,j,k,kt,npt,np
 PetscInt, PRIVATE:: ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
 PetscInt, PRIVATE:: ctx3,ctx2
@@ -132,11 +132,11 @@ DM, PRIVATE::da3(nlevel),da2(nlevel)
 KSP Conti,Toppsi,Topchi
 ! Set method and preconditioning
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPFBCGS, pc_type_Conti = PCMG
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
 !Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCNONE
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCBJACOBI
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCBJACOBI
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCBJACOBI
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCBJACOBI
 
 
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_conti = KSPCG, spc_type_Conti = PCBJACOBI

@@ -7,6 +7,7 @@ USE constld
 USE const3d
 USE profoutld
 USE utils
+USE domain_decomposition
 
 IMPLICIT NONE
 PRIVATE
@@ -29,9 +30,11 @@ CONTAINS
 !-------------------------
 !     Gravity Wave Damping (Rayleigh type)
 
-      DO 300 K = NK1-9, NK1
+      DO 300 K = NK2-10, NK1
       CGR =  CRAD*(ZZ(K)-ZT(NK2-10))/(ZT(NK2)-ZT(NK2-10))
-
+!      CGR = 30.**((ZZ(NK2)-ZT(K))/(ZT(NK2)-ZT(NK2-10)))
+!      CGR = CRAD/CGR
+      if (my_task .eq. 0) print*,k,cgr
       DO 310 J = 1, MJ1
       DO 310 I = 1, MI1
       Z3DX(I,J,K)=Z3DX(I,J,K)-DT*CGR*Z3DX(I,J,K)
@@ -83,7 +86,8 @@ CONTAINS
 !-------------------------
       END IF
 
-      IF (CRAD1.NE.0.) THEN
+      IF (.false.) then
+!      IF (CRAD1.NE.0.) THEN
 !     Newtonian Cooling - Original Code plus thtd3d counter
 !------------------------------------------
 
