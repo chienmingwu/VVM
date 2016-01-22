@@ -195,8 +195,8 @@ CONTAINS
       Z1PERT = 0.
       Z2PERT = 100._dbl_kind
 !ccwu
-!      CRAD   = 1. / (60._dbl_kind*60._dbl_kind)
-      CRAD   = 1. / (60._dbl_kind)    
+      CRAD   = 1. / (60._dbl_kind*60._dbl_kind)
+!      CRAD   = 1. / (60._dbl_kind)    
       CRAD1  = 1. / 86400._dbl_kind  !only used for newtownian cooling
       DTRAD  = 300._dbl_kind ! Interval between calls to CEMRAD
 

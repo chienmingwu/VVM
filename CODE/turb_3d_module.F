@@ -865,7 +865,8 @@ CONTAINS
 !      endif
 
 !ccwu for sst gradient test
-      tg(i,j)=298.+4.*cos(.5*pi*tempim*2/12288.)**2   !1536 points in x direction
+!easy tg = 25.1 oC and 4degree variation  
+      tg(i,j)=298.35+4.*cos(.5*pi*tempim*2/12288.)**2   !1536 points in x direction
 
   100 CONTINUE
 

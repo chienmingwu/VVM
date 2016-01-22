@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = sstgradient4
+set expname = sstgradient8
 
 # hardscrabble configuration
 set subdir = '../..'
