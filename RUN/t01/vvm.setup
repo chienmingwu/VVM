@@ -94,6 +94,8 @@ make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
 ./nc2fortranBinary
 exit
+
+
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
 #set soil2 = (SOILM0_1lev SOILM0_2lev SOILM0_3lev SOILM0_4lev \
