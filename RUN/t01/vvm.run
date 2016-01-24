@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = rank02bws3q1q2
+set expname = rank02bws3q1q2x6
 set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
@@ -28,7 +28,7 @@ make INTEL_COMP=true CASENAME=${expname} CODEDIR=${codedir} -f ../makefile
 
 cd ${subdir}
 
-set file = ${subdir}/PARMSLD.f
+set file = ../../RUN/t01/PARMSLD.f
 
 set nx = `grep "nsbdm_x = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_x = //g'`
 set ny = `grep "nsbdm_y = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_y = //g'`
