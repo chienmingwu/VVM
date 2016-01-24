@@ -34,7 +34,7 @@ CONTAINS
       CGR =  CRAD*(ZZ(K)-ZT(NK2-10))/(ZT(NK2)-ZT(NK2-10))
 !      CGR = 30.**((ZZ(NK2)-ZT(K))/(ZT(NK2)-ZT(NK2-10)))
 !      CGR = CRAD/CGR
-      if (my_task .eq. 0) print*,k,cgr
+!      if (my_task .eq. 0) print*,k,cgr
       DO 310 J = 1, MJ1
       DO 310 I = 1, MI1
       Z3DX(I,J,K)=Z3DX(I,J,K)-DT*CGR*Z3DX(I,J,K)

@@ -928,7 +928,7 @@ CONTAINS
       STD_TM5(I,J,3)=WTH(I,J)
       STD_TM5(I,J,4)=WQV(I,J)
       STD_TM5(I,J,5)=SPREC(I,J)
-      STD_TM5(I,J,6)=PREC25(I,J)
+      STD_TM5(I,J,6)=TG(I,J)
       STD_TM5(I,J,7)=OLR(I,J)
       
   226 CONTINUE

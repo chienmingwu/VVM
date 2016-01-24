@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = sstgradient8
+set expname = walker
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -43,6 +43,7 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
+#define RADCODE
 'END1'
 cat definesld.com
 
@@ -66,11 +67,11 @@ sed -e '1,$s/zonal_dimension/12288/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=8640 /
+ &INPUT1 NEWRUN=T, ITTADD=216000 /
  &INPUT2 RLAT=0., RLON=120.95 /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=20.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=20.,NOTURB=F,NOSFX=F,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=180,NWR11=1,NFLPRT=1,NRESTART=180 /
- &INPUT5 IX=3182073,ITINIT=30,ITSTOP=1200,SCALE=0.,Q1Q2=T,DTRAD=1200.,SOLVAR=F, RRTMRC=T/
+ &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=0.,Q1Q2=F,DTRAD=1200./
 'END6'
 cat INPUT
 
