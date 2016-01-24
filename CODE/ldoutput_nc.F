@@ -998,7 +998,7 @@ CONTAINS
       STD_TM5(I,J,3)=STD_TM5(I,J,3)+WTH(I,J)       *  dtfac
       STD_TM5(I,J,4)=STD_TM5(I,J,4)+WQV(I,J)       *  dtfac
       STD_TM5(I,J,5)=STD_TM5(I,J,5)+SPREC(I,J)     *  dtfac
-      STD_TM5(I,J,6)=STD_TM5(I,J,6)+PREC25(I,J)    *  dtfac
+      STD_TM5(I,J,6)=STD_TM5(I,J,6)+TG(I,J)        *  dtfac
       STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       *  dtfac
  1226 CONTINUE
 
