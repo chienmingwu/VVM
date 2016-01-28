@@ -37,7 +37,7 @@
       LOGICAL :: &
           ocean = .TRUE., &             ! true = surface is water
           dostatisrad = .FALSE., &      ! true = permits the gathering of statistics
-          doshortwave = .TRUE., &       ! true = do shortwave calculation
+          doshortwave = .FALSE., &       ! true = do shortwave calculation
           dolongwave = .TRUE., &        ! true = do longwave calculation
           doseasons = .FALSE., &        ! true = seasonal cycle in solar radiation
           doperpetual = .TRUE., &      ! true = perpetual sun

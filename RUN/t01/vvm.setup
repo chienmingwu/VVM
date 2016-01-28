@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = walker
+set expname = walkernosw
 
 # hardscrabble configuration
 set subdir = '../..'
