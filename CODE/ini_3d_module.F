@@ -11,6 +11,7 @@ USE bound
 USE update_tracer_module
 USE z_coord
 USE domain_decomposition
+USE wind_module,only:DIRECTIB_ini
 #if defined (DIFFUSION)
 USE TURB_3D_module
 #endif
@@ -445,6 +446,8 @@ CONTAINS
 
       CALL BOUND_3D_XY
 
+      CALL DIRECTIB_ini
+
 
 #if defined (AREAMN)
 !-------------------
@@ -485,8 +488,10 @@ CONTAINS
       VTMN0 = VTMN
       
       IF(itt == 0) CALL UPDATE_TRACER_init
-  
+ 
+#if defined (RADCODE) 
       albdo = 0.30
+#endif
    
 #if defined (DIFFUSION)
       call turb_3d_ini
@@ -527,48 +532,94 @@ CONTAINS
 
       call bound_arb(1,HX)
 
-      DO I=1,MI1
-      DO J=1,MJ1
-      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
-      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
+      DO J=mjm,MJ1
+      DO I=mim,MI1
+!      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
+!      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
+
+      HXU(I,J) = MAX(HX(I,J),HX(I+1,J))
+      HXV(I,J) = MAX(HX(I,J),HX(I,J+1))
+      ENDDO
+      ENDDO
+
+      call bound_arb(1,HXU)
+      call bound_arb(1,HXV)
+
+      DO J=mjm,mjp
+      DO I=mim,mip
+
+      NHX(I,J) = INT(HX(I,J))
+      NXU(I,J) = INT(HXU(I,J))
+      NXV(I,J) = INT(HXV(I,J))
       ENDDO
       ENDDO
 
       DO J=1,MJ1
       DO I=1,MI1
-      NN=INT(HX(I,J))
-      IF(NN .NE. 0) THEN
-      DO K=2,NN
-      ITYPEU(I,J,K)=0
-      ITYPEV(I,J,K)=0
+      DO K=1,NHX(I,J)
       ITYPEW(I,J,K)=0
       ENDDO
-      ENDIF
+
+      DO K=1,NXU(I,J)-1
+      ITYPEU(I,J,K)=0
+      ENDDO
+      IF (NXU(I,J) .GE. 1) ITYPEU(I,J,NXU(I,J)) = -1
+      IF (NXU(I,J) .EQ. 0) ITYPEU(I,J,1) = -1
+
+      DO K=1,NXV(I,J)-1
+      ITYPEV(I,J,K)=0
+      ENDDO
+      IF (NXV(I,J) .GE. 1) ITYPEV(I,J,NXV(I,J)) = -1
+      IF (NXV(I,J) .EQ. 0) ITYPEV(I,J,1) = -1
+
       ENDDO
       ENDDO
 
       call bound_int_arb(NK2,ITYPEW)
 
-      DO K=2,NK2
-      DO J=mjm,mjp
-      DO I=mim,mip
-      NN=ITYPEW(I,J,K)
-      IF(NN .EQ. 0) THEN
-      ITYPEU(I-1,J,K)=0
-      ITYPEV(I,J-1,K)=0
+      DO K=2,maxtopo
+      DO J=1,mjp
+      DO I=1,mip
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I-1,J,K) .EQ. 1) THEN
+!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I+1,J,K) ) THEN
+      ITYPEU(I-1,J,K) = -1
+      ITYPEV(I-1,J,K) = -1
       ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I+1,J,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I-1,J,K) .GT. ITYPEW(I,J,K) ) THEN
+      ITYPEU(I,J,K) = -1
+      ITYPEV(I,J,K) = -1
+      ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J-1,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I,J+1,K) ) THEN
+      ITYPEU(I,J-1,K) = -1
+      ITYPEV(I,J-1,K) = -1
+      ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J+1,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I,J-1,K) .GT. ITYPEW(I,J,K) ) THEN
+      ITYPEU(I,J,K) = -1
+      ITYPEV(I,J,K) = -1
+      ENDIF
+
       ENDDO
+      ENDDO
+      ENDDO
+
+      DO J=1,mjp
+      DO I=1,mip
+
+      IF (ITYPEU(I,J,2) .NE. 1 ) THEN
+      ITYPEU(I,J,1) = 0
+      ENDIF
+      IF (ITYPEV(I,J,2) .NE. 1 ) THEN
+      ITYPEU(I,J,1) = 0
+      ENDIF
+
       ENDDO
       ENDDO
 
       call bound_int_arb(NK2,ITYPEU)
       call bound_int_arb(NK2,ITYPEV)
-
-      DO J=mjm,mjp
-      DO I=mim,mip
-      IF(HX(I,J) .EQ. 0.) HX(I,J)=1.
-      ENDDO
-      ENDDO
 
 #else
       hx=1

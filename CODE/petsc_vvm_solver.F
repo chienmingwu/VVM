@@ -183,7 +183,7 @@ SUBROUTINE petsc_solver_initialize
 
     call DMDACreate3d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                       &
       DM_BOUNDARY_PERIODIC,DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,MI_glob/(2**nlv), &
-      MJ_glob/(2**nlv),NK2-2,nsbdm_x,nsbdm_y,1,1,nhalo,PETSC_NULL_INTEGER,      &
+      MJ_glob/(2**nlv),NK2-1,nsbdm_x,nsbdm_y,1,1,nhalo,PETSC_NULL_INTEGER,      &
       PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da3(nlevel),ierr)
 
     call DMDASetUniformCoordinates(da3(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
@@ -425,7 +425,7 @@ SUBROUTINE petsc_solver_finalize
     enddo
 END SUBROUTINE petsc_solver_finalize
 SUBROUTINE petsc_solve_3d(F,X)
-REAL (KIND=dbl_kind), INTENT(INOUT)::F(mi1,mj1,nk2-2)
+REAL (KIND=dbl_kind), INTENT(INOUT)::F(mi1,mj1,nk2-1)
 REAL (KIND=dbl_kind), INTENT(INOUT)::X(mi1+2,mj1+2,nk2)
 PetscInt its
 PetscReal norm
@@ -464,7 +464,7 @@ PetscReal norm
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + (k - izg)*mxg*myg + 1
-      X(I-ixx+2,J-iy+2,K+2) = tmp(ip+kt) / RHOZ(K+2)
+      X(I-ixx+2,J-iy+2,K+1) = tmp(ip+kt) / RHOZ(K+1)
       enddo
       enddo
       enddo
@@ -588,7 +588,7 @@ SUBROUTINE OperatorConti(jac)
       PetscInt row,i1,i7,i6,irow,jrow,krow
       PetscInt col(7),iseven
       PetscScalar two,one,lambda,c1,c2,ctmp,tem,dzsq
-      PetscScalar vv(7),AN(NK2-2),BN(NK2-2),CN(NK2-2),B_loc(NK2),BU(NK2)
+      PetscScalar vv(7),AN(NK2-1),BN(NK2-1),CN(NK2-1),B_loc(NK2),BU(NK2)
       ISLocalToGlobalMapping ltogm
 
       one    = 1.
@@ -601,22 +601,21 @@ SUBROUTINE OperatorConti(jac)
       c2 = -1.d0/(DYNEW*DYNEW)
       ctmp = -2.d0*(c1+c2)
 
-      do K = 1, Nk2-2
-      B_loc(K) = 1. / ( RHOZ(K+1) * FNZ(K+1) )
-      BU(K) = FNU(K+1) / RHOU(K+1)
+      do K = 1, Nk2-1
+      B_loc(K) = 1. / ( RHOZ(K) * FNZ(K) )
+      BU(K) = FNU(K) / RHOU(K)
       enddo
-      BU(Nk2-1) = FNU(Nk2) / RHOU(Nk2)
+      BU(Nk2) = FNU(Nk2) / RHOU(Nk2)
 
       DZSQ = DZ*DZ
-      do K = 1, Nk2-2
+      do K = 1, Nk2-1
       TEM = 1. / ( B_loc(K) * DZSQ )
       AN(K) = - BU(K) * TEM
       CN(K) = - BU(K+1) * TEM
       BN(K) = -( AN(K) + CN(K) )
       enddo
       AN(1) = 0.
-      CN(Nk2-2) = 0.
-
+      CN(Nk2-1) = 0.
 
       call DMGetLocalToGlobalMapping(da3(1),ltogm,ierr)
       call ISLocalToGlobalMappingGetIndices(ltogm,ltog,idltog,ierr)

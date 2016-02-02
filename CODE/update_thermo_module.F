@@ -43,7 +43,7 @@ CONTAINS
    50 CONTINUE
 
 !ccwut set physics variables on topo to zero
-      DO K = 2, maxtopo
+      DO K = 1, maxtopo
       DO J = 1, MJ1
       DO I = 1, MI1
       IF(ITYPEW(I,J,K) .NE. 1) THEN
@@ -130,20 +130,44 @@ CONTAINS
 
 
 !ccwut set physics variables on topo to zero
+
       DO K = 2, maxtopo
       DO J = 1, MJ1
       DO I = 1, MI1
       IF(ITYPEW(I,J,K) .NE. 1) THEN
       TH3D(I,J,K) = THBAR(K)
+      IF (K .EQ. NHX(I,J) ) THEN
+      QV3D(I,J,K) = QV3D(I,J,K+1)!QVBAR(K)
+      QR3D(I,J,K) = QR3D(I,J,K+1)
+      QC3D(I,J,K) = QC3D(I,J,K+1)
+      QS3D(I,J,K) = QS3D(I,J,K+1)
+      QG3D(I,J,K) = QG3D(I,J,K+1)
+      ELSE
       QV3D(I,J,K) = 0.
-      QC3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
+      QC3D(I,J,K) = 0.
+!      QR3D(I,J,K) = 0.
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.
+      ENDIF
       ENDIF
       ENDDO
       ENDDO
       ENDDO
+
+      DO J = 1, MJ1
+      DO I = 1, MI1
+      IF(ITYPEW(I,J,1) .NE. 1 .and. ITYPEW(I,J,2) .NE. 1) THEN
+      TH3D(I,J,1) = THBAR(1)
+      QV3D(I,J,1) = QVBAR(1)
+      QC3D(I,J,1) = QC3D(I,J,2)
+      QR3D(I,J,1) = QR3D(I,J,2)
+      QS3D(I,J,1) = QS3D(I,J,2)
+      QG3D(I,J,1) = QG3D(I,J,2)
+      ENDIF
+      ENDDO
+      ENDDO
+
 !ccwut
 
 
