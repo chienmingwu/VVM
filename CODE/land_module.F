@@ -431,6 +431,7 @@ CONTAINS
       SHDMIN(I,J) = 80. 
       endif
 
+      endif
       enddo
       enddo
 

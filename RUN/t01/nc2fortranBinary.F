@@ -29,7 +29,7 @@
       integer i,j,k,ierr
 
       integer NLID(2)
-      integer idx,idy
+      integer idx,idy,nvaridy,nvaridx
 
       REAL*8 DT,DX,DYNEW,DZ,DZ1,ALADV,ZB,TOP,TMP,WRXMU,UVTAU
       LOGICAL NOTURB,NOSFX,BUOY
@@ -189,10 +189,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   800 CONTINUE
 
 
-      OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
-      WRITE(16)HX 
-      CLOSE(16)
-
       DO 900 JP = 1,nsbdm_y
       JI = (JP-1)*MJ1+1
       JE = (JP)*MJ1
@@ -207,18 +203,28 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
   900 CONTINUE
 
+
       ierr = nf_create('TOPO.nc', NF_CLOBBER, ncid)
       print*,'ERRor', nf_strerror(ierr)
 
-
-      ierr = nf_def_dim(ncid, "lat", MJ_GLOB, idy)
-      print*,'ERRor', nf_strerror(ierr)
-
-      ierr = nf_def_dim(ncid, "lon", MI_GLOB, idx)
+      ierr = nf_def_dim(ncid, "y", MJ_GLOB, idy)
+      ierr = nf_def_dim(ncid, "x", MI_GLOB, idx)
       print*,'ERRor', nf_strerror(ierr)
 
       nlid(2) = idy
       nlid(1) = idx
+
+      ierr = nf_def_var(ncid, "y", NF_DOUBLE, 1, nlid(2), nvaridy)
+      ierr = nf_put_att_text(ncid, nvaridy, 'long_name',1 , 'y')
+      ierr = nf_put_att_text(ncid, nvaridy, 'units',13, 'degrees_north')
+
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "x", NF_DOUBLE, 1, nlid(1), nvaridx)
+      ierr = nf_put_att_text(ncid, nvaridx, 'long_name',1, 'x')
+      ierr = nf_put_att_text(ncid, nvaridx, 'units',12, 'degrees_east')
+
+      print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_def_var(ncid, "TOPO", NF_DOUBLE, 2, nlid, nvarid)
       print*,'ERRor', nf_strerror(ierr)
@@ -227,14 +233,14 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_put_var_double(ncid, nvarid, dble(HX))
-      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_double(ncid, nvaridy, YM)
+      ierr = nf_put_var_double(ncid, nvaridx, XM)
 
+      ierr = nf_put_var_double(ncid, nvarid, HX)
+      print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_close(ncid)
       print*,'ERRor', nf_strerror(ierr)
-
-
 
 
       end
