@@ -16,7 +16,7 @@
 
       REAL*8 XT(MI_GLOB),YT(MJ_GLOB)
       LOGICAL TWTOPO 
-      parameter(TWTOPO = .TRUE.)
+      parameter(TWTOPO = .FALSE.)
 
 
       INTEGER ISH,JSH
@@ -169,7 +169,9 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       DO 500 J = 1,MJ_GLOB
       DO 500 I = 1,MI_GLOB
-      HX(I,J) =1.
+
+      if (I .gt. 128 .and. I .lt. 385) 
+     1 hx(i,j) = INT(max((-(abs(256-real(I)))/512+.125)/.125*10,0.))+1
   500 CONTINUE
 
       ENDIF

@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = shadow_nc
+set expname = test
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -45,7 +45,6 @@ cat > definesld.com << 'END1'
 #define PARALLELIO
 #define RADCODE
 #define LSM
-#define TOPOGRAPHY
 'END1'
 cat definesld.com
 
@@ -54,10 +53,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/256/' \
-    -e '1,$s/merid_dimension/256/' \
-    -e '1,$s/zonal_decomposition/2/' \
-    -e '1,$s/merid_decomposition/2/' \
+sed -e '1,$s/zonal_dimension/512/' \
+    -e '1,$s/merid_dimension/192/' \
+    -e '1,$s/zonal_decomposition/8/' \
+    -e '1,$s/merid_decomposition/3/' \
     -e '1,$s/vert_dimension/70/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
@@ -93,7 +92,6 @@ cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
 ./nc2fortranBinary
-exit
 
 
 # GLDAS
@@ -115,7 +113,7 @@ exit
 #./nc2fortranBinary
 
 # for LSM
-cd ../${subdir}
+#cd ../${subdir}
 cp ${subdir}/CODE/LSM/GENPARM.TBL .
 cp ${subdir}/CODE/LSM/SOILPARM.TBL .
 cp ${subdir}/CODE/LSM/VEGPARM.TBL .
