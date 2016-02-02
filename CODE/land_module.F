@@ -430,6 +430,7 @@ CONTAINS
       SHDMAX(I,J) = 80.
       SHDMIN(I,J) = 80. 
       endif
+      endif
 
       enddo
       enddo
