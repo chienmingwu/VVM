@@ -328,10 +328,6 @@ CONTAINS
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
-      PRINT*,'-----1----------------',my_task
-
-
-
       locean = .true.
       psfx = .false.
 
