@@ -318,7 +318,7 @@ CONTAINS
    real (kind=int_kind), dimension(mi1,mj1):: & 
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
-   INTEGER (KIND=int_kind):: i,j,hxp
+   INTEGER (KIND=int_kind):: i,j,hxp,itmp
    CHARACTER(50):: FILENAME
 
 ! surface pressure
@@ -396,25 +396,43 @@ CONTAINS
       ENDIF
 
 !ccwu
-      if (ni_sbdm .eq. 0 .or. ni_sbdm .eq. 3 ) then
-      LU = 16
-      SOIL = 1
-      SLOPE =  1
+      do J=1,MJ1
+      do I=1,MI1
+
+      itmp = ni_sbdm*MI1+I
+
+      if (itmp .le. 128 .or. itmp .ge. 385 ) then
+      LU(I,J) = 16
+      SOIL(I,J) = 1
+      SLOPE(I,J) =  1
       ALBEDOM = 15.
-      GREENFRACM = 10.
-      LAIM = 4.
-      SHDMAX = 10.
-      SHDMIN = 10.
+      GREENFRACM(I,J) = 10.
+      LAIM(I,J) = 4.
+      SHDMAX(I,J) = 10.
+      SHDMIN(I,J) = 10.
       else
-      LU = 1
-      SOIL = 1
-      SLOPE =  1
-      ALBEDOM = 15.
-      GREENFRACM = 10.
-      LAIM = 4.
-      SHDMAX = 10.
-      SHDMIN = 10.
+      IF (hx(I,J) .eq. 1 ) then
+      LU(I,J) = 1
+      SOIL(I,J) = 1
+      SLOPE(I,J) =  1
+      ALBEDOM(I,J) = 15.
+      GREENFRACM(I,J) = 10.
+      LAIM(I,J) = 4.
+      SHDMAX(I,J) = 10.
+      SHDMIN(I,J) = 10.
+      else
+      LU(I,J) = 7
+      SOIL(I,J) = 1
+      SLOPE(I,J) = 1
+      ALBEDOM(I,J) = 19.
+      GREENFRACM(I,J) = 80.
+      LAIM(I,J) = 4.
+      SHDMAX(I,J) = 80.
+      SHDMIN(I,J) = 80. 
       endif
+
+      enddo
+      enddo
 
 !      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
 !      'RUNDATA/SM1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
