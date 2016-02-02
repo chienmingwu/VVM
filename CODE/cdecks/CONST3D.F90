@@ -192,10 +192,6 @@ PRIVATE
 ! topography variables
 ! 
 
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk2), PUBLIC ::       &
-      z3dxt,    &  ! x-component of vorticity, dw/dy-dv/dz (1/s)
-      z3dyt        ! y-component of vorticity, dw/dx-du/dz (1/s)
-
    INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp,nk2), PUBLIC ::       &
       itypeu, &  !topography index for z3dy
       itypev, &  !topography index for z3dx
@@ -204,10 +200,17 @@ PRIVATE
    INTEGER (KIND=int_kind), PUBLIC ::           &
       maxtopo  ! maximum topo height
 
+   INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::       &
+      nhx, & ! Floor of topography at t-point
+      nxu, & ! Floor of topography at u-coor, directly replace hxu
+      nxv, & ! Florr of topography at v-coor, directly replace hxv
+      nup, & ! Indicate the partial cell in u point
+      nvp    ! Indicate the partial cell in v point
+
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::       &
-!   INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::       &
       hx,  & ! location of topography at t-point
-      hxu, & ! location of west cornor  topography 
+      hxu, & ! location of west cornor  topography
       hxv    ! location of south cornor topography
+
 
 END MODULE const3d
