@@ -318,7 +318,7 @@ CONTAINS
    real (kind=int_kind), dimension(mi1,mj1):: & 
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
-   INTEGER (KIND=int_kind):: i,j,hxp,itmp
+   INTEGER (KIND=int_kind):: i,j,hxp,itmp,jtmp
    CHARACTER(50):: FILENAME
 
 ! surface pressure
@@ -400,8 +400,18 @@ CONTAINS
       do I=1,MI1
 
       itmp = ni_sbdm*MI1+I
+      jtmp = nj_sbdm*MJ1+J
 
-      if (itmp .le. 128 .or. itmp .ge. 385 ) then
+!      if (itmp .gt. 32 .and. itmp .lt. 97 .and. jtmp .gt. 32 .and. jtmp .lt. 97) then
+!      LU(I,J) = 7
+!      SOIL(I,J) = 1
+!      SLOPE(I,J) = 1
+!      ALBEDOM(I,J) = 19.
+!      GREENFRACM(I,J) = 80.
+!      LAIM(I,J) = 4.
+!      SHDMAX(I,J) = 80.
+!      SHDMIN(I,J) = 80.
+!      else
       LU(I,J) = 16
       SOIL(I,J) = 1
       SLOPE(I,J) =  1
@@ -410,27 +420,7 @@ CONTAINS
       LAIM(I,J) = 4.
       SHDMAX(I,J) = 10.
       SHDMIN(I,J) = 10.
-      else
-      IF (hx(I,J) .eq. 1 ) then
-      LU(I,J) = 1
-      SOIL(I,J) = 1
-      SLOPE(I,J) =  1
-      ALBEDOM(I,J) = 15.
-      GREENFRACM(I,J) = 10.
-      LAIM(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-      else
-      LU(I,J) = 7
-      SOIL(I,J) = 1
-      SLOPE(I,J) = 1
-      ALBEDOM(I,J) = 19.
-      GREENFRACM(I,J) = 80.
-      LAIM(I,J) = 4.
-      SHDMAX(I,J) = 80.
-      SHDMIN(I,J) = 80. 
-      endif
-      endif
+!      endif
 
       enddo
       enddo
