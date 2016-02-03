@@ -198,12 +198,14 @@ SUBROUTINE petsc_solver_initialize
     call DMDAGetCorners(da3(1),ixx,iy,iz,mx,my,mz,ierr)
     call DMDAGetGhostCorners(da3(1),ixg,iyg,izg,mxg,myg,mzg,ierr)
 
-    npt=mi_glob*mj_glob*(NK2-2)
+    npt=mi_glob*mj_glob*(NK2-1)
     np=nsbdm_x*nsbdm_y
 
     call MatCreateAIJ(MPI_COMM_WORLD,npt/np,npt/np,npt,npt,7, &
          PETSC_NULL_INTEGER,5,PETSC_NULL_INTEGER,Cmat,ierr)
     call OperatorConti(Cmat)
+
+    PRINT*,'90009090'
 
 ! http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP
 ! Connect KSP with DM grid -- KSPSetDM
