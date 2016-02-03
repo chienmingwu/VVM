@@ -410,8 +410,9 @@ CONTAINS
       LAIM(I,J) = 4.
       SHDMAX(I,J) = 10.
       SHDMIN(I,J) = 10.
-      else
-      IF (hx(I,J) .eq. 1 ) then
+
+      elseif (hx(I,J) .eq. 1 ) then
+
       LU(I,J) = 1
       SOIL(I,J) = 1
       SLOPE(I,J) =  1
@@ -420,7 +421,9 @@ CONTAINS
       LAIM(I,J) = 4.
       SHDMAX(I,J) = 10.
       SHDMIN(I,J) = 10.
+
       else
+
       LU(I,J) = 7
       SOIL(I,J) = 1
       SLOPE(I,J) = 1
@@ -431,7 +434,6 @@ CONTAINS
       SHDMIN(I,J) = 80. 
       endif
 
-      endif
       enddo
       enddo
 

@@ -431,7 +431,7 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=0.
+      U3DX(I,J,K)=3.
       U3DY(I,J,K)=0.
   610 CONTINUE
 

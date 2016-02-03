@@ -29,7 +29,7 @@
       integer i,j,k,ierr
 
       integer NLID(2)
-      integer idx,idy,nvaridy,nvaridx
+      integer idx,idy,nvaridx,nvaridy
 
       REAL*8 DT,DX,DYNEW,DZ,DZ1,ALADV,ZB,TOP,TMP,WRXMU,UVTAU
       LOGICAL NOTURB,NOSFX,BUOY
@@ -166,12 +166,20 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   100 CONTINUE
 
       ELSE
+      
+      DO J=1,MJ_GLOB
+      DO I=1,MI_GLOB
+      YM(J)=J
+      XM(I)=I
+      ENDDO
+      ENDDO
+
 
       DO 500 J = 1,MJ_GLOB
       DO 500 I = 1,MI_GLOB
 
       if (I .gt. 128 .and. I .lt. 385) 
-     1 hx(i,j) = INT(max((-(abs(256-real(I)))/512+.125)/.125*10,0.))+1
+     1 hx(i,j) = INT(max((-(abs(256-real(I)))/512+.125)/.125*5,0.))+1
   500 CONTINUE
 
       ENDIF
@@ -189,6 +197,10 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   800 CONTINUE
 
 
+      OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
+      WRITE(16)HX 
+      CLOSE(16)
+
       DO 900 JP = 1,nsbdm_y
       JI = (JP-1)*MJ1+1
       JE = (JP)*MJ1
@@ -202,7 +214,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       CLOSE(16)
 
   900 CONTINUE
-
 
       ierr = nf_create('TOPO.nc', NF_CLOBBER, ncid)
       print*,'ERRor', nf_strerror(ierr)
@@ -236,11 +247,12 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_put_var_double(ncid, nvaridy, YM)
       ierr = nf_put_var_double(ncid, nvaridx, XM)
 
-      ierr = nf_put_var_double(ncid, nvarid, HX)
+      ierr = nf_put_var_double(ncid, nvarid, dble(hx))
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_close(ncid)
       print*,'ERRor', nf_strerror(ierr)
+
 
 
       end
