@@ -169,7 +169,7 @@ CONTAINS
       DO 12 J = 1, MJ1
       DO 12 I = 1, MI1
       LO = I +1 + (J-1)*(MI1 + 2*NHALO)
-      DTH = PERT(LO)
+      DTH = .1 !PERT(LO)
       FTH3D(I,J,K+hx(I,J)-1,L) = FTH3D(I,J,K+hx(I,J)-1,L) + DTH / DT
    12 CONTINUE
 

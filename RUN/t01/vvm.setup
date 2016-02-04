@@ -39,7 +39,7 @@ cat COMMENTS
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
-#define DIFFUSION 
+#define DIFFUSION
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
