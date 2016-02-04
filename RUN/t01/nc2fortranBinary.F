@@ -167,7 +167,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
-      HX = 1
+      HX = 2
 
       ENDIF
 
