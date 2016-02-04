@@ -403,7 +403,7 @@ CONTAINS
       hxp =INT( hx(I,J))+1
       hxvp=INT(hxv(I,J))+1                                   
       if(hxvp .gt. 1) then             !south cornor points
-      FZXTB(I,J,hxvp)=FZXTB(I,J,hxvp)+FNZ(hxvp)*FNU(hxvp)*WV(I,J)/(RHOU(hxvp)*DZ*DZ)
+      FZXTB(I,J,hxvp)=FZXTB(I,J,hxvp)!+FNZ(hxvp)*FNU(hxvp)*WV(I,J)/(RHOU(hxvp)*DZ*DZ)
       else
       FZXTB(I,J,hxp)=FZXTB(I,J,hxp)+FNZ(hxp)*FNU(hxp)*WV(I,J)/(RHOU(hxp)*DZ*DZ)
       endif
@@ -457,7 +457,7 @@ CONTAINS
       hxup= INT(hxu(I,J))+1
 
       if(hxup .gt. 1) then             !left cornor points 
-      FZYTB(I,J,hxup)=FZYTB(I,J,hxup)+FNZ(hxup)*FNU(hxup)*UW(I,J)/(RHOU(hxup)*DZ*DZ) 
+      FZYTB(I,J,hxup)=FZYTB(I,J,hxup)!+FNZ(hxup)*FNU(hxup)*UW(I,J)/(RHOU(hxup)*DZ*DZ) 
       else
       FZYTB(I,J,hxp)=FZYTB(I,J,hxp)+FNZ(hxp)*FNU(hxp)*UW(I,J)/(RHOU(hxp)*DZ*DZ)
       endif
