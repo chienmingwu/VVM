@@ -39,14 +39,11 @@ cat COMMENTS
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
-#define DIFFUSION
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
 #define RADCODE
-#define LSM
 #define TOPOGRAPHY
-
 'END1'
 cat definesld.com
 
