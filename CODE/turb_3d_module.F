@@ -384,7 +384,8 @@ CONTAINS
 
 
 !ccwu
-
+!easy 
+      if (.false.) then
       DO 334 K=2,NK1
       DO 334 J=1,MJ1
       DO 334 I=1,MI1
@@ -395,7 +396,7 @@ CONTAINS
                 *(Z3DX(I,J,K)-Z3DX(I,J,K-1))*DHVW2(I,J,K))            &
        /(2.*DZSQ*RHOZ(K))*FNZ(K)
   334 CONTINUE
-
+      endif
 !ccwu calculate surface above surface points
 
       DO 336 J=1,MJ1
@@ -403,7 +404,7 @@ CONTAINS
       hxp =INT( hx(I,J))+1
       hxvp=INT(hxv(I,J))+1                                   
       if(hxvp .gt. 1) then             !south cornor points
-      FZXTB(I,J,hxvp)=FZXTB(I,J,hxvp)+FNZ(hxvp)*FNU(hxvp)*WV(I,J)/(RHOU(hxvp)*DZ*DZ)
+      FZXTB(I,J,hxvp)=FZXTB(I,J,hxvp)!+FNZ(hxvp)*FNU(hxvp)*WV(I,J)/(RHOU(hxvp)*DZ*DZ)
       else
       FZXTB(I,J,hxp)=FZXTB(I,J,hxp)+FNZ(hxp)*FNU(hxp)*WV(I,J)/(RHOU(hxp)*DZ*DZ)
       endif
@@ -423,7 +424,8 @@ CONTAINS
 
 !      IF (.FALSE.) THEN
 !ccwu
-
+!easy 
+      if (.false.) then
       DO 342 K=2,NK1
       DO 342 J=1,MJ1
       DO 342 I=1,MI1
@@ -436,7 +438,7 @@ CONTAINS
                     *(Z3DY(I,J,K)-Z3DY(I,J-1,K))*DHUV2(I,J,K))                    &
          /(8.*DYSQ)
   342 CONTINUE
-
+      endif
 !ccwu
 
       DO 344 K=2,NK1
