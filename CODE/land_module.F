@@ -402,16 +402,16 @@ CONTAINS
       itmp = ni_sbdm*MI1+I
       jtmp = nj_sbdm*MJ1+J
 
-!      if (itmp .gt. 32 .and. itmp .lt. 97 .and. jtmp .gt. 32 .and. jtmp .lt. 97) then
-!      LU(I,J) = 7
-!      SOIL(I,J) = 1
-!      SLOPE(I,J) = 1
-!      ALBEDOM(I,J) = 19.
-!      GREENFRACM(I,J) = 80.
-!      LAIM(I,J) = 4.
-!      SHDMAX(I,J) = 80.
-!      SHDMIN(I,J) = 80.
-!      else
+      if (itmp .gt. 32 .and. itmp .lt. 97 .and. jtmp .gt. 32 .and. jtmp .lt. 97) then
+      LU(I,J) = 7
+      SOIL(I,J) = 1
+      SLOPE(I,J) = 1
+      ALBEDOM(I,J) = 19.
+      GREENFRACM(I,J) = 80.
+      LAIM(I,J) = 4.
+      SHDMAX(I,J) = 80.
+      SHDMIN(I,J) = 80.
+      else
       LU(I,J) = 16
       SOIL(I,J) = 1
       SLOPE(I,J) =  1
@@ -420,10 +420,11 @@ CONTAINS
       LAIM(I,J) = 4.
       SHDMAX(I,J) = 10.
       SHDMIN(I,J) = 10.
-!      endif
+      endif
 
       enddo
       enddo
+
 
 !      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
 !      'RUNDATA/SM1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'

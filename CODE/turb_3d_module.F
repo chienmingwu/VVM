@@ -862,7 +862,6 @@ CONTAINS
   100 CONTINUE
 
 #if defined (LSM)
-
       DO 105 J = 1,MJ1
       DO 105 I = 1,MI1
 
@@ -874,7 +873,6 @@ CONTAINS
       QG(I,J) = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
       swD(I,J) = swDown_3D(I,J,hxp)
       lwD(I,J) = lwDown_3D(I,J,hxp)
-
 
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 )
