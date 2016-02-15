@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = p00
+set expname = L00
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -54,8 +54,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/128/' \
-    -e '1,$s/merid_dimension/128/' \
+sed -e '1,$s/zonal_dimension/1024/' \
+    -e '1,$s/merid_dimension/1024/' \
     -e '1,$s/zonal_decomposition/4/' \
     -e '1,$s/merid_decomposition/4/' \
     -e '1,$s/vert_dimension/70/' \
@@ -86,6 +86,8 @@ endif
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
+
 #cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
 #cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 

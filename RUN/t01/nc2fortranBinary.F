@@ -11,7 +11,7 @@
       character(23) FILENAME
 
       integer NX, NY
-      parameter (NX = 14401, NY = 18001)
+      parameter (NX = 1024, NY = 1024)
       REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
       REAL*8 XT(MI_GLOB),YT(MJ_GLOB)
@@ -26,6 +26,8 @@
       parameter (MIC = MI_GLOB/2+ISH+1, MJC= MJ_GLOB/2+JSH+1)
 
       integer ncid, nvarid
+      integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope, 
+     1        nsoil
       integer i,j,k,ierr
 
       integer NLID(2)
@@ -38,11 +40,16 @@
       INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT
  
 
+      REAL alb(1024,1024), grf(1024,1024), hgt(1024,1024), 
+     1 lai(1024,1024), lu(1024,1024), shdmax(1024,1024), 
+     1 shdmin(1024,1024), slope(1024,1024), soil(1024,1024)
+
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
       REAL*8 ZZ(NK3)      
 
       INTEGER (KIND=int_kind) HX(MI_GLOB,MJ_GLOB)
 
+ 
       R = 6378137.0
       ZB = 0. 
       PI = 3.14159265358979323846264338327 
@@ -58,7 +65,6 @@
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
 
-      
       DZTMP = MIN(DZ,DZ1)
       Zz(1) = ZB
       DO 50 K = 2, NK3
@@ -69,10 +75,7 @@
       ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
    51 CONTINUE
 
-
-
 ! import INPUT FILE 
-
       IF (TWTOPO) THEN
 ! IMPORT topography date
 
@@ -167,10 +170,58 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
-      HX = 1
+      OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
+      READ(15,*) alb
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
+      READ(15,*) grf
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
+      READ(15,*) hgt
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
+      READ(15,*) lai
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
+      READ(15,*) lu
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
+      READ(15,*) shdmax
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
+      READ(15,*) shdmin
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
+      READ(15,*) slope
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
+      READ(15,*) soil
+      CLOSE(15)
+
+      DO I=1,mi_glob
+      DO J=1,mj_glob
+      TMP=DBLE(hgt(I,J))
+
+      IF (TMP .GT. 0.) HX(I,J) = 2.
+
+      DO K=2,NK1
+      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+
+      ENDDO
+      IF(HX(I,J).LT.0)HX(I,J)=0
+
+      ENDDO
+      ENDDO
 
       ENDIF
-
 
       NP = 0
 
@@ -184,9 +235,9 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   800 CONTINUE
 
 
-      OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
-      WRITE(16)HX 
-      CLOSE(16)
+!      OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
+!      WRITE(16)HX 
+!      CLOSE(16)
 
       DO 900 JP = 1,nsbdm_y
       JI = (JP-1)*MJ1+1
@@ -198,11 +249,19 @@ C      TMP = MAX(TMP,DATA(IP,JP))
      1 'RUNDATA/TOPO',IP,'_',JP,'.dat'
       OPEN(unit=16,file=FILENAME,form='unformatted')
       WRITE(16) ((DBLE(HX(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((DBLE(alb(I,J)),I=II,IE),J=JI,JE) 
+      WRITE(16) ((DBLE(grf(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((DBLE(lai(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((DBLE(lu(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((DBLE(shdmax(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((DBLE(shdmin(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((DBLE(slope(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((DBLE(soil(I,J)),I=II,IE),J=JI,JE)
       CLOSE(16)
-
   900 CONTINUE
 
-      ierr = nf_create('TOPO.nc', NF_CLOBBER, ncid)
+
+      ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
 
 
@@ -215,21 +274,60 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       nlid(2) = idy
       nlid(1) = idx
 
-      ierr = nf_def_var(ncid, "TOPO", NF_DOUBLE, 2, nlid, nvarid)
+      ierr = nf_def_var(ncid, "TOPO", NF_FLOAT, 2, nlid, ntopo)
       print*,'ERRor', nf_strerror(ierr)
 
+      ierr = nf_def_var(ncid, "albedo", NF_FLOAT, 2, nlid, nalb)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "GRF", NF_FLOAT, 2, nlid, ngrf)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "LAI", NF_FLOAT, 2, nlid, nlai)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "LU", NF_FLOAT, 2, nlid, nlu)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "SHDMAX", NF_FLOAT, 2, nlid, nshdmax)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "SHADMIN", NF_FLOAT, 2, nlid, nshdmin)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "SLOPE", NF_FLOAT, 2, nlid, nslope)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "SOIL", NF_FLOAT, 2, nlid, nsoil)
+      print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_put_var_double(ncid, nvarid, dble(HX))
+      ierr = nf_put_var_real(ncid, ntopo, HX)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_put_var_real(ncid, nalb, alb)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, ngrf, grf)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nlai, lai)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nlu, lu)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nshdmax, shdmax)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nshdmin, shdmin)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nslope, slope)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nsoil, soil)
       print*,'ERRor', nf_strerror(ierr)
 
 
       ierr = nf_close(ncid)
       print*,'ERRor', nf_strerror(ierr)
 
-
-
+      
 
       end
