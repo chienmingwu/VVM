@@ -125,6 +125,9 @@ CONTAINS
       T1(K) =  T1(K) * 1.E-01 + 273.16
       QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
+!ccwu stable env.
+      T1(7:21)=T1(7:21)+10.
+      QV1(7:21)=QV1(7:21)*0.5
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
