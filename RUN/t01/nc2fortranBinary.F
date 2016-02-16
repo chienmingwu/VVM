@@ -167,7 +167,15 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
-      HX = 1
+!      HX = 1
+      DO 500 J = 1,MJ_GLOB
+      DO 500 I = 1,MI_GLOB
+
+      if (I .gt. 128 .and. I .lt. 385)
+     1 hx(i,j) = INT(max((-(abs(256-real(I)))/512+.125)/.125*10,0.))+1
+  500 CONTINUE
+
+
 
       ENDIF
 
