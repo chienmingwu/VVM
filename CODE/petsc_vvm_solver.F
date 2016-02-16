@@ -118,7 +118,7 @@ USE petscdmda
 
 IMPLICIT NONE
 PRIVATE
-PetscInt, PARAMETER, PRIVATE:: nlevel = 4, nlv = nlevel-1
+PetscInt, PARAMETER, PRIVATE:: nlevel = 6, nlv = nlevel-1
 PetscInt, PRIVATE:: i,j,k,kt,npt,np
 PetscInt, PRIVATE:: ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
 PetscInt, PRIVATE:: ctx3,ctx2
@@ -149,7 +149,7 @@ KSP sksp_Conti(2*nlevel-1),sksp_topChi(2*nlevel-1),sksp_topPsi(2*nlevel-1)
 Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
-PetscInt, PRIVATE:: MXIT = 1000
+PetscInt, PRIVATE:: MXIT = 2000
 PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
 PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-6,dtol_TopPsi = 1.d2
 PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-6,dtol_TopChi = 1.d2
