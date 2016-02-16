@@ -14,7 +14,7 @@
       parameter (NX = 1024, NY = 1024)
       REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
-      REAL*8 XT(MI_GLOB),YT(MJ_GLOB)
+      REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB)
       LOGICAL TWTOPO 
       parameter(TWTOPO = .FALSE.)
 
@@ -27,7 +27,7 @@
 
       integer ncid, nvarid
       integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope, 
-     1        nsoil
+     1        nsoil, nlon, nlat
       integer i,j,k,ierr
 
       integer NLID(2)
@@ -170,6 +170,14 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
+
+      OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
+      READ(15,*) xt
+      CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
+      READ(15,*) yt
+      CLOSE(15)
+
       OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
       READ(15,*) alb
       CLOSE(15)
@@ -277,6 +285,12 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       nlid(2) = idy
       nlid(1) = idx
 
+      ierr = nf_def_var(ncid, "lat", NF_FLOAT, 1, nlid(2), nlat)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "lon", NF_FLOAT, 1, nlid(1), nlon)
+      print*,'ERRor', nf_strerror(ierr)
+
       ierr = nf_def_var(ncid, "TOPO", NF_FLOAT, 2, nlid, ntopo)
       print*,'ERRor', nf_strerror(ierr)
 
@@ -306,6 +320,13 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_put_var_real(ncid, nlat, yt)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_put_var_real(ncid, nlon, xt)
+      print*,'ERRor', nf_strerror(ierr)
+
 
       ierr = nf_put_var_real(ncid, ntopo, HX)
       print*,'ERRor', nf_strerror(ierr)
