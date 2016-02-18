@@ -495,20 +495,20 @@ PetscReal norm
       call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
 
       call vecsum(rhs,vsum,ierr)
-      call vecshift(rhs,vsum*tpts, ierr)
+!      call vecshift(rhs,vsum*tpts, ierr)
 
-!      call KSPSetFromOptions(Toppsi,ierr)
+      call KSPSetFromOptions(Toppsi,ierr)
       call KSPSolve(Toppsi,rhs,v1,ierr)
 
       IF ( MY_TASK .EQ. 0) THEN
       call KSPGetIterationNumber(Toppsi,its,ierr)
       call KSPGetResidualNorm(Toppsi,norm,ierr)
-      write(6,100) norm,its
+      write(6,100) norm,its,vsum
       ENDIF
- 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+ 100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
 
       call vecsum(v1,vsum,ierr)
-      call vecshift(v1,vsum*tpts, ierr)
+!      call vecshift(v1,vsum*tpts, ierr)
 
       call DMGlobalToLocalBegin(da2(1),v1,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da2(1),v1,INSERT_VALUES,vl,ierr)
@@ -547,18 +547,18 @@ PetscReal norm
       call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
 
       call vecsum(rhs,vsum,ierr)
-      call vecshift(rhs,vsum*tpts, ierr)
+!      call vecshift(rhs,vsum*tpts, ierr)
 
-!      call KSPSetFromOptions(Topchi,ierr)
+      call KSPSetFromOptions(Topchi,ierr)
 
       call KSPSolve(Topchi,rhs,v2,ierr)
 
       IF ( MY_TASK .EQ. 0) THEN
       call KSPGetIterationNumber(Topchi,its,ierr)
       call KSPGetResidualNorm(Topchi,norm,ierr)
-      write(6,100) norm,its
+      write(6,100) norm,its,vsum
       ENDIF
- 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+ 100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
 
       call vecsum(v2,vsum,ierr)
       call vecshift(v2,vsum*tpts,ierr)
