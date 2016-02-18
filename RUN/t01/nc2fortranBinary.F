@@ -47,7 +47,7 @@
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
       REAL*8 ZZ(NK3)      
 
-      INTEGER (KIND=int_kind) HX(MI_GLOB,MJ_GLOB)
+      REAL (KIND=int_kind) HX(MI_GLOB,MJ_GLOB)
 
  
       R = 6378137.0
@@ -286,9 +286,13 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       nlid(1) = idx
 
       ierr = nf_def_var(ncid, "lat", NF_FLOAT, 1, nlid(2), nlat)
+      ierr = nf_put_att_text(ncid, nlat, 'long_name',1 , 'y')
+      ierr = nf_put_att_text(ncid, nlat, 'units',13, 'degrees_north')
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_def_var(ncid, "lon", NF_FLOAT, 1, nlid(1), nlon)
+      ierr = nf_put_att_text(ncid, nlon, 'long_name',1, 'x')
+      ierr = nf_put_att_text(ncid, nlon, 'units',12, 'degrees_east')
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_def_var(ncid, "TOPO", NF_FLOAT, 2, nlid, ntopo)
@@ -309,7 +313,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_def_var(ncid, "SHDMAX", NF_FLOAT, 2, nlid, nshdmax)
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_def_var(ncid, "SHADMIN", NF_FLOAT, 2, nlid, nshdmin)
+      ierr = nf_def_var(ncid, "SHDMIN", NF_FLOAT, 2, nlid, nshdmin)
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_def_var(ncid, "SLOPE", NF_FLOAT, 2, nlid, nslope)
