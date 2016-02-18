@@ -7,6 +7,8 @@
 set echo  # echoes the commands
 set expname = L00
 
+useintel
+
 # hardscrabble configuration
 set subdir = '../..'
 
