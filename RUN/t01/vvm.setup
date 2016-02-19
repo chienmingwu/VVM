@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = p30
+set expname = p40
 
 # hardscrabble configuration
 set subdir = '../..'
