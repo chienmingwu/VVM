@@ -48,7 +48,7 @@ CONTAINS
          scaleq=0._dbl_kind, & !
          rkappa,             &
          rkappai,            &
-         gamfac, a0, z00, xr, yr, zr, dist,tmp
+         gamfac, a0, z00, xr, yr, zr, dist,tmp,ESW,ESI
       REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
       REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
@@ -64,23 +64,20 @@ CONTAINS
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(33),PI1(33),TV1(33),PILOG1(33)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(33),T1(33),QV1(33),QC1(33)
+      REAL (KIND=dbl_kind) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
+      REAL (KIND=dbl_kind) :: PQ1(20),P1(21),T1(21),QV1(21),QC1(21)
       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
               ,111.3,92.6/
-      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0 &
-               ,775.0,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0 &
-               ,350.0,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0 &
-               ,70.0,50.0,30.0,20.0,10.0,7.0/
-      DATA T1/281.7,261.4,243.0,232.8,220.5,206.9,192.8,179.5,167.8,&
-              156.5,145.0,118.4,83.4,37.9,0.2,-32.8,-78.3,-132.6,&
-              -194.9,-275.9,-378.5,-438.5,-502.7,-573.8,-645.4,-714.3,&
-              -764.8,-728.1,-650.5,-560.5,-515.1,-422.4,-384.0/
-      DATA QV1/200.6,200.2,189.3,169.8,160.3,151.3,142.3,132.9,124.3,&
-               115.7,108.2,93.6,76.1,62.0,51.4,43.5,34.8,26.4,17.0,&
-               8.1,3.7,2.6,1.8,0.9,0.4,0.2,7*0.0/
-      DATA QC1/33*0./
+      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
+             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
+             ,133.6,111.3,92.6/
+      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
+             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
+             ,-726.4,-755.8,-749.0/
+      DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
+              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
+      DATA QC1/21*0./
 
       REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
       DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
@@ -320,6 +317,44 @@ CONTAINS
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       vG(:)   = 0.
+
+      DO 250 K = 1, NK3
+      IF (ZT(K) .LT. 3000.) THEN
+        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
+      ELSEIF (ZT(K) .LT. 8000.) THEN
+        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
+      ELSEIF (ZT(K) .LT. 13000.) THEN
+        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
+      ELSE
+        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
+      ENDIF
+!Temperature + 2 K
+         if (zt(k) < 10000.) then
+            thbar(k)=thbar(k) + 2.
+         endif
+
+      T(K) = THBAR(K) * PIBAR(K)
+      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
+      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
+      IF (T(K) .LE. 233.15) THEN
+        ES1 = ESI
+      ELSE IF (T(K) .LT. 273.15) THEN
+        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
+      ELSE
+        ES1 = ESW
+      ENDIF
+      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
+!CCCCCCCCCCCCCCCCCC
+      IF (ZT(K) .LE. 1500) THEN
+        H(K) = 0.82
+      ELSE IF (ZT(K) .LE. 12000) THEN
+        H(K) = (ZT(K)-8000)**2/132031250.+0.5
+      ELSE
+        H(K) = 0.50
+      END IF
+!CCCCCCCCCCCCCCCCCC
+      QVBAR(K) = H(K) * QVSBAR(K)
+  250 CONTINUE
 
 !     OCEAN POINTS
 
