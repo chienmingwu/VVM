@@ -328,10 +328,6 @@ CONTAINS
       ELSE
         THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
       ENDIF
-!Temperature + 2 K
-         if (zt(k) < 10000.) then
-            thbar(k)=thbar(k) + 2.
-         endif
 
       T(K) = THBAR(K) * PIBAR(K)
       ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
@@ -362,7 +358,7 @@ CONTAINS
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
-      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))
+      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
