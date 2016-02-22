@@ -149,7 +149,7 @@ KSP sksp_Conti(2*nlevel-1),sksp_topChi(2*nlevel-1),sksp_topPsi(2*nlevel-1)
 Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
-PetscInt, PRIVATE:: MXIT = 1000
+PetscInt, PRIVATE:: MXIT = 2000
 PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
 PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-6,dtol_TopPsi = 1.d2
 PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-6,dtol_TopChi = 1.d2
@@ -495,7 +495,7 @@ PetscReal norm
       call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
 
       call vecsum(rhs,vsum,ierr)
-      call vecshift(rhs,vsum*tpts, ierr)
+!      call vecshift(rhs,vsum*tpts, ierr)
 
       call KSPSetFromOptions(Toppsi,ierr)
       call KSPSolve(Toppsi,rhs,v1,ierr)
@@ -508,7 +508,7 @@ PetscReal norm
  100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
 
       call vecsum(v1,vsum,ierr)
-!      call vecshift(v1,vsum*tpts, ierr)
+      call vecshift(v1,vsum*tpts, ierr)
 
       call DMGlobalToLocalBegin(da2(1),v1,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da2(1),v1,INSERT_VALUES,vl,ierr)
@@ -547,7 +547,7 @@ PetscReal norm
       call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
 
       call vecsum(rhs,vsum,ierr)
-      call vecshift(rhs,vsum*tpts, ierr)
+!      call vecshift(rhs,vsum*tpts, ierr)
 
       call KSPSetFromOptions(Topchi,ierr)
 
@@ -561,7 +561,7 @@ PetscReal norm
  100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
 
       call vecsum(v2,vsum,ierr)
-!      call vecshift(v2,vsum*tpts,ierr)
+      call vecshift(v2,vsum*tpts,ierr)
 
       call DMGlobalToLocalBegin(da2(1),v2,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da2(1),v2,INSERT_VALUES,vl,ierr)

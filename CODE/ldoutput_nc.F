@@ -911,6 +911,7 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
+      std_lsm = 0.
    endif
 
    dtfac = PASS_SMALL_DT / DT 
@@ -1073,6 +1074,7 @@ CONTAINS
 !      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
 !========
  1227 CONTINUE
+
 #endif
 #endif
 
