@@ -172,10 +172,12 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       DO 500 I = 1,MI_GLOB
 
       if (I .gt. 256 .and. I .lt. 512)
-     1 hx(i,j) = INT(max((-(abs(384-real(I)))/256+.125)/.125*10,0.))+1
+     1 hx(i,j) = INT(max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))+1
+
+      if (I .gt. 128 .and. I .lt. 641)  hx(I,J) = max(hx(I,J), 2)
+
+
   500 CONTINUE
-
-
 
       ENDIF
 

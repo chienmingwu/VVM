@@ -591,6 +591,7 @@ CONTAINS
 
 
 !easy define surface temperature and albedo over water surface. 
+!note that TG must equal to lT1 in order to compute the sflux_2d i
    DO J=1,MJ1
    DO I=1,MI1
 
@@ -598,7 +599,7 @@ CONTAINS
    IF (INT(HX(I,J)) .eq. 1) THEN
    lT1(I,J) = SST
    ELSE
-   lT1(I,J) = thbar(hx(I,J))*pibar(INT(hx(I,J))
+   lT1(I,J) = thbar(hx(I,J))*pibar(INT(hx(I,J)))
    ENDIF
    albdo(I,J) = .3
    ENDIF
