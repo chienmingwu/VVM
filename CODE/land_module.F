@@ -141,8 +141,6 @@ CONTAINS
 
   200 CONTINUE
 
-
-
 #endif
 
    END SUBROUTINE land_interface
