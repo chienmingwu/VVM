@@ -495,7 +495,7 @@ PetscReal norm
       call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
 
       call vecsum(rhs,vsum,ierr)
-!      call vecshift(rhs,vsum*tpts, ierr)
+      call vecshift(rhs,vsum*tpts, ierr)
 
       call KSPSetFromOptions(Toppsi,ierr)
       call KSPSolve(Toppsi,rhs,v1,ierr)
@@ -547,7 +547,7 @@ PetscReal norm
       call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
 
       call vecsum(rhs,vsum,ierr)
-!      call vecshift(rhs,vsum*tpts, ierr)
+      call vecshift(rhs,vsum*tpts, ierr)
 
       call KSPSetFromOptions(Topchi,ierr)
 

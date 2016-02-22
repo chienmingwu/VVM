@@ -915,7 +915,6 @@ CONTAINS
 
    dtfac = PASS_SMALL_DT / DT 
 
-
 ! accumulate physical variables all timesteps (except twp-ice case)
    SELECT CASE (TRIM(casename))
    CASE('TWP-ICE')

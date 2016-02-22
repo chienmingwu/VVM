@@ -156,6 +156,8 @@ PROGRAM ldmain
 
     CALL TIME_MANAGER(ITT)
 
+    PASS_SMALL_DT = DT
+
     CALL AB_3D ( N1, N2, ITT )
     call timer_start('output')
 

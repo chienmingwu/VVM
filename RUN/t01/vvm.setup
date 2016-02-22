@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = shadow
+set expname = shadow1
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -69,10 +69,10 @@ sed -e '1,$s/zonal_dimension/768/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=17280 /
+ &INPUT1 NEWRUN=T, ITTADD=360 /
  &INPUT2 RLAT=0./
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=200.,DZ1=200.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=6,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
+ &INPUT4 NXS=1,NXSAVG=12,NWR11=1,NFLPRT=1,NRESTART=12 /
  &INPUT5 IX=3182073,ITINIT=8650,ITSTOP=8650,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
 'END6'
 cat INPUT
