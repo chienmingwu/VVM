@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = p40
+set expname = p00
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -44,6 +44,8 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define PARALLELIO
 #define TOPOGRAPHY
+#define RADCODE
+#define LSM
 'END1'
 cat definesld.com
 
@@ -52,9 +54,9 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/512/' \
+sed -e '1,$s/zonal_dimension/768/' \
     -e '1,$s/merid_dimension/32/' \
-    -e '1,$s/zonal_decomposition/8/' \
+    -e '1,$s/zonal_decomposition/12/' \
     -e '1,$s/merid_decomposition/2/' \
     -e '1,$s/vert_dimension/100/' \
     -e '1,$s/tracer_dimension/0/' \

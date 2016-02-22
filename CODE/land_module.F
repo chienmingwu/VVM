@@ -402,7 +402,7 @@ CONTAINS
       itmp = ni_sbdm*MI1+I
       jtmp = nj_sbdm*MJ1+J
 
-      if (itmp .gt. 32 .and. itmp .lt. 97 .and. jtmp .gt. 32 .and. jtmp .lt. 97) then
+      if (itmp .gt. 129 .and. itmp .lt. 641) then
       LU(I,J) = 7
       SOIL(I,J) = 1
       SLOPE(I,J) = 1
@@ -508,7 +508,7 @@ CONTAINS
          ZL(I,J)          = .5*DZ/FNT(hx(I,J)+1)
          P2(I,J)          = PBAR(hxp)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
-         lT1(I,J)         = thbar(hx(I,J))*pibar(hx(I,J))
+         lT1(I,J)         = thbar(hx(I,J))*pibar(INT(hx(I,J)))
          lST(I,J,1)       = 297.0995
          lST(I,J,2)       = 298.0445
          lST(I,J,3)       = 297.8954
@@ -588,6 +588,23 @@ CONTAINS
 
    albdo = lALBEDO
    sstxy = lT1
+
+
+!easy define surface temperature and albedo over water surface. 
+   DO J=1,MJ1
+   DO I=1,MI1
+
+   IF (LU(I,J) .eq. 16) THEN
+   IF (INT(HX(I,J)) .eq. 1) THEN
+   lT1(I,J) = SST
+   ELSE
+   lT1(I,J) = thbar(hx(I,J))*pibar(INT(hx(I,J))
+   ENDIF
+   albdo(I,J) = .3
+   ENDIF
+
+   ENDDO
+   ENDDO
 
 #endif
 
