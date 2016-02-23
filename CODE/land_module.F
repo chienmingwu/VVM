@@ -385,7 +385,7 @@ CONTAINS
          lSNEQV      = -9.9999996E+35
          lALBEDO     = -9.9999996E+35
          lCH         = -9.9999996E+35
-         lETA        = -9.9999996E+35
+         lETA        = realval!-9.9999996E+35
          lFDOWN      = -9.9999996E+35
          lEC         = -9.9999996E+35
          lEDIR       = -9.9999996E+35
