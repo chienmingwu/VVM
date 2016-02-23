@@ -6,6 +6,7 @@ USE parmsld
 USE constld
 USE domain_decomposition
 USE rrtm_vars, only: sstxy,albdo
+USE OUTPUT_NC, only: realval
 !===hchun=================================
 USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
@@ -140,8 +141,6 @@ CONTAINS
 !      if (J .eq. 10 .and. I .eq. 10) PRINT*,WT(I,J),WQ(I,J),VNE2D(I,J)
 
   200 CONTINUE
-
-
 
 #endif
 
@@ -350,7 +349,7 @@ CONTAINS
          ZL(I,J)          = .5*DZ/FNT(hx(I,J)+1)
          P2(I,J)          = PBAR(hxp)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
-         lT1(I,J)         = thbar(hx(I,J))*pibar(hx(I,J))
+         lT1(I,J)         = thbar(hx(I,J))*pibar(INT(hx(I,J)))
          lST(I,J,1)       = 297.0995
          lST(I,J,2)       = 298.0445
          lST(I,J,3)       = 297.8954
@@ -386,7 +385,7 @@ CONTAINS
          lSNEQV      = -9.9999996E+35
          lALBEDO     = -9.9999996E+35
          lCH         = -9.9999996E+35
-         lETA        = -9.9999996E+35
+         lETA        = realval!-9.9999996E+35
          lFDOWN      = -9.9999996E+35
          lEC         = -9.9999996E+35
          lEDIR       = -9.9999996E+35
@@ -430,6 +429,23 @@ CONTAINS
 
    albdo = lALBEDO
    sstxy = lT1
+
+!easy define surface temperature and albedo over water surface.
+!note that TG must equal to lT1 in order to compute the sflux_2d i
+   DO J=1,MJ1
+   DO I=1,MI1
+
+   IF (LU(I,J) .eq. 16) THEN
+   IF (INT(HX(I,J)) .eq. 1) THEN
+   lT1(I,J) = SST
+   ELSE
+   lT1(I,J) = thbar(hx(I,J))*pibar(INT(hx(I,J)))
+   ENDIF
+   albdo(I,J) = .3
+   ENDIF
+
+   ENDDO
+   ENDDO
 
 #endif
 

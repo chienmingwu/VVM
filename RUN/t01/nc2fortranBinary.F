@@ -170,7 +170,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
-
       OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
       READ(15,*) xt
       CLOSE(15)
@@ -181,7 +180,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
       READ(15,*) alb
       CLOSE(15)
-
+    
       OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
       READ(15,*) grf
       CLOSE(15)
@@ -229,6 +228,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ENDDO
       ENDDO
 
+
+
       ENDIF
 
       NP = 0
@@ -261,12 +262,12 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)')
      1 'RUNDATA/LSM',IP,'_',JP,'.dat'
       OPEN(unit=16,file=FILENAME,form='unformatted')
-      WRITE(16) ((REAL(alb(I,J)),I=II,IE),J=JI,JE) 
-      WRITE(16) ((REAL(grf(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((REAL(lai(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((alb(I,J)),I=II,IE),J=JI,JE) 
+      WRITE(16) (((grf(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((lai(I,J)),I=II,IE),J=JI,JE)
       WRITE(16) ((INT(lu(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((REAL(shdmax(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((REAL(shdmin(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((shdmax(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((shdmin(I,J)),I=II,IE),J=JI,JE)
       WRITE(16) ((INT(slope(I,J)),I=II,IE),J=JI,JE)
       WRITE(16) ((INT(soil(I,J)),I=II,IE),J=JI,JE)
       CLOSE(16)

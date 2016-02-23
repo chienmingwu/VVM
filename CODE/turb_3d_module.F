@@ -883,8 +883,6 @@ CONTAINS
       T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)    &
              -(HLF+HLM)*QI3D(I,J,hxp)
 
-!      if (my_task .eq. 0 .and. (J .eq. 10 .and. I .eq. 10)) &
-!      PRINT*,CP,TH3D(I,J,hxp)
       TD(I,J) = TS-T 
       QD(I,J) = ABS(GWET(I,J))*(QSFC-Q)
       THVSMD(I,J) = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
@@ -930,8 +928,6 @@ CONTAINS
       ENDIF
 
       VEN2D(I,J) = VENTFC(1)
-!      if (my_task .eq. 0 .and. (J .eq. 10 .and. I .eq. 10)) &
-!      PRINT*,CP,TH3D(I,J,hxp)
 
 !PRINT*,TS,T,WQ(I,J),VEN2D(I,J)
 
