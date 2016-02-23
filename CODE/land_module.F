@@ -142,7 +142,6 @@ CONTAINS
 
   200 CONTINUE
 
-
 #endif
 
    END SUBROUTINE land_interface
@@ -350,7 +349,7 @@ CONTAINS
          ZL(I,J)          = .5*DZ/FNT(hx(I,J)+1)
          P2(I,J)          = PBAR(hxp)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
-         lT1(I,J)         = thbar(hx(I,J))*pibar(hx(I,J))
+         lT1(I,J)         = thbar(hx(I,J))*pibar(INT(hx(I,J)))
          lST(I,J,1)       = 297.0995
          lST(I,J,2)       = 298.0445
          lST(I,J,3)       = 297.8954
@@ -447,7 +446,6 @@ CONTAINS
 
    ENDDO
    ENDDO
-
 
 #endif
 

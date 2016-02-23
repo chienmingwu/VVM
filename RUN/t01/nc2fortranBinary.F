@@ -170,7 +170,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
-
       OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
       READ(15,*) xt
       CLOSE(15)
@@ -181,7 +180,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
       READ(15,*) alb
       CLOSE(15)
-
+    
       OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
       READ(15,*) grf
       CLOSE(15)
@@ -228,6 +227,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ENDDO
       ENDDO
+
+
 
       ENDIF
 
