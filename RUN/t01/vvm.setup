@@ -71,7 +71,7 @@ sed -e '1,$s/zonal_dimension/768/' \
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=17280 /
  &INPUT2 RLAT=0./
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=200.,DZ1=200.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=200.,DZ1=200.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=12,NWR11=1,NFLPRT=1,NRESTART=12 /
  &INPUT5 IX=3182073,ITINIT=17290,ITSTOP=17290,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
 'END6'
@@ -94,7 +94,7 @@ cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
-./nc2fortranBinary
+./nc2fortranBinary > tmp.out
 
 
 # GLDAS

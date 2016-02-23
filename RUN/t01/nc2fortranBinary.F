@@ -40,9 +40,10 @@
       INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT
  
 
-      REAL alb(1024,1024), grf(1024,1024), hgt(1024,1024), 
-     1 lai(1024,1024), lu(1024,1024), shdmax(1024,1024), 
-     1 shdmin(1024,1024), slope(1024,1024), soil(1024,1024)
+      REAL alb(MI_glob,MJ_glob), grf(MI_glob,MJ_glob),
+     1  hgt(MI_glob,MJ_glob), lai(MI_glob,MJ_glob), lu(MI_glob,MJ_glob),
+     1  shdmax(MI_glob,MJ_glob), shdmin(MI_glob,MJ_glob), 
+     1  slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
       REAL*8 ZZ(NK3)      
@@ -174,13 +175,11 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       DO 500 J = 1,MJ_GLOB
       DO 500 I = 1,MI_GLOB
 
-      xt(I) = I * DX
-      yt(I) = J * DYNEW
+!      xt(I) = I * DX
+!      yt(I) = J * DYNEW
 
-      if (I .gt. 256 .and. I .lt. 512) 
-     1 hx(i,j) = INT(max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))+1
- 
       if (I .gt. 128 .and. I .lt. 641) then
+      hx(i,j) = INT(max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))+1
       hx(I,J) = max(hx(I,J), 2.)
       LU(I,J) = 7
       alb(I,J) = 19.
@@ -202,8 +201,18 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SOIL(I,J) = 1 
       endif
      
-
+     
   500 CONTINUE
+
+
+      DO 600 I = 1, MI_GLOB
+  600 XT (I) = I*DX
+
+      DO 700 J = 1,MJ_GLOB
+  700 YT (J) = J*DYNEW
+
+
+
 
       ENDIF
 
