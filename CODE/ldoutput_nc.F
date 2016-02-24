@@ -868,6 +868,9 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k, nt    ! do loop indices for zonal, meridional, vertical 
                         ! and tracer dimensions
+#if defined (LSM) 
+      INTEGER (KIND=int_kind) :: ivar ! index for LSM masking out
+#endif
       INTEGER (KIND=int_kind)     ::   &
          n2, &
          itp1, itp5  ! logical unit numbers
@@ -911,10 +914,12 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
+#if defined (LSM)
+      std_lsm = 0.
+#endif
    endif
 
    dtfac = PASS_SMALL_DT / DT 
-
 
 ! accumulate physical variables all timesteps (except twp-ice case)
    SELECT CASE (TRIM(casename))
@@ -1008,6 +1013,8 @@ CONTAINS
       DO 1227 J=1,mj1
       DO 1227 I=1,mi1
 !===hchun
+! easy, only average points that apply lsm
+      if (LU(I,J) .NE. 16) THEN
       STD_LSM(I,J,1)=STD_LSM(I,J,1)+lEMISSI(I,J)   *  dtfac 
       STD_LSM(I,J,2)=STD_LSM(I,J,2)+lCMC(I,J)      *  dtfac 
       STD_LSM(I,J,3)=STD_LSM(I,J,3)+lT1(I,J)       *  dtfac 
@@ -1073,7 +1080,9 @@ CONTAINS
 !      STD_LSM(I,J,63)=STD_LSM(I,J,63)+lNROOT(I,J)
 !      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
 !========
+      ENDIF
  1227 CONTINUE
+
 #endif
 #endif
 
@@ -1134,6 +1143,16 @@ CONTAINS
       out_tm9 = out_tm9 * fac
 #if defined (LSM)
       std_lsm = std_lsm * fac
+! easy, mask out the water points
+      DO J = 1,MJ1
+      DO I = 1,MI1
+      IF (LU(I,J) .EQ. 16) THEN
+      DO IVAR = 1, IVAR10
+      std_lsm(I,J,IVAR) = realval
+      ENDDO
+      ENDIF
+      ENDDO
+      ENDDO
 #endif
    END SELECT
 #endif

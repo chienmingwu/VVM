@@ -118,7 +118,7 @@ USE petscdmda
 
 IMPLICIT NONE
 PRIVATE
-PetscInt, PARAMETER, PRIVATE:: nlevel = 4, nlv = nlevel-1
+PetscInt, PARAMETER, PRIVATE:: nlevel = 6, nlv = nlevel-1
 PetscInt, PRIVATE:: i,j,k,kt,npt,np
 PetscInt, PRIVATE:: ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
 PetscInt, PRIVATE:: ctx3,ctx2
@@ -149,7 +149,7 @@ KSP sksp_Conti(2*nlevel-1),sksp_topChi(2*nlevel-1),sksp_topPsi(2*nlevel-1)
 Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
-PetscInt, PRIVATE:: MXIT = 1000
+PetscInt, PRIVATE:: MXIT = 2000
 PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
 PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-6,dtol_TopPsi = 1.d2
 PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-6,dtol_TopChi = 1.d2
@@ -499,18 +499,18 @@ PetscReal norm
       call vecsum(rhs,vsum,ierr)
       call vecshift(rhs,vsum*tpts, ierr)
 
-!      call KSPSetFromOptions(Toppsi,ierr)
+      call KSPSetFromOptions(Toppsi,ierr)
       call KSPSolve(Toppsi,rhs,v1,ierr)
 
       IF ( MY_TASK .EQ. 0) THEN
       call KSPGetIterationNumber(Toppsi,its,ierr)
       call KSPGetResidualNorm(Toppsi,norm,ierr)
-      write(6,100) norm,its
+      write(6,100) norm,its,vsum
       ENDIF
- 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+ 100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
 
       call vecsum(v1,vsum,ierr)
-      call vecshift(v1,vsum*tpts, ierr)
+!      call vecshift(v1,vsum*tpts, ierr)
 
       call DMGlobalToLocalBegin(da2(1),v1,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da2(1),v1,INSERT_VALUES,vl,ierr)
@@ -551,19 +551,19 @@ PetscReal norm
       call vecsum(rhs,vsum,ierr)
       call vecshift(rhs,vsum*tpts, ierr)
 
-!      call KSPSetFromOptions(Topchi,ierr)
+      call KSPSetFromOptions(Topchi,ierr)
 
       call KSPSolve(Topchi,rhs,v2,ierr)
 
       IF ( MY_TASK .EQ. 0) THEN
       call KSPGetIterationNumber(Topchi,its,ierr)
       call KSPGetResidualNorm(Topchi,norm,ierr)
-      write(6,100) norm,its
+      write(6,100) norm,its,vsum
       ENDIF
- 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+ 100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
 
       call vecsum(v2,vsum,ierr)
-      call vecshift(v2,vsum*tpts,ierr)
+!      call vecshift(v2,vsum*tpts,ierr)
 
       call DMGlobalToLocalBegin(da2(1),v2,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da2(1),v2,INSERT_VALUES,vl,ierr)

@@ -49,7 +49,7 @@ CONTAINS
          scaleq=0._dbl_kind, & !
          rkappa,             &
          rkappai,            &
-         gamfac, a0, z00, xr, yr, zr, dist,tmp
+         gamfac, a0, z00, xr, yr, zr, dist,tmp,ESW,ESI
       REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
       REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
@@ -325,7 +325,7 @@ CONTAINS
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
-      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))
+      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
@@ -432,7 +432,7 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=0.
+      U3DX(I,J,K)=1.
       U3DY(I,J,K)=0.
   610 CONTINUE
 
@@ -441,6 +441,8 @@ CONTAINS
       DO 660 I = 1, MI1
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
+      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
+                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
 
 
@@ -488,11 +490,10 @@ CONTAINS
       VTMN0 = VTMN
       
       IF(itt == 0) CALL UPDATE_TRACER_init
- 
-#if defined (RADCODE) 
+#if defined (RADCODE)
+  
       albdo = 0.30
-#endif
-   
+#endif    
 #if defined (DIFFUSION)
       call turb_3d_ini
 #endif
