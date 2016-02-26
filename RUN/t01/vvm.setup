@@ -94,7 +94,7 @@ cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
-./nc2fortranBinary
+./nc2fortranBinary > tmp.out
 
 
 # GLDAS

@@ -40,9 +40,10 @@
       INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT
  
 
-      REAL alb(1024,1024), grf(1024,1024), hgt(1024,1024), 
-     1 lai(1024,1024), lu(1024,1024), shdmax(1024,1024), 
-     1 shdmin(1024,1024), slope(1024,1024), soil(1024,1024)
+      REAL alb(MI_glob,MJ_glob), grf(MI_glob,MJ_glob),
+     1  hgt(MI_glob,MJ_glob), lai(MI_glob,MJ_glob), lu(MI_glob,MJ_glob),
+     1  shdmax(MI_glob,MJ_glob), shdmin(MI_glob,MJ_glob), 
+     1  slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
       REAL*8 ZZ(NK3)      
@@ -227,8 +228,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ENDDO
       ENDDO
-
-
 
       ENDIF
 
