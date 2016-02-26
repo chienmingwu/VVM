@@ -819,12 +819,16 @@ CONTAINS
          SPEEDTP(MI1,MJ1),       & ! surface spd flux input for LSM/SFLUX_2
          QG(MI1,MJ1),            & ! surface qv flux input for LSM/SFLUX_2
          T2(MI1,MJ1),            & ! second lv tmperature for LSM
-         swD(MI1,MJ1),           & ! surface short wave flux input for LSM
-         lwD(MI1,MJ1),           & ! surface long wave flux input fof LSM
          TD(MI1,MJ1),            &
          QD(MI1,MJ1),            &
          THVSMD(MI1,MJ1),        &
          VEN2D(mim:mip,mjm:mjp)    ! surface spd factor output fof LSM
+
+      REAL (KIND=int_kind) ::    &
+         swD(MI1,MJ1),           & ! surface short wave flux input for LSM
+         lwD(MI1,MJ1)             ! surface long wave flux input fof LSM
+
+
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
          q,       & !

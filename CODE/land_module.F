@@ -64,30 +64,28 @@ CONTAINS
       REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(IN) ::    &
          T2,            &
          Q2,            &
-         swD,           &
-         lwD,           &
          SPREC,         &
          SFCSPD,        &
          TD,            &
          QD,            &
          THVSMD 
 
-      REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(OUT) ::    &
+      REAL (KIND=int_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::   & 
+         swD,           &
+         lwD
+
+      REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::    &
          WT,            &
          WQ            
         
-      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(OUT) ::    &
+      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(INOUT) ::    &
          VNE2D
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(IN) ::    &
          ZROUGH,tg
 
-
-
       REAL (KIND=int_kind), DIMENSION(MI1,MJ1) ::    &
          T2i,            &
          Q2i,            &
-         swDi,           &
-         lwDi,           &
          SPRECi,         &
          WTi,            &
          WQi,            &
@@ -101,12 +99,10 @@ CONTAINS
       
       T2i = real(T2)
       Q2i = real(Q2)            
-      swDi = real(swD) 
-      lwDi = real(lwD)
       SPRECi = real(SPREC)
       SFCSPDi =real(SFCSPD)
 
-      CALL LSM_DRV(SFCSPDi,T2i,Q2i,swDi,lwDi,SPRECi,WQi,WTi, &
+      CALL LSM_DRV(SFCSPDi,T2i,Q2i,swD,lwD,SPRECi,WQi,WTi, &
 ! LSM inout variables
            lCM,lST,lSM,lSL,lEMISSI,lCMC,lT1,lSNOWH,lSNEQV,&
            lALBEDO,lCH,lETA,lFDOWN,lEC,lEDIR,lET,lETT,lESNOW,lDRIP,&
