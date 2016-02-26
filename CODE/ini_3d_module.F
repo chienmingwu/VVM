@@ -125,6 +125,9 @@ CONTAINS
       T1(K) =  T1(K) * 1.E-01 + 273.16
       QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
+!ccwu stable env.
+      T1(7:21)=T1(7:21)+10.
+      QV1(7:21)=QV1(7:21)*0.5
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -431,7 +434,7 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=1.
+      U3DX(I,J,K)=3.
       U3DY(I,J,K)=0.
   610 CONTINUE
 
