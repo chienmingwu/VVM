@@ -6,7 +6,6 @@ USE parmsld
 USE constld
 USE domain_decomposition
 USE rrtm_vars, only: sstxy,albdo
-USE OUTPUT_NC, only: realval
 !===hchun=================================
 USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
@@ -381,7 +380,7 @@ CONTAINS
          lSNEQV      = -9.9999996E+35
          lALBEDO     = -9.9999996E+35
          lCH         = -9.9999996E+35
-         lETA        = realval!-9.9999996E+35
+         lETA        = -9.9999996E+35
          lFDOWN      = -9.9999996E+35
          lEC         = -9.9999996E+35
          lEDIR       = -9.9999996E+35
