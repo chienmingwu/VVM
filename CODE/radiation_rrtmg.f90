@@ -1,6 +1,6 @@
 #include "definesld.com"
-SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, DYNEW, &
-                            RLAT, RLON, DT, ZZ, ZT, RHO)
+SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
+                            DYNEW, RLAT, RLON, DT, ZZ, ZT, RHO)
 
 !------------------------------------------------------------------
 !  This is the interface code between the Vector Vorticity Model
@@ -39,7 +39,6 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, DYNEW, &
       INTEGER (KIND=int_kind), INTENT(IN) :: &
           ITT, &    ! Current dynamic time step
           NRADD     ! Interval in time steps to calculate radiation
-
       REAL (KIND=dbl_kind), INTENT(IN) :: &
           DX, &     ! Grid spacing in x-direction
           DYNEW, &  ! Grid spacing in y-direction (m)
@@ -74,8 +73,8 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, DYNEW, &
 
       INTEGER (KIND=int_kind) :: &
           I,J,K,m, &
-          KRAD
-
+          KRAD,    &
+          CU_ITT = -1 ! Mars add to prevent too much rad
       REAL (KIND=dbl_kind), PARAMETER :: &
           p0_sfc = 1.0E+05_dbl_kind, &  ! Reference surface pressure (Pa)
           gas_const_R = 287.000_dbl_kind, &
@@ -258,8 +257,9 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, DYNEW, &
    50 CONTINUE
    
 !======================================================================
-      IF ((itt .EQ. 1) .OR. mod(itt,nrad)==1 ) THEN
+      IF ((itt .EQ. 1) .OR. ( (mod(itt,nrad)==1) .AND. (CU_ITT .NE. ITT) )) THEN
       
+        CU_ITT = ITT 
         if(masterproc) PRINT*, 'RRTMG radiation is called'
 
 ! Start timer

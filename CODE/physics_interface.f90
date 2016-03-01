@@ -25,10 +25,9 @@
       USE physics_tendencies
       USE turb_surflx_variables, only: dz_mean, thetaS
 !      USE rad_variables_tendencies
-      
       USE rrtm_params, only: latitude, longitude
       USE rrtm_grid, only: day, day0, iyear
-      USE rrtm_vars, only: sstxy
+      USE rrtm_vars, only: sstxy,albdo
       USE profoutld
       USE radoutld
       USE const3d
@@ -81,7 +80,7 @@
           A,B, qb4, qafter, hb4, hafter
 
       INTEGER (KIND=int_kind) :: &
-          i,j,k,L
+          i,j,k,L      ! add by mars for not calling too much rad
           
       LOGICAL (KIND=log_kind), SAVE :: &
           first_physics, first_rad
@@ -168,8 +167,9 @@
 !-----------------------------------------------------------------------
 ! Sea surface temperature for radiation
 !-----------------------------------------------------------------------
+#if !defined (LSM)
       sstxy(:,:) = tg(:,:)
-
+#endif
 !-----------------------------------------------------------------------
 ! Sanity check
 !-----------------------------------------------------------------------
@@ -232,9 +232,8 @@
       call timer_start('radiation')
       first_rad = .FALSE.
 
-      CALL RADIATION_RRTMG(ITT, NRADD, SSTxy, PBAR, PIBAR, DX, DYNEW, &
-                            RLAT, RLON, DT, ZZ, ZT, RHO)
-
+      CALL RADIATION_RRTMG(ITT, NRADD, SSTxy, PBAR, PIBAR, DX, &
+                           DYNEW, RLAT, RLON, DT, ZZ, ZT, RHO)
 ! Update theta tendency term for TWP-ICE output
       DO 230 K=2,NK2
       DO 230 J=1,MJ1
@@ -321,7 +320,7 @@
 !ccwu for total prec(rain+snow+graupel)
 !        SPREC(I,J)  = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
          hxp=INT(hx(I,J))
-        SPREC(I,J) =VTR_int(I,hxp)+VTS_int(I,hxp)+VTG_int(I,hxp)
+        SPREC(I,J) =  VTR_int(I,hxp)+VTS_int(I,hxp)+VTG_int(I,hxp)
 !
         PREC25(I,J) = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
   200 CONTINUE

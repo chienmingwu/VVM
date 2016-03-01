@@ -34,7 +34,6 @@ CONTAINS
 ! local variables
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
-
 ! Update theta from dynamics tendency term
       DO 50 K = 2, NK2
       DO 50 J = 1, MJ1
@@ -44,8 +43,7 @@ CONTAINS
    50 CONTINUE
 
 !ccwut set physics variables on topo to zero
-      IF (.true.) then
-      DO K = 1, maxtopo
+      DO K = 2, maxtopo
       DO J = 1, MJ1
       DO I = 1, MI1
       IF(ITYPEW(I,J,K) .NE. 1) THEN
@@ -54,7 +52,6 @@ CONTAINS
       ENDDO
       ENDDO
       ENDDO
-      ENDIF
 !ccwut
 
 #if defined (PHYSICS)
@@ -138,28 +135,16 @@ CONTAINS
       DO I = 1, MI1
       IF(ITYPEW(I,J,K) .NE. 1) THEN
       TH3D(I,J,K) = THBAR(K)
-      IF (K .EQ. INT(HX(I,J)) ) THEN
-      QV3D(I,J,K) = QV3D(I,J,K+1)!QVBAR(K)
-      QR3D(I,J,K) = QR3D(I,J,K+1)
-      QC3D(I,J,K) = QC3D(I,J,K+1)
-      QS3D(I,J,K) = QS3D(I,J,K+1)
-      QG3D(I,J,K) = QG3D(I,J,K+1)
-      ELSE
       QV3D(I,J,K) = 0.
-      QR3D(I,J,K) = 0.
       QC3D(I,J,K) = 0.
+      QR3D(I,J,K) = 0.
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.
-
-      ENDIF
       ENDIF
       ENDDO
       ENDDO
       ENDDO
-
 !ccwut
-
-!      call DIRECTIB_Q(QV3D,0.d0)
 
 
 #endif

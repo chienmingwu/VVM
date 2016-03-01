@@ -4,6 +4,7 @@ MODULE turb_1d_module
 USE kinds
 USE parmsld, nzt=>nk2
 use CONSTLD, von_Karman=>vk, lv=>hlf
+use workcom
 use bound
 
 IMPLICIT NONE
@@ -1836,12 +1837,12 @@ REAL (KIND=dbl_kind), INTENT(IN) :: w_thl_sfc, w_qt_sfc, u_star
 	ELSE
 		w_star = 0.0
     END IF
-	u_var(2,i,j) = (u_star*u_star) + 0.3*(w_star*w_star)
+    u_var(2,i,j) = (u_star*u_star) + 0.3*(w_star*w_star)
     v_var(2,i,j) = (u_star*u_star) + 0.3*(w_star*w_star)
     zeta = zw(2)/(-u_star*u_star*u_star/(von_Karman*g_alpha*w_thl_sfc))
         
     IF( zeta < 0.0) THEN
-		w_var(2,i,j) = (1.75 + 2*(-1*zeta)**(2/3.0))*(u_star*u_star)
+	w_var(2,i,j) = (1.75 + 2*(-1*zeta)**(2/3.0))*(u_star*u_star)
         zeta_term = (1.0 - 8.3*zeta)**(-2/3.0)
 		thl_var(2,i,j) = (4.0*zeta_term)/((u_star*u_star)/(w_thl_sfc*w_thl_sfc))
 	ELSE
@@ -1940,7 +1941,7 @@ END FUNCTION erf
 SUBROUTINE turb_1d_driver(th_model, qv_model, u_model, v_model, ql_model,  &
                           w_model, p_model, pi_model, itt,                 &
                           thl_sgs_tend,qv_sgs_tend,qc_sgs_tend,            &
-                          rain_accum, cldfrc)
+                          rain_accum, cldfrc, fztopb, fzxtb, fzytb)
 
 ! This subroutine subcycles the updating of quantities by SGS
 
@@ -1966,6 +1967,12 @@ SUBROUTINE turb_1d_driver(th_model, qv_model, u_model, v_model, ql_model,  &
       qv_sgs_tend,   &
       qc_sgs_tend
 
+   REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,1:nzt), intent(inout) ::       &
+      fzxtb,    &  ! tendency of x-component of vorticity due to turbulence (1/s/s)
+      fzytb        ! tendency of y-component of vorticity due to turbulence (1/s/s)
+   REAL (KIND=dbl_kind), DIMENSION(mi1,mj1), intent(inout) ::       & 
+      fztopb       ! tendency of z-component of vorticity due to turbulence (1/s/s)
+
    REAL(KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), intent(out) ::  &
       rain_accum
    REAL(KIND=dbl_kind), DIMENSION(mi1,mj1,1:nzt), intent(out) ::  &
@@ -1978,7 +1985,7 @@ SUBROUTINE turb_1d_driver(th_model, qv_model, u_model, v_model, ql_model,  &
    REAL(KIND=dbl_kind), DIMENSION(1:nzt+1,mim:mip,2) :: &
       u_var_tem, v_var_tem
 ! horizontal loop indices
-   INTEGER (KIND=int_kind) :: i,j, j0,jm1
+   INTEGER (KIND=int_kind) :: i,j,k, j0,jm1
    LOGICAL :: first_step
    
    first_step = itt==1
@@ -2094,6 +2101,18 @@ enddo
 ! update boundaries of model variables
       CALL BOUND_ARB (nzt,u_sgs_tend)
       CALL BOUND_ARB (nzt,v_sgs_tend)
+
+      fztopb(1:mi1,1:mj1) = (v_sgs_tend(1:mi1,1:mj1,nzt) - v_sgs_tend(0:mi1-1,1:mj1,nzt)) / dx - &
+                            (u_sgs_tend(1:mi1,1:mj1,nzt) - u_sgs_tend(1:mi1,0:mj1-1,nzt)) / dynew
+      do k = 2,nzt-1
+         fzxtb(1:mi1,1:mj1,k) = (v_sgs_tend(1:mi1,1:mj1,k) - v_sgs_tend(1:mi1,1:mj1,k+1))*FNT(K) /DZ
+         fzytb(1:mi1,1:mj1,k) = (u_sgs_tend(1:mi1,1:mj1,k) - u_sgs_tend(1:mi1,1:mj1,k+1))*FNT(K) /DZ
+      enddo
+
+      wth = w_thl_sfc
+      wqv = w_qt_sfc
+
+      PRINT*,cldfrc(10,10,20)
 
 END SUBROUTINE turb_1d_driver
 

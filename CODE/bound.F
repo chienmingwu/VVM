@@ -269,11 +269,11 @@ CONTAINS
           qs3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,6,2)
           qg3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,7,1)
           qg3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,7,2)
-#endif
           DO nt = 1,ntracer
             tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,7+nt,1)
             tc3d(mi1+i,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,7+nt,2)
           enddo  
+#endif
         enddo 
 
 ! unpack the corner buffer

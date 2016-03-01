@@ -13,10 +13,10 @@ USE z_coord
 USE domain_decomposition
 #if defined (DIFFUSION)
 USE TURB_3D_module
-#if defined (LSM)
-USE land_module
 #endif
-#endif
+#if defined (RADCODE)
+USE rrtm_vars, only: sstxy,albdo
+#endif 
 USE petscsys
 
 IMPLICIT NONE
@@ -48,7 +48,7 @@ CONTAINS
          scaleq=0._dbl_kind, & !
          rkappa,             &
          rkappai,            &
-         gamfac, a0, z00, xr, yr, zr, dist,tmp
+         gamfac, a0, z00, xr, yr, zr, dist,tmp,ESW,ESI
       REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
       REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
@@ -59,30 +59,25 @@ CONTAINS
 
       integer nu1, nt1, k1, k2, it
       logical lf
-      DATA NU1/33/,NT1/33/
+      DATA NU1/33/,NT1/21/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(33),PI1(33),TV1(33),PILOG1(33)
-      REAL (KIND=dbl_kind) :: PQ1(33),P1(33),T1(33),QV1(33),QC1(33)
-      DATA PQ1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0 &
-               ,775.0,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0 &
-               ,350.0,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0 &
-               ,70.0,50.0,30.0,20.0,10.0,7.0/
-      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0 &
-               ,775.0,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0 &
-               ,350.0,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0 &
-               ,70.0,50.0,30.0,20.0,10.0,7.0/
-      DATA T1/281.7,261.4,243.0,232.8,220.5,206.9,192.8,179.5,167.8,&
-              156.5,145.0,118.4,83.4,37.9,0.2,-32.8,-78.3,-132.6,&
-              -194.9,-275.9,-378.5,-438.5,-502.7,-573.8,-645.4,-714.3,&
-              -764.8,-728.1,-650.5,-560.5,-515.1,-422.4,-384.0/
-      DATA QV1/200.6,200.2,189.3,169.8,160.3,151.3,142.3,132.9,124.3,&
-               115.7,108.2,93.6,76.1,62.0,51.4,43.5,34.8,26.4,17.0,&
-               8.1,3.7,2.6,1.8,0.9,0.4,0.2,7*0.0/
-      DATA QC1/33*0./
-
+      REAL (KIND=dbl_kind) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
+      REAL (KIND=dbl_kind) :: PQ1(20),P1(21),T1(21),QV1(21),QC1(21)
+      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
+              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
+              ,111.3,92.6/
+      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
+             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
+             ,133.6,111.3,92.6/
+      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
+             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
+             ,-726.4,-755.8,-749.0/
+      DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
+              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
+      DATA QC1/21*0./
 
       REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
       DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
@@ -93,21 +88,17 @@ CONTAINS
 !     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
 !     PU1 (MB) , U1(M/S)
 
-      REAL (KIND=dbl_kind) ::  PU1(33),U1(33),V1(33)
-      DATA PU1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0 &
-               ,775.0,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0 &
-               ,350.0,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0 &
-               ,70.0,50.0,30.0,20.0,10.0,7.0/
-      DATA U1/   3.0,   3.4,   3.7,   3.6,   3.0,   2.5,   2.0,   1.7, &
-                 1.8,   1.8,   1.9,   2.1,   2.1,   1.9,   1.1,   0.1, &
-                -0.6,  -1.1,  -1.5,  -2.3,  -2.5,  -2.0,  -0.8,  -1.8, &
-                -6.1, -11.8, -18.7, -22.6, -16.7, -19.1, -23.0, -25.1, &
-               -28.0/
-      DATA V1/   1.1,   1.3,   1.3,   1.2,   1.1,   1.2,   1.4,   1.3, &
-                 1.0,   0.7,   0.3,  -0.3,  -0.7,  -1.7,  -2.9,  -3.1, &
-                -2.8,  -1.3,   1.1,   1.5,  -0.3,  -2.5,  -5.0,  -5.5, &
-                -6.2,  -7.5,  -8.7,  -5.7,   1.8,  -2.6,  -3.1,  -2.0, &    
-                -1.8/
+      REAL (KIND=dbl_kind) ::  PU1(33),U1(33)
+      DATA PU1/1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
+                858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
+                618.6, 581.3, 543.9, 506.8, 470.2, 434.1, 398.9,   &
+                364.6, 331.4, 299.4, 268.7, 239.5, 211.8, 185.8,   &
+                161.6, 139.4, 119.2, 101.4,  85.8 /
+      DATA U1/ -1.0,  -1.0,  -1.4,  -1.7,  -1.8,  -2.1,  -2.6,  -3.6,   &
+               -4.9,  -6.7,  -8.7, -10.6, -12.2, -13.2, -13.1, -12.0,   &
+               -9.7,  -6.6,  -3.2,  -0.3,   1.3,   1.3,   0.4,  -1.0,   &
+               -2.9,  -4.3,  -4.5,  -2.8,  -0.6,  -0.5,  -2.2,  -2.5,   &
+               -3.0 / 
 
       casename= 'GATE_PHASE_III'
 
@@ -121,9 +112,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-!      SST = T1(1) * 0.1 + 273.16 + DSST
-
-       SST = 303.
+      SST = T1(1) * 0.1 + 273.16 + DSST
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -133,8 +122,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * .1 +273.16
-      QV1(K)= QV1(K)*1e-4
+      T1(K) =  T1(K) * 1.E-01 + 273.16
+      QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -148,17 +137,18 @@ CONTAINS
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
+
       DO 120 K = 1, NT1
       T8  = T1(K)
       P8  = P1(K)
       QV8 = QV1(K)
       QC8 = 0.D0
       QI8 = 0.D0
+      if (my_task .eq. 0) print*, T8,P8,QV8,K
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
       QC1(K) = 0.
   120 CONTINUE
-
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
 !     UNITS ARE T : DEG K, QV : G/G.
@@ -167,6 +157,7 @@ CONTAINS
       PILOG1(K) = LOG ( PI1(K) )
       TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
   130 CONTINUE
+
 
       ZT1(1) = Zz(1)
 
@@ -248,6 +239,7 @@ CONTAINS
       IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
 
 
+
 !     PROFILES OF RHO, RHOz, AND GAMMA
 
       GAMFAC = HLF / CP
@@ -321,17 +313,44 @@ CONTAINS
       K1 = INDEXR(PBARMB,NU1,PU1,LF)
       K2 = K1 + 1
       UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-!===hchun
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-!========
   220 CONTINUE 
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
-!===hchun
-      VG(1)   = VG(2)
-      VG(NK3) = VG(NK2)
-!      vG(:)   = 0.
-!========
+      vG(:)   = 0.
+
+      DO 250 K = 1, NK3
+      IF (ZT(K) .LT. 3000.) THEN
+        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
+      ELSEIF (ZT(K) .LT. 8000.) THEN
+        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
+      ELSEIF (ZT(K) .LT. 13000.) THEN
+        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
+      ELSE
+        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
+      ENDIF
+
+      T(K) = THBAR(K) * PIBAR(K)
+      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
+      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
+      IF (T(K) .LE. 233.15) THEN
+        ES1 = ESI
+      ELSE IF (T(K) .LT. 273.15) THEN
+        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
+      ELSE
+        ES1 = ESW
+      ENDIF
+      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
+!CCCCCCCCCCCCCCCCCC
+      IF (ZT(K) .LE. 1500) THEN
+        H(K) = 0.82
+      ELSE IF (ZT(K) .LE. 12000) THEN
+        H(K) = (ZT(K)-8000)**2/132031250.+0.5
+      ELSE
+        H(K) = 0.50
+      END IF
+!CCCCCCCCCCCCCCCCCC
+      QVBAR(K) = H(K) * QVSBAR(K)
+  250 CONTINUE
 
 !     OCEAN POINTS
 
@@ -339,6 +358,7 @@ CONTAINS
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
+      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
@@ -347,12 +367,8 @@ CONTAINS
 
       WRITE(95,*) '************* INITIAL PROFILE ****************'
       WRITE(95,401)
-!===hchun
       WRITE(95,402) (ZT(K),PBAR(K),T(K),THBAR(K),QVBAR(K),UG(K),  &
-                     VG(K),K=2,NK2)
-!      WRITE(95,402) (ZT(K),PBAR(K),T(K),THBAR(K),QVBAR(K),UG(K),  &
-!                     K=2,NK2)
-!========
+                     K=2,NK2)
       WRITE(95,*) 
       WRITE(95,*) 
       WRITE(95,*) '************* LS FORCING **********************'
@@ -449,13 +465,8 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-!      U3DX(I,J,K)=5.
-!      U3DY(I,J,K)=0.
-!hchun
-!      U3DX(I,J,K)=-5.
-!      U3DY(I,J,K)=-5.
-      U3DX(I,J,K)=3.1
-      U3DY(I,J,K)=1.1
+      U3DX(I,J,K)=2.12
+      U3DY(I,J,K)=2.12
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -463,9 +474,8 @@ CONTAINS
       DO 660 I = 1, MI1
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
-      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW    &
+      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
                  -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
-
   660 CONTINUE
 
 
@@ -511,7 +521,15 @@ CONTAINS
       VTMN0 = VTMN
       
       IF(itt == 0) CALL UPDATE_TRACER_init
-      
+#if defined (RADCODE)
+  
+      albdo = 0.30
+#endif    
+#if defined (DIFFUSION)
+      call turb_3d_ini
+#endif
+
+ 
    END SUBROUTINE ini_3d
 
 
@@ -522,7 +540,7 @@ CONTAINS
       i,j,k,NN,midi,midj
       real(kind=int_kind) :: &
       twtopo(mi_glob,mj_glob) 
-      character(25) FILENAME,FILENAME2
+      character(25) FILENAME
 
       ITYPEU = 1
       ITYPEV = 1
@@ -531,7 +549,6 @@ CONTAINS
 #if defined (TOPOGRAPHY) 
 
 !      DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
-
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
 
@@ -590,17 +607,9 @@ CONTAINS
       ENDDO
       ENDDO
 
-
 #else
       hx=1
       maxtopo=2
-#endif
-
-#if defined (DIFFUSION)
-      call turb_3d_ini
-#if defined (LSM)
-      call land_ini
-#endif
 #endif
 
       ENDSUBROUTINE PTSPEC

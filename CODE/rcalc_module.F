@@ -45,10 +45,8 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-
       call timer_start('advection')
       CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
-
 #if defined (PHYSICS)
 
       CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
@@ -82,11 +80,9 @@ CONTAINS
       call timer_stop('advection')
 
       call timer_start('forcing')
-!ccwu      IF ( START .AND. ITT .LT. ITSTOP )   &
-!           CALL FORCE_3D (DTHMAX,DTPERT,Z1PERT,Z2PERT,l)
 
-!     IF ( START .AND. ITT .LT. ITSTOP )   &
-!           CALL FORCE_3D (DTHMAX,DTPERT,Z1PERT,Z2PERT,l)
+     IF ( START .AND. ITT .LT. ITSTOP )   &
+           CALL FORCE_3D (DTHMAX,DTPERT,Z1PERT,Z2PERT,l)
 
 !   HERE Q1LS IS DEFINED AS 'ADVECTIVE HEATING' SUCH 
 !   THAT NEGATIVE VALUES COOL THE UPPER LEVELS AND
@@ -188,7 +184,6 @@ CONTAINS
         QSAD3(I,J,K) = 0.
         QGAD3(I,J,K) = 0.
   510 CONTINUE
-
 
 ! Physics calculations
       CALL physics_interface(N1,N2,ITT,DT,ZZ,ZT,PBAR,PIBAR,  &

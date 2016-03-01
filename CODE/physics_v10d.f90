@@ -1600,7 +1600,7 @@ enddo
       IF(SNO)    VTS =         VCONS * QSR**0.062500 * RHOFAC
       IF(GRAUP)  VTG = min ( VCONG * QGR**0.125000 / DSQRT(RHO) , 20.0_8 )
       IF(RAIN)   VTR = min ( VCONR * QRR**0.200000 * RHOFAC     , 10.0_8 )
-
+      !IF(VTG > 0.00)  write(*,*) 'I : ', VCONG , QGR , DSQRT(RHO)
 !     ---------------------------------------------------------------------
 !     ----   PROCESSES CALLED INDEPENDENT OF   ----
 !     ----   TEMPERATURE ARE:                  ----

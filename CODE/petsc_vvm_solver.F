@@ -134,10 +134,9 @@ KSP Conti,Toppsi,Topchi
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPFBCGS, pc_type_Conti = PCMG
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCEISENSTAT
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCEISENSTAT
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCEISENSTAT
-
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCNONE
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCNONE
+!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCNONE
 
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_conti = KSPCG, spc_type_Conti = PCBJACOBI
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_toppsi = KSPCG, spc_type_toppsi = PCBJACOBI
@@ -498,7 +497,7 @@ PetscReal norm
       call vecsum(rhs,vsum,ierr)
       call vecshift(rhs,vsum*tpts, ierr)
 
-!      call KSPSetFromOptions(Toppsi,ierr)
+      call KSPSetFromOptions(Toppsi,ierr)
       call KSPSolve(Toppsi,rhs,v1,ierr)
 
       IF ( MY_TASK .EQ. 0) THEN
@@ -509,7 +508,7 @@ PetscReal norm
  100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
 
       call vecsum(v1,vsum,ierr)
-      call vecshift(v1,vsum*tpts, ierr)
+!      call vecshift(v1,vsum*tpts, ierr)
 
       call DMGlobalToLocalBegin(da2(1),v1,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da2(1),v1,INSERT_VALUES,vl,ierr)
@@ -550,7 +549,7 @@ PetscReal norm
       call vecsum(rhs,vsum,ierr)
       call vecshift(rhs,vsum*tpts, ierr)
 
-!      call KSPSetFromOptions(Topchi,ierr)
+      call KSPSetFromOptions(Topchi,ierr)
 
       call KSPSolve(Topchi,rhs,v2,ierr)
 
@@ -562,7 +561,7 @@ PetscReal norm
  100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
 
       call vecsum(v2,vsum,ierr)
-      call vecshift(v2,vsum*tpts,ierr)
+!      call vecshift(v2,vsum*tpts,ierr)
 
       call DMGlobalToLocalBegin(da2(1),v2,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da2(1),v2,INSERT_VALUES,vl,ierr)

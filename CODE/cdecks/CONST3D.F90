@@ -209,16 +209,5 @@ PRIVATE
       hx,  & ! location of topography at t-point
       hxu, & ! location of west cornor  topography 
       hxv    ! location of south cornor topography
-!===hchun
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::       &
-      lu,    &
-      soil,  &
-      slope, &
-      albedom, &
-      greenfracm, &
-      laim, &
-      shdmax, &
-      shdmin
-!========
 
 END MODULE const3d

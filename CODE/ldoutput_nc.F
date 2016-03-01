@@ -39,7 +39,7 @@ PRIVATE
 
       INTEGER (KIND=int_kind), PARAMETER ::             &
          IVAR1=6,IVAR2=6,IVAR3=1,IVAR4=ntracer,IVAR5=7, & ! number of fields in
-         IVAR6=6,IVAR7=3,IVAR8=2,IVAR9=15,IVAR10=64        !  each output variable class
+         IVAR6=6,IVAR7=3,IVAR8=2,IVAR9=15,IVAR10=62        !  each output variable class
 
 ! *** FOR DATA STORAGE FILE MANAGEMENT
       CHARACTER*50 F_HEADER
@@ -79,8 +79,7 @@ PRIVATE
          STD_RAD(mi1,mj1,nk2,8)
 #if defined (DIFFUSION) 
 #if defined (LSM)
-      REAL (KIND=tm_kind) ::
-         STD_LSM(mi1,mj1,IVAR10)
+      REAL (KIND=tm_kind) :: STD_LSM(mi1,mj1,IVAR10)
 #endif
 #endif
 
@@ -869,6 +868,11 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k, nt    ! do loop indices for zonal, meridional, vertical 
                         ! and tracer dimensions
+#if defined (LSM) 
+      INTEGER (KIND=int_kind) :: ivar ! index for LSM masking out
+#endif
+
+
       INTEGER (KIND=int_kind)     ::   &
          n2, &
          itp1, itp5  ! logical unit numbers
@@ -876,11 +880,11 @@ CONTAINS
       REAL (KIND=real_kind) :: TIME_P
       
       
-      REAL (KIND=dbl_kind) ::  sfmn, fac
+      REAL (KIND=dbl_kind) ::  sfmn, fac, dtfac
 
-      INTEGER (KIND=int_kind)     ::   ibnew, kvar
-      LOGICAL first
-      DATA IBNEW/0/, first/.true./
+      INTEGER (KIND=int_kind)     ::   ibnew, kvar , out_itt   ! mars add
+      LOGICAL first 
+      DATA IBNEW/0/, first/.true./, out_itt/-1/
 
 !------------------------------------------------------------------------------
 
@@ -912,13 +916,12 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
-!===hchun
-#if defined (DIFFUSION)
 #if defined (LSM)
-      std_lsm = 0.0
-#endif
+      std_lsm = 0.
 #endif
    endif
+
+   dtfac = PASS_SMALL_DT / DT 
 
 ! accumulate physical variables all timesteps (except twp-ice case)
    SELECT CASE (TRIM(casename))
@@ -932,8 +935,8 @@ CONTAINS
       STD_TM5(I,J,3)=WTH(I,J)
       STD_TM5(I,J,4)=WQV(I,J)
       STD_TM5(I,J,5)=SPREC(I,J)
-      STD_TM5(I,J,6)=OLR(I,J)
-      STD_TM5(I,J,7)=PREC25(I,J)
+      STD_TM5(I,J,6)=PREC25(I,J)
+      STD_TM5(I,J,7)=OLR(I,J)
       
   226 CONTINUE
 
@@ -943,20 +946,18 @@ CONTAINS
       DO 227 J=1,mj1
       DO 227 I=1,mi1
 !===hchun
-      STD_LSM(I,J,1)=ST_lsm(I,J,1)
-      STD_LSM(I,J,2)=ST_lsm(I,J,2)
-      STD_LSM(I,J,3)=ST_lsm(I,J,3)
-      STD_LSM(I,J,4)=ST_lsm(I,J,4)
-      STD_LSM(I,J,5)=SM_lsm(I,J,1)
-      STD_LSM(I,J,6)=SM_lsm(I,J,2)
-      STD_LSM(I,J,7)=SM_lsm(I,J,3)
-      STD_LSM(I,J,8)=SM_lsm(I,J,4)
+      STD_LSM(I,J,1)=lST(I,J,1)
+      STD_LSM(I,J,2)=lST(I,J,2)
+      STD_LSM(I,J,3)=lST(I,J,3)
+      STD_LSM(I,J,4)=lST(I,J,4)
+      STD_LSM(I,J,5)=lSM(I,J,1)
+      STD_LSM(I,J,6)=lSM(I,J,2)
+      STD_LSM(I,J,7)=lSM(I,J,3)
+      STD_LSM(I,J,8)=lSM(I,J,4)
 !=======
   227 CONTINUE
 #endif
 #endif
-
-
 
 
       DO 2226 k=1,nk2
@@ -999,105 +1000,111 @@ CONTAINS
 !     Store the real-time raw-vectors into output-arrays for dataset C
       DO 1226 J=1,mj1
       DO 1226 I=1,mi1
-      STD_TM5(I,J,1)=STD_TM5(I,J,1)+UW(I,J)
-      STD_TM5(I,J,2)=STD_TM5(I,J,2)+WV(I,J)
-      STD_TM5(I,J,3)=STD_TM5(I,J,3)+WTH(I,J)
-      STD_TM5(I,J,4)=STD_TM5(I,J,4)+WQV(I,J)
-      STD_TM5(I,J,5)=STD_TM5(I,J,5)+SPREC(I,J)
-      STD_TM5(I,J,6)=STD_TM5(I,J,6)+OLR(I,J)
-      STD_TM5(I,J,7)=STD_TM5(I,J,7)+PREC25(I,J)
+      STD_TM5(I,J,1)=STD_TM5(I,J,1)+UW(I,J)        *  dtfac
+      STD_TM5(I,J,2)=STD_TM5(I,J,2)+WV(I,J)        *  dtfac
+      STD_TM5(I,J,3)=STD_TM5(I,J,3)+WTH(I,J)       *  dtfac
+      STD_TM5(I,J,4)=STD_TM5(I,J,4)+WQV(I,J)       *  dtfac
+      STD_TM5(I,J,5)=STD_TM5(I,J,5)+SPREC(I,J)     *  dtfac
+      STD_TM5(I,J,6)=STD_TM5(I,J,6)+PREC25(I,J)    *  dtfac
+      STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       *  dtfac
  1226 CONTINUE
 
 #if defined (DIFFUSION)
 #if defined (LSM)
+
       DO 1227 J=1,mj1
       DO 1227 I=1,mi1
 !===hchun
-      STD_LSM(I,J,1)=STD_LSM(I,J,1)+EMISSI_lsm(I,J)
-      STD_LSM(I,J,2)=STD_LSM(I,J,2)+CMC_lsm(I,J)
-      STD_LSM(I,J,3)=STD_LSM(I,J,3)+T1_lsm(I,J)
-      STD_LSM(I,J,4)=STD_LSM(I,J,4)+ST_lsm(I,J,1)
-      STD_LSM(I,J,5)=STD_LSM(I,J,5)+ST_lsm(I,J,2)
-      STD_LSM(I,J,6)=STD_LSM(I,J,6)+ST_lsm(I,J,3)
-      STD_LSM(I,J,7)=STD_LSM(I,J,7)+ST_lsm(I,J,4)
-      STD_LSM(I,J,8)=STD_LSM(I,J,8)+SM_lsm(I,J,1)
-      STD_LSM(I,J,9)=STD_LSM(I,J,9)+SM_lsm(I,J,2)
-      STD_LSM(I,J,10)=STD_LSM(I,J,10)+SM_lsm(I,J,3)
-      STD_LSM(I,J,11)=STD_LSM(I,J,11)+SM_lsm(I,J,4)
-      STD_LSM(I,J,12)=STD_LSM(I,J,12)+SL_lsm(I,J,1)
-      STD_LSM(I,J,13)=STD_LSM(I,J,13)+SL_lsm(I,J,2)
-      STD_LSM(I,J,14)=STD_LSM(I,J,14)+SL_lsm(I,J,3)
-      STD_LSM(I,J,15)=STD_LSM(I,J,15)+SL_lsm(I,J,4)
-      STD_LSM(I,J,16)=STD_LSM(I,J,16)+SNOWH_lsm(I,J)
-      STD_LSM(I,J,17)=STD_LSM(I,J,17)+SNEQV_lsm(I,J)
-      STD_LSM(I,J,18)=STD_LSM(I,J,18)+ALBEDO_lsm(I,J)
-      STD_LSM(I,J,19)=STD_LSM(I,J,19)+CH_lsm(I,J)
-      STD_LSM(I,J,20)=STD_LSM(I,J,20)+CM_lsm(I,J)
-      STD_LSM(I,J,21)=STD_LSM(I,J,21)+ETA_lsm(I,J)
-      STD_LSM(I,J,22)=STD_LSM(I,J,22)+FDOWN_lsm(I,J)
-      STD_LSM(I,J,23)=STD_LSM(I,J,23)+EC_lsm(I,J)
-      STD_LSM(I,J,24)=STD_LSM(I,J,24)+EDIR_lsm(I,J)
-      STD_LSM(I,J,25)=STD_LSM(I,J,25)+ET_lsm(I,J,1)
-      STD_LSM(I,J,26)=STD_LSM(I,J,26)+ET_lsm(I,J,2)
-      STD_LSM(I,J,27)=STD_LSM(I,J,27)+ET_lsm(I,J,3)
-      STD_LSM(I,J,28)=STD_LSM(I,J,28)+ET_lsm(I,J,4)
-      STD_LSM(I,J,29)=STD_LSM(I,J,29)+ETT_lsm(I,J)
-      STD_LSM(I,J,30)=STD_LSM(I,J,30)+ESNOW_lsm(I,J)
-      STD_LSM(I,J,31)=STD_LSM(I,J,31)+DRIP_lsm(I,J)
-      STD_LSM(I,J,32)=STD_LSM(I,J,32)+DEW_lsm(I,J)
-      STD_LSM(I,J,33)=STD_LSM(I,J,33)+BETA_lsm(I,J)
-      STD_LSM(I,J,34)=STD_LSM(I,J,34)+ETP_lsm(I,J)
-      STD_LSM(I,J,35)=STD_LSM(I,J,35)+SSOIL_lsm(I,J)
-      STD_LSM(I,J,36)=STD_LSM(I,J,36)+FLX1_lsm(I,J)
-      STD_LSM(I,J,37)=STD_LSM(I,J,37)+FLX2_lsm(I,J)
-      STD_LSM(I,J,38)=STD_LSM(I,J,38)+FLX3_lsm(I,J)
-      STD_LSM(I,J,39)=STD_LSM(I,J,39)+SNOMLT_lsm(I,J)
-      STD_LSM(I,J,40)=STD_LSM(I,J,40)+SNCOVR_lsm(I,J)
-      STD_LSM(I,J,41)=STD_LSM(I,J,41)+RUNOFF1_lsm(I,J)
-      STD_LSM(I,J,42)=STD_LSM(I,J,42)+RUNOFF2_lsm(I,J)
-      STD_LSM(I,J,43)=STD_LSM(I,J,43)+RUNOFF3_lsm(I,J)
-      STD_LSM(I,J,44)=STD_LSM(I,J,44)+RC_lsm(I,J)
-      STD_LSM(I,J,45)=STD_LSM(I,J,45)+PC_lsm(I,J)
-      STD_LSM(I,J,46)=STD_LSM(I,J,46)+RSMIN_lsm(I,J)
-      STD_LSM(I,J,47)=STD_LSM(I,J,47)+XLAI_lsm(I,J)
-      STD_LSM(I,J,48)=STD_LSM(I,J,48)+RCS_lsm(I,J)
-      STD_LSM(I,J,49)=STD_LSM(I,J,49)+RCT_lsm(I,J)
-      STD_LSM(I,J,50)=STD_LSM(I,J,50)+RCQ_lsm(I,J)
-      STD_LSM(I,J,51)=STD_LSM(I,J,51)+RCSOIL_lsm(I,J)
-      STD_LSM(I,J,52)=STD_LSM(I,J,52)+SOILW_lsm(I,J)
-      STD_LSM(I,J,53)=STD_LSM(I,J,53)+SOILM_lsm(I,J)
-      STD_LSM(I,J,54)=STD_LSM(I,J,54)+Q1_lsm(I,J)
-      STD_LSM(I,J,55)=STD_LSM(I,J,55)+SMAV_lsm(I,J,1)
-      STD_LSM(I,J,56)=STD_LSM(I,J,56)+SMAV_lsm(I,J,2)
-      STD_LSM(I,J,57)=STD_LSM(I,J,57)+SMAV_lsm(I,J,3)
-      STD_LSM(I,J,58)=STD_LSM(I,J,58)+SMAV_lsm(I,J,4)
-      STD_LSM(I,J,59)=STD_LSM(I,J,59)+SMCWLT_lsm(I,J)
-      STD_LSM(I,J,60)=STD_LSM(I,J,60)+SMCDRY_lsm(I,J)
-      STD_LSM(I,J,61)=STD_LSM(I,J,61)+SMCREF_lsm(I,J)
-      STD_LSM(I,J,62)=STD_LSM(I,J,62)+SMCMAX_lsm(I,J)
-      STD_LSM(I,J,63)=STD_LSM(I,J,63)+NROOT_lsm(I,J)
-      STD_LSM(I,J,64)=STD_LSM(I,J,64)+LU_lsm(I,J)
+! easy, only average points that apply lsm
+      if (LU(I,J) .NE. 16) THEN
+      STD_LSM(I,J,1)=STD_LSM(I,J,1)+lEMISSI(I,J)   *  dtfac 
+      STD_LSM(I,J,2)=STD_LSM(I,J,2)+lCMC(I,J)      *  dtfac 
+      STD_LSM(I,J,3)=STD_LSM(I,J,3)+lT1(I,J)       *  dtfac 
+      STD_LSM(I,J,4)=STD_LSM(I,J,4)+lST(I,J,1)     *  dtfac 
+      STD_LSM(I,J,5)=STD_LSM(I,J,5)+lST(I,J,2)     *  dtfac 
+      STD_LSM(I,J,6)=STD_LSM(I,J,6)+lST(I,J,3)     *  dtfac 
+      STD_LSM(I,J,7)=STD_LSM(I,J,7)+lST(I,J,4)     *  dtfac 
+      STD_LSM(I,J,8)=STD_LSM(I,J,8)+lSM(I,J,1)     *  dtfac 
+      STD_LSM(I,J,9)=STD_LSM(I,J,9)+lSM(I,J,2)     *  dtfac 
+      STD_LSM(I,J,10)=STD_LSM(I,J,10)+lSM(I,J,3)   *  dtfac 
+      STD_LSM(I,J,11)=STD_LSM(I,J,11)+lSM(I,J,4)   *  dtfac 
+      STD_LSM(I,J,12)=STD_LSM(I,J,12)+lSL(I,J,1)   *  dtfac 
+      STD_LSM(I,J,13)=STD_LSM(I,J,13)+lSL(I,J,2)   *  dtfac 
+      STD_LSM(I,J,14)=STD_LSM(I,J,14)+lSL(I,J,3)   *  dtfac 
+      STD_LSM(I,J,15)=STD_LSM(I,J,15)+lSL(I,J,4)   *  dtfac 
+      STD_LSM(I,J,16)=STD_LSM(I,J,16)+lSNOWH(I,J)  *  dtfac 
+      STD_LSM(I,J,17)=STD_LSM(I,J,17)+lSNEQV(I,J)  *  dtfac 
+      STD_LSM(I,J,18)=STD_LSM(I,J,18)+lALBEDO(I,J) *  dtfac 
+      STD_LSM(I,J,19)=STD_LSM(I,J,19)+lCH(I,J)     *  dtfac 
+      STD_LSM(I,J,20)=STD_LSM(I,J,20)+lCM(I,J)     *  dtfac 
+      STD_LSM(I,J,21)=STD_LSM(I,J,21)+lETA(I,J)    *  dtfac 
+      STD_LSM(I,J,22)=STD_LSM(I,J,22)+lFDOWN(I,J)  *  dtfac 
+      STD_LSM(I,J,23)=STD_LSM(I,J,23)+lEC(I,J)     *  dtfac 
+      STD_LSM(I,J,24)=STD_LSM(I,J,24)+lEDIR(I,J)   *  dtfac 
+      STD_LSM(I,J,25)=STD_LSM(I,J,25)+lET(I,J,1)   *  dtfac 
+      STD_LSM(I,J,26)=STD_LSM(I,J,26)+lET(I,J,2)   *  dtfac 
+      STD_LSM(I,J,27)=STD_LSM(I,J,27)+lET(I,J,3)   *  dtfac 
+      STD_LSM(I,J,28)=STD_LSM(I,J,28)+lET(I,J,4)   *  dtfac 
+      STD_LSM(I,J,29)=STD_LSM(I,J,29)+lETT(I,J)    *  dtfac 
+      STD_LSM(I,J,30)=STD_LSM(I,J,30)+lESNOW(I,J)  *  dtfac 
+      STD_LSM(I,J,31)=STD_LSM(I,J,31)+lDRIP(I,J)   *  dtfac 
+      STD_LSM(I,J,32)=STD_LSM(I,J,32)+lDEW(I,J)    *  dtfac 
+      STD_LSM(I,J,33)=STD_LSM(I,J,33)+lBETA(I,J)   *  dtfac 
+      STD_LSM(I,J,34)=STD_LSM(I,J,34)+lETP(I,J)    *  dtfac 
+      STD_LSM(I,J,35)=STD_LSM(I,J,35)+lSSOIL(I,J)  *  dtfac  
+      STD_LSM(I,J,36)=STD_LSM(I,J,36)+lFLX1(I,J)   *  dtfac 
+      STD_LSM(I,J,37)=STD_LSM(I,J,37)+lFLX2(I,J)   *  dtfac 
+      STD_LSM(I,J,38)=STD_LSM(I,J,38)+lFLX3(I,J)   *  dtfac 
+      STD_LSM(I,J,39)=STD_LSM(I,J,39)+lSNOMLT(I,J) *  dtfac 
+      STD_LSM(I,J,40)=STD_LSM(I,J,40)+lSNCOVR(I,J) *  dtfac 
+      STD_LSM(I,J,41)=STD_LSM(I,J,41)+lRUNOFF1(I,J)*  dtfac 
+      STD_LSM(I,J,42)=STD_LSM(I,J,42)+lRUNOFF2(I,J)*  dtfac 
+      STD_LSM(I,J,43)=STD_LSM(I,J,43)+lRUNOFF3(I,J)*  dtfac 
+      STD_LSM(I,J,44)=STD_LSM(I,J,44)+lRC(I,J)     *  dtfac 
+      STD_LSM(I,J,45)=STD_LSM(I,J,45)+lPC(I,J)     *  dtfac 
+      STD_LSM(I,J,46)=STD_LSM(I,J,46)+lRSMIN(I,J)  *  dtfac 
+      STD_LSM(I,J,47)=STD_LSM(I,J,47)+lXLAI(I,J)   *  dtfac 
+      STD_LSM(I,J,48)=STD_LSM(I,J,48)+lRCS(I,J)    *  dtfac 
+      STD_LSM(I,J,49)=STD_LSM(I,J,49)+lRCT(I,J)    *  dtfac 
+      STD_LSM(I,J,50)=STD_LSM(I,J,50)+lRCQ(I,J)    *  dtfac 
+      STD_LSM(I,J,51)=STD_LSM(I,J,51)+lRCSOIL(I,J) *  dtfac 
+      STD_LSM(I,J,52)=STD_LSM(I,J,52)+lSOILW(I,J)  *  dtfac 
+      STD_LSM(I,J,53)=STD_LSM(I,J,53)+lSOILM(I,J)  *  dtfac 
+      STD_LSM(I,J,54)=STD_LSM(I,J,54)+lQ1(I,J)     *  dtfac 
+      STD_LSM(I,J,55)=STD_LSM(I,J,55)+lSMAV(I,J,1) *  dtfac 
+      STD_LSM(I,J,56)=STD_LSM(I,J,56)+lSMAV(I,J,2) *  dtfac 
+      STD_LSM(I,J,57)=STD_LSM(I,J,57)+lSMAV(I,J,3) *  dtfac 
+      STD_LSM(I,J,58)=STD_LSM(I,J,58)+lSMAV(I,J,4) *  dtfac 
+      STD_LSM(I,J,59)=STD_LSM(I,J,59)+lSMCWLT(I,J) *  dtfac 
+      STD_LSM(I,J,60)=STD_LSM(I,J,60)+lSMCDRY(I,J) *  dtfac 
+      STD_LSM(I,J,61)=STD_LSM(I,J,61)+lSMCREF(I,J) *  dtfac 
+      STD_LSM(I,J,62)=STD_LSM(I,J,62)+lSMCMAX(I,J) *  dtfac 
+!      STD_LSM(I,J,63)=STD_LSM(I,J,63)+lNROOT(I,J)
+!      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
 !========
+
+      ENDIF !easy
  1227 CONTINUE
+
 #endif
 #endif
 
       DO 3226 k=1,nk2
       DO 3226 J=1,mj1
       DO 3226 I=1,mi1
-      STD_RAD(I,J,k,1)=STD_RAD(I,J,k,1)+FUSWO(I,J,k)
-      STD_RAD(I,J,k,2)=STD_RAD(I,J,k,2)+FDSWO(I,J,k)
-      STD_RAD(I,J,k,3)=STD_RAD(I,J,k,3)+FULWO(I,J,k)
-      STD_RAD(I,J,k,4)=STD_RAD(I,J,k,4)+FDLWO(I,J,k)
-      STD_RAD(I,J,k,5)=STD_RAD(I,J,k,5)+DTRADSW(I,J,k)
-      STD_RAD(I,J,k,6)=STD_RAD(I,J,k,6)+DTRADLW(I,J,k)
-      STD_RAD(I,J,k,7)=STD_RAD(I,J,k,7)+cldfrc(I,J,k)
+      STD_RAD(I,J,k,1)=STD_RAD(I,J,k,1)+FUSWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,2)=STD_RAD(I,J,k,2)+FDSWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,3)=STD_RAD(I,J,k,3)+FULWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,4)=STD_RAD(I,J,k,4)+FDLWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,5)=STD_RAD(I,J,k,5)+DTRADSW(I,J,k) *  dtfac
+      STD_RAD(I,J,k,6)=STD_RAD(I,J,k,6)+DTRADLW(I,J,k) *  dtfac
+      STD_RAD(I,J,k,7)=STD_RAD(I,J,k,7)+cldfrc(I,J,k) *  dtfac
  3226 CONTINUE
       DO 3227 J=1,mj1
       DO 3227 I=1,mi1
-      STD_RAD(I,J,1,8)=STD_RAD(I,J,1,8)+FUSWTOA(I,J)
-      STD_RAD(I,J,2,8)=STD_RAD(I,J,2,8)+FDSWTOA(I,J)
-      STD_RAD(I,J,3,8)=STD_RAD(I,J,2,8)+FULWTOA(I,J)
+      STD_RAD(I,J,1,8)=STD_RAD(I,J,1,8)+FUSWTOA(I,J) *  dtfac
+      STD_RAD(I,J,2,8)=STD_RAD(I,J,2,8)+FDSWTOA(I,J) *  dtfac
+      STD_RAD(I,J,3,8)=STD_RAD(I,J,3,8)+FULWTOA(I,J) *  dtfac
  3227 CONTINUE
 
       DO 1041 K=1, NK2
@@ -1120,7 +1127,9 @@ CONTAINS
       
    END SELECT
 #endif
-   if(mod(itt,nxsavg) .ne. 0) return
+   if( (mod(itt,nxsavg) .ne. 0 ) .OR. ( itt .eq. out_itt ) ) return
+
+   out_itt = itt  ! Mars ADD to prevent over-estimate
 !      IF (IBNEW .EQ. 0 .and. TRIM(casename).ne.'TWP-ICE') GO TO 1555
 !
 #if defined (PHYSICS)
@@ -1131,15 +1140,22 @@ CONTAINS
       FAC = 1. / FLOAT ( NXSAVG )
 !      TIME_C = TIME1 -0.5*dt / ( FAC * 60.)
       TIME_C = TIME1
-      FAC = 1. / FLOAT ( isample )
+!      FAC = 1. / FLOAT ( isample )   ! Mars comment to test sprec
       std_rad = std_rad * fac
       std_tm5 = std_tm5 * fac
       out_tm9 = out_tm9 * fac
-!===hchun
-#if defined (DIFFUSION)
 #if defined (LSM)
       std_lsm = std_lsm * fac
-#endif
+! easy, mask out the water points
+      DO J = 1,MJ1
+      DO I = 1,MI1
+      IF (LU(I,J) .EQ. 16) THEN
+      DO IVAR = 1, IVAR10
+      std_lsm(I,J,IVAR) = realval
+      ENDDO
+      ENDIF
+      ENDDO
+      ENDDO
 #endif
    END SELECT
 #endif
@@ -1331,10 +1347,11 @@ CONTAINS
 !===hchun
 #if defined (PARALLELIO)
 #if defined (DIFFUSION)
-#if defined (LSM) 
-        call pCDF_WRITE_xy(ncid_lsm, 'emissi_lsm', TIME_C, time_start, std_lsm(:,:,1) )
-        call pCDF_WRITE_xy(ncid_lsm, 'cmc_lsm', TIME_C, time_start, std_lsm(:,:,2) )
-        call pCDF_WRITE_xy(ncid_lsm, 't1_lsm', TIME_C, time_start, std_lsm(:,:,3) )
+#if defined (LSM)
+
+        call pCDF_WRITE_xy(ncid_lsm, 'emissi', TIME_C, time_start, std_lsm(:,:,1) )
+        call pCDF_WRITE_xy(ncid_lsm, 'cmc', TIME_C, time_start, std_lsm(:,:,2) )
+        call pCDF_WRITE_xy(ncid_lsm, 't1', TIME_C, time_start, std_lsm(:,:,3) )
         call pCDF_WRITE_xy(ncid_lsm, 'ST1', TIME_C, time_start, std_lsm(:,:,4) )
         call pCDF_WRITE_xy(ncid_lsm, 'ST2', TIME_C, time_start, std_lsm(:,:,5) )
         call pCDF_WRITE_xy(ncid_lsm, 'ST3', TIME_C, time_start, std_lsm(:,:,6) )
@@ -1347,55 +1364,53 @@ CONTAINS
         call pCDF_WRITE_xy(ncid_lsm, 'SL2', TIME_C, time_start, std_lsm(:,:,13) )
         call pCDF_WRITE_xy(ncid_lsm, 'SL3', TIME_C, time_start, std_lsm(:,:,14) )
         call pCDF_WRITE_xy(ncid_lsm, 'SL4', TIME_C, time_start, std_lsm(:,:,15) )
-        call pCDF_WRITE_xy(ncid_lsm, 'snowh_lsm', TIME_C, time_start, std_lsm(:,:,16) )
-        call pCDF_WRITE_xy(ncid_lsm, 'sneqv_lsm', TIME_C, time_start, std_lsm(:,:,17) )
-        call pCDF_WRITE_xy(ncid_lsm, 'albedo_lsm', TIME_C, time_start, std_lsm(:,:,18) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ch_lsm', TIME_C, time_start, std_lsm(:,:,19) )
-        call pCDF_WRITE_xy(ncid_lsm, 'cm_lsm', TIME_C, time_start, std_lsm(:,:,20) )
-        call pCDF_WRITE_xy(ncid_lsm, 'eta_lsm', TIME_C, time_start, std_lsm(:,:,21) )
-        call pCDF_WRITE_xy(ncid_lsm, 'fdown_lsm', TIME_C, time_start, std_lsm(:,:,22) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ec_lsm', TIME_C, time_start, std_lsm(:,:,23) )
-        call pCDF_WRITE_xy(ncid_lsm, 'edir_lsm', TIME_C, time_start, std_lsm(:,:,24) )
-        call pCDF_WRITE_xy(ncid_lsm, 'et1_lsm', TIME_C, time_start, std_lsm(:,:,25) )
-        call pCDF_WRITE_xy(ncid_lsm, 'et2_lsm', TIME_C, time_start, std_lsm(:,:,26) )
-        call pCDF_WRITE_xy(ncid_lsm, 'et3_lsm', TIME_C, time_start, std_lsm(:,:,27) )
-        call pCDF_WRITE_xy(ncid_lsm, 'et4_lsm', TIME_C, time_start, std_lsm(:,:,28) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ett_lsm', TIME_C, time_start, std_lsm(:,:,29) )
-        call pCDF_WRITE_xy(ncid_lsm, 'esnow_lsm', TIME_C, time_start, std_lsm(:,:,30) )
-        call pCDF_WRITE_xy(ncid_lsm, 'drip_lsm', TIME_C, time_start, std_lsm(:,:,31) )
-        call pCDF_WRITE_xy(ncid_lsm, 'dew_lsm', TIME_C, time_start, std_lsm(:,:,32) )
-        call pCDF_WRITE_xy(ncid_lsm, 'beta_lsm', TIME_C, time_start, std_lsm(:,:,33) )
-        call pCDF_WRITE_xy(ncid_lsm, 'etp_lsm', TIME_C, time_start, std_lsm(:,:,34) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ssoil_lsm', TIME_C, time_start, std_lsm(:,:,35) )
-        call pCDF_WRITE_xy(ncid_lsm, 'flx1_lsm', TIME_C, time_start, std_lsm(:,:,36) )
-        call pCDF_WRITE_xy(ncid_lsm, 'flx2_lsm', TIME_C, time_start, std_lsm(:,:,37) )
-        call pCDF_WRITE_xy(ncid_lsm, 'flx3_lsm', TIME_C, time_start, std_lsm(:,:,38) )
-        call pCDF_WRITE_xy(ncid_lsm, 'snomlt_lsm', TIME_C, time_start, std_lsm(:,:,39) )
-        call pCDF_WRITE_xy(ncid_lsm, 'sncovr_lsm', TIME_C, time_start, std_lsm(:,:,40) )
-        call pCDF_WRITE_xy(ncid_lsm, 'runoff1_lsm', TIME_C, time_start, std_lsm(:,:,41) )
-        call pCDF_WRITE_xy(ncid_lsm, 'runoff2_lsm', TIME_C, time_start, std_lsm(:,:,42) )
-        call pCDF_WRITE_xy(ncid_lsm, 'runoff3_lsm', TIME_C, time_start, std_lsm(:,:,43) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rc_lsm', TIME_C, time_start, std_lsm(:,:,44) )
-        call pCDF_WRITE_xy(ncid_lsm, 'pc_lsm', TIME_C, time_start, std_lsm(:,:,45) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rsmin_lsm', TIME_C, time_start, std_lsm(:,:,46) )
-        call pCDF_WRITE_xy(ncid_lsm, 'xlai_lsm', TIME_C, time_start, std_lsm(:,:,47) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rcs_lsm', TIME_C, time_start, std_lsm(:,:,48) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rct_lsm', TIME_C, time_start, std_lsm(:,:,49) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rcq_lsm', TIME_C, time_start, std_lsm(:,:,50) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rcsoil_lsm', TIME_C, time_start, std_lsm(:,:,51) )
-        call pCDF_WRITE_xy(ncid_lsm, 'soilw_lsm', TIME_C, time_start, std_lsm(:,:,52) )
-        call pCDF_WRITE_xy(ncid_lsm, 'soilm_lsm', TIME_C, time_start, std_lsm(:,:,53) )
-        call pCDF_WRITE_xy(ncid_lsm, 'q1_lsm', TIME_C, time_start, std_lsm(:,:,54) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smav1_lsm', TIME_C, time_start, std_lsm(:,:,55) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smav2_lsm', TIME_C, time_start, std_lsm(:,:,56) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smav3_lsm', TIME_C, time_start, std_lsm(:,:,57) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smav4_lsm', TIME_C, time_start, std_lsm(:,:,58) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smcwlt_lsm', TIME_C, time_start, std_lsm(:,:,59) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smcdry_lsm', TIME_C, time_start, std_lsm(:,:,60) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smcref_lsm', TIME_C, time_start, std_lsm(:,:,61) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smcmax_lsm', TIME_C, time_start, std_lsm(:,:,62) )
-        call pCDF_WRITE_xy(ncid_lsm, 'nroot_lsm', TIME_C, time_start, std_lsm(:,:,63) )
-        call pCDF_WRITE_xy(ncid_lsm, 'lu_lsm', TIME_C, time_start, std_lsm(:,:,64) )
+        call pCDF_WRITE_xy(ncid_lsm, 'snowh', TIME_C, time_start, std_lsm(:,:,16) )
+        call pCDF_WRITE_xy(ncid_lsm, 'sneqv', TIME_C, time_start, std_lsm(:,:,17) )
+        call pCDF_WRITE_xy(ncid_lsm, 'albedo', TIME_C, time_start, std_lsm(:,:,18) )
+        call pCDF_WRITE_xy(ncid_lsm, 'ch', TIME_C, time_start, std_lsm(:,:,19) )
+        call pCDF_WRITE_xy(ncid_lsm, 'cm', TIME_C, time_start, std_lsm(:,:,20) )
+        call pCDF_WRITE_xy(ncid_lsm, 'eta', TIME_C, time_start, std_lsm(:,:,21) )
+        call pCDF_WRITE_xy(ncid_lsm, 'fdown', TIME_C, time_start, std_lsm(:,:,22) )
+        call pCDF_WRITE_xy(ncid_lsm, 'ec', TIME_C, time_start, std_lsm(:,:,23) )
+        call pCDF_WRITE_xy(ncid_lsm, 'edir', TIME_C, time_start, std_lsm(:,:,24) )
+        call pCDF_WRITE_xy(ncid_lsm, 'et1', TIME_C, time_start, std_lsm(:,:,25) )
+        call pCDF_WRITE_xy(ncid_lsm, 'et2', TIME_C, time_start, std_lsm(:,:,26) )
+        call pCDF_WRITE_xy(ncid_lsm, 'et3', TIME_C, time_start, std_lsm(:,:,27) )
+        call pCDF_WRITE_xy(ncid_lsm, 'et4', TIME_C, time_start, std_lsm(:,:,28) )
+        call pCDF_WRITE_xy(ncid_lsm, 'ett', TIME_C, time_start, std_lsm(:,:,29) )
+        call pCDF_WRITE_xy(ncid_lsm, 'esnow', TIME_C, time_start, std_lsm(:,:,30) )
+        call pCDF_WRITE_xy(ncid_lsm, 'drip', TIME_C, time_start, std_lsm(:,:,31) )
+        call pCDF_WRITE_xy(ncid_lsm, 'dew', TIME_C, time_start, std_lsm(:,:,32) )
+        call pCDF_WRITE_xy(ncid_lsm, 'beta', TIME_C, time_start, std_lsm(:,:,33) )
+        call pCDF_WRITE_xy(ncid_lsm, 'etp', TIME_C, time_start, std_lsm(:,:,34) )
+        call pCDF_WRITE_xy(ncid_lsm, 'ssoil', TIME_C, time_start, std_lsm(:,:,35) )
+        call pCDF_WRITE_xy(ncid_lsm, 'flx1', TIME_C, time_start, std_lsm(:,:,36) )
+        call pCDF_WRITE_xy(ncid_lsm, 'flx2', TIME_C, time_start, std_lsm(:,:,37) )
+        call pCDF_WRITE_xy(ncid_lsm, 'flx3', TIME_C, time_start, std_lsm(:,:,38) )
+        call pCDF_WRITE_xy(ncid_lsm, 'snomlt', TIME_C, time_start, std_lsm(:,:,39) )
+        call pCDF_WRITE_xy(ncid_lsm, 'sncovr', TIME_C, time_start, std_lsm(:,:,40) )
+        call pCDF_WRITE_xy(ncid_lsm, 'runoff1', TIME_C, time_start, std_lsm(:,:,41) )
+        call pCDF_WRITE_xy(ncid_lsm, 'runoff2', TIME_C, time_start, std_lsm(:,:,42) )
+        call pCDF_WRITE_xy(ncid_lsm, 'runoff3', TIME_C, time_start, std_lsm(:,:,43) )
+        call pCDF_WRITE_xy(ncid_lsm, 'rc', TIME_C, time_start, std_lsm(:,:,44) )
+        call pCDF_WRITE_xy(ncid_lsm, 'pc', TIME_C, time_start, std_lsm(:,:,45) )
+        call pCDF_WRITE_xy(ncid_lsm, 'rsmin', TIME_C, time_start, std_lsm(:,:,46) )
+        call pCDF_WRITE_xy(ncid_lsm, 'xlai', TIME_C, time_start, std_lsm(:,:,47) )
+        call pCDF_WRITE_xy(ncid_lsm, 'rcs', TIME_C, time_start, std_lsm(:,:,48) )
+        call pCDF_WRITE_xy(ncid_lsm, 'rct', TIME_C, time_start, std_lsm(:,:,49) )
+        call pCDF_WRITE_xy(ncid_lsm, 'rcq', TIME_C, time_start, std_lsm(:,:,50) )
+        call pCDF_WRITE_xy(ncid_lsm, 'rcsoil', TIME_C, time_start, std_lsm(:,:,51) )
+        call pCDF_WRITE_xy(ncid_lsm, 'soilw', TIME_C, time_start, std_lsm(:,:,52) )
+        call pCDF_WRITE_xy(ncid_lsm, 'soilm', TIME_C, time_start, std_lsm(:,:,53) )
+        call pCDF_WRITE_xy(ncid_lsm, 'q1', TIME_C, time_start, std_lsm(:,:,54) )
+        call pCDF_WRITE_xy(ncid_lsm, 'smav1', TIME_C, time_start, std_lsm(:,:,55) )
+        call pCDF_WRITE_xy(ncid_lsm, 'smav2', TIME_C, time_start, std_lsm(:,:,56) )
+        call pCDF_WRITE_xy(ncid_lsm, 'smav3', TIME_C, time_start, std_lsm(:,:,57) )
+        call pCDF_WRITE_xy(ncid_lsm, 'smav4', TIME_C, time_start, std_lsm(:,:,58) )
+        call pCDF_WRITE_xy(ncid_lsm, 'smcwlt', TIME_C, time_start, std_lsm(:,:,59) )
+        call pCDF_WRITE_xy(ncid_lsm, 'smcdry', TIME_C, time_start, std_lsm(:,:,60) )
+        call pCDF_WRITE_xy(ncid_lsm, 'smcref', TIME_C, time_start, std_lsm(:,:,61) )
+        call pCDF_WRITE_xy(ncid_lsm, 'smcmax', TIME_C, time_start, std_lsm(:,:,62) )
 
 #endif
 #endif
@@ -1479,6 +1494,7 @@ CONTAINS
 #endif
 #endif
 
+
 ! uncomment here is need syncing more frequently than the restart interval
 !#if defined (PARALLELIO) 
 !      call output_nc_sync
@@ -1545,15 +1561,9 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
-
-#if defined (DIFFUSION)
-#if defined (LSM)
-!===hchun
+#if defined (LSM)     
       std_lsm = 0.0
-!========
 #endif
-#endif
-      
 !==============================================================================
    END SUBROUTINE XSEC_CDF
 !==============================================================================

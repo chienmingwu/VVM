@@ -245,7 +245,7 @@ SUBROUTINE DIRECTIB
       U3DYT(mim:mip,mjm:mjp,nk3), &
       W3DT(mim:mip,mjm:mjp,nk2)
 
-      DO 500 K=1,NK3
+      DO 500 K=1,maxtopo+1
       DO 500 J=mjm,mjp
       DO 500 I=mim,mip
       IF (ITYPEU(I,J,K) .NE. 1) THEN
@@ -260,7 +260,7 @@ SUBROUTINE DIRECTIB
       ENDIF
  500  CONTINUE
 
-      DO 550 K=1,NK2
+      DO 550 K=1,maxtopo+1
       DO 550 J=mjm,mjp
       DO 550 I=mim,mip
       IF (ITYPEW(I,J,K) .NE. 1) THEN
