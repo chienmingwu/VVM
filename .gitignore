@@ -1,3 +1,3 @@
-.mod
-.o
+*.mod
+*.o
 DATA/*
