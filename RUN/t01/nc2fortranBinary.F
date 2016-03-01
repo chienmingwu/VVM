@@ -38,7 +38,7 @@
       INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT
  
 
-      REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI, TMPMN,TMPMX
+      REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI, TMPMN,TMPMX, TMPX,TMPY, DGR
       REAL*8 ZZ(NK3)      
 
       INTEGER (KIND=int_kind) HX(MI_GLOB,MJ_GLOB),HXtmp(MI_GLOB,MJ_GLOB)
@@ -48,6 +48,9 @@
       R = 6378137.0
       ZB = 0. 
       PI = 3.14159265358979323846264338327 
+
+      DGR = pi/2.
+
       NAMELIST /INPUT3/ DT,DX,DYNEW,DZ,DZ1,DOMAIN,ZB,NOTURB,NOSFX 
      1                 ,NSFLUX,ALADV,UVTAU,BUOY,NOTHERM,WRXMU
 
@@ -121,17 +124,23 @@
    70 YT (J) = (J-MJC)*DYNEW
 
       DO 100 J = 1,MJ_GLOB
-      IF ( YT(J)-.5*DYNEW.GE.YM(1) .AND.YT(J)+.5*DYNEW .LE. YM(NY))THEN
-      DO 101 I = 1,MI_GLOB
-      IF ( XT(I)-.5*DX .GE. XM(1) .AND. XT(I)+.5*DX .LE. XM(NX) ) THEN
+      DO 100 I = 1,MI_GLOB
+
+      TMPX = XT(I) * COS(DGR) - YT(J) * SIN(DGR)
+      TMPY = XT(I) * SIN(DGR) + YT(J) * COS(DGR)
+
+
+      IF ( TMPY-.5*DYNEW.GE.YM(1) .AND. TMPY+.5*DYNEW .LE. YM(NY))THEN
+      IF ( TMPX-.5*DX .GE. XM(1) .AND. TMPX+.5*DX .LE. XM(NX) ) THEN
+
 
       DO 110 IP = 1,NX
-      IF (XM(IP) .LT. XT(I) -.5*DX ) II = IP
-  110 IF (XM(IP) .LT. XT(I) +.5*DX ) IE = IP       
+      IF (XM(IP) .LT. TMPX -.5*DX ) II = IP
+  110 IF (XM(IP) .LT. TMPX +.5*DX ) IE = IP       
 
       DO 120 JP = 1,NY
-      IF (YM(JP) .LT. YT(J) -.5*DYNEW) JI = JP
-  120 IF (YM(JP) .LT. YT(J) +.5*DYNEW) JE = JP
+      IF (YM(JP) .LT. TMPY -.5*DYNEW) JI = JP
+  120 IF (YM(JP) .LT. TMPY +.5*DYNEW) JE = JP
 
 ! use TMPMN to determine whether there is land.
 ! use TMPMX to determine the height of topography.
@@ -157,13 +166,9 @@
       ELSE
       HX(I,J) = 0.
       ENDIF
-
-  101 CONTINUE
-      ELSE
-      DO 102 I = 1,MI_GLOB
-      HX(I,J) = 0.
-  102 CONTINUE
       ENDIF
+      
+
   100 CONTINUE
 
 !ccwu move topo  for 12 points (24km)
