@@ -892,6 +892,7 @@ CONTAINS
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
   105 CONTINUE
 
+
       call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ, &
                           VEN2D,SPEEDTP,ZROUGH,TG,TD,QD,THVSMD)
 
