@@ -295,7 +295,6 @@ CONTAINS
 
  5000 CONTINUE
 
-
 !ccwut rkh
       DO K=2,maxtopo
       DO J=1,mj1
@@ -330,10 +329,11 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-!         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
+
+         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
-      CALL SFLUX_3D ! call sflux every time step 
+!      CALL SFLUX_3D ! call sflux every time step 
       END IF
 
 #endif
@@ -384,7 +384,6 @@ CONTAINS
 
 
 !ccwu
-
       DO 334 K=2,NK1
       DO 334 J=1,MJ1
       DO 334 I=1,MI1
@@ -395,7 +394,6 @@ CONTAINS
                 *(Z3DX(I,J,K)-Z3DX(I,J,K-1))*DHVW2(I,J,K))            &
        /(2.*DZSQ*RHOZ(K))*FNZ(K)
   334 CONTINUE
-
 !ccwu calculate surface above surface points
 
       DO 336 J=1,MJ1
@@ -423,7 +421,6 @@ CONTAINS
 
 !      IF (.FALSE.) THEN
 !ccwu
-
       DO 342 K=2,NK1
       DO 342 J=1,MJ1
       DO 342 I=1,MI1
@@ -436,7 +433,6 @@ CONTAINS
                     *(Z3DY(I,J,K)-Z3DY(I,J-1,K))*DHUV2(I,J,K))                    &
          /(8.*DYSQ)
   342 CONTINUE
-
 !ccwu
 
       DO 344 K=2,NK1
@@ -823,9 +819,15 @@ CONTAINS
          SPEEDTP(MI1,MJ1),       & ! surface spd flux input for LSM/SFLUX_2
          QG(MI1,MJ1),            & ! surface qv flux input for LSM/SFLUX_2
          T2(MI1,MJ1),            & ! second lv tmperature for LSM
-         swD(MI1,MJ1),           & ! surface short wave flux input for LSM
-         lwD(MI1,MJ1),           & ! surface long wave flux input fof LSM
+         TD(MI1,MJ1),            &
+         QD(MI1,MJ1),            &
+         THVSMD(MI1,MJ1),        &
          VEN2D(mim:mip,mjm:mjp)    ! surface spd factor output fof LSM
+
+      REAL (KIND=int_kind) ::    &
+         swD(MI1,MJ1),           & ! surface short wave flux input for LSM
+         lwD(MI1,MJ1)             ! surface long wave flux input fof LSM
+
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
          q,       & !
@@ -835,7 +837,8 @@ CONTAINS
          thvsm,   & !
          ts,      & !
          ustar,   & !
-         zrough1    !
+         zrough1, & !
+         ztmp
 
       REAL (KIND=dbl_kind) ::    &
          pi
@@ -864,25 +867,38 @@ CONTAINS
 !      gwet(i,j)=0.8
 !      endif
 
-!ccwu for sst gradient test
-!      tg(i,j)=297.-8.*cos(2*pi*tempim/6144.)   !6144 points in x direction
-
   100 CONTINUE
 
 #if defined (LSM)
-
       DO 105 J = 1,MJ1
       DO 105 I = 1,MI1
 
       hxp=INT(hx(I,J))+1
+      hx1=INT(hx(I,J))
+      ztmp = .5*DZ/FNT(hxp)
+
       T2(I,J) = TH3D(I,J,hxp)*PIBAR(hxp)
       QG(I,J) = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
       swD(I,J) = swDown_3D(I,J,hxp)
       lwD(I,J) = lwDown_3D(I,J,hxp)
 
+      ES1  = ES ( TG(I,J) )
+      QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 )
+      TS   = CP * TG(I,J) + GRAV * ZW(hx1)
+
+!     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
+      Q    = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
+      T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)    &
+             -(HLF+HLM)*QI3D(I,J,hxp)
+
+      TD(I,J) = TS-T 
+      QD(I,J) = ABS(GWET(I,J))*(QSFC-Q)
+      THVSMD(I,J) = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
+               +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
   105 CONTINUE
 
-      call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ,VEN2D,SPEEDTP)
+      call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ, &
+                          VEN2D,SPEEDTP,ZROUGH,TG,TD,QD,THVSMD)
 
 #else
 !==========================================================
@@ -891,6 +907,7 @@ CONTAINS
       DO 110 I=1,MI1
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
+      ztmp = .5*DZ/FNT(hxp)
 
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 ) 
@@ -898,7 +915,7 @@ CONTAINS
 
 !     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
       Q    = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
-      T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)   &
+      T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)  &
              -(HLF+HLM)*QI3D(I,J,hxp)
 
       ZROUGH1 = ZROUGH(I,J)
@@ -906,19 +923,22 @@ CONTAINS
       THVSM   = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
 
-
-      CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ZT(hxp),ZROUGH1,   &
+      CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ztmp,ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
+
       if(psfx) THEN
         WT(I,J) = fss(i,j) 
         WQ(I,J) = fws(i,j) / hlf
       ELSE
-        WT(I,J) = VENTFC(2) * (TS-T)
-        WQ(I,J) = VENTFC(2) * ABS(GWET(I,J))*(QSFC-Q)
+ !ccwu for rico case      WT(I,J) = VENTFC(2) * (TS-T)
+ !        WQ(I,J) = VENTFC(2) * ABS(GWET(I,J))*(QSFC-Q)
+         WT(I,J) = 0.001094*speedm*(TS-T)
+         WQ(I,J) = 0.001133*speedm*(QSFC-Q)
       ENDIF
 
       VEN2D(I,J) = VENTFC(1)
 
+!PRINT*,TS,T,WQ(I,J),VEN2D(I,J)
 
   110 CONTINUE
 
@@ -944,8 +964,14 @@ CONTAINS
       WV(I,J)=-VEN2D(I,J+1)*U3DY(I,J,hxp)
       endif
 #else
-      UW(I,J)=-(VEN2D(I,J)+VEN2D(I+1,J))/2.*U3DX(I,J,2)
-      WV(I,J)=-(VEN2D(I,J)+VEN2D(I,J+1))/2.*U3DY(I,J,2)
+
+!ccwu for rico case
+!      UW(I,J)=-(VEN2D(I,J)+VEN2D(I+1,J))/2.*U3DX(I,J,2)
+!      WV(I,J)=-(VEN2D(I,J)+VEN2D(I,J+1))/2.*U3DY(I,J,2)
+      UW(I,J)=-0.001229*speedm*U3DX(I,J,2)
+      WV(I,J)=-0.001133*speedm*U3DY(I,J,2)
+
+
 #endif
 
   120 CONTINUE
@@ -1306,10 +1332,12 @@ SUBROUTINE TURB_3D_INI
       ENDDO
       ENDDO
 
+
 #if defined (LSM)
       call land_ini(hx)
 #endif
 #endif
+
 
    END SUBROUTINE TURB_3D_INI
 

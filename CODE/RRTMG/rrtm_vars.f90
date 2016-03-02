@@ -23,7 +23,8 @@
           qci        ! layer cloud ice mixing ratio (g/g)
           
       REAL (KIND=kind_rb), DIMENSION(nx,ny) :: &
-          sstxy    ! sea surface temperature (K)
+          sstxy, &   ! sea surface temperature (K)
+          albdo
 
       REAL (KIND=kind_rb), DIMENSION(nzm) :: &
           pres    ! model layer pressure (hPa)

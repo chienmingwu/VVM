@@ -36,14 +36,30 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
+ !add simple subsidence effects
+ !wbar=Dz where d=-3.75e-6 s^-1
+ !dT/dt= -wbar*(dT/dz)
+ !dqv/dt=-wbar*(dqv/dz)
+
+       REAL (KIND=dbl_kind) :: &
+       wbar(nk3)  !subsidence in m/s unit
+
+       do  k=1,nk3
+       if (zt(k) .le. 2260.) then
+       wbar(k)=-0.005/2260.*zt(k)*FNZ(K)/DZ
+       else
+       wbar(k)=-0.005*FNZ(K)/DZ
+       endif
+       enddo
+
 !add simple subsidence effects using wls (1/s)
 
       do k=2,nk2
       do j=1,mj1
       do i=1,mi1
-      TH3D(I,J,K)=TH3D(I,J,K)-DT*WLS(K)*(TH3D(I,J,K+1)-TH3D(I,J,K))
-      QV3D(I,J,K)=QV3D(I,J,K)-DT*WLS(K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
-      QC3D(I,J,K)=QC3D(I,J,K)-DT*WLS(K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
+      TH3D(I,J,K)=TH3D(I,J,K)-DT*WBAR(K)*(TH3D(I,J,K+1)-TH3D(I,J,K))
+      QV3D(I,J,K)=QV3D(I,J,K)-DT*WBAR(K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
+      QC3D(I,J,K)=QC3D(I,J,K)-DT*WBAR(K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
       enddo
       enddo
       enddo

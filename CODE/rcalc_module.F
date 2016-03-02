@@ -47,7 +47,6 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
-
       call timer_start('advection')
       CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
 #if defined (PHYSICS)
@@ -105,8 +104,8 @@ CONTAINS
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
 !ccwu
-      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K,1) 
-      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K,1) 
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K) 
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K) 
 !
 !      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K,hour) + &
 !                     time/21600.*(Q1LS(K,hour+1)-Q1LS(K,hour))
@@ -195,7 +194,6 @@ CONTAINS
         QSAD3(I,J,K) = 0.
         QGAD3(I,J,K) = 0.
   510 CONTINUE
-
 
 ! Physics calculations
       CALL physics_interface(N1,N2,ITT,DT,ZZ,ZT,PBAR,PIBAR,  &

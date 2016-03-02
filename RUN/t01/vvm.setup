@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = mjoshallow4
+set expname = shallow
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -43,7 +43,7 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
-#define RADCODE
+#define AREAMN
 'END1'
 cat definesld.com
 
@@ -52,11 +52,11 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/256/' \
-    -e '1,$s/merid_dimension/256/' \
-    -e '1,$s/zonal_decomposition/8/' \
-    -e '1,$s/merid_decomposition/8/' \
-    -e '1,$s/vert_dimension/70/' \
+sed -e '1,$s/zonal_dimension/32/' \
+    -e '1,$s/merid_dimension/32/' \
+    -e '1,$s/zonal_decomposition/2/' \
+    -e '1,$s/merid_decomposition/2/' \
+    -e '1,$s/vert_dimension/100/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -67,11 +67,11 @@ sed -e '1,$s/zonal_dimension/256/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=172800 /
- &INPUT2 RLAT=5.,RLON=75. /
- &INPUT3 DX=250.,DYNEW=250.,DZ=250.,DZ1=50.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
- &INPUT5 IX=3182073,ITINIT=60,ITSTOP=2400,SCALE=0.,Q1Q2=F,DTRAD=600.,SOLVAR=F /
+ &INPUT1 NEWRUN=T, ITTADD=86400 /
+ &INPUT2 RLAT=15. /
+ &INPUT3 DX=100.,DYNEW=100.,DZ=40.,DZ1=40.,DT=1.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT4 NXS=1,NXSAVG=1200,NWR11=1,NFLPRT=1,NRESTART=1200 /
+ &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=1.,Q1Q2=T,DTRAD=1200.,SOLVAR=F /
 'END6'
 cat INPUT
 
@@ -84,7 +84,17 @@ endif
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+exit
 
+cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
+
+#cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
+#cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
+
+cd ${subdir}"/RUN/t01"
+make topography CASENAME=${expname} -f ../makefile
+cd ${subdir}"/DATA/"${expname}
+./nc2fortranBinary > tmp.out
 
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
@@ -102,4 +112,15 @@ cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
 #mv makefile_topo makefile
 ln -s /data/mog/mjolong/q1mjo.dat
 ln -s /data/mog/mjolong/q2mjo.dat
+
+#make
+#./nc2fortranBinary
+
+# for LSM
+#cd ../${subdir}
+cp ${subdir}/CODE/LSM/GENPARM.TBL .
+cp ${subdir}/CODE/LSM/SOILPARM.TBL .
+cp ${subdir}/CODE/LSM/VEGPARM.TBL .
+exit
+
 

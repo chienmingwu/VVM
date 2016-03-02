@@ -8,6 +8,7 @@
       use parkind, only: &
                    kind_rb ! RRTM expects reals with this kind parameter (8 byte reals) 
 
+      use const3d, only: hx 
 !===========================================================================
 !  Modified for use with the Lorenz grid physics model.
 !  Thomas Cram and Celal Konor, CSU, October 2009.
@@ -70,6 +71,7 @@
        qcl, &     ! cloud mixing ratio
        qci, &     ! ice mixing ratio
        sstxy, &   ! sea surface temperature
+       albdo, &   ! given albedo from land surface model.
        pres, &    ! model layer pressure (mb)
        presi, &   ! model interface pressure (mb)
 !       rho, &     ! density profile.  In this anelastic model, rho=rho(z).
@@ -131,7 +133,7 @@
 !       swHeatingRateClearSky, & !  units: K/s
 !       lwHeatingRateClearSky !  units: K/s
   
-  integer :: ierr, i, j, k
+  integer :: ierr, i, j, k, nzt
 
 !=====================================================================
 ! PORTABILITY NOTE: all processors should have same pressure soundings
@@ -253,6 +255,7 @@
              qcl_slice, &
              qci_slice, &
              tg_slice, &
+             albedo_slice, &
              o3_slice, &
              co2_slice, &
              ch4_slice, &
@@ -294,11 +297,12 @@
       if(.NOT.isAllocated_RadInputsOutputs) then
 ! allocate arrays.
         ALLOCATE( &
-             tabs_slice(nx,nzrad), &
-             qv_slice(nx,nzrad), &
-             qcl_slice(nx,nzrad), &
-             qci_slice(nx,nzrad), &
-             tg_slice(nx), &
+             tabs_slice(1,nzrad), &
+             qv_slice(1,nzrad), &
+             qcl_slice(1,nzrad), &
+             qci_slice(1,nzrad), &
+             tg_slice(1), &
+             albedo_slice(1), &
              o3_slice(nzrad+1), &
              co2_slice(nzrad+1), &
              ch4_slice(nzrad+1), &
@@ -308,26 +312,26 @@
              cfc12_slice(nzrad+1), &
              cfc22_slice(nzrad+1), &
              ccl4_slice(nzrad+1), &
-             latitude_slice(nx), &
-             longitude_slice(nx), &
-             p_factor_slice(nx), &
-             p_coszrs_slice(nx), &
+             latitude_slice(1), &
+             longitude_slice(1), &
+             p_factor_slice(1), &
+             p_coszrs_slice(1), &
              pres_input(nzrad), &
              presi_input(nzrad+1), &
-             lwUp(nx,nzrad+2), &
-             lwDown(nx,nzrad+2), &
-             lwUpClearSky(nx,nzrad+2), &
-             lwDownClearSky(nx,nzrad+2), &
-             swUp(nx,nzrad+2), &
-             swDown(nx,nzrad+2), &
-             swUpClearSky(nx,nzrad+2), &
-             swDownClearSky(nx,nzrad+2), &
-             swHeatingRate(nx,nzrad+1), &
-             swHeatingRateClearSky(nx,nzrad+1), &
-             lwHeatingRate(nx,nzrad+1), &
-             lwHeatingRateClearSky(nx,nzrad+1), &
-             LWP(nx, nzm+1), IWP(nx, nzm+1), &
-             liquidRe(nx,nzm+1), iceRe(nx, nzm+1), &
+             lwUp(1,nzrad+2), &
+             lwDown(1,nzrad+2), &
+             lwUpClearSky(1,nzrad+2), &
+             lwDownClearSky(1,nzrad+2), &
+             swUp(1,nzrad+2), &
+             swDown(1,nzrad+2), &
+             swUpClearSky(1,nzrad+2), &
+             swDownClearSky(1,nzrad+2), &
+             swHeatingRate(1,nzrad+1), &
+             swHeatingRateClearSky(1,nzrad+1), &
+             lwHeatingRate(1,nzrad+1), &
+             lwHeatingRateClearSky(1,nzrad+1), &
+             LWP(1, nzm+1), IWP(1, nzm+1), &
+             liquidRe(1,nzm+1), iceRe(1, nzm+1), &
              STAT=ierr)
         if(ierr.ne.0) then
           write(*,*) 'Could not allocate input/output arrays in rad_full'
@@ -374,15 +378,15 @@
 
 ! set up pressure inputs to radiation
 
-    pres_input(1:nzm) = pres(1:nzm)
-    presi_input(1:nzm+1) = presi(1:nzm+1)
+!    pres_input(1:nzm) = pres(1:nzm)
+!    presi_input(1:nzm+1) = presi(1:nzm+1)
 
     if(nzpatch.gt.0) then
-      pres_input(nzm+1:nzrad) = psnd(npatch_start:npatch_end) ! layer pressures
-      presi_input(nzm+2:nzrad) = & ! interface pressures.
+      pres_input(nzm+1:nzrad-k+1) = psnd(npatch_start:npatch_end) ! layer pressures
+      presi_input(nzm+2:nzrad-k+1) = & ! interface pressures.
            0.5*(psnd(npatch_start:npatch_end-1) &
            + psnd(npatch_start+1:npatch_end))
-      presi_input(nzrad+1) = MAX(0.5*psnd(npatch_end), &
+      presi_input(nzrad-k+2) = MAX(0.5*psnd(npatch_end), &
                                  1.5*psnd(npatch_end) - 0.5*psnd(npatch_end-1))
     end if
 
@@ -398,46 +402,57 @@
 !$omp              swUp, swDown, swUpClearSky, swDownClearSky,                 &
 !$omp              swHeatingRate, swHeatingRateClearSky, lwHeatingRate, lwHeatingRateClearSky, &
 !$omp              LWP, IWP, liquidRe, iceRe)
+
+!    print*,albdo(10,10),sstxy(10,10),'rad'
+
     do 1000 j = 1,ny
+    do 1000 i = 1,nx
 
       ! extract a slice from the three-dimensional domain on this processor.
       !   We need absolute temperature (K), mass mixing ratios (kg/kg) of
       !   water vapor, cloud liquid water and cloud ice, along with SST (K).
 
-      tabs_slice(1:nx,1:nzm) = tabs(1:nx,j,1:nzm)
-      qv_slice(1:nx,1:nzm) = qv(1:nx,j,1:nzm)
-      qcl_slice(1:nx,1:nzm) = qcl(1:nx,j,1:nzm)
-      qci_slice(1:nx,1:nzm) = qci(1:nx,j,1:nzm)
-      tg_slice(1:nx) = sstxy(1:nx,j)
-      o3_slice(1:nzm) = o3(1,j,1:nzm)
-      co2_slice(1:nzm) = co2(1,j,1:nzm)
-      ch4_slice(1:nzm) = ch4(1,j,1:nzm)
-      n2o_slice(1:nzm) = n2o(1,j,1:nzm)
-      o2_slice(1:nzm) = o2(1,j,1:nzm)
-      cfc11_slice(1:nzm) = cfc11(1,j,1:nzm)
-      cfc12_slice(1:nzm) = cfc12(1,j,1:nzm)
-      cfc22_slice(1:nzm) = cfc22(1,j,1:nzm)
-      ccl4_slice(1:nzm) = ccl4(1,j,1:nzm)
+      k =  hx(i,j)
+      nzt = nzm - k +1
+
+      pres_input(1:nzt) = pres(k:nzm)
+      presi_input(1:nzt+1) = presi(k:nzm+1)
+
+      tabs_slice(1,1:nzt) = tabs(i,j,k:nzm)
+      qv_slice(1,1:nzt) = qv(i,j,k:nzm)
+      qcl_slice(1,1:nzt) = qcl(i,j,k:nzm)
+      qci_slice(1,1:nzt) = qci(i,j,k:nzm)
+      tg_slice(1) = sstxy(i,j)
+      albedo_slice(1) = albdo(i,j)
+      o3_slice(1:nzt) = o3(i,j,k:nzm)
+      co2_slice(1:nzt) = co2(i,j,k:nzm)
+      ch4_slice(1:nzt) = ch4(i,j,k:nzm)
+      n2o_slice(1:nzt) = n2o(i,j,k:nzm)
+      o2_slice(1:nzt) = o2(i,j,k:nzm)
+      cfc11_slice(1:nzt) = cfc11(i,j,k:nzm)
+      cfc12_slice(1:nzt) = cfc12(i,j,k:nzm)
+      cfc22_slice(1:nzt) = cfc22(i,j,k:nzm)
+      ccl4_slice(1:nzt) = ccl4(i,j,k:nzm)
       
-      latitude_slice(1:nx) = latitude(1:nx,j)
-      longitude_slice(1:nx) = longitude(1:nx,j)
+      latitude_slice(1) = latitude(i,j)
+      longitude_slice(1) = longitude(i,j)
       
-      p_factor_slice(1:nx) = p_factor_xy(1:nx,j)
-      p_coszrs_slice(1:nx) = p_coszrs_xy(1:nx,j)
+      p_factor_slice(1) = p_factor_xy(i,j)
+      p_coszrs_slice(1) = p_coszrs_xy(i,j)
 
 ! patch sounding on top of model sounding for more complete radiation calculation.
       if(nzpatch.gt.0) then
-        tabs_slice(1:nx,nzm+1:nzrad) = spread( tsnd(npatch_start:npatch_end), dim=1, ncopies=nx )
-        qv_slice(1:nx,nzm+1:nzrad) = spread( qsnd(npatch_start:npatch_end), dim=1, ncopies=nx )
-        qcl_slice(1:nx,nzm+1:nzrad) = 0.
-        qci_slice(1:nx,nzm+1:nzrad) = 0.
+        tabs_slice(1,nzt+1:nzrad) = tsnd(npatch_start:npatch_end)
+        qv_slice(1,nzt+1:nzrad) = qsnd(npatch_start:npatch_end)
+        qcl_slice(1,nzt+1:nzrad) = 0.
+        qci_slice(1,nzt+1:nzrad) = 0.
       end if
 
 !------------------------------------------------------------------------------
 ! Make call to wrapper routine for RRTMG (v.4.8 for LW, v.3.8 for SW)
 
-      call rad_driver_rrtm(nx,nzrad,j,pres_input,presi_input, &
-           tabs_slice,qv_slice,qcl_slice,qci_slice,tg_slice, &
+      call rad_driver_rrtm(1,nzrad-k+1,j,pres_input,presi_input, &
+           tabs_slice,qv_slice,qcl_slice,qci_slice,tg_slice, albedo_slice, &
            o3_slice,co2_slice,ch4_slice,n2o_slice,o2_slice, &
            cfc11_slice,cfc12_slice,cfc22_slice,ccl4_slice, &
            dolongwave,doshortwave,doperpetual,doseasons, &
@@ -486,55 +501,55 @@
 
 !tcram: convert units to K/s
 
-      qrad(1:nx,j,1:nzm) = (swHeatingRate(1:nx,1:nzm) + lwHeatingRate(1:nx,1:nzm)) / secday
+      qrad(i,j,k:nzm) = (swHeatingRate(1,1:nzt) + lwHeatingRate(1,1:nzt)) / secday
 
 !---------------------------------------------------------------------
 ! Load shortwave and longwave heating rates into proper VVM 3-D arrays
 
-      swHeatingRate_3d(1:nx, j, 1:nzm) = swHeatingRate(1:nx,1:nzm) / secday
-      lwHeatingRate_3d(1:nx, j, 1:nzm) = lwHeatingRate(1:nx,1:nzm) / secday
-      lwUp_3d(1:nx, j, 1:nzm)          = lwUp(1:nx,1:nzm)
-      lwDown_3d(1:nx, j, 1:nzm)        = lwDown(1:nx,1:nzm)
-      swUp_3d(1:nx, j, 1:nzm)          = swUp(1:nx,1:nzm)
-      swDown_3d(1:nx, j, 1:nzm)        = swDown(1:nx,1:nzm)
-      lwp_3d(1:nx, j, 1:nzm)           = LWP(1:nx,1:nzm)
-      iwp_3d(1:nx, j, 1:nzm)           = IWP(1:nx,1:nzm)
-      reliq_3d(1:nx, j, 1:nzm)         = liquidRe(1:nx,1:nzm)
-      reice_3d(1:nx, j, 1:nzm)         = iceRe(1:nx,1:nzm)
+      swHeatingRate_3d(i, j, k:nzm) = swHeatingRate(1,1:nzt) / secday
+      lwHeatingRate_3d(i, j, k:nzm) = lwHeatingRate(1,1:nzt) / secday
+      lwUp_3d(i, j, k:nzm)          = lwUp(1,1:nzt)
+      lwDown_3d(i, j, k:nzm)        = lwDown(1,1:nzt)
+      swUp_3d(i, j, k:nzm)          = swUp(1,1:nzt)
+      swDown_3d(i, j, k:nzm)        = swDown(1,1:nzt)
+      lwp_3d(i, j, k:nzm)           = LWP(1,1:nzt)
+      iwp_3d(i, j, k:nzm)           = IWP(1,1:nzt)
+      reliq_3d(i, j, k:nzm)         = liquidRe(1,1:nzt)
+      reice_3d(i, j, k:nzm)         = iceRe(1,1:nzt)
        
 !------------------------------------------------------------------------------
 ! accumulate heating rates and fluxes for horizontally-averaged statistics
 !$omp critical
-      radlwup(:) = radlwup(:) + sum(lwUp(:, 1:nzm+1),   dim = 1)
-      radlwdn(:) = radlwdn(:) + sum(lwDown(:, 1:nzm+1), dim = 1)
-      radqrlw(1:nzm) = radqrlw(1:nzm) + sum(lwHeatingRate(:, 1:nzm), dim = 1)
-      radqrclw(1:nzm) = radqrclw(1:nzm) + sum(lwHeatingRateClearSky(:, 1:nzm), dim = 1)
-      radswup(:) = radswup(:) + sum(swUp(:, 1:nzm+1),   dim = 1)
-      radswdn(:) = radswdn(:) + sum(swDown(:, 1:nzm+1), dim = 1)
-      radqrsw(1:nzm) = radqrsw(1:nzm) + sum(swHeatingRate(:, 1:nzm), dim = 1)
-      radqrcsw(1:nzm) = radqrcsw(1:nzm) + sum(swHeatingRateClearSky(:, 1:nzm), dim = 1)
+      radlwup(k:nzm+1) = radlwup(1:nzt+1) + lwUp(1, 1:nzt+1)
+      radlwdn(k:nzm+1) = radlwdn(1:nzt+1) + lwDown(1, 1:nzt+1)
+      radqrlw(k:nzm) = radqrlw(1:nzt) + lwHeatingRate(1, 1:nzt)
+      radqrclw(k:nzm) = radqrclw(1:nzt) + lwHeatingRateClearSky(1, 1:nzt)
+      radswup(k:nzm+1) = radswup(1:nzt+1) + swUp(1, 1:nzt+1)
+      radswdn(k:nzm+1) = radswdn(1:nzt+1) + swDown(1, 1:nzt+1)
+      radqrsw(k:nzm) = radqrsw(1:nzt) + swHeatingRate(1, 1:nzt)
+      radqrcsw(k:nzm) = radqrcsw(1:nzt) + swHeatingRateClearSky(1, 1:nzt)
 !$omp end critical
 
       ! shortwave fluxes at top-of-atmosphere (TOA) and surface -- NOTE POSITIVE DOWNWARDS
-      insolation_TOA(1:nx,j) = swDown(:,nzrad+2) ! shortwave down at TOA
-      swDownSurface(1:nx,j) = swDown(:,1) ! shortwave down at surface
+      insolation_TOA(i,j) = swDown(1,nzrad-k+3) ! shortwave down at TOA
+      swDownSurface(i,j) = swDown(1,k) ! shortwave down at surface
 
-      NetswUpToa(1:nx,j) = swUp(:,nzrad+2) - swDown(:,nzrad+2) ! net shortwave up at TOA
+      NetswUpToa(i,j) = swUp(1,nzrad-k+3) - swDown(1,nzrad-k+3) ! net shortwave up at TOA
 
-      NetswDownToa(1:nx,j) = swDown(:,nzrad+2) - swUp(:,nzrad+2) ! net shortwave down at TOA
-      NetswDownToaClearSky(1:nx,j) = swDownClearSky(:,nzrad+2) - swUpClearSky(:,nzrad+2) ! net clearsky shortwave down at TOA
+      NetswDownToa(i,j) = swDown(1,nzrad-k+3) - swUp(1,nzrad-k+3) ! net shortwave down at TOA
+      NetswDownToaClearSky(i,j) = swDownClearSky(1,nzrad-k+3) - swUpClearSky(1,nzrad-k+3) ! net clearsky shortwave down at TOA
 
-      NetswDownSurface(1:nx,j) = swDown(:,1) - swUp(:,1) ! net shortwave down at surface
-      NetswDownSurfaceClearSky(1:nx,j) = swDownClearSky(:,1) - swUpClearSky(:,1) ! net clearsky shortwave down at surface
+      NetswDownSurface(i,j) = swDown(1,k) - swUp(1,k) ! net shortwave down at surface
+      NetswDownSurfaceClearSky(i,j) = swDownClearSky(i,k) - swUpClearSky(i,k) ! net clearsky shortwave down at surface
 
       ! longwave fluxes at top-of-atmosphere (TOA) and surface -- NOTE POSITIVE UPWARDS
-      lwDownSurface(1:nx,j) = lwDown(:,1) ! longwave down at surface
+      lwDownSurface(i,j) = lwDown(1,k) ! longwave down at surface
 
-      NetlwUpToa(1:nx,j) = lwUp(:,nzrad+2) - lwDown(:,nzrad+2) ! net longwave up at TOA
-      NetlwUpToaClearSky(1:nx,j) = lwUpClearSky(:,nzrad+2) - lwDownClearSky(:,nzrad+2) ! net clearsky longwave up at TOA
+      NetlwUpToa(i,j) = lwUp(1,nzrad-k+3) - lwDown(1,nzrad-k+3) ! net longwave up at TOA
+      NetlwUpToaClearSky(i,j) = lwUpClearSky(1,nzrad-k+3) - lwDownClearSky(1,nzrad-k+3) ! net clearsky longwave up at TOA
 
-      NetlwUpSurface(1:nx,j) = lwUp(:,1) - lwDown(:,1) ! net longwave up at surface
-      NetlwUpSurfaceClearSky(1:nx,j) = lwUpClearSky(:,1) - lwDownClearSky(:,1) ! net clearsky longwave up at surface
+      NetlwUpSurface(i,j) = lwUp(1,k) - lwDown(1,k) ! net longwave up at surface
+      NetlwUpSurfaceClearSky(i,j) = lwUpClearSky(1,k) - lwDownClearSky(1,k) ! net clearsky longwave up at surface
 
  1000 continue ! j = 1,ny
 !$omp end parallel do

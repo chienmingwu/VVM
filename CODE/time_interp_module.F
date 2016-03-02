@@ -39,8 +39,8 @@ CONTAINS
       NSTPS=3.*60.*60./DT
       if(my_task == 0) WRITE (6,*) 'Enter TIME_INTERP NSTPS=',nstps
       DO 210 K = 1, NK3
-      Q1LS1 (K) = Q1LS(K,1)
-      Q2LS1 (K) = Q2LS(K,1)
+      Q1LS1 (K) = Q1LS(K)
+      Q2LS1 (K) = Q2LS(K)
       Q1LS2 (K) = 1 * ZDATA2(5,K) / 3600.
       Q2LS2 (K) = 1 * ZDATA2(6,K) / (1000. * 3600.)  
       

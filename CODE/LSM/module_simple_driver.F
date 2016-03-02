@@ -350,6 +350,8 @@ DO I=1,MI1
      ! FFROZP indicates the fraction of the total precipitation which is considered to be
      ! frozen.
      !
+! easy if water body skip LSM
+     IF (LU(I,J) .NE. 16) THEN
 
      if ( (PRCP(I,J) > 0) .and. (SFCTMP(I,J) < 273.15) ) then
         FFROZP = 1.0
@@ -526,6 +528,8 @@ DO I=1,MI1
      !    NROOT       -- Number of root layers ( count )
      !
 
+
+
 !     if ( ICE == 0 ) THEN
      if (.true.) then
 
@@ -554,7 +558,6 @@ DO I=1,MI1
 !             ETP(I,J)
 !      PRINT*, SNOMLT(I,J), SNCOVR(I,J), RUNOFF1(I,J), RUNOFF2(I,J),     &
 !             RUNOFF3(I,J), RC(I,J), PC(I,J), RCT(I,J), RCQ(I,J), Q1(I,J), RIBB,'==='
-
 
 
      ELSEIF ( ICE == -1 ) THEN
@@ -630,11 +633,11 @@ DO I=1,MI1
      ! Write the output data for this timestep.
      !
 
-
+     ENDIF
 ENDDO
 ENDDO
 
-     PRINT*,CMC(10,10),ET(10,10,:),ETT(10,10),DRIP(10,10),RC(10,10),ETAKIN(10,10),LU(10,10)
+!     PRINT*,CMC(10,10),ET(10,10,:),ETT(10,10),DRIP(10,10),RC(10,10),ETAKIN(10,10),LU(10,10)
 
 
 
@@ -675,7 +678,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
    SLOPE = SLOPE1
 
    ALBEDOM    = ALBEDOM1/100.
-   SHDFAC     = GREENFRACM1 
+   SHDFAC     = GREENFRACM1/100. 
    LAIM       = LAIM1
    SHDMAX     = SHDMAX1
    SHDMIN     = SHDMIN1
@@ -684,6 +687,10 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
 
   DO J=1,MJ1
   DO I=1,MI1
+
+  STinout_ini = ST(I,J,:)
+  SMinout_ini = SM(I,J,:)
+  SLinout_ini = SL(I,J,:)
   
   call open_forcing_file(iunit, output_dir, forcing_filename, nsoil(I,J), startdate, enddate,          &
        loop_for_a_while, latitude, longitude, &
@@ -694,15 +701,14 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
        usemonalb, rdlai2d, llanduse, &
        iz0tlnd, sfcdif_option,STinout_ini,SMinout_ini,SLinout_ini)
 
-
-!  ST(I,J,:) = STinout_int
-!  SM(I,J,:) = SMinout_int
-!  SL(I,J,:) = SLinout_int
+  ST(I,J,:) = STinout_ini
+  SM(I,J,:) = SMinout_ini
+  SL(I,J,:) = SLinout_ini
 
   ENDDO
   ENDDO
 
-!  dt = real(noahlsm_timestep)
+  dt = real(noahlsm_timestep)
   nsoil = 4
   shdfac                    = shdfac
   shdmax                    = shdmax1/100.0
