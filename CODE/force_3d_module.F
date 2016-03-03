@@ -149,7 +149,7 @@ CONTAINS
         ISTEP = 0
         NSTEP = TINC / DT + 0.5
         TEM = A * DT / TINC
-        K1 = INDEXR(Z1,NK3,ZT,LF) + 1
+        K1 = INDEXR(Z1,NK3,ZT,LF) + 1 
         K2 = INDEXR(Z2,NK3,ZT,LF)
       ENDIF
 
@@ -162,6 +162,7 @@ CONTAINS
    10 CONTINUE
 
       ENDIF
+      
 
       if(my_task == 0) write(6,*) 'RANDOM',K1,K2
       DO 12 K = K1, K2

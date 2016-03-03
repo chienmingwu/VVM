@@ -335,11 +335,10 @@
 ! Fill out 2D arrays needed by RRTMG 
 
     layerP(:, 1:nzm) = spread(pres (:), dim = 1, ncopies = nx) 
-    layerP(:, nzm+1) = spread((2.*pres(nzm)-pres(nzm-1)), dim = 1, ncopies = nx) ! add layer
+    layerP(:, nzm+1) = 0.5*spread(presi(nzm+1), dim = 1, ncopies = nx) ! add layer
 
     interfaceP(:, 1:nzm+1) = spread(presi(:), dim = 1, ncopies = nx) 
-! easy set fixed pressure 11.8mb
-    interfaceP(:, nzm+2) = 11.8 ! near-zero pressure at top of extra laye
+    interfaceP(:, nzm+2) = MIN(1.e-4_kind_rb,0.25*layerP(1,nzm+1)) ! near-zero pressure at top of extra layer
 
 ! Convert hPa to Pa in layer mass calculation (kg/m2) 
     layerMass(:, 1:nzm+1) = &
@@ -356,8 +355,7 @@
     interfaceT(:, 2:nzm+1) = (layerT(:, 1:nzm) + layerT(:, 2:nzm+1)) / 2. 
 
 ! Extrapolate temperature at top from lapse rate within the layer
-! easy set model top temperature 210.46K
-   interfaceT(:, nzm+2) = 210.46
+    interfaceT(:, nzm+2) = 2.*layerT(:, nzm+1) - interfaceT(:, nzm+1)
 
 ! Use SST as interface temperature of atmosphere at surface.
     interfaceT(:, 1)  = tg(1:nx) !bloss layerT(:, 1)   + (layerT(:, 1)   - interfaceT(:, 2))   
@@ -423,8 +421,8 @@
 !------------------------------------------------------------------------------
 
     if (dolongwave) then
-    
-      if(lat.eq.1.AND.masterproc) print *, "Computing longwave radiation ..." 
+!easy delete output
+!      if(lat.eq.1.AND.masterproc) print *, "Computing longwave radiation ..." 
       
       surfaceT(:) = tg(1:nx)
 
@@ -448,8 +446,8 @@
 !------------------------------------------------------------------------------
 
     if(doshortwave) then
-
-        if(lat.eq.1.AND.masterproc) print *, "Computing shortwave radiation ..." 
+!easy delete output
+!        if(lat.eq.1.AND.masterproc) print *, "Computing shortwave radiation ..." 
 
 ! Solar insolation depends on several choices
 
@@ -519,17 +517,18 @@
 
         if(lat.eq.1.AND.masterproc) then
           if(doshortwave) then 
-            if(doperpetual) then
-              write(*,992) coszrs, SUM(swDown(1:nx,nzm+2))/float(nx)
-            else
-              write(*,991) coszrs, SUM(swDown(1:nx,nzm+2))/float(nx), eccf
-            end if
+!easy delete ouput
+!            if(doperpetual) then
+!              write(*,992) coszrs, SUM(swDown(1:nx,nzm+2))/float(nx)
+!            else
+!              write(*,991) coszrs, SUM(swDown(1:nx,nzm+2))/float(nx), eccf
+!            end if
             991 format('radiation: diurnally-varying insolation, coszrs = ',F10.7, &
                      ' solin = ',f10.4,' eccf = ',f10.7)
             992 format('radiation: diurnally-averaged insolation, coszrs = ',F10.7, &
                      ' solin = ',f10.4)
           end if
-          write(*,993) asdir(1), aldir(1), asdif(1), aldif(1)
+!          write(*,993) asdir(1), aldir(1), asdif(1), aldif(1)
 993       format('radiation: surface albedos, asdir= ',F10.7, &
                ' aldir = ',f10.7,' asdif = ',f10.7,' aldif = ',f10.7)
         end if

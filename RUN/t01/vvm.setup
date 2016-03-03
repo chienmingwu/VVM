@@ -54,8 +54,8 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -e '1,$s/zonal_dimension/64/' \
     -e '1,$s/merid_dimension/64/' \
-    -e '1,$s/zonal_decomposition/4/' \
-    -e '1,$s/merid_decomposition/4/' \
+    -e '1,$s/zonal_decomposition/2/' \
+    -e '1,$s/merid_decomposition/2/' \
     -e '1,$s/vert_dimension/120/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
@@ -84,6 +84,18 @@ endif
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+exit
+
+
+cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
+
+#cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
+#cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
+
+cd ${subdir}"/RUN/t01"
+make topography CASENAME=${expname} -f ../makefile
+cd ${subdir}"/DATA/"${expname}
+./nc2fortranBinary > tmp.out
 
 
 # GLDAS
@@ -102,4 +114,15 @@ cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
 #mv makefile_topo makefile
 ln -s /data/mog/mjolong/q1mjo.dat
 ln -s /data/mog/mjolong/q2mjo.dat
+
+#make
+#./nc2fortranBinary
+
+# for LSM
+#cd ../${subdir}
+cp ${subdir}/CODE/LSM/GENPARM.TBL .
+cp ${subdir}/CODE/LSM/SOILPARM.TBL .
+cp ${subdir}/CODE/LSM/VEGPARM.TBL .
+exit
+
 

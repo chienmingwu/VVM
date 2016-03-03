@@ -168,17 +168,17 @@ CONTAINS
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
-!      DO 120 K = 1, NT1
-!      T8  = T1(K)
-!      P8  = P1(K)
-!      QV8 = QV1(K)
-!      QC8 = 0.D0
-!      QI8 = 0.D0
-!      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-!      QV1(K) = QV8
-!      QC1(K) = 0.
-!  120 CONTINUE
-
+      DO 120 K = 1, NT1
+      T8  = T1(K)
+      P8  = P1(K)
+      QV8 = QV1(K)
+      QC8 = 0.D0
+      QI8 = 0.D0
+      if (my_task .eq. 0) print*, T8,P8,QV8,K
+      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+      QV1(K) = QV8
+      QC1(K) = 0.
+  120 CONTINUE
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
 !     UNITS ARE T : DEG K, QV : G/G.
 
@@ -186,6 +186,7 @@ CONTAINS
       PILOG1(K) = LOG ( PI1(K) )
       TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
   130 CONTINUE
+
 
       ZT1(1) = Zz(1)
 
@@ -265,6 +266,7 @@ CONTAINS
   160 CONTINUE
 
       IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
+
 
 
 !     PROFILES OF RHO, RHOz, AND GAMMA
@@ -396,6 +398,7 @@ CONTAINS
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
+      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
@@ -510,6 +513,8 @@ CONTAINS
       DO 660 I = 1, MI1
       Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
                  -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
+      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
+                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
 
 
@@ -555,12 +560,14 @@ CONTAINS
       VTMN0 = VTMN
       
       IF(itt == 0) CALL UPDATE_TRACER_init
+#if defined (RADCODE)
   
       albdo = 0.30
-   
+#endif    
 #if defined (DIFFUSION)
       call turb_3d_ini
 #endif
+
  
    END SUBROUTINE ini_3d
 
@@ -581,7 +588,6 @@ CONTAINS
 #if defined (TOPOGRAPHY) 
 
 !      DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
-      IF (.false.) THEN
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
 
@@ -596,9 +602,6 @@ CONTAINS
       maxtopo=INT(H) + 1
 
       call bound_arb(1,HX)
-      ENDIF
-!le for debug 
-      HX = 1
 
       DO I=1,MI1
       DO J=1,MJ1
