@@ -112,7 +112,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T1(1) * 0.1 + 273.16 + DSST
+      SST = 302.
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -125,6 +125,9 @@ CONTAINS
       T1(K) =  T1(K) * 1.E-01 + 273.16
       QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
+!ccwu stable env.
+      T1(7:21)=T1(7:21)+10.
+      QV1(7:21)=QV1(7:21)*0.5
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -361,7 +364,7 @@ CONTAINS
       if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
-
+ 
       locean = .true.
       psfx = .false.
 

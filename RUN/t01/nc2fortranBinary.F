@@ -219,7 +219,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       TMP=DBLE(hgt(I,J))
 
       IF (TMP .GT. 0.) HX(I,J) = 2.
-
       DO K=2,NK1
       IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
 
