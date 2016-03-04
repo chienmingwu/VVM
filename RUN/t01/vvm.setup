@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = shadowFL
+set expname = shadowFL1
 
 # hardscrabble configuration
 set subdir = '../..'

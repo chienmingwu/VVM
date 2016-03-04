@@ -35,7 +35,7 @@ PRIVATE
 
   INTEGER (KIND=int_kind), dimension(MI1,MJ1), PUBLIC::lNROOT,LU
 
-  REAL (KIND=dbl_kind),dimension(MI1,MJ1) :: TB,ZBT
+  REAL (KIND=dbl_kind),dimension(MI1,MJ1) :: TB,ZBT,RHOMAP,PIMAP
 
 
 !public member functions
@@ -134,6 +134,9 @@ CONTAINS
       VNE2D(I,J) = VENTFC(1)
       ENDIF
 !      if (J .eq. 10 .and. I .eq. 10) PRINT*,WT(I,J),WQ(I,J),VNE2D(I,J)
+
+      WT(I,J) = WT(I,J)*PIMAP(I,J)
+      WQ(I,J) = WQ(I,J)*RHOMAP(I,J)
 
   200 CONTINUE
 
@@ -312,8 +315,12 @@ CONTAINS
    real (kind=int_kind), dimension(mi1,mj1):: & 
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
-   INTEGER (KIND=int_kind):: i,j,hxp,itmp,jtmp
+   INTEGER (KIND=int_kind):: i,j,itmp,jtmp
    CHARACTER(50):: FILENAME
+   INTEGER (KIND=int_kind) :: hxp, hx1
+   REAL (KIND=dbl_kind) :: CP
+
+   CP = 1004.5
 
 ! surface pressure
       WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)') &
@@ -431,14 +438,21 @@ CONTAINS
    DO J=1,MJ1
    DO I=1,MI1
 
+   hx1 =INT( hx(I,J))
+
    IF (LU(I,J) .eq. 16) THEN
-   IF (INT(HX(I,J)) .eq. 1) THEN
+   IF (hx1 .eq. 1) THEN
    lT1(I,J) = SST
    ELSE
-   lT1(I,J) = thbar(hx(I,J))*pibar(INT(hx(I,J)))
+   lT1(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
+   RHOMAP(I,J) = RHOZ(hx1)   
    albdo(I,J) = .3
+   ELSE
+   RHOMAP(I,J) = 1.
    ENDIF
+
+   PIMAP(I,J) = RHOMAP(I,J)/(CP*PIBAR(hx1))
 
    ENDDO
    ENDDO
