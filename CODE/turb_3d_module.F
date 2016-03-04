@@ -384,7 +384,6 @@ CONTAINS
 
 
 !ccwu
-
       DO 334 K=2,NK1
       DO 334 J=1,MJ1
       DO 334 I=1,MI1
@@ -395,7 +394,6 @@ CONTAINS
                 *(Z3DX(I,J,K)-Z3DX(I,J,K-1))*DHVW2(I,J,K))            &
        /(2.*DZSQ*RHOZ(K))*FNZ(K)
   334 CONTINUE
-
 !ccwu calculate surface above surface points
 
       DO 336 J=1,MJ1
@@ -423,7 +421,6 @@ CONTAINS
 
 !      IF (.FALSE.) THEN
 !ccwu
-
       DO 342 K=2,NK1
       DO 342 J=1,MJ1
       DO 342 I=1,MI1
@@ -436,7 +433,6 @@ CONTAINS
                     *(Z3DY(I,J,K)-Z3DY(I,J-1,K))*DHUV2(I,J,K))                    &
          /(8.*DYSQ)
   342 CONTINUE
-
 !ccwu
 
       DO 344 K=2,NK1
@@ -823,12 +819,15 @@ CONTAINS
          SPEEDTP(MI1,MJ1),       & ! surface spd flux input for LSM/SFLUX_2
          QG(MI1,MJ1),            & ! surface qv flux input for LSM/SFLUX_2
          T2(MI1,MJ1),            & ! second lv tmperature for LSM
-         swD(MI1,MJ1),           & ! surface short wave flux input for LSM
-         lwD(MI1,MJ1),           & ! surface long wave flux input fof LSM
          TD(MI1,MJ1),            &
          QD(MI1,MJ1),            &
          THVSMD(MI1,MJ1),        &
          VEN2D(mim:mip,mjm:mjp)    ! surface spd factor output fof LSM
+
+      REAL (KIND=int_kind) ::    &
+         swD(MI1,MJ1),           & ! surface short wave flux input for LSM
+         lwD(MI1,MJ1)             ! surface long wave flux input fof LSM
+
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
          q,       & !
@@ -866,7 +865,6 @@ CONTAINS
   100 CONTINUE
 
 #if defined (LSM)
-
       DO 105 J = 1,MJ1
       DO 105 I = 1,MI1
 
@@ -879,7 +877,6 @@ CONTAINS
       swD(I,J) = swDown_3D(I,J,hxp)
       lwD(I,J) = lwDown_3D(I,J,hxp)
 
-
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 )
       TS   = CP * TG(I,J) + GRAV * ZW(hx1)
@@ -889,8 +886,6 @@ CONTAINS
       T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)    &
              -(HLF+HLM)*QI3D(I,J,hxp)
 
-!      if (my_task .eq. 0 .and. (J .eq. 10 .and. I .eq. 10)) &
-!      PRINT*,CP,TH3D(I,J,hxp)
       TD(I,J) = TS-T 
       QD(I,J) = ABS(GWET(I,J))*(QSFC-Q)
       THVSMD(I,J) = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
@@ -923,7 +918,6 @@ CONTAINS
       THVSM   = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
 
-
       CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ztmp,ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
 
@@ -936,8 +930,6 @@ CONTAINS
       ENDIF
 
       VEN2D(I,J) = VENTFC(1)
-!      if (my_task .eq. 0 .and. (J .eq. 10 .and. I .eq. 10)) &
-!      PRINT*,CP,TH3D(I,J,hxp)
 
 !PRINT*,TS,T,WQ(I,J),VEN2D(I,J)
 

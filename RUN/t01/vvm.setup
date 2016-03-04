@@ -43,6 +43,7 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
+#define TOPOGRAPHY
 #define RADCODE
 #define LSM
 #define TOPOGRAPHY
@@ -86,13 +87,15 @@ endif
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
+
 #cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
 #cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
-./nc2fortranBinary
+./nc2fortranBinary > tmp.out
 
 
 # GLDAS

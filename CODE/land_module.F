@@ -64,30 +64,28 @@ CONTAINS
       REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(IN) ::    &
          T2,            &
          Q2,            &
-         swD,           &
-         lwD,           &
          SPREC,         &
          SFCSPD,        &
          TD,            &
          QD,            &
          THVSMD 
 
-      REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(OUT) ::    &
+      REAL (KIND=int_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::   & 
+         swD,           &
+         lwD
+
+      REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::    &
          WT,            &
          WQ            
         
-      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(OUT) ::    &
+      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(INOUT) ::    &
          VNE2D
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(IN) ::    &
          ZROUGH,tg
 
-
-
       REAL (KIND=int_kind), DIMENSION(MI1,MJ1) ::    &
          T2i,            &
          Q2i,            &
-         swDi,           &
-         lwDi,           &
          SPRECi,         &
          WTi,            &
          WQi,            &
@@ -101,12 +99,10 @@ CONTAINS
       
       T2i = real(T2)
       Q2i = real(Q2)            
-      swDi = real(swD) 
-      lwDi = real(lwD)
       SPRECi = real(SPREC)
       SFCSPDi =real(SFCSPD)
 
-      CALL LSM_DRV(SFCSPDi,T2i,Q2i,swDi,lwDi,SPRECi,WQi,WTi, &
+      CALL LSM_DRV(SFCSPDi,T2i,Q2i,swD,lwD,SPRECi,WQi,WTi, &
 ! LSM inout variables
            lCM,lST,lSM,lSL,lEMISSI,lCMC,lT1,lSNOWH,lSNEQV,&
            lALBEDO,lCH,lETA,lFDOWN,lEC,lEDIR,lET,lETT,lESNOW,lDRIP,&
@@ -140,8 +136,6 @@ CONTAINS
 !      if (J .eq. 10 .and. I .eq. 10) PRINT*,WT(I,J),WQ(I,J),VNE2D(I,J)
 
   200 CONTINUE
-
-
 
 #endif
 
@@ -318,198 +312,29 @@ CONTAINS
    real (kind=int_kind), dimension(mi1,mj1):: & 
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
-   INTEGER (KIND=int_kind):: i,j,hxp,itmp
+   INTEGER (KIND=int_kind):: i,j,hxp,itmp,jtmp
    CHARACTER(50):: FILENAME
 
 ! surface pressure
-      IF (.false.) then
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/LULU',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)') &
+      'RUNDATA/LSM',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
 
       PRINT*,FILENAME
       
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+      READ(99) ((ALBEDOM(I,J),I=1,MI1),J=1,MJ1)
+      READ(99) ((GREENFRACM(I,J),I=1,MI1),J=1,MJ1)
+      READ(99) ((LAIM(I,J),I=1,MI1),J=1,MJ1)
       READ(99) ((LU(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
-
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/SOIL',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-      PRINT*,FILENAME
-
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+      READ(99) ((SHDMAX(I,J),I=1,MI1),J=1,MJ1)
+      READ(99) ((SHDMIN(I,J),I=1,MI1),J=1,MJ1)
+      READ(99) ((SLOPE(I,J),I=1,MI1),J=1,MJ1)
       READ(99) ((SOIL(I,J),I=1,MI1),J=1,MJ1)
       CLOSE(99)
 
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/SLOP',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-      PRINT*,FILENAME
-
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) ((SLOPE(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
-
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/ALBM',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-      PRINT*,FILENAME
-
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) ((ALBEDOM(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
-
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/GFRM',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-      PRINT*,FILENAME
-
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) ((GREENFRACM(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
-
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/LAIM',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-      PRINT*,FILENAME
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) ((LAIM(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
-
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/SMAX',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-      PRINT*,FILENAME
-
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) ((SHDMAX(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
-
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/SMIN',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-      PRINT*,FILENAME
-
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) ((SHDMIN(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
-      ENDIF
-
-!ccwu
-      do J=1,MJ1
-      do I=1,MI1
-
-      itmp = ni_sbdm*MI1+I
-
-      if (itmp .le. 128 .or. itmp .ge. 385 ) then
-      LU(I,J) = 16
-      SOIL(I,J) = 1
-      SLOPE(I,J) =  1
-      ALBEDOM = 15.
-      GREENFRACM(I,J) = 10.
-      LAIM(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-
-      elseif (hx(I,J) .eq. 1 ) then
-
-      LU(I,J) = 1
-      SOIL(I,J) = 1
-      SLOPE(I,J) =  1
-      ALBEDOM(I,J) = 15.
-      GREENFRACM(I,J) = 10.
-      LAIM(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-
-      else
-
-      LU(I,J) = 7
-      SOIL(I,J) = 1
-      SLOPE(I,J) = 1
-      ALBEDOM(I,J) = 19.
-      GREENFRACM(I,J) = 80.
-      LAIM(I,J) = 4.
-      SHDMAX(I,J) = 80.
-      SHDMIN(I,J) = 80. 
-      endif
-
-      enddo
-      enddo
-
-!      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
-!      'RUNDATA/SM1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-!      PRINT*,FILENAME2
-
-!      OPEN(99,FILE=FILENAME2,FORM='unformatted',STATUS='OLD')
-!      READ(99) ((SM1(I,J),I=1,MI1),J=1,MJ1)
-!      CLOSE(99)
-
-!      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
-!      'RUNDATA/SM2',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-!      PRINT*,FILENAME2
-
-!      OPEN(99,FILE=FILENAME2,FORM='unformatted',STATUS='OLD')
-!      READ(99) ((SM2(I,J),I=1,MI1),J=1,MJ1)
-!      CLOSE(99)
-
-!      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
-!      'RUNDATA/SM3',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-!      PRINT*,FILENAME2
-
-!      OPEN(99,FILE=FILENAME2,FORM='unformatted',STATUS='OLD')
-!      READ(99) ((SM3(I,J),I=1,MI1),J=1,MJ1)
-!      CLOSE(99)
-
-!      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
-!      'RUNDATA/SM4',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-!      PRINT*,FILENAME2
-
-!      OPEN(99,FILE=FILENAME2,FORM='unformatted',STATUS='OLD')
-!      READ(99) ((SM4(I,J),I=1,MI1),J=1,MJ1)
-!      CLOSE(99)
-
-!      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
-!      'RUNDATA/ST1',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-!      PRINT*,FILENAME2
-
-!      OPEN(99,FILE=FILENAME2,FORM='unformatted',STATUS='OLD')
-!      READ(99) ((ST1(I,J),I=1,MI1),J=1,MJ1)
-!      CLOSE(99)
-
-!      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
-!      'RUNDATA/ST2',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-!      PRINT*,FILENAME2
-
-!      OPEN(99,FILE=FILENAME2,FORM='unformatted',STATUS='OLD')
-!      READ(99) ((ST2(I,J),I=1,MI1),J=1,MJ1)
-!      CLOSE(99)
-
-!      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
-!      'RUNDATA/ST3',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-!      PRINT*,FILENAME2
-!      OPEN(99,FILE=FILENAME2,FORM='unformatted',STATUS='OLD')
-!      READ(99) ((ST3(I,J),I=1,MI1),J=1,MJ1)
-!      CLOSE(99)
-
-!      WRITE(FILENAME2,'(A12,I3.3,A1,I3.3,A4)') &
-!      'RUNDATA/ST4',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
-!      PRINT*,FILENAME2
-
-!      OPEN(99,FILE=FILENAME2,FORM='unformatted',STATUS='OLD')
-!      READ(99) ((ST4(I,J),I=1,MI1),J=1,MJ1)
-!      CLOSE(99)
-
       DO 100 J = 1,MJ1
       DO 100 I = 1,MI1
+
       hxp=INT(hx(I,J))+1
 
 ! INPUT for SFLX_2D
@@ -519,7 +344,7 @@ CONTAINS
          ZL(I,J)          = .5*DZ/FNT(hx(I,J)+1)
          P2(I,J)          = PBAR(hxp)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
-         lT1(I,J)         = thbar(hx(I,J))*pibar(hx(I,J))
+         lT1(I,J)         = thbar(hx(I,J))*pibar(INT(hx(I,J)))
          lST(I,J,1)       = 297.0995
          lST(I,J,2)       = 298.0445
          lST(I,J,3)       = 297.8954
@@ -599,6 +424,24 @@ CONTAINS
 
    albdo = lALBEDO
    sstxy = lT1
+
+
+!easy define surface temperature and albedo over water surface. 
+!note that TG must equal to lT1 in order to compute the sflux_2d i
+   DO J=1,MJ1
+   DO I=1,MI1
+
+   IF (LU(I,J) .eq. 16) THEN
+   IF (INT(HX(I,J)) .eq. 1) THEN
+   lT1(I,J) = SST
+   ELSE
+   lT1(I,J) = thbar(hx(I,J))*pibar(INT(hx(I,J)))
+   ENDIF
+   albdo(I,J) = .3
+   ENDIF
+
+   ENDDO
+   ENDDO
 
 #endif
 
