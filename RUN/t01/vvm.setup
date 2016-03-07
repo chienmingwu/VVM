@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = shadow3shz3
+set expname = shadow3olm
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -46,7 +46,6 @@ cat > definesld.com << 'END1'
 #define TOPOGRAPHY
 #define RADCODE
 #define LSM
-#define TOPOGRAPHY
 'END1'
 cat definesld.com
 
