@@ -499,7 +499,7 @@ CONTAINS
       IF(itt == 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
-      albdo = 0.30
+      albdo = 0.19
 #endif    
 #if defined (DIFFUSION)
       call turb_3d_ini

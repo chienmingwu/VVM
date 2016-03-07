@@ -179,7 +179,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      yt(I) = J * DYNEW
 
       if (I .gt. 256 .and. I .lt. 513) then
-      hx(i,j) = INT(max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))
+      hx(i,j) = (max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))
       hx(I,J) = max(hx(I,J), 1.)
       LU(I,J) = 7
       alb(I,J) = 19.

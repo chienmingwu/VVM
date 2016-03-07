@@ -447,7 +447,7 @@ CONTAINS
    lT1(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
    RHOMAP(I,J) = RHOZ(hx1)   
-   albdo(I,J) = .3
+   albdo(I,J) = .19
    ELSE
    RHOMAP(I,J) = 1.
    ENDIF
