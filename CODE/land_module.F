@@ -95,6 +95,17 @@ CONTAINS
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
       REAL (KIND=dbl_kind) ::  USTAR,VENTFC(2),MOLEN,zzz,ttt
 
+#if defined (SLAB)
+        REAL(kind=dbl_kind)::  &
+         rhoh2o,        & ! density of water [kg/m**3]
+         zdmix,         & ! constant depth of mixed layer [m]
+         zcpwater,      & ! watar heat capacity [J/K/kg]
+         zmixcap,       & ! Cw ocean heat capacity [J/K/kg]
+         zmcapdt,       & ! 1/cw*dt
+         sig,           & ! boltzman constant
+         zfluxw           ! flux change across ocean surface
+#endif
+
 #if defined (LSM)
       
       T2i = real(T2)
@@ -119,12 +130,34 @@ CONTAINS
 
       WT(I,J) = dble(WTi(I,J))
       WQ(I,J) = dble(WQi(I,J))
-!      PRINT*, lALBEDO(10,10),lT1(10,10),'land'
       albdo(I,J) = lALBEDO(I,J)
       sstxy(I,J) = lT1(I,J)
 
       ELSE
+
 ! OCEAN part      
+
+#if defined (SLAB)
+
+! 1. Set up constants
+
+        rhoh2o = 1024.75         !density of water [kg/m**3]
+        zdmix=10._dbl_kind       ! constant depth of mixed layer
+        zcpwater=4218._dbl_kind  ! watar heat capacity
+        zmixcap=rhoh2o*zcpwater*zdmix  !Cw ocean heat capacity
+        zmcapdt=dt/zmixcap       !1/cw*dt
+        sig= 5.66E-8             ! boltzman constant
+
+! 2. Ocean temperature
+! calculate net fluxes 
+        zfluxw=swD(I,J)*(1-albdo(I,J)) +lwD(I,J)-sig*TB(I,J)**4   &
+              -wth(I,J)*(CP*PIBAR(1))/rhoz(1)-wqv(I,J)*2.5e6/rhoz(1)
+
+!       Ocean temperature (tg)
+
+        TB(I,J)=TB(i,j)+zmcapdt*zfluxw
+
+#endif
 
       CALL SFLUX_2D (0._dbl_kind,TB(I,J),THVSMD(I,J),SFCSPD(I,J), &
                      ZBT(I,J),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
@@ -132,6 +165,7 @@ CONTAINS
       WT(I,J) = VENTFC(2)*TD(I,J)
       WQ(I,J) = VENTFC(2)*QD(I,J)
       VNE2D(I,J) = VENTFC(1)
+      sstxy(I,J) = TB(I,J) !varying SST to radiation
       ENDIF
 !      if (J .eq. 10 .and. I .eq. 10) PRINT*,WT(I,J),WQ(I,J),VNE2D(I,J)
 
@@ -447,7 +481,7 @@ CONTAINS
    lT1(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
    RHOMAP(I,J) = RHOZ(hx1)   
-   albdo(I,J) = .3
+   albdo(I,J) = .19
    ELSE
    RHOMAP(I,J) = 1.
    ENDIF
