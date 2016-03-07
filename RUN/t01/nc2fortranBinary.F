@@ -179,8 +179,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      yt(I) = J * DYNEW
 
       if (I .gt. 256 .and. I .lt. 513) then
-      hx(i,j) = INT(max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))+1
-      hx(I,J) = max(hx(I,J), 2.)
+      hx(i,j) = INT(max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))
+      hx(I,J) = max(hx(I,J), 1.)
       LU(I,J) = 7
       alb(I,J) = 19.
       grf(I,J) = 80.
@@ -190,7 +190,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SLOPE(I,J) = 1
       SOIL(I,J) = 1
       elseif (I .gt. 128 .and. I .lt. 641) then
-      hx(I,J) = 2.
+      hx(I,J) = 1.
       LU(I,J) = 1
       alb(I,J) = 15.
       grf(I,J) = 10.
