@@ -828,7 +828,6 @@ CONTAINS
          swD(MI1,MJ1),           & ! surface short wave flux input for LSM
          lwD(MI1,MJ1)             ! surface long wave flux input fof LSM
 
-
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
          q,       & !
@@ -893,6 +892,7 @@ CONTAINS
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
   105 CONTINUE
 
+
       call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ, &
                           VEN2D,SPEEDTP,ZROUGH,TG,TD,QD,THVSMD)
 
@@ -918,7 +918,6 @@ CONTAINS
       SPEEDM  = SPEEDTP(I,J)
       THVSM   = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
-
 
       CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ztmp,ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
@@ -975,10 +974,15 @@ CONTAINS
       hxu1=INT(hxu(I,J))
       hxv1=INT(hxv(I,J))
 
+#if defined (LSM)
+!easy WQ/ETAKIN and WT/SHEAT already time rho in LSM and maskout in
+!land_interface.F
+      WQV(I,J) = WQ(I,J)
+      WTH(I,J) = WT(I,J)     
+#else
       WQV(I,J) = WQ(I,J)*RHOZ(hx1)
       WTH(I,J) = WT(I,J)*RHOZ(hx1)/(CP*PIBAR(hx1))
-!      WQV(I,J)=0.
-!      WTH(I,J)=0. !turn on momentum drag, not surface fluxes
+#endif
 
       if(hxu1 .gt. 0) then
       UW(I,J)  = UW(I,J)*RHOZ(hxu1)
@@ -991,7 +995,6 @@ CONTAINS
       WV(I,J)  = WV(I,J)*RHOZ(hx1)
       endif
   130 CONTINUE
-
    END SUBROUTINE sflux_3d
 
 !-----7---------------------------------------------------------------72
