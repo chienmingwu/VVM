@@ -134,6 +134,8 @@ PROGRAM ldmain
     IF (ITT .EQ. 0) THEN
 
     IF ( ITTADD .LE. 0 ) STOP 101
+    PASS_SMALL_DT = DT
+
     call timer_start('output')
     CALL OUTCON_3D  (8)
     ! CALL OUTPUT_3D  (ITT,9)
