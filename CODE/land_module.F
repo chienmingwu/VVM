@@ -37,6 +37,16 @@ PRIVATE
 
   REAL (KIND=dbl_kind),dimension(MI1,MJ1) :: TB,ZBT,RHOMAP,PIMAP
 
+#if defined (SLAB)
+        REAL(kind=dbl_kind), PRIVATE::  &
+         rhoh2o,        & ! density of water [kg/m**3]
+         zdmix,         & ! constant depth of mixed layer [m]
+         zcpwater,      & ! watar heat capacity [J/K/kg]
+         zmixcap,       & ! Cw ocean heat capacity [J/K/kg]
+         zmcapdt,       & ! 1/cw*dt
+         sig,           & ! boltzman constant
+         zfluxw           ! flux change across ocean surface
+#endif
 
 !public member functions
 PUBLIC ::      &
@@ -95,17 +105,6 @@ CONTAINS
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
       REAL (KIND=dbl_kind) ::  USTAR,VENTFC(2),MOLEN,zzz,ttt
 
-#if defined (SLAB)
-        REAL(kind=dbl_kind)::  &
-         rhoh2o,        & ! density of water [kg/m**3]
-         zdmix,         & ! constant depth of mixed layer [m]
-         zcpwater,      & ! watar heat capacity [J/K/kg]
-         zmixcap,       & ! Cw ocean heat capacity [J/K/kg]
-         zmcapdt,       & ! 1/cw*dt
-         sig,           & ! boltzman constant
-         zfluxw           ! flux change across ocean surface
-#endif
-
 #if defined (LSM)
       
       T2i = real(T2)
@@ -138,25 +137,13 @@ CONTAINS
 ! OCEAN part      
 
 #if defined (SLAB)
-
-! 1. Set up constants
-
-        rhoh2o = 1024.75         !density of water [kg/m**3]
-        zdmix=10._dbl_kind       ! constant depth of mixed layer
-        zcpwater=4218._dbl_kind  ! watar heat capacity
-        zmixcap=rhoh2o*zcpwater*zdmix  !Cw ocean heat capacity
-        zmcapdt=dt/zmixcap       !1/cw*dt
-        sig= 5.66E-8             ! boltzman constant
-
 ! 2. Ocean temperature
 ! calculate net fluxes 
         zfluxw=swD(I,J)*(1-albdo(I,J)) +lwD(I,J)-sig*TB(I,J)**4   &
-              -wth(I,J)*(CP*PIBAR(1))/rhoz(1)-wqv(I,J)*2.5e6/rhoz(1)
-
+              -wt(I,J)*CP-wq(I,J)*2.5e6
 !       Ocean temperature (tg)
 
         TB(I,J)=TB(i,j)+zmcapdt*zfluxw
-
 #endif
 
       CALL SFLUX_2D (0._dbl_kind,TB(I,J),THVSMD(I,J),SFCSPD(I,J), &
@@ -173,6 +160,8 @@ CONTAINS
       WQ(I,J) = WQ(I,J)*RHOMAP(I,J)
 
   200 CONTINUE
+
+      if (my_task .eq. 0) PRINT*, TB(10,10),'====',zmcapdt*zfluxw
 
 #endif
 
@@ -381,7 +370,6 @@ CONTAINS
 ! INPUT for SFLX_2D
          ZBT(I,J)         = .5*DZ/FNT(hx(I,J)+1)
          TB(I,J)          = THBAR(hxp)
-                
          ZL(I,J)          = .5*DZ/FNT(hx(I,J)+1)
          P2(I,J)          = PBAR(hxp)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
@@ -425,7 +413,7 @@ CONTAINS
          lFDOWN      = -9.9999996E+35
          lEC         = -9.9999996E+35
          lEDIR       = -9.9999996E+35
-         lET       = -9.9999996E+35
+         lET         = -9.9999996E+35
          lETT        = -9.9999996E+35
          lESNOW      = -9.9999996E+35
          lDRIP       = -9.9999996E+35
@@ -474,22 +462,42 @@ CONTAINS
 
    hx1 =INT( hx(I,J))
 
+! determine surface temp and albedo of water body
    IF (LU(I,J) .eq. 16) THEN
    IF (hx1 .eq. 1) THEN
    lT1(I,J) = SST
    ELSE
    lT1(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
-   RHOMAP(I,J) = RHOZ(hx1)   
    albdo(I,J) = .19
+   ENDIF
+
+! define unit of WQ and WV
+   IF (LU(I,J) .eq. 16) THEN
+   RHOMAP(I,J) = RHOZ(hx1)
    ELSE
    RHOMAP(I,J) = 1.
    ENDIF
-
    PIMAP(I,J) = RHOMAP(I,J)/(CP*PIBAR(hx1))
 
    ENDDO
    ENDDO
+
+
+#if defined (SLAB)
+
+! 1. Set up constants
+
+        rhoh2o = 1024.75         !density of water [kg/m**3]
+        zdmix=10._dbl_kind       ! constant depth of mixed layer
+        zcpwater=4218._dbl_kind  ! watar heat capacity
+        zmixcap=rhoh2o*zcpwater*zdmix  !Cw ocean heat capacity
+        zmcapdt=dt/zmixcap       !1/cw*dt
+        sig= 5.66E-8             ! boltzman constant
+
+#endif
+
+
 
 #endif
 
