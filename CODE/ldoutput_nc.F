@@ -434,8 +434,8 @@ CONTAINS
       nc_err = nfmpi_put_vara_double_all(ncid_rst, olr_id_rst,       &
                   start(1:2), count(1:2), olr(1:mi1,1:mj1) )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_vara_double_all(ncid_rst, prec25_id_rst,       &
-                  start(1:2), count(1:2), prec25(1:mi1,1:mj1) )
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, tg_id_rst,       &
+                  start(1:2), count(1:2), tg(1:mi1,1:mj1) )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(1, uw, iobuffh(:,:,1))
@@ -444,7 +444,7 @@ CONTAINS
       call gather_h(1, wqv, iobuffh(:,:,4))
       call gather_h(1, sprec, iobuffh(:,:,5))
       call gather_h(1, olr, iobuffh(:,:,6))
-      call gather_h(1, prec25, iobuffh(:,:,7))
+      call gather_h(1, tg, iobuffh(:,:,7))
 
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, uw_id_rst, iobuffh(1:mi_glob,1:mj_glob,1))
@@ -465,7 +465,7 @@ CONTAINS
         nc_err = nf90_put_var(ncid_rst, olr_id_rst, iobuffh(1:mi_glob,1:mj_glob,6))
         if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
 
-        nc_err = nf90_put_var(ncid_rst, prec25_id_rst, iobuffh(1:mi_glob,1:mj_glob,7))
+        nc_err = nf90_put_var(ncid_rst, tg_id_rst, iobuffh(1:mi_glob,1:mj_glob,7))
         if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
@@ -933,9 +933,8 @@ CONTAINS
       STD_TM5(I,J,3)=WTH(I,J)
       STD_TM5(I,J,4)=WQV(I,J)
       STD_TM5(I,J,5)=SPREC(I,J)
-      STD_TM5(I,J,6)=PREC25(I,J)
+      STD_TM5(I,J,6)=TG(I,J)
       STD_TM5(I,J,7)=OLR(I,J)
-      
   226 CONTINUE
 
 #if defined (DIFFUSION)
@@ -1003,7 +1002,7 @@ CONTAINS
       STD_TM5(I,J,3)=STD_TM5(I,J,3)+WTH(I,J)       *  dtfac
       STD_TM5(I,J,4)=STD_TM5(I,J,4)+WQV(I,J)       *  dtfac
       STD_TM5(I,J,5)=STD_TM5(I,J,5)+SPREC(I,J)     *  dtfac
-      STD_TM5(I,J,6)=STD_TM5(I,J,6)+PREC25(I,J)    *  dtfac
+      STD_TM5(I,J,6)=STD_TM5(I,J,6)+TG(I,J)        *  dtfac
       STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       *  dtfac
  1226 CONTINUE
 
@@ -1318,7 +1317,7 @@ CONTAINS
         call pCDF_WRITE_xy(ncid_phys, 'wth', TIME_C, time_start, std_tm5(:,:,3) )
         call pCDF_WRITE_xy(ncid_phys, 'wqv', TIME_C, time_start, std_tm5(:,:,4) )
         call pCDF_WRITE_xy(ncid_phys, 'sprec', TIME_C, time_start, std_tm5(:,:,5) )
-        call pCDF_WRITE_xy(ncid_phys, 'prec25', TIME_C, time_start, std_tm5(:,:,6) )
+        call pCDF_WRITE_xy(ncid_phys, 'tg', TIME_C, time_start, std_tm5(:,:,6) )
         call pCDF_WRITE_xy(ncid_phys, 'olr', TIME_C, time_start, std_tm5(:,:,7) )
 #else
       CALL gather(ivar5,std_tm5(:,:,1:ivar5), out_glob(:,:,1:ivar5))
@@ -1335,7 +1334,7 @@ CONTAINS
         out_glob_xy(:,:) = out_glob(:,:,5)
         call CDF_WRITE_XY(ncid_phys, 'sprec', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
         out_glob_xy(:,:) = out_glob(:,:,6)
-        call CDF_WRITE_XY(ncid_phys, 'prec25', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
+        call CDF_WRITE_XY(ncid_phys, 'tg', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
         out_glob_xy(:,:) = out_glob(:,:,7)
         call CDF_WRITE_XY(ncid_phys, 'olr', TIME_C, time_start, out_glob_xy, (/ 1,1,time_start(1) /))
       endif

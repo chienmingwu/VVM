@@ -714,8 +714,8 @@ CONTAINS
       CALL pCDF_INI_XY_VAR(ncid_phys, 'sprec', 'Surface precipitation rate', &
                           'sfc_precip_rate', 'kg m-2 s-1', &
                           'yt','xt')
-      CALL pCDF_INI_XY_VAR(ncid_phys, 'prec25', 'Precipitation rate at 2.5 km height', &
-                          'precip_rate_2_5km', 'kg m-2 s-1', &
+      CALL pCDF_INI_XY_VAR(ncid_phys, 'tg', 'Skin and sea surface temperature', &
+                          'Skin_temp', 'K', &
                           'yt','xt')
       CALL pCDF_INI_XY_VAR(ncid_phys, 'olr', 'Outgoing longwave radiation', &
                           'outgoing_longwave_radiation', 'W m-2', &
