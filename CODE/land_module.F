@@ -140,7 +140,8 @@ CONTAINS
 ! 2. Ocean temperature
 ! calculate net fluxes 
         zfluxw=swD(I,J)*(1-albdo(I,J)) +lwD(I,J)-sig*TB(I,J)**4   &
-              -wt(I,J)*CP-wq(I,J)*2.5e6
+              -CP*WT(I,J)-HLF*WQ(I,J)
+
 !       Ocean temperature (tg)
 
         TB(I,J)=TB(i,j)+zmcapdt*zfluxw
