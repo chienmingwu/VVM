@@ -46,6 +46,7 @@ cat > definesld.com << 'END1'
 #define TOPOGRAPHY
 #define RADCODE
 #define LSM
+#define SLAB
 'END1'
 cat definesld.com
 
@@ -54,8 +55,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/512/' \
-    -e '1,$s/merid_dimension/64/' \
+sed -e '1,$s/zonal_dimension/768/' \
+    -e '1,$s/merid_dimension/128/' \
     -e '1,$s/zonal_decomposition/8/' \
     -e '1,$s/merid_decomposition/2/' \
     -e '1,$s/vert_dimension/70/' \
