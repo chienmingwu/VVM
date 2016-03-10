@@ -12,7 +12,8 @@ USE utils
 USE domain_decomposition
 #if defined (LSM)
 USE land_module, only:land_interface,land_ini
-USE rad, only:lwDown_3D,swDown_3D
+USE rad, only:lwDown_3D,swDown_3D,lwUp_3d, swUp_3d
+
 #endif
 
 IMPLICIT NONE
@@ -826,7 +827,9 @@ CONTAINS
 
       REAL (KIND=int_kind) ::    &
          swD(MI1,MJ1),           & ! surface short wave flux input for LSM
-         lwD(MI1,MJ1)             ! surface long wave flux input fof LSM
+         lwD(MI1,MJ1),           & ! surface long wave flux input fof LSM
+         swU(MI1,MJ1),           & ! surface short wave flux output for LSM
+         lwU(MI1,MJ1)              ! surface long wave flux output fof LSM
 
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
@@ -875,6 +878,10 @@ CONTAINS
       QG(I,J) = QV3D(I,J,hxp)
       swD(I,J) = swDown_3D(I,J,hxp)
       lwD(I,J) = lwDown_3D(I,J,hxp)
+      swU(I,J) = swUp_3D(I,J,hxp)
+      lwU(I,J) = lwUp_3D(I,J,hxp)
+
+
 
 !     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
       QD(I,J) = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
@@ -884,7 +891,7 @@ CONTAINS
   105 CONTINUE
 
       call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ, &
-                          VEN2D,SPEEDTP,ZROUGH,TG,TD,QD,GWET)
+                          VEN2D,SPEEDTP,ZROUGH,TG,TD,QD,GWET,swU,lwU)
 
 #else
 !==========================================================
@@ -911,6 +918,18 @@ CONTAINS
 
       CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ztmp,ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
+
+
+      if (my_task .eq. 0 ) THEN
+
+      if (i .eq. 10 .and. j .eq. 10 ) THEN 
+      print*,'TB = ', THBAR(hxp)
+      print*,'THVSMD = ', THVSM
+      print*,'speed = ', SPEEDM
+      print*,'zd = ', ztmp
+      print*,'zrough = ',ZROUGH1
+      endif
+      endif
 
       if(psfx) THEN
         WT(I,J) = fss(i,j) 
@@ -985,8 +1004,10 @@ CONTAINS
       WV(I,J)  = WV(I,J)*RHOZ(hx1)
       endif
   130 CONTINUE
-   END SUBROUTINE sflux_3d
+      if (my_task .eq. 0 ) print*,'sensible heat = ', WTH(10,10)
+      if (my_task .eq. 0 ) print*,'latent heat = ',WQV(10,10)
 
+   END SUBROUTINE sflux_3d
 !-----7---------------------------------------------------------------72
    SUBROUTINE SFLUX_2D (SIGMAU,THVM,THVSM,SPEED1,ZR,ZROUGH,USTAR,   &
        VENTFC,MOLEN )

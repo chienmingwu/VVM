@@ -36,7 +36,8 @@ PRIVATE
 
   INTEGER (KIND=int_kind), dimension(MI1,MJ1), PUBLIC::lNROOT,LU
 
-  REAL (KIND=dbl_kind),dimension(MI1,MJ1) :: TB,ZD,ZL,RHOMAP,RHOPIMAP,PIMAP
+  REAL (KIND=dbl_kind),dimension(MI1,MJ1) :: &
+     TB,ZD,ZL,RHOMAP,RHOPIMAP,PIMAP,PI1MAP
 
 #if defined (SLAB)
         REAL(kind=dbl_kind), PRIVATE::  &
@@ -58,7 +59,7 @@ CONTAINS
 
 !=======================================================================
    SUBROUTINE land_interface(T2,Q2,swD,lwD,SPREC,WT,WQ,VNE2D,SFCSPD,  &
-                             ZROUGH,TG,TD,QD,GWET) 
+                             ZROUGH,TG,TD,QD,GWET,swU,lwU) 
 
 !=======================================================================
 ! land model interface for LSM_DRV 
@@ -81,7 +82,9 @@ CONTAINS
 
       REAL (KIND=int_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::   & 
          swD,           &
-         lwD
+         lwD,           &
+         swU,           &
+         lwU
 
       REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::    &
          WT,            &
@@ -119,7 +122,7 @@ CONTAINS
 #if defined (SLAB)
 ! 2. Ocean temperature
 ! calculate net fluxes
-        zfluxw=swD(I,J)*(1-albdo(I,J)) +lwD(I,J)-sig*TB(I,J)**4   &
+        zfluxw=swD(I,J)-swU(I,J) +lwD(I,J)-lwU(I,J)   &
               -CP*WT(I,J)-HLF*WQ(I,J)
 !       Ocean temperature (tg)
         TG(I,J)=TG(i,j)+zmcapdt*zfluxw
@@ -132,7 +135,7 @@ CONTAINS
       TD(I,J) = TS-TD(I,J)
       QD(I,J) = ABS(GWET(I,J))*(QSFC-QD(I,J))
 
-      THVSMD(I,J) = TG(I,J)/PIMAP(I,J)-T2(I,J)                         &
+      THVSMD(I,J) = TG(I,J)*PI1MAP(I,J)-T2(I,J)                         &
                +ABS(GWET(I,J))*TB(I,J)*(DELTA*(QSFC-Q2(I,J)))
       ENDIF
           
@@ -140,7 +143,12 @@ CONTAINS
       Q2i(I,J) = Q2(I,J)/(1+Q2(I,J))
   100 CONTINUE
 
-      if (my_task .eq. 0 ) print*, tg(10,10)
+      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
+      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
+      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
+      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
+      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
+
             
       SPRECi = real(SPREC)
       SFCSPDi =real(SFCSPD)
@@ -181,6 +189,12 @@ CONTAINS
       WQ(I,J) = WQ(I,J)*RHOMAP(I,J)
 
   200 CONTINUE
+
+      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
+      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
+      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
+      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
+      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
 
 #endif
 
@@ -395,6 +409,7 @@ CONTAINS
          P2(I,J)          = PBAR(hxp)
          P1(I,J)          = PBAR(hxp-1)
          PIMAP(I,J)       = PIBAR(hxp)
+         PI1MAP(I,J)      = 1./PIBAR(hxp-1)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
          lT1(I,J)         = thbar(hx(I,J))*pibar(INT(hx(I,J)))
          lST(I,J,1)       = 297.0995
