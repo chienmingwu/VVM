@@ -919,18 +919,6 @@ CONTAINS
       CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ztmp,ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
 
-
-      if (my_task .eq. 0 ) THEN
-
-      if (i .eq. 10 .and. j .eq. 10 ) THEN 
-      print*,'TB = ', THBAR(hxp)
-      print*,'THVSMD = ', THVSM
-      print*,'speed = ', SPEEDM
-      print*,'zd = ', ztmp
-      print*,'zrough = ',ZROUGH1
-      endif
-      endif
-
       if(psfx) THEN
         WT(I,J) = fss(i,j) 
         WQ(I,J) = fws(i,j) / hlf
@@ -1004,8 +992,6 @@ CONTAINS
       WV(I,J)  = WV(I,J)*RHOZ(hx1)
       endif
   130 CONTINUE
-      if (my_task .eq. 0 ) print*,'sensible heat = ', WTH(10,10)
-      if (my_task .eq. 0 ) print*,'latent heat = ',WQV(10,10)
 
    END SUBROUTINE sflux_3d
 !-----7---------------------------------------------------------------72
