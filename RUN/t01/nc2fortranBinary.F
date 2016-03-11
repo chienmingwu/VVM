@@ -31,7 +31,7 @@
       integer i,j,k,ierr
 
       integer NLID(2)
-      integer idx,idy
+      integer idx,idy,nvaridx,nvaridy
 
       REAL*8 DT,DX,DYNEW,DZ,DZ1,ALADV,ZB,TOP,TMP,WRXMU,UVTAU
       LOGICAL NOTURB,NOSFX,BUOY
@@ -170,6 +170,15 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   100 CONTINUE
 
       ELSE
+      
+      DO J=1,MJ_GLOB
+      YM(J)=J
+      ENDDO
+
+      DO I=1,MI_GLOB
+      XM(I)=I
+      ENDDO
+
 
       HX = 1
       DO 500 J = 1,MJ_GLOB
@@ -177,7 +186,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
 !      xt(I) = I * DX
 !      yt(I) = J * DYNEW
-
       if (I .gt. 256 .and. I .lt. 513) then
       hx(i,j) = (max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))
       hx(I,J) = max(hx(I,J), 1.)
@@ -208,10 +216,10 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMAX(I,J) = 10.
       SHDMIN(I,J) = 10.
       SLOPE(I,J) = 1
-      SOIL(I,J) = 1 
-      endif
-     
-     
+      SOIL(I,J) = 1
+      endif 
+   
+ 
   500 CONTINUE
 
       DO 600 I = 1, MI_GLOB
@@ -266,11 +274,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
 
-
-      ierr = nf_def_dim(ncid, "lat", MJ_GLOB, idy)
-      print*,'ERRor', nf_strerror(ierr)
-
-      ierr = nf_def_dim(ncid, "lon", MI_GLOB, idx)
+      ierr = nf_def_dim(ncid, "y", MJ_GLOB, idy)
+      ierr = nf_def_dim(ncid, "x", MI_GLOB, idx)
       print*,'ERRor', nf_strerror(ierr)
 
       nlid(2) = idy

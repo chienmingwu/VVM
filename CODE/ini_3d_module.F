@@ -130,10 +130,6 @@ CONTAINS
       T1(7:21)=T1(7:21)+10.
       QV1(7:21)=QV1(7:21)*0.5
 
-!ccwu stable env.
-      T1(7:21)=T1(7:21)+10.
-      QV1(7:21)=QV1(7:21)*0.5
-
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
       PI1(K) = ( P1(K) / PZERO ) ** RBCP
