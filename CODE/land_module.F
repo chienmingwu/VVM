@@ -123,7 +123,8 @@ CONTAINS
 ! 2. Ocean temperature
 ! calculate net fluxes
         zfluxw=swD(I,J)-swU(I,J) +lwD(I,J)-lwU(I,J)   &
-              -CP*WT(I,J)-HLF*WQ(I,J)
+              -CP*WT(I,J)-HLF*WQ(I,J)                 &
+              -25. ! ocean cooling 25 w/m2
 !       Ocean temperature (tg)
         TG(I,J)=TG(i,j)+zmcapdt*zfluxw
 #endif
@@ -530,7 +531,7 @@ CONTAINS
 ! 1. Set up constants
 
         rhoh2o = 1024.75         !density of water [kg/m**3]
-        zdmix=2._dbl_kind       ! constant depth of mixed layer
+        zdmix=20._dbl_kind       ! constant depth of mixed layer
         zcpwater=4218._dbl_kind  ! watar heat capacity
         zmixcap=rhoh2o*zcpwater*zdmix  !Cw ocean heat capacity
         zmcapdt=nsflux*dt/zmixcap       !1/cw*dt

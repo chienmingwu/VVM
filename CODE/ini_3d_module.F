@@ -112,7 +112,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 299.88
+      SST = 300.
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -431,8 +431,8 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=UG(K)
-      U3DY(I,J,K)=VG(K)
+      U3DX(I,J,K)=0.
+      U3DY(I,J,K)=0.
   610 CONTINUE
 
       DO 660 K = 2, NK1
