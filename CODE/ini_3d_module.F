@@ -126,6 +126,7 @@ CONTAINS
       QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
 
+
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
       PI1(K) = ( P1(K) / PZERO ) ** RBCP

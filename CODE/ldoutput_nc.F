@@ -910,6 +910,8 @@ CONTAINS
 #endif
 
 #if defined (PHYSICS)
+   dtfac = PASS_SMALL_DT / DT
+
 ! initialize accumulators and counter on first call
    if(first) then
       isample = 0
@@ -919,9 +921,11 @@ CONTAINS
 #if defined (LSM)
       std_lsm = 0.
 #endif
+
+   dtfac = PASS_SMALL_DT / DT * NXSAVG
+
    endif
 
-   dtfac = PASS_SMALL_DT / DT 
 
 ! accumulate physical variables all timesteps (except twp-ice case)
    SELECT CASE (TRIM(casename))
@@ -1007,6 +1011,7 @@ CONTAINS
       STD_TM5(I,J,6)=STD_TM5(I,J,6)+TG(I,J)        *  dtfac
       STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       *  dtfac
  1226 CONTINUE
+
 
 #if defined (DIFFUSION)
 #if defined (LSM)
@@ -1126,6 +1131,7 @@ CONTAINS
       
    END SELECT
 #endif
+
    if( (mod(itt,nxsavg) .ne. 0 ) .OR. ( itt .eq. out_itt ) ) return
 
    out_itt = itt  ! Mars ADD to prevent over-estimate
@@ -1156,6 +1162,7 @@ CONTAINS
       ENDDO
       ENDDO
 #endif
+
    END SELECT
 #endif
 

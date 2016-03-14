@@ -31,7 +31,7 @@
       integer i,j,k,ierr
 
       integer NLID(2)
-      integer idx,idy
+      integer idx,idy,nvaridx,nvaridy
 
       REAL*8 DT,DX,DYNEW,DZ,DZ1,ALADV,ZB,TOP,TMP,WRXMU,UVTAU
       LOGICAL NOTURB,NOSFX,BUOY
@@ -170,7 +170,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   100 CONTINUE
 
       ELSE
-
+      
       OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
       READ(15,*) xt
       CLOSE(15)
@@ -274,11 +274,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
 
-
-      ierr = nf_def_dim(ncid, "lat", MJ_GLOB, idy)
-      print*,'ERRor', nf_strerror(ierr)
-
-      ierr = nf_def_dim(ncid, "lon", MI_GLOB, idx)
+      ierr = nf_def_dim(ncid, "y", MJ_GLOB, idy)
+      ierr = nf_def_dim(ncid, "x", MI_GLOB, idx)
       print*,'ERRor', nf_strerror(ierr)
 
       nlid(2) = idy
@@ -354,7 +351,5 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ierr = nf_close(ncid)
       print*,'ERRor', nf_strerror(ierr)
-
-      
 
       end

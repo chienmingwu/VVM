@@ -639,7 +639,7 @@ CONTAINS
                     !current_mag = ( u3dx_now ** 2 + u3dy_now ** 2 + w3d_now ** 2 ) ** 0.5
                     current_mag = max ( abs( w3d_now) , abs( vtr_now ) , abs(vtg_now) )
                     !grid_length = ( ( DX **2 + DYNEW ** 2 + ( ZZ(k+1) - ZZ(K) ) ** 2 ) ** 0.5 ) * 0.2 ! USE FNZ ?
-                    grid_length = ( DZ ) / fnz(k) * 0.6 !ccwu
+                    grid_length = ( DZ ) / fnz(k) * 0.8 !ccwu
                     
                     current_mag = grid_length / max( current_mag , 1.E-6 )
                                        

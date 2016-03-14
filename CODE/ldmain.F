@@ -145,6 +145,7 @@ PROGRAM ldmain
 
 
     ITT = ITT + 1
+    CALL XSEC_CDF ( ITT )
     if(my_task == 0) write(6,*) 'ITT=',ITT
 
     !  USE FORWARD SCHEME TO INITIALIZE
