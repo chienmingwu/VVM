@@ -7,7 +7,8 @@
       real DX,DY,DXY,pi
       real L,H,W,RW
       common H,W 
-!      
+!  
+!    
       L = 100000.
       H = 1000.
       parameter (W=4000.0)
