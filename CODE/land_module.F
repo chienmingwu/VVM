@@ -124,7 +124,7 @@ CONTAINS
 ! calculate net fluxes
         zfluxw=swD(I,J)-swU(I,J) +lwD(I,J)-lwU(I,J)   &
               -CP*WT(I,J)-HLF*WQ(I,J)                 &
-              -25. ! ocean cooling 25 w/m2
+              -100. ! ocean cooling 100 w/m2 from Romps 2012
 !       Ocean temperature (tg)
         TG(I,J)=TG(i,j)+zmcapdt*zfluxw
 #endif
