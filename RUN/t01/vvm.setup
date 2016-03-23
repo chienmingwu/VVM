@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = slab100
+set expname = slab100critmn
 
 # hardscrabble configuration
 set subdir = '../..'
