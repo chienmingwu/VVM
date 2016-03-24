@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = slab100critmn
+set expname = slab_300K_critmn
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -46,7 +46,6 @@ cat > definesld.com << 'END1'
 #define RADCODE
 #define TOPOGRAPHY
 #define LSM
-#define SLAB
 'END1'
 cat definesld.com
 
@@ -71,7 +70,7 @@ sed -e '1,$s/zonal_dimension/128/' \
 # input data
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=432000 /
- &INPUT2 RLAT=0./
+ &INPUT2 RLAT=45./
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=20,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=180,NWR11=1,NFLPRT=1,NRESTART=180 /
  &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=1.,Q1Q2=T,DTRAD=120./
