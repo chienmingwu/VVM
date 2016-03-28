@@ -61,7 +61,7 @@ sed -e '1,$s/zonal_dimension/1024/' \
     -e '1,$s/merid_dimension/1024/' \
     -e '1,$s/zonal_decomposition/8/' \
     -e '1,$s/merid_decomposition/8/' \
-    -e '1,$s/vert_dimension/70/' \
+    -e '1,$s/vert_dimension/60/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -74,9 +74,9 @@ sed -e '1,$s/zonal_dimension/1024/' \
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=60 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=10,NWR11=1,NFLPRT=1,NRESTART=10 /
- &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=60.,SOLVAR=F, RRTMRC=T/
+ &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
 'END6'
 cat INPUT
 

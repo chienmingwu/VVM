@@ -30,7 +30,7 @@ CONTAINS
 !     Gravity Wave Damping (Rayleigh type)
 
       DO 300 K = NK1-4, NK1
-      CGR =  CRAD*(ZZ(K)-ZT(NK2-5))/(ZT(NK2)-ZT(NK2-5))
+      CGR =  CRAD*(ZZ(K)-ZT(NK2-9))/(ZT(NK2)-ZT(NK2-9))
 
       DO 310 J = 1, MJ1
       DO 310 I = 1, MI1
@@ -60,7 +60,7 @@ CONTAINS
 !     Gravity Wave Damping (Rayleigh type)
 !-----------------------------------------
       DO 700 K = NK2-4, NK2
-      CGR =  CRAD*(ZT(K)-ZT(NK2-5))/(ZT(NK2)-ZT(NK2-5))
+      CGR =  CRAD*(ZT(K)-ZT(NK2-9))/(ZT(NK2)-ZT(NK2-9))
 
       DO 702 J = 1, MJ1
       DO 702 I = 1, MI1
