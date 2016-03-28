@@ -62,19 +62,10 @@
       CLOSE(15)
 
       DOMAIN = 15000.
-
-      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
-      CZ1 = 1. - CZ2 * DOMAIN
-
-      DZTMP = MIN(DZ,DZ1)
       Zz(1) = ZB
       DO 50 K = 2, NK3
-      Zz(K) = Zz(K-1) + DZ
+      Zz(K) = Zz(K-1) + DZ1
    50 CONTINUE
-
-      DO 51 K = 1, NK3
-      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
-   51 CONTINUE
 
 ! import INPUT FILE 
       IF (TWTOPO) THEN
