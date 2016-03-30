@@ -48,7 +48,6 @@ cat > definesld.com << 'END1'
 #define LSM
 #define AREAMN
 #define SLAB
-#define ZCONST
 'END1'
 cat definesld.com
 
@@ -61,7 +60,7 @@ sed -e '1,$s/zonal_dimension/1024/' \
     -e '1,$s/merid_dimension/1024/' \
     -e '1,$s/zonal_decomposition/8/' \
     -e '1,$s/merid_decomposition/8/' \
-    -e '1,$s/vert_dimension/60/' \
+    -e '1,$s/vert_dimension/70/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
