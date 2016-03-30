@@ -1,10 +1,8 @@
-#include "definesld.com"
 MODULE z_coord
 
 USE kinds
 USE PARMSLD
 USE CONSTLD
-
 
 IMPLICIT NONE
 PRIVATE
