@@ -84,9 +84,9 @@ CONTAINS
 ! TWP-ICE comparison study (0Z 18 Jan 2006)      
       iyear0 = 2013
       imonth0 = 9
-      iday0 = 8
+      iday0 = 7
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 22.0
+      hour0 = 18.0
   END SELECT 
 
 !  Get Julian day

@@ -85,7 +85,7 @@ CONTAINS
 
         do k=1,NT1
         if(height(k) .lt. 1500.) then
-        t1(k) =305.5
+        t1(k) =298.5+(305.5-298.5)*height(k)/1500.
         qv1(k)=15.7
         elseif(height(k) .ge. 1500. .and. height(k) .le. 2275.) then
         qv1(k)=15.7 -(15.7-12.7) *(height(k)-1500.)/775.
@@ -139,7 +139,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 305.
+      SST = 298.5
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
