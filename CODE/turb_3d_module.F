@@ -71,7 +71,11 @@ CONTAINS
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3) ::       &
       ddx,  &  ! temporary variable used in turbulence
       ddy      ! temporary variable used in turbulence
-      INTEGER (KIND=int_kind) ::   &
+!ADD from Kuo setting
+      REAL :: DN, Ftot, BR, SH, LE
+      REAL (KIND=dbl_kind), PARAMETER :: PI=3.14159265358979
+!end 
+     INTEGER (KIND=int_kind) ::   &
          i, j, k,  & ! do loop indices for zonal, meridional and vertical dimensions
          itype       !
 
@@ -325,8 +329,25 @@ CONTAINS
          DO 110 I=mim,mip
          UW(I,J)  = 0.
          WV(I,J)  = 0.
-         WTH(I,J) = 0.
-         WQV(I,J) = 0.
+!VARIABLE FROM KUO 
+
+         tempim=int((mim+mip)/2)
+         tempjm=int((mjm+mjp)/2)
+    
+         Ftot=500.*sin(2.*PI*ITT*DT/86400.)
+!land
+         IF(abs(i - tempim).LE.(mip-mim)/4)then
+            BR=4.*sin(2.*PI*ITT*DT/86400.)
+            SH=BR*Ftot/(1+BR)
+            LE=Ftot-SH
+            WTH(I,J) = SH/(1004.5*PIBAR(1))
+            WQV(I,J) = LE/2.5e6
+         ELSE             
+!ocean
+            WTH(I,J) = (50.*2./PI)/(1004.5*PIBAR(1))
+            WQV(I,J) = (450.*2./PI)/2.5e6
+         ENDIF
+
   110    CONTINUE
       ELSE
 
