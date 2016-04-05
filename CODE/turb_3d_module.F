@@ -71,9 +71,11 @@ CONTAINS
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3) ::       &
       ddx,  &  ! temporary variable used in turbulence
       ddy      ! temporary variable used in turbulence
+
 !ADD from Kuo setting
       REAL :: DN, Ftot, BR, SH, LE
       REAL (KIND=dbl_kind), PARAMETER :: PI=3.14159265358979
+      INTEGER tempim,tempjm
 !end 
      INTEGER (KIND=int_kind) ::   &
          i, j, k,  & ! do loop indices for zonal, meridional and vertical dimensions
