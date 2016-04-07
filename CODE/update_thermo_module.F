@@ -34,6 +34,20 @@ CONTAINS
 ! local variables
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
+
+
+!add simple subsidence effects using wls (1/s)
+
+      do k=2,nk2
+      do j=1,mj1
+      do i=1,mi1
+      TH3D(I,J,K)=TH3D(I,J,K)-DT*WLS(K)*(TH3D(I,J,K+1)-TH3D(I,J,K))
+      QV3D(I,J,K)=QV3D(I,J,K)-DT*WLS(K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
+      QC3D(I,J,K)=QC3D(I,J,K)-DT*WLS(K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
+      enddo
+      enddo
+      enddo
+
 ! Update theta from dynamics tendency term
       DO 50 K = 2, NK2
       DO 50 J = 1, MJ1
