@@ -66,7 +66,7 @@ CONTAINS
           ,QCBAR(NK3),QVSBAR(NK3)
       REAL (KIND=dbl_kind) :: ZT1(10000),PI1(10000),TV1(10000),PILOG1(10000)
       REAL (KIND=dbl_kind) :: PQ1(10000),P1(10000),T1(10000),QV1(10000),QC1(10000)
-      REAL (KIND=dbl_kind) :: Q1OBS(10000),Q2OBS(10000)
+      REAL (KIND=dbl_kind) :: Q1OBS(10000),Q2OBS(10000),wls1(10000)
       REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
 
        DELZ=1.
@@ -82,6 +82,7 @@ CONTAINS
         t1=0.
         qv1=0.
         qc1=0.
+        wls1=0.
 
         do k=1,NT1
         if(height(k) .lt. 1500.) then
@@ -100,6 +101,13 @@ CONTAINS
         endif
 
         enddo
+    
+        do k=2,NT1
+        if(height(k) .le. 2275.) then
+        wls1(k)=1.5*(height(k)/2275.)
+        else
+        wls1(k)=1.5
+        endif
 
 
         do k=1,NT1
@@ -319,6 +327,19 @@ CONTAINS
       Q2LS (K) = 0.0
       END IF
   200 CONTINUE
+
+!ccwu for subsidence 
+      DO 201 K = 2, NK3
+
+      K1 = INDEXR(PBAR(K)*0.01,NT1,PQ1,LF) !ccwu change with pq1 accordingly
+      K2 = K1 + 1
+      WLS (K) =  &
+        FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLStemp(K1),PQ1(K2),wlstemp(K2))
+  201 CONTINUE
+
+!ccwu change omega mb/hr to w/dz 1/s
+
+      WLS=-WLS/RHO/9.8*FNZ/DZ*100./3600.
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
 !     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
