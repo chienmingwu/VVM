@@ -124,11 +124,11 @@ CONTAINS
 
       DO 100 K = 1, NT1
       T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04
+      QV1(K)= QV1(K) * 0.!1.E-04
   100 CONTINUE
 !ccwu stable env.
-      T1(7:21)=T1(7:21)+10.
-      QV1(7:21)=QV1(7:21)*0.5
+!      T1(7:21)=T1(7:21)+10.
+!      QV1(7:21)=QV1(7:21)*0.5
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -321,6 +321,15 @@ CONTAINS
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       vG(:)   = 0.
+
+!easy for stable initial profile
+
+      DO 211 K = 4,1,-1
+
+      THBAR(K) = 2*THBAR(K+1) - THBAR(K+2)
+  211 CONTINUE
+
+
 
 !     OCEAN POINTS
 
