@@ -396,8 +396,8 @@ CONTAINS
       ENDIF
 
 !ccwu
-      if (ni_sbdm .eq. 0 .or. ni_sbdm .eq. 3 ) then
-      LU = 16
+      if (ni_sbdm .eq. 1 .and. I .le. (mim+mip)/2) then
+      LU = 1
       SOIL = 1
       SLOPE =  1
       ALBEDOM = 15.
@@ -405,8 +405,19 @@ CONTAINS
       LAIM = 4.
       SHDMAX = 10.
       SHDMIN = 10.
-      else
+      
+      else if (ni_sbdm .eq. 0 .and. I .ge. (mim+mip)/2) then
       LU = 1
+      SOIL = 1
+      SLOPE =  1
+      ALBEDOM = 15.
+      GREENFRACM = 10.
+      LAIM = 4.
+      SHDMAX = 10.
+      SHDMIN = 10.
+      
+      else
+      LU = 16
       SOIL = 1
       SLOPE =  1
       ALBEDOM = 15.
