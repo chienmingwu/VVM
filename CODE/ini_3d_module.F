@@ -58,6 +58,9 @@ CONTAINS
       REAL (KIND=int_kind) :: temp(NK3)
 
       integer nu1, nt1, k1, k2, it
+! add to debug
+      real albdo
+!*************
       logical lf
       DATA NU1/33/,NT1/21/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &

@@ -327,27 +327,39 @@ CONTAINS
 !===================================================
 
       IF(NOSFX) THEN
+     
+       
          DO 110 J=mjm,mjp
          DO 110 I=mim,mip
          UW(I,J)  = 0.
          WV(I,J)  = 0.
 !VARIABLE FROM KUO 
-
-         tempim=int((mim+mip)/2)
-         tempjm=int((mjm+mjp)/2)
-    
-         Ftot=500.*sin(2.*PI*ITT*DT/86400.)
+  
+         Ftot=340.*sin(2.*PI*ITT*DT/86400.)
+         BR = 4.*sin(2.*PI*ITT*DT/86400.)
+         SH = BR*Ftot/(1+BR)
+         LE = Ftot-SH        
 !land
-         IF(abs(i - tempim).LE.(mip-mim)/4)then
-            BR=4.*sin(2.*PI*ITT*DT/86400.)
-            SH=BR*Ftot/(1+BR)
-            LE=Ftot-SH
-            WTH(I,J) = SH/(1004.5*PIBAR(1))
-            WQV(I,J) = LE/2.5e6
-         ELSE             
+         IF(ni_sbdm .eq. 1)then
+            IF(I .le. (mim+mip)/2)then
+             WTH(I,J) = SH/(1004.5*PIBAR(1))
+             WQV(I,J) = LE/2.5e6
+         
+            ELSE             
 !ocean
-            WTH(I,J) = (50.*2./PI)/(1004.5*PIBAR(1))
-            WQV(I,J) = (450.*2./PI)/2.5e6
+             WTH(I,J) = 200./(1004.5*PIBAR(1))
+             WQV(I,J) = 20./2.5e6
+            ENDIF
+         ELSE
+             IF(I .ge. (mim+mip)/2)then
+             WTH(I,J) = SH/(1004.5*PIBAR(1))
+             WQV(I,J) = LE/2.5e6
+
+            ELSE
+!ocean
+             WTH(I,J) = 200./(1004.5*PIBAR(1))
+             WQV(I,J) = 20./2.5e6
+             ENDIF   
          ENDIF
 
   110    CONTINUE
