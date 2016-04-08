@@ -108,6 +108,7 @@ CONTAINS
         else
         wls1(k)=1.5
         endif
+        enddo
 
 
         do k=1,NT1
@@ -334,7 +335,7 @@ CONTAINS
       K1 = INDEXR(PBAR(K)*0.01,NT1,PQ1,LF) !ccwu change with pq1 accordingly
       K2 = K1 + 1
       WLS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLStemp(K1),PQ1(K2),wlstemp(K2))
+        FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLS1(K1),PQ1(K2),wls1(K2))
   201 CONTINUE
 
 !ccwu change omega mb/hr to w/dz 1/s

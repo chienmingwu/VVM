@@ -48,7 +48,7 @@ CONTAINS
       tempim=mi1*ni_sbdm+i
       tempjm=mj1*nj_sbdm+j
       if(tempim .eq. 398. .and. tempjm .eq. 645.) then
-      TC3D(I,J,2,1)=1.
+      TC3D(I,J,6,1)=1.
       END IF
   123 CONTINUE
 
@@ -72,12 +72,12 @@ CONTAINS
   SELECT CASE (TRIM(casename))
   CASE ('GATE_PHASE_III')
 !   Universal tracer decay with 6-hour e-folding time 
-      DO 301 nt=1,ntracer
-      DO 301 K=1,NK3
-      DO 301 J=mjm,mjp
-      DO 301 I=mim,mip
-      TC3D(I,J,K,nt)=TC3D(I,J,K,nt) - DT*(TC3D(I,J,K,nt)/21600.)
-  301 CONTINUE
+!      DO 301 nt=1,ntracer
+!      DO 301 K=1,NK3
+!      DO 301 J=mjm,mjp
+!      DO 301 I=mim,mip
+!      TC3D(I,J,K,nt)=TC3D(I,J,K,nt) - DT*(TC3D(I,J,K,nt)/21600.)
+!  301 CONTINUE
   
 ! the case has a specified source function
 
@@ -98,7 +98,7 @@ CONTAINS
       tempim=mi1*ni_sbdm+i
       tempjm=mj1*nj_sbdm+j
       if(tempim .eq. 398. .and. tempjm .eq. 645.) then
-      TC3D(I,J,3,1)=1.
+      TC3D(I,J,6,1)=1.
       END IF
   123 CONTINUE
   

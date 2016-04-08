@@ -37,7 +37,6 @@ CONTAINS
 
 
 !add simple subsidence effects using wls (1/s)
-
       do k=2,nk2
       do j=1,mj1
       do i=1,mi1
