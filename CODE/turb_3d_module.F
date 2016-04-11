@@ -341,7 +341,7 @@ CONTAINS
          LE = Ftot-SH        
 !land
          IF(ni_sbdm .eq. 1)then
-            IF(I .le. (mim+mip)/6)then
+            IF(I .le. (5.*mim+mip)/6)then
              WTH(I,J) = SH/(1004.5*PIBAR(1))
              WQV(I,J) = LE/2.5e6
          
@@ -351,7 +351,7 @@ CONTAINS
              WQV(I,J) = 20./2.5e6
             ENDIF
          ELSE
-             IF(I .ge. 5.*(mim+mip)/6)then
+             IF(I .ge. (mim+5.*mip)/6)then
              WTH(I,J) = SH/(1004.5*PIBAR(1))
              WQV(I,J) = LE/2.5e6
 

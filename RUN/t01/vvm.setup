@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = case1
+set expname = case2
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -48,6 +48,7 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
+#define LSM
 'END1'
 cat definesld.com
 
@@ -94,7 +95,7 @@ cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 ln -s ${subdir}/DATA/${expname}/INPUT
-./nc2fortranBinary
+#./nc2fortranBinary
 rm INPUT
 exit
 # GLDAS
