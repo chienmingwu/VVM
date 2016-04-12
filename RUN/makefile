@@ -70,7 +70,7 @@
 # specify the shell to avoid surprises in weird environments
 SHELL	= /bin/csh
 
-PETSC_DIR        = /opt/petsc-intel
+PETSC_DIR        = /opt/petsc360/lib/petsc
 include ${PETSC_DIR}/conf/variables
 #-----------------------------------------------------------------------------
 # Read the universal makefile to define the processor-dependent information
@@ -170,8 +170,8 @@ topography :
 	${CPP} -p $(BINDIR)/PARMSLD.f90 > PARMSLD.f	
 	ifort -c PARMSLD.f -free
 	${CPP} -p nc2fortranBinary.F > nc2fortranBinary.f
-	ifort -c nc2fortranBinary.f  -I/opt/netcdf4-intel/include
-	ifort -o $(BINDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o -L/opt/netcdf4-intel/lib -lnetcdf -lnetcdff 
+	ifort -c nc2fortranBinary.f  -I/opt/intel-libs/include
+	ifort -o nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o -L/opt/intel-libs/lib -lnetcdf -lnetcdff 
 #	$(CPP) -p nc2fortranBinary.F > nc2fortranBinary.f
 #	ifort -c nc2fortranBinary.f -L/opt/netcdf4-intel/lib -lnetcdf -lnetcdff
 
