@@ -232,7 +232,7 @@
       call timer_start('radiation')
       first_rad = .FALSE.
 
-      CALL RADIATION_RRTMG(ITT, NRADD, SSTxy, PBAR, PIBAR, DX, &
+      CALL RADIATION_RRTMG(ITT, NRADD, SSTXY, PBAR, PIBAR, DX, &
                            DYNEW, RLAT, RLON, DT, ZZ, ZT, RHO)
 ! Update theta tendency term for TWP-ICE output
       DO 230 K=2,NK2

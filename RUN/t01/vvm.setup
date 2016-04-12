@@ -5,7 +5,8 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = case2
+
+set expname = case3
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -74,7 +75,7 @@ sed -e '1,$s/zonal_dimension/256/' \
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=0./
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=670.,DZ1=100.,DT=5,NOTURB=F,NOSFX=T,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=50.,DT=5,NOTURB=F,NOSFX=T,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
  &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F, RRTMRC=T/
 'END6'
@@ -89,15 +90,17 @@ endif
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
+
 #cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
 #cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
-ln -s ${subdir}/DATA/${expname}/INPUT
-#./nc2fortranBinary
-rm INPUT
-exit
+cd ${subdir}"/DATA/"${expname}
+./nc2fortranBinary 
+
+
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
 #set soil2 = (SOILM0_1lev SOILM0_2lev SOILM0_3lev SOILM0_4lev \
@@ -117,7 +120,7 @@ exit
 #./nc2fortranBinary
 
 # for LSM
-cd ../${subdir}
+#cd ../${subdir}
 cp ${subdir}/CODE/LSM/GENPARM.TBL .
 cp ${subdir}/CODE/LSM/SOILPARM.TBL .
 cp ${subdir}/CODE/LSM/VEGPARM.TBL .

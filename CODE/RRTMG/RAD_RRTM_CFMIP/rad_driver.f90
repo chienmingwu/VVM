@@ -421,8 +421,8 @@
 !------------------------------------------------------------------------------
 
     if (dolongwave) then
-    
-      if(lat.eq.1.AND.masterproc) print *, "Computing longwave radiation ..." 
+!easy delete output
+!      if(lat.eq.1.AND.masterproc) print *, "Computing longwave radiation ..." 
       
       surfaceT(:) = tg(1:nx)
 
@@ -446,8 +446,8 @@
 !------------------------------------------------------------------------------
 
     if(doshortwave) then
-
-        if(lat.eq.1.AND.masterproc) print *, "Computing shortwave radiation ..." 
+!easy delete output
+!        if(lat.eq.1.AND.masterproc) print *, "Computing shortwave radiation ..." 
 
 ! Solar insolation depends on several choices
 
@@ -517,17 +517,18 @@
 
         if(lat.eq.1.AND.masterproc) then
           if(doshortwave) then 
-            if(doperpetual) then
-              write(*,992) coszrs, SUM(swDown(1:nx,nzm+2))/float(nx)
-            else
-              write(*,991) coszrs, SUM(swDown(1:nx,nzm+2))/float(nx), eccf
-            end if
+!easy delete ouput
+!            if(doperpetual) then
+!              write(*,992) coszrs, SUM(swDown(1:nx,nzm+2))/float(nx)
+!            else
+!              write(*,991) coszrs, SUM(swDown(1:nx,nzm+2))/float(nx), eccf
+!            end if
             991 format('radiation: diurnally-varying insolation, coszrs = ',F10.7, &
                      ' solin = ',f10.4,' eccf = ',f10.7)
             992 format('radiation: diurnally-averaged insolation, coszrs = ',F10.7, &
                      ' solin = ',f10.4)
           end if
-          write(*,993) asdir(1), aldir(1), asdif(1), aldif(1)
+!          write(*,993) asdir(1), aldir(1), asdif(1), aldif(1)
 993       format('radiation: surface albedos, asdir= ',F10.7, &
                ' aldir = ',f10.7,' asdif = ',f10.7,' aldif = ',f10.7)
         end if
