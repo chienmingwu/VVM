@@ -46,7 +46,6 @@ cat > definesld.com << 'END1'
 #define RADCODE
 #define TOPOGRAPHY
 #define LSM
-#define SLAB
 'END1'
 cat definesld.com
 
@@ -55,11 +54,11 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/768/' \
+sed -e '1,$s/zonal_dimension/128/' \
     -e '1,$s/merid_dimension/128/' \
-    -e '1,$s/zonal_decomposition/12/' \
+    -e '1,$s/zonal_decomposition/2/' \
     -e '1,$s/merid_decomposition/2/' \
-    -e '1,$s/vert_dimension/100/' \
+    -e '1,$s/vert_dimension/34/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -95,7 +94,7 @@ cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
-./nc2fortranBinary > tmp.out
+./nc2fortranBinary 
 
 
 # GLDAS
