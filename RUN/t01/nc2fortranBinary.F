@@ -49,8 +49,9 @@
       REAL*8 ZZ(NK3)      
 
       REAL (KIND=int_kind) HX(MI_GLOB,MJ_GLOB)
-
- 
+!chen ADD
+      REAL twtopog(mi_glob,mj_glob),height,maxtopo
+!end
       R = 6378137.0
       ZB = 0. 
       PI = 3.14159265358979323846264338327 
@@ -170,35 +171,50 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   100 CONTINUE
 
       ELSE
-      
+
+! chen add     
+      OPEN(UNIT=99,FILE='../../topofile/topo6.dat'
+     &,FORM='unformatted',STATUS='OLD',access='direct',
+     &recl=mi_glob*mj_glob)
+       READ(99,rec=1) twtopog
+       CLOSE(99)
+      ENDIF
+
+! make sure the coastline doesn't change due to vertical resolution
+      do j=1,mj_glob
+      do i=1,mi_glob
+      if(twtopog(i,j) .gt. 0.) then
+      hx(i,j)=2
+      endif
+      enddo
+      enddo
+ 
       DO J=1,MJ_GLOB
-      YM(J)=J
-      ENDDO
-
       DO I=1,MI_GLOB
-      XM(I)=I
+      HEIGHT=twtopog(i,j)
+      DO K=2,NK1
+      IF(HEIGHT .GE. ZZ(K)) THEN
+      HX(I,J)=K+NINT((HEIGHT-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      ENDIF
+      IF(HX(I,J) .LT. 0) THEN
+      HX(I,J)=0
+      ENDIF
+      ENDDO
+ 
+      tmp=HX(I,J)
+      if(tmp .gt. maxtopo) then
+      maxtopo=tmp
+      endif
+
+      ENDDO
       ENDDO
 
 
-!      HX = 1
+      HX = 0. ! for no topography
       DO 500 J = 1,MJ_GLOB
       DO 500 I = 1,MI_GLOB
-
-!      xt(I) = I * DX
-!      yt(I) = J * DYNEW
-      if (I .gt. 256 .and. I .lt. 513) then
-      hx(i,j) = INT(max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))+1
-      hx(I,J) = max(hx(I,J), 2.)
-      LU(I,J) = 7
-      alb(I,J) = 19.
-      grf(I,J) = 80.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 80.
-      SHDMIN(I,J) = 80.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 1
-      elseif (I .gt. 128 .and. I .lt. 641) then
-      hx(I,J) = 2.
+  
+      if (abs(I-(MI_GLOB/2) .LE. (MI_GLOB/6))) then
       LU(I,J) = 1
       alb(I,J) = 15.
       grf(I,J) = 10.
@@ -207,8 +223,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMIN(I,J) = 10.
       SLOPE(I,J) = 1
       SOIL(I,J) = 1
+
       else
-      hx(I,J) = 1
       LU(I,J) = 16
       alb(I,J) = 15.
       grf(I,J) = 10.
@@ -217,9 +233,9 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMIN(I,J) = 10.
       SLOPE(I,J) = 1
       SOIL(I,J) = 1
-      endif 
-   
- 
+      endif
+! add end
+
   500 CONTINUE
 
 
@@ -229,10 +245,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       DO 700 J = 1,MJ_GLOB
   700 YT (J) = J*DYNEW
 
-
-
-
-      ENDIF
 
       NP = 0
 
