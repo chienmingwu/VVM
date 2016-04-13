@@ -382,7 +382,6 @@ CONTAINS
       READ(99) ((SLOPE(I,J),I=1,MI1),J=1,MJ1)
       READ(99) ((SOIL(I,J),I=1,MI1),J=1,MJ1)
       CLOSE(99)
-      ENDIF
 
 !ccwu
       if (ni_sbdm .eq. 1 .and. I .le. (mim+mip)/2) then
