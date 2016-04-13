@@ -210,11 +210,11 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ENDDO
 
 
-      HX = 0. ! for no topography
+      HX = 1. ! for no topography
       DO 500 J = 1,MJ_GLOB
       DO 500 I = 1,MI_GLOB
   
-      if (abs(I-(MI_GLOB/2) .LE. (MI_GLOB/6))) then
+      if(abs(I-(MI_GLOB/2)) .LE. (MI_GLOB/6)) then
       LU(I,J) = 1
       alb(I,J) = 15.
       grf(I,J) = 10.
