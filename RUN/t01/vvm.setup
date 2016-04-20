@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = cr1_2km_moist_large
+set expname = cr0_1km_moist_large
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -46,6 +46,7 @@ cat > definesld.com << 'END1'
 #define RADCODE
 #define TOPOGRAPHY
 #define LSM
+#define SLAB
 'END1'
 cat definesld.com
 
@@ -54,8 +55,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/256/' \
-    -e '1,$s/merid_dimension/256/' \
+sed -e '1,$s/zonal_dimension/512/' \
+    -e '1,$s/merid_dimension/512/' \
     -e '1,$s/zonal_decomposition/8/' \
     -e '1,$s/merid_decomposition/8/' \
     -e '1,$s/vert_dimension/45/' \
@@ -71,7 +72,7 @@ sed -e '1,$s/zonal_dimension/256/' \
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=86400 /
  &INPUT2 RLAT=0./
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=20,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=1000.,DYNEW=1000.,DZ=500.,DZ1=100.,DT=20,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=180,NWR11=1,NFLPRT=1,NRESTART=180 /
  &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=0.,Q1Q2=F,DTRAD=120./
 'END6'
