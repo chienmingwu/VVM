@@ -994,8 +994,8 @@ CONTAINS
       endif
   130 CONTINUE
 
-      IF (my_task .eq. 5) PRINT*,(ni_sbdm,I,WTH(I,10),WQV(I,10),I=1,MI1)
-      IF (my_task .eq. 6) PRINT*,(ni_sbdm,I,WTH(I,10),WQV(I,10),I=1,MI1)
+!      IF (my_task .eq. 5) PRINT*,(ni_sbdm,I,WTH(I,10),WQV(I,10),I=1,MI1)
+!      IF (my_task .eq. 6) PRINT*,(ni_sbdm,I,WTH(I,10),WQV(I,10),I=1,MI1)
 
 
 

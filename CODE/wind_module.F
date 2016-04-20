@@ -535,8 +535,13 @@ SUBROUTINE DIRECTIB
   700 CONTINUE
 
 
-      IF (my_task .eq. 2) PRINT*,(ni_sbdm,I,Z3DYT(I,10,4),Z3DYT(I,10,5),I=57,MI1)
-      IF (my_task .eq. 5) PRINT*,(ni_sbdm,I,Z3DYT(I,10,4),Z3DYT(I,10,5),I=1,7)
+      IF (my_task .eq. 3) &
+      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(HXV(I,10)),dble(HXU(I,10),I=33,MI1)
+!      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(HXV(I,10)),Z3DYT(I,10,3),I=33,MI1)
+
+      IF (my_task .eq. 4) &
+      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(HXV(I,10)),dble(HXU(I,10),I=33,MI1)
+!      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(HXV(I,10)),Z3DYT(I,10,3),I=1,32)
 
       call bound_3dt_xy(Z3DXT,Z3DYT)
 
