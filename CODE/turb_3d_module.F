@@ -332,6 +332,7 @@ CONTAINS
       ELSE
 
          IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
+
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
 !      CALL SFLUX_3D ! call sflux every time step 
@@ -992,6 +993,11 @@ CONTAINS
       WV(I,J)  = WV(I,J)*RHOZ(hx1)
       endif
   130 CONTINUE
+
+      IF (my_task .eq. 5) PRINT*,(ni_sbdm,I,WTH(I,10),WQV(I,10),I=1,MI1)
+      IF (my_task .eq. 6) PRINT*,(ni_sbdm,I,WTH(I,10),WQV(I,10),I=1,MI1)
+
+
 
    END SUBROUTINE sflux_3d
 !-----7---------------------------------------------------------------72

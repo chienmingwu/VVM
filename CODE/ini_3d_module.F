@@ -124,7 +124,7 @@ CONTAINS
 
       DO 100 K = 1, NT1
       T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 0.!1.E-04
+      QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
 !ccwu stable env.
 !      T1(7:21)=T1(7:21)+10.
@@ -392,7 +392,7 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      QV3D(I,J,K) = QVBAR(K)
+      QV3D(I,J,K) = 0.!QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
@@ -501,7 +501,7 @@ CONTAINS
       UTMN0 = UTMN
       VTMN0 = VTMN
       
-      IF(itt == 0) CALL UPDATE_TRACER_init
+!      IF(itt == 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
       albdo = 0.19

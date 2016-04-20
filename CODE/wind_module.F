@@ -267,7 +267,6 @@ SUBROUTINE DIRECTIB
 
       K = NXV(I,J)
       JP = J + 1
-      JM = J - 1
       KP = K + 1
       KPP = KP + 1
       DDZ = DZ/FNZ(K)
@@ -284,6 +283,10 @@ SUBROUTINE DIRECTIB
 
       HXZX(I,J) = ((HXWN-HXWS)/DYNEW-(HXVT - HXVB)/DDZ)
 
+      HXVB = 0.
+      HXVT = 0.
+      HXWS = 0.
+      HXWN = 0.
 
       if (HXV(I,J) .GE. 1. ) THEN
       if (HYDIJ(I,J) .LT. DDZ) THEN
@@ -378,10 +381,6 @@ SUBROUTINE DIRECTIB
 
       endif
 !      RATIO = ((HXWE-HXWW)/DX-(HXUT-HXUB)/DDZ)
-
-
-
-
 
       ENDIF
  200  CONTINUE
@@ -535,29 +534,9 @@ SUBROUTINE DIRECTIB
       ENDIF
   700 CONTINUE
 
-!      IF (MY_TASK .eq. 2) PRINT*,(Z3DYT(I,5,1),Z3DYT(I,5,2),I+MI1*MY_task,I=1,MI1)
-!      IF (MY_TASK .eq. 2) PRINT*,(Z3DYT(I,5,1),HXU(I,5),I+MI1*MY_task,I=1,MI1)
 
-
-!      IF (MY_TASK .eq. 2) PRINT*,(dble(ITYPEU(I,5,8)),dble(ITYPEU(I,5,9)),I+MI1*MY_task,I=1,MI1)
-!      IF (MY_TASK .eq. 2) PRINT*,(dble(NXU(I,5)),dble(ITYPEU(I,5,9)),I+MI1*MY_task,I=1,MI1)
-
-
-!      IF (MY_TASK .eq. 2) PRINT*,(dble(ITYPEU(I,5,1)),dble(ITYPEU(I,5,2)),I+MI1*MY_task,I=1,MI1)
-
-
-!      IF (MY_TASK .eq. 8) PRINT*,(dble(Z3DYT(I,5,8)),dble(ITYPEU(I,5,8)),I+MI1*MY_task,I=1,MI1)
-
-
-!      IF (MY_TASK .eq. 8) PRINT*,(Z3DYT(I,5,8),Z3DYT(I,5,9),Z3DYT(I,5,10),I=1,MI1)
-
-!      IF (MY_TASK .eq. 7) PRINT*,(Z3DYT(I,5,8),Z3DYT(I,5,9),Z3DYT(I,5,10),I=1,MI1)
-
-
-!      PRINT*,(dble(HXZY(I,5)),Z3DYT(I,5,1),I+MI1*MY_task,I=1,MI1)
-
-!      PRINT*,(Z3DYT(I,5,2),Z3DYT(I,5,1),I+MI1*MY_task,I=1,MI1)
-
+      IF (my_task .eq. 4) PRINT*,(ni_sbdm,I,Z3DYT(I,10,4),Z3DYT(I,10,5),I=57,MI1)
+      IF (my_task .eq. 7) PRINT*,(ni_sbdm,I,Z3DYT(I,10,4),Z3DYT(I,10,5),I=1,7)
 
       call bound_3dt_xy(Z3DXT,Z3DYT)
 

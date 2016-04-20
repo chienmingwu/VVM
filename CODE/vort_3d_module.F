@@ -1155,7 +1155,7 @@ CONTAINS
       DO 10 J = 1,MJ1
       DO 10 I = 1,MI1
       IF (ITYPEV(I,J,K) .EQ. 1) Z3DX(I,J,K) = Z3DX(I,J,K) &
-                  + DT*FZXBU(I,J,K)                       &
+!                  + DT*FZXBU(I,J,K)                       &
                   + A*FZX(I,J,K,N2) + B*FZX(I,J,K,N1)
    10 CONTINUE
 

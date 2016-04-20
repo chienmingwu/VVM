@@ -77,12 +77,12 @@ CONTAINS
   SELECT CASE (TRIM(casename))
   CASE ('TWP-ICE')
 !   Universal tracer decay with 6-hour e-folding time (TWP-ICE)
-      DO 301 nt=1,ntracer
-      DO 301 K=1,NK3
-      DO 301 J=mjm,mjp
-      DO 301 I=mim,mip
-      TC3D(I,J,K,nt)=TC3D(I,J,K,nt) - DT*(TC3D(I,J,K,nt)/21600.)
-  301 CONTINUE
+!      DO 301 nt=1,ntracer
+!      DO 301 K=1,NK3
+!      DO 301 J=mjm,mjp
+!      DO 301 I=mim,mip
+!      TC3D(I,J,K,nt)=TC3D(I,J,K,nt) - DT*(TC3D(I,J,K,nt)/21600.)
+!  301 CONTINUE
   
 ! the twp-ice case has a specified source function
       call update_tracer_source      
