@@ -281,6 +281,8 @@ SUBROUTINE DIRECTIB
       IF (HXV(I,J) .GT. HX(I,JP) ) &
       CALL INTERP1(W3D(I,JP,K),W3D(I,JP,KP),HYZ(I,J),DDZ,HXWN)
 
+      HXVT = 0.
+
       HXZX(I,J) = ((HXWN-HXWS)/DYNEW-(HXVT - HXVB)/DDZ)
 
       HXVB = 0.
@@ -302,8 +304,10 @@ SUBROUTINE DIRECTIB
       IF (HXV(I,J) .GT. HX(I,J) ) &
       CALL INTERP1(W3D(I,J,KP),W3D(I,J,KPP),HYDIJ(I,J)-DDZ,DDZ,HXWS)
       IF (HXV(I,J) .GT. HX(I,JP) ) &
-      CALL INTERP1(W3D(I,JP,KP),W3D(IP,J,KPP),HYDIJ(I,J)-DDZ,DDZ,HXWN)
+      CALL INTERP1(W3D(I,JP,KP),W3D(I,JP,KPP),HYDIJ(I,J)-DDZ,DDZ,HXWN)
       ENDIF
+
+      HXVT = 0.
 
       RATIO = ((HXWN-HXWS)/DYNEW-(HXVT-HXVB)/DDZ)
 
@@ -536,11 +540,11 @@ SUBROUTINE DIRECTIB
 
 
       IF (my_task .eq. 3) &
-      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(HXV(I,10)),dble(HXU(I,10),I=33,MI1)
+      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(ITYPEU(I,10,8)),dble(ITYPEV(I,10,8)),I=33,MI1)
 !      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(HXV(I,10)),Z3DYT(I,10,3),I=33,MI1)
 
       IF (my_task .eq. 4) &
-      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(HXV(I,10)),dble(HXU(I,10),I=33,MI1)
+      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(ITYPEU(I,10,8)),dble(ITYPEV(I,10,8)),I=1,32)
 !      PRINT*,(ni_sbdm*MI1+I,NHX(I,10),dble(HXV(I,10)),Z3DYT(I,10,3),I=1,32)
 
       call bound_3dt_xy(Z3DXT,Z3DYT)

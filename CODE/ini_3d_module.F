@@ -596,7 +596,7 @@ CONTAINS
       IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I-1,J,K) .EQ. 1) THEN
 !      IF (ITYPEW(I,J,K) .GT. ITYPEW(I+1,J,K) ) THEN
       ITYPEU(I-1,J,K) = -1
-      ITYPEV(I-1,J,K) = -1
+!      ITYPEV(I-1,J,K) = -1
       ENDIF
       IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I+1,J,K) .EQ. 1 ) THEN
 !      IF (ITYPEW(I-1,J,K) .GT. ITYPEW(I,J,K) ) THEN
@@ -605,7 +605,7 @@ CONTAINS
       ENDIF
       IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J-1,K) .EQ. 1 ) THEN
 !      IF (ITYPEW(I,J,K) .GT. ITYPEW(I,J+1,K) ) THEN
-      ITYPEU(I,J-1,K) = -1
+!      ITYPEU(I,J-1,K) = -1
       ITYPEV(I,J-1,K) = -1
       ENDIF
       IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J+1,K) .EQ. 1 ) THEN
