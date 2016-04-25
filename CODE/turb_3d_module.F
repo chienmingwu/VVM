@@ -973,7 +973,7 @@ CONTAINS
 #if defined (LSM)
 !easy WQ/ETAKIN and WT/SHEAT already time rho in LSM and maskout in
 !land_interface.F
-      WQV(I,J) = 0.!WQ(I,J)
+      WQV(I,J) = WQ(I,J)
       WTH(I,J) = WT(I,J)     
 #else
       WQV(I,J) = WQ(I,J)*RHOZ(hx1)
