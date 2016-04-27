@@ -188,7 +188,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      yt(I) = J * DYNEW
 !      if (I .gt. 256 .and. I .lt. 513) then
 !      hx(i,j) = (max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))
-      if (I .gt. 128 .and. I .lt. 385) then
+      if (I .gt. 192 .and. I .lt. 321) then
       hx(i,j) = INT(max((-(abs(256.5-real(I)))/512+.125)/.125*10,0.))
       hx(I,J) = max(hx(I,J), 1.)
       LU(I,J) = 7
@@ -199,7 +199,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMIN(I,J) = 80.
       SLOPE(I,J) = 1
       SOIL(I,J) = 1
-      elseif (I .gt. 64 .and. I .lt. 449) then
+      elseif (I .gt. 128 .and. I .lt. 385) then
       hx(I,J) = 1.
       LU(I,J) = 1
       alb(I,J) = 15.
