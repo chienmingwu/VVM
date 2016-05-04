@@ -215,14 +215,14 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       DO 500 I = 1,MI_GLOB
   
       if(abs(I-(MI_GLOB/2)) .LE. (MI_GLOB/6)) then
-      LU(I,J) = 1
-      alb(I,J) = 15.
-      grf(I,J) = 10.
+      LU(I,J) = 7
+      alb(I,J) = 19.
+      grf(I,J) = 80.
       lai(I,J) = 4.
       SHDMAX(I,J) = 10.
       SHDMIN(I,J) = 10.
       SLOPE(I,J) = 1
-      SOIL(I,J) = 1
+      SOIL(I,J) = 13
 
       else
       LU(I,J) = 16
@@ -232,7 +232,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMAX(I,J) = 10.
       SHDMIN(I,J) = 10.
       SLOPE(I,J) = 1
-      SOIL(I,J) = 1
+      SOIL(I,J) = 14
       endif
 ! add end
 
