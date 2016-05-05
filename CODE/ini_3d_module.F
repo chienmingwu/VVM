@@ -556,57 +556,26 @@ CONTAINS
       PRINT*,FILENAME
 
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+      READ(99) maxtopo
       READ(99) ((HX(I,J),I=1,MI1),J=1,MJ1)
+      READ(99) (((ITYPEU(I,J,K),I=1,MI1),J=1,MJ1),K=1,NK2)
+      READ(99) (((ITYPEV(I,J,K),I=1,MI1),J=1,MJ1),K=1,NK2)
+      READ(99) (((ITYPEW(I,J,K),I=1,MI1),J=1,MJ1),K=1,NK2)
       CLOSE(99)
 
-      tmp = maxval(HX)
-      CALL MPI_ALLREDUCE(tmp,H,1,MPI_dbl_kind, MPI_MAX, MPI_COMM_WORLD, mpierr)
-      maxtopo=INT(H) + 1
-
       call bound_arb(1,HX)
+      call bound_int_arb(NK2,ITYPEW)
+      call bound_int_arb(NK2,ITYPEU)
+      call bound_int_arb(NK2,ITYPEV)
 
-      DO I=1,MI1
-      DO J=1,MJ1
+
+      DO I=1,mi1
+      DO J=1,mj1
       if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
       if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
       ENDDO
       ENDDO
 
-      DO J=1,MJ1
-      DO I=1,MI1
-      NN=INT(HX(I,J))
-      IF(NN .NE. 0) THEN
-      DO K=2,NN
-      ITYPEU(I,J,K)=0
-      ITYPEV(I,J,K)=0
-      ITYPEW(I,J,K)=0
-      ENDDO
-      ENDIF
-      ENDDO
-      ENDDO
-
-      call bound_int_arb(NK2,ITYPEW)
-
-      DO K=2,NK2
-      DO J=mjm,mjp
-      DO I=mim,mip
-      NN=ITYPEW(I,J,K)
-      IF(NN .EQ. 0) THEN
-      ITYPEU(I-1,J,K)=0
-      ITYPEV(I,J-1,K)=0
-      ENDIF
-      ENDDO
-      ENDDO
-      ENDDO
-
-      call bound_int_arb(NK2,ITYPEU)
-      call bound_int_arb(NK2,ITYPEV)
-
-      DO J=mjm,mjp
-      DO I=mim,mip
-      IF(HX(I,J) .EQ. 0.) HX(I,J)=1.
-      ENDDO
-      ENDDO
 
 #else
       hx=1
