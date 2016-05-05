@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rank02bws3q1q2x6
+set expname = ring
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -46,7 +46,6 @@ cat > definesld.com << 'END1'
 #define CORIOLIS
 #define RADCODE
 #define AREAMN
-#define TOPOGRAPHY
 'END1'
 cat definesld.com
 
@@ -55,10 +54,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/768/' \
-    -e '1,$s/merid_dimension/768/' \
-    -e '1,$s/zonal_decomposition/8/' \
-    -e '1,$s/merid_decomposition/8/' \
+sed -e '1,$s/zonal_dimension/256/' \
+    -e '1,$s/merid_dimension/256/' \
+    -e '1,$s/zonal_decomposition/4/' \
+    -e '1,$s/merid_decomposition/4/' \
     -e '1,$s/vert_dimension/45/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
@@ -97,7 +96,7 @@ rm -rf RUNDATA/ASTER_GDEM_TWTOPO
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
-./nc2fortranBinary
+#./nc2fortranBinary
 exit
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)

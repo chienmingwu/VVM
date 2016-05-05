@@ -1,4 +1,11 @@
 #include "definesld.com"
+#include "petsc/finclude/petscsysdef.h"
+#include "petsc/finclude/petscvecdef.h"
+#include "petsc/finclude/petscmatdef.h"
+#include "petsc/finclude/petsckspdef.h"
+#include "petsc/finclude/petscpcdef.h"
+#include "petsc/finclude/petscdmdef.h"
+#include "petsc/finclude/petscdmdadef.h"
 MODULE ini_3d_module
 
 USE kinds
@@ -389,7 +396,7 @@ CONTAINS
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
 !ccwu turn on the if for restarting
-      IF (.true.) then
+      IF (.false.) then
       WRITE(FILENAME,'(A27,I3.3,A1,I3.3,A4)') &
       '../rank01bw/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
@@ -439,7 +446,7 @@ CONTAINS
 !     3. SET UP CIRCULATION
 !*******************************************
 !ccwu if true, then restart
-      if (.true.) then
+      if (.false.) then
       
       Call bound_3d_xy
 
@@ -460,7 +467,18 @@ CONTAINS
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
-      call RANKINE(mi_glob/2+192,mj_glob/2-64,30,50000.,15.)
+!      call RANKINE(mi_glob/2+192,mj_glob/2-64,30,50000.,15.)
+
+      CALL RING(mi_glob/2,mj_glob/2,70,0.0021d0,20000.d0,24000.d0,38000.d0,42000.d0)
+
+!thick
+!      CALL RING(mi_glob/2,mj_glob/2,51,0.0021d0,20000.d0,24000.d0,38000.d0,42000.d0)
+!thin
+!      CALL RING(mi_glob/2,mj_glob/2,29,0.0045d0,30000.d0,34000.d0,38000.d0,42000.d0)
+! only thicker: zeta1=0.0021,,r1=10000,r2=14000,r3=38000,r4=42000i
+!      CALL RING(mi_glob/2,mj_glob/2,29,0.0021d0,10000.d0,14000.d0,38000.d0,42000.d0)
+
+
       call bound_arb(nk3,u3dx)
       call bound_arb(nk3,u3dy)
 
@@ -524,6 +542,245 @@ CONTAINS
 #endif
  
    END SUBROUTINE ini_3d
+      SUBROUTINE RING(IC,JC,KL,Z1,R1,R2,R3,R4)
+
+      USE petscvec
+      USE petscmat
+      USE petscksp
+      USE petscpc
+      USE petscdm
+      USE petscdmda
+
+!     KC modified in 10/2/13
+!     SETUP THE VORTEX RING WIND FIELD I.C.
+!     Vortex details are discussed in Hendricks and Shubert (2010)
+!     Input: zeta1,zeta2,r1,r2,r3,r4 (ring structure), MI3,MJ3,DX,GP (domain
+!     structure)
+!     Output: ZZXY,zeta2
+      REAL*8 RZZ(mim:mip,mjm:mjp),GRIDX(mim:mip),GRIDY(mjm:mjp)
+      REAL*8 PI,RVOR,TEMP,TEMP1,Z1,Z2,R1,R2,R3,R4,OMEGA,c1,c2
+      INTEGER I,J,K,IC,JC,KL
+
+! solver varibles
+      PetscErrorCode ierr
+      PetscOffset    ip,idltog,idx
+      PetscScalar    tmp(1)
+      PetscInt       ltog(1)
+      PetscInt       grow(1)
+      PetscScalar    vec(5)
+      PetscInt       col(7)
+
+      PetscInt its
+      PetscReal norm
+
+      ISLocalToGlobalMapping ltogm
+
+      PetscInt ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg,it,kt,np,npt
+
+      Vec v,rhs
+      PC  pc
+      DM  da
+      Mat A
+      KSP ksp
+
+
+      PI = 3.141592653589793
+!      Z2=-Z1*(R3**2+R4**2-R1**2-R2**2)/(R4**2-R3**2+((2*(GP*DX)**2)/PI))
+      Z2=-Z1*(R3**2+R4**2-R1**2-R2**2)/(R4**2-R3**2+(2*(4*mi_glob*DX)**2)/PI)
+
+      DO I = mim,mip
+      GRIDX(I) = (I+ni_sbdm*MI1-IC)*DX
+      ENDDO
+      DO J = mjm,mjp
+      GRIDY(J) = (J+nj_sbdm*MJ1-JC)*DYNEW
+      ENDDO
+      DO 658 J = 1,MJ1
+      DO 658 I = 1,MI1
+      RVOR = SQRT(GRIDX(I)**2+GRIDY(J)**2)
+
+!      CALL RING(mi_glob/2,mj_glob/2,29,0.0021d0,20000.d0,24000.d0,38000.d0,42000.d0)
+     IF (RVOR .LE. R1) THEN
+      RZZ(I,J) = 0.
+      ELSEIF (RVOR .GT. R1 .AND. RVOR .LT. R2) THEN
+      TEMP = (R2-RVOR)/(R2-R1)
+      RZZ(I,J) = Z1*(1.-3.*(TEMP**2.)+2.*(TEMP**3.))
+      ELSEIF (RVOR .GE. R2 .AND. RVOR .LT. R3) THEN
+      RZZ(I,J) = Z1
+      ELSEIF (RVOR .GE. R3 .AND. RVOR .LT. R4) THEN
+      TEMP = (RVOR-R3)/(R4-R3)
+      TEMP1 = (R4-RVOR)/(R4-R3)
+      RZZ(I,J) = Z1*(1.-3.*(TEMP**2.)+2.*(TEMP**3.)) &
+               +(Z2*(1.-3.*(TEMP1**2.)+2.*(TEMP1**3.)))
+      ELSE
+      RZZ(I,J) = Z2
+      END IF
+      DO 658 K=1,KL
+      Z3DZ(I,J,K)=RZZ(I,J)
+
+  658 CONTINUE
+!      Do k=1,KL
+!      do J=1,MJ1
+!      do I=1,MI1
+!      TEMP = F/Grav*RZZ(I,J)*pi/ZZ(KL)
+!      TH3D(I,J,K)=TH3D(I,J,K)*(1.+TEMP*cos(ZZ(K)/ZZ(KL)*pi))
+!      enddo
+!      enddo
+!      enddo
+
+! FOR RING STRUCTURE
+! KC, 10/2/13
+! THICK,zeta1=0.0021,r1=20000,r2=24000,r3=38000,r4=42000
+! THIN,zeta1=0.0045,r1=30000,r2=34000,r3=38000,r4=42000
+! thicker, weaker: zeta1=0.001,r1=10000,r2=14000,r3=38000,r4=42000
+! only thicker: zeta1=0.0021,,r1=10000,r2=14000,r3=38000,r4=42000i
+
+! GET THE RING STRUCTURE
+!      CALL RING
+!     .(ZZXY,MI3,MJ3,1024,DX,0.0021,zeta2,20000.,24000.,38000.,42000.)
+! GET U3DX&U3DY
+!      CALL PSI_UV(UXY,VXY,ZZXY)
+
+!      solving RZZ top uxy vxy
+
+! solving RZZ by PETSC ksp
+
+      if (.true.) then
+
+      CALL KSPCreate(MPI_COMM_WORLD,ksp,ierr)
+      call DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,       &
+      DM_BOUNDARY_PERIODIC,DMDA_STENCIL_STAR,MI_glob,MJ_glob,nsbdm_x,&
+      nsbdm_y,1,nhalo,PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da,ierr)
+
+      call DMDAGetCorners(da,ixx,iy,iz,mx,my,mz,ierr)
+      call DMDAGetGhostCorners(da,ixg,iyg,izg,mxg,myg,mzg,ierr)
+
+      call DMCreateLocalVector(da,v,ierr)
+      call DMCreateGlobalVector(da,rhs,ierr)
+
+      npt = mi_glob*mj_glob
+      np = nsbdm_x*nsbdm_y
+
+      call MatCreateAIJ(MPI_COMM_WORLD,npt/np,npt/np,npt,npt,5, &
+       PETSC_NULL_INTEGER,3,PETSC_NULL_INTEGER,A,ierr)
+
+      call DMGetLocalToGlobalMapping(da,ltogm,ierr)
+      call ISLocalToGlobalMappingGetIndices(ltogm,ltog,idltog,ierr)
+
+      c1 = -1./DX/DX
+      c2 = -1./DYNEW/DYNEW
+
+      do j=iy,iy+my-1
+          it = (j - iyg)*mxg + ixx - ixg
+      do i=ixx,ixx+mx-1
+            kt = it + (i - ixg)
+            grow(1) = ltog(idltog+kt)
+            vec(1) = c2
+            col(1) = ltog(idltog+kt - mxg)
+            vec(2) = c1
+            col(2) = ltog(idltog+kt - 1)
+            vec(3) = -2.*(c1+c2)
+            col(3) = grow(1)
+            vec(4) = c1
+            col(4) = ltog(idltog+kt + 1)
+            vec(5) = c2
+            col(5) = ltog(idltog+kt + mxg)
+      call MatSetValues(A,1,grow,5,col,vec,INSERT_VALUES,ierr)
+      enddo
+      enddo
+
+      call MatAssemblyBegin(A,MAT_FINAL_ASSEMBLY,ierr)
+      call MatAssemblyEnd(A,MAT_FINAL_ASSEMBLY,ierr)
+
+      call KSPSetOperators(ksp,A,A,ierr)
+      call KSPSetType(ksp,KSPCG,ierr)
+      call KSPGetPC(ksp,pc,ierr)
+      call PCSetType(pc,PCNONE,ierr)
+      call KSPSetTolerances(ksp,1.d-30,1.d-12,1.d10,2000,ierr)
+      call KSPSetFromOptions(ksp,ierr)
+
+      call VecGetArray(v,tmp,ip,ierr)
+      do j=iy,iy+my-1
+      do i=ixx,ixx+mx-1
+      kt = i - ixg + (j - iyg)*mxg + 1
+      tmp(ip+kt)=-RZZ(I-ixx+1,J-iy+1)
+      enddo
+      enddo
+      call VecRestoreArray(v,tmp,ip,ierr)
+!
+      call DMLocalToGlobalBegin(da,v,INSERT_VALUES,rhs,ierr)
+      call DMLocalToGlobalEnd(da,v,INSERT_VALUES,rhs,ierr)
+
+      call vecsum(rhs,temp,ierr)
+      call vecshift(rhs,-temp/dble(npt), ierr)
+
+!
+      call KSPSolve(ksp,rhs,rhs,ierr)
+      IF ( MY_TASK .EQ. 0) THEN
+      call KSPGetIterationNumber(ksp,its,ierr)
+      call KSPGetResidualNorm(ksp,norm,ierr)
+      write(6,100) norm,its
+      PRINT*,'----------------------------------------------------------'
+      ENDIF
+ 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+
+      call vecsum(rhs,temp,ierr)
+      call vecshift(rhs,-temp/dble(npt), ierr)
+
+      call DMGlobalToLocalBegin(da,rhs,INSERT_VALUES,v,ierr)
+      call DMGlobalToLocalEnd(da,rhs,INSERT_VALUES,v,ierr)
+
+      call VecGetArray(v,tmp,ip,ierr)
+      do j=iy,iy+my-1
+      do i=ixx,ixx+mx-1
+      kt = i - ixg + (j - iyg)*mxg + 1
+      RZZ(I-ixx+1,J-iy+1) = tmp(ip+kt)
+      enddo
+      enddo
+      call VecRestoreArray(v,tmp,ip,ierr)
+      call VecDestroy(rhs,ierr)
+      call VecDestroy(v,ierr)
+      call DMDestroy(da,ierr)
+      call KSPDestroy(ksp,ierr)
+
+!end solving rzz by PETSc
+      call bound_arb(1,rzz)
+
+      endif
+
+      DO 810 K = 1, KL
+      DO 810 J = 1, MJ1
+      DO 810 I = 1, MI1
+      U3DX(I,J,K)=-(RZZ(I,J)-RZZ(I,J-1))/DYNEW*COS(pi*ZZ(K)/2./ZZ(KL))
+      U3DY(I,J,K)=(RZZ(I,J)-RZZ(I-1,J))/DX*COS(pi*ZZ(K)/2./ZZ(KL))
+
+!      U3DX(I,J,K)=-(RZZ(I,J)-RZZ(I,J-1))/DYNEW*SIN(pi*ZZ(K)/ZZ(KL))
+!      U3DY(I,J,K)=(RZZ(I,J)-RZZ(I-1,J))/DX*SIN(pi*ZZ(K)/ZZ(KL))
+
+
+!      U3DX(I,J,K)=-(RZZ(I,J)-RZZ(I,J-1))/DYNEW*COS(pi*ZZ(K)/2.ZZ(NK2))
+!      U3DY(I,J,K)=(RZZ(I,J)-RZZ(I-1,J))/DX*COS(pi*ZZ(K)/2./ZZ(NK2))
+!      Z3DZ(I,J,K)=RZZ(I,J)
+
+  810 CONTINUE
+
+!      RLAT=15.
+!      OMEGA=7.292E-5
+!      print*, F/Grav*(RZZ(10,10)+TEMP)*pi/ZZ(KL),F/Grav*RZZ(10,10)*pi/ZZ(KL)
+      Do k=1,KL
+      do J=1,MJ1
+      do I=1,MI1
+      TEMP1 = 0.!F/Grav*(RZZ(I,J))*pi/ZZ(KL)*10.
+      TH3D(I,J,K)=TH3D(I,J,K)*(1.+TEMP1*cos(ZZ(K)/ZZ(KL)*pi))
+
+!      TEMP = -F/Grav*RZZ(I,J)*pi/ZZ(KL)/2
+!      TH3D(I,J,K)=TH3D(I,J,K)*(1.+TEMP*sin(ZZ(K)/ZZ(KL)*pi/2.))
+
+      enddo
+      enddo
+      enddo
+
+      RETURN
+  END SUBROUTINE RING
 
       SUBROUTINE RANKINE(IC,JC,KT,RMAX,VMAX)
 !     SETUP THE RANKINE WIND FIELD I.C.
