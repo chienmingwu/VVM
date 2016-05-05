@@ -189,7 +189,11 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      if (I .gt. 256 .and. I .lt. 513) then
 !      hx(i,j) = (max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))
       if (I .gt. 192 .and. I .lt. 321) then
-      hx(i,j) = (max((-(abs(256.5-real(I)))/768+.1)/.125*7.5,0.))
+      TMP = (max((-(abs(256.5-real(I)))/768+.1)/.125*7.5,0.))
+!      TMP = (max((-(abs(256.5-real(I)))/768+.1)/.125*7.5-1.,0.))*200.
+!      IT = 1
+!      DO 161 K = 1,NK3
+!  161 IF (TMP .GT. ZZ(K)) hx(I,J)=MAX(K,IT)!+(TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))
       hx(I,J) = max(hx(I,J),1.)
       LU(I,J) = 7
       alb(I,J) = 19.

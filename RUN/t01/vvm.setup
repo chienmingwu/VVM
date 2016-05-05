@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = shadowPL5
+set expname = shadowPL7
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -59,7 +59,7 @@ sed -e '1,$s/zonal_dimension/512/' \
     -e '1,$s/merid_dimension/128/' \
     -e '1,$s/zonal_decomposition/8/' \
     -e '1,$s/merid_decomposition/2/' \
-    -e '1,$s/vert_dimension/100/' \
+    -e '1,$s/vert_dimension/70/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -72,7 +72,7 @@ sed -e '1,$s/zonal_dimension/512/' \
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=0./
- &INPUT3 DX=500.,DYNEW=500.,DZ=200.,DZ1=200.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=50.,DZ1=250.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
  &INPUT5 IX=3182073,ITINIT=17281,ITSTOP=17282,SCALE=6.,Q1Q2=F,DTRAD=120./
 'END6'
