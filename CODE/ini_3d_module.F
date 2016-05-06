@@ -472,7 +472,7 @@ CONTAINS
   610 CONTINUE
 !      call RANKINE(mi_glob/2+192,mj_glob/2-64,30,50000.,15.)
 
-      CALL RING(mi_glob/2,mj_glob/2,70,0.0021d0,20000.d0,24000.d0,38000.d0,42000.d0)
+      CALL RING(mi_glob/2,mj_glob/2,30,0.0021d0,20000.d0,24000.d0,38000.d0,42000.d0)
 
 !thick
 !      CALL RING(mi_glob/2,mj_glob/2,51,0.0021d0,20000.d0,24000.d0,38000.d0,42000.d0)

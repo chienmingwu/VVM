@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = ring01
+set expname = ring01_cr10
 
 # hardscrabble configuration
 set subdir = '../..'
