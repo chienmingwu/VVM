@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = ring01_cr1_large
+set expname = ring01_cr1_large_4km
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -69,7 +69,7 @@ sed -e '1,$s/zonal_dimension/384/' \
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=17280 /
  &INPUT2 RLAT=25., RLON=120.95 /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
  &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=0.,Q1Q2=T,DTRAD=1200.,SOLVAR=F, RRTMRC=T/
 'END6'
