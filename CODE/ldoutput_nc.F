@@ -1181,7 +1181,7 @@ CONTAINS
       first = .false.
       
 ! formerly OUT_tm1
-      OUT_tm1(:,:,1:nk2) = th3d(1:mi1,1:mj1,1:nk2)
+      OUT_tm1(:,:,1:nk2) = qv3d(1:mi1,1:mj1,1:nk2) !easy for debug
 #if defined (PARALLELIO) 
         call pCDF_WRITE_4D(ncid_th, 'th', TIME_L, time_start, out_tm1, nk2 )
 #else

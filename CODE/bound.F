@@ -52,10 +52,10 @@ CONTAINS
                                          !                  3 send to e, 4 send to w
 #else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension 1 = th3d
-         buff_c(nhalo, nhalo,nk1,1,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
-         buff_ns(1:mi1,nhalo,nk1,1,4), &  ! last dimension - 1 recv from s, 2 recv from n
+         buff_c(nhalo, nhalo,nk1,2,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
+         buff_ns(1:mi1,nhalo,nk1,2,4), &  ! last dimension - 1 recv from s, 2 recv from n
                                           !                  3 send to n, 4 send to south
-         buff_ew(nhalo,1:mj1,nk1,1,4)  ! last dimension - 1 recv from w, 2 recv from e
+         buff_ew(nhalo,1:mj1,nk1,2,4)  ! last dimension - 1 recv from w, 2 recv from e
                                          !                  3 send to e, 4 send to w
 #endif
       INTEGER (KIND=int_kind) :: size_ns, size_ew, size_c
@@ -67,9 +67,9 @@ CONTAINS
       size_ew = nhalo*(7+ntracer)*(nk2-1)*(mj1)
       size_c = (7+ntracer)*(nk2-1)*nhalo*nhalo
 #else
-      size_ns = nhalo*(nk2-1)*(mi1)
-      size_ew = nhalo*(nk2-1)*(mj1)
-      size_c = (nk2-1)*nhalo*nhalo
+      size_ns = 2*nhalo*(nk2-1)*(mi1)
+      size_ew = 2*nhalo*(nk2-1)*(mj1)
+      size_c = 2*(nk2-1)*nhalo*nhalo
 #endif
          
 ! post receives from s (non-blocking)
@@ -111,9 +111,11 @@ CONTAINS
         do j = 1,nhalo
           buff_ns(1:mi1,j,k-1,1,3) = th3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,1,4) = th3d(1:mi1,j,k)
-#if defined (PHYSICS)
+!#if defined (PHYSICS)
           buff_ns(1:mi1,j,k-1,2,3) = qv3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,2,4) = qv3d(1:mi1,j,k)
+
+#if defined (PHYSICS)
           buff_ns(1:mi1,j,k-1,3,3) = qc3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,3,4) = qc3d(1:mi1,j,k)
           buff_ns(1:mi1,j,k-1,4,3) = qi3d(1:mi1,mj1-nhalo+j,k)
@@ -133,9 +135,12 @@ CONTAINS
         DO i=1,nhalo
           buff_ew(i,1:mj1,k-1,1,3) = th3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,1,4) = th3d(i,1:mj1,k)
-#if defined (PHYSICS)
+!#if defined (PHYSICS)
           buff_ew(i,1:mj1,k-1,2,3) = qv3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,2,4) = qv3d(i,1:mj1,k)
+
+#if defined (PHYSICS)
+
           buff_ew(i,1:mj1,k-1,3,3) = qc3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,3,4) = qc3d(i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,4,3) = qi3d(mi1-nhalo+i,1:mj1,k)
@@ -231,9 +236,10 @@ CONTAINS
         DO j=1,nhalo
           th3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,1,1)
           th3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,1,2)
-#if defined (PHYSICS)
+!if defined (PHYSICS)
           qv3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,2,1)
           qv3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,2,2)
+#if defined (PHYSICS)
           qc3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,3,1)
           qc3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,3,2)
           qi3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,4,1)
@@ -256,9 +262,10 @@ CONTAINS
         DO i=1,nhalo
           th3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,1,1)
           th3d(mi1+i,1:mj1,k) = buff_ew(i,1:mj1,k-1,1,2)
-#if defined (PHYSICS)
+!#if defined (PHYSICS)
           qv3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,2,1)
           qv3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,2,2)
+#if defined (PHYSICS)
           qc3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,3,1)
           qc3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,3,2)
           qi3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,4,1)
@@ -396,8 +403,10 @@ CONTAINS
       DO 1300 I=mim,mip
       TH3D(I,J,1)=TH3D(I,J,2)
       TH3D(I,J,NK3)=TH3D(I,J,NK2)
-#if defined (PHYSICS)
+!#if defined (PHYSICS)
       QV3D(I,J,1)=QV3D(I,J,2)
+#if defined (PHYSICS)
+
       QC3D(I,J,1)=QC3D(I,J,2)
       QI3D(I,J,1)=QI3D(I,J,2)
       QR3D(I,J,1)=QR3D(I,J,2)

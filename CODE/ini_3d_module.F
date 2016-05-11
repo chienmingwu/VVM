@@ -330,24 +330,13 @@ CONTAINS
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
-      if (.false.) then
+      if (.true.) then
 !     PROFILES OF RHO, RHOz, AND GAMMA
-      do k=1,nk3
-      if(zt(k) .le. 12000.) then
-      thbar(k)=300.+43.*((zt(k)/12000.)**1.25)
-      else
-      thbar(k)=343.*exp(9.8*(zt(k)-12000.)/1004./213.)
-      endif
-      enddo
+! easy advection schem test
 
-      do k=1,nk3
-      if(zt(k) .le. 4000.) then
-      qvbar(k)=0.0161-0.000003375*zt(k)
-      elseif(zt(k) .gt. 4000. .and. zt(k) .le. 8000.) then
-      qvbar(k)=0.0026-0.00000065*(zt(k)-4000.)
-      else
-      qvbar(k)=0.
-      endif
+      THBAR(1)=297.76
+      DO K=1,NK2
+      THBAR(K+1)=THBAR(K)*(1+1e-4/9.8*(ZT(k+1)-ZT(k)))
       enddo
 
       endif
@@ -403,7 +392,7 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      QV3D(I,J,K) = QVBAR(K)
+      QV3D(I,J,K) = 0.!QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
@@ -411,6 +400,21 @@ CONTAINS
       QG3D(I,J,K) = 0.
   500 CONTINUE
 
+
+      DO 501 K=1,NK2
+      DO 501 J=mjm,mjp
+      DO 501 I=mim,mip
+!      IF ((ni_sbdm*mi1+I-mi_glob/2.)*DX .GT. 25000.) THEN
+!      TMP=((ni_sbdm*mi1+I-mi_glob/2.-50)*DX/25000.)**2!
+!      ELSEIF ((ni_sbdm*mi1+I-mi_glob/2.)*DX .LT. -25000.)THEN
+      TMP=((ni_sbdm*mi1+I-mi_glob/2.+50)*DX/25000.)**2
+!      ELSE
+!      TMP=((ni_sbdm*mi1+I-mi_glob/2.)*DX/25000.)**2
+!      ENDIF
+
+      TMP=TMP + ((K*DZ-9000)/3000)**2
+      TMP=sqrt(TMP)
+ 501  IF( TMP .LE. 1) QV3D(I,J,K)=QV3D(I,J,K)+.001*(COS(TMP*3.1415926)+1)/2
 
       DO 515 K = 1, NK2
       DO 515 J = 1, MJ1
@@ -455,8 +459,14 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
+
+      if (ZT(K) .GT. 5000.) THEN
+      U3DX(I,J,K) = 20.
+      ELSEIF (ZT(K) .GT. 4000.) THEN
+      U3DX(I,J,K) =20* sin(pi/2.*(ZT(K) - 4000.)/1000.)**2
+      ENDIF
+
   610 CONTINUE
 
       DO 660 K = 2, NK1

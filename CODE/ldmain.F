@@ -196,9 +196,9 @@ PROGRAM ldmain
         itt_record  = 0
         
         
-
         call  maintain_Time(  ( NXSAVG  * origin_dt ) - elapse_time , inner_dt )
         ! inner_dt = origin_dt  ! if want to use original dt , not var version
+        inner_dt = DT
         DT = inner_dt
         itt_align = itt_align + inner_dt
         elapse_time = elapse_time + inner_dt
@@ -211,7 +211,9 @@ PROGRAM ldmain
             ITT = ITT + 1
             itt_align = 0.
         endif      
-        
+
+
+
         
         A = 3./2. * DT
         B = -1./2. * DT

@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = shadowPL5
+set expname = MPDATA
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -39,14 +39,8 @@ cat COMMENTS
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
-#define DIFFUSION
-#define PHYSICS
-#define MICROCODE
 #define PARALLELIO
-#define RADCODE
 #define TOPOGRAPHY
-#define LSM
-#define SLAB
 'END1'
 cat definesld.com
 
@@ -55,11 +49,11 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/512/' \
-    -e '1,$s/merid_dimension/128/' \
-    -e '1,$s/zonal_decomposition/8/' \
+sed -e '1,$s/zonal_dimension/600/' \
+    -e '1,$s/merid_dimension/30/' \
+    -e '1,$s/zonal_decomposition/12/' \
     -e '1,$s/merid_decomposition/2/' \
-    -e '1,$s/vert_dimension/70/' \
+    -e '1,$s/vert_dimension/30/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -70,11 +64,11 @@ sed -e '1,$s/zonal_dimension/512/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=8640 /
+ &INPUT1 NEWRUN=T, ITTADD=5000 /
  &INPUT2 RLAT=0./
- &INPUT3 DX=500.,DYNEW=500.,DZ=250.,DZ1=50.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
- &INPUT5 IX=3182073,ITINIT=17281,ITSTOP=17282,SCALE=6.,Q1Q2=F,DTRAD=120./
+ &INPUT3 DX=1000.,DYNEW=1000.,DZ=500.,DZ1=500.,DT=1.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT4 NXS=1,NXSAVG=50,NWR11=1,NFLPRT=1,NRESTART=50 /
+ &INPUT5 IX=3182073,ITINIT=12,ITSTOP=24,SCALE=6.,Q1Q2=F,DTRAD=120./
 'END6'
 cat INPUT
 
