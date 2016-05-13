@@ -188,12 +188,27 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      yt(I) = J * DYNEW
 !      if (I .gt. 256 .and. I .lt. 513) then
 !      hx(i,j) = (max((-(abs(384-real(I)))/1024+.125)/.125*10,0.))
-      if (I .gt. 192 .and. I .lt. 321) then
+      if (I .gt. 236 .and. I .lt. 277) then
 !      TMP = (max((-(abs(256.5-real(I)))/768+.1)/.125*7.5,0.))
-      TMP = (max((-(abs(256.5-real(I)))/768+.1)/.125*7.5-1.,0.))*200.
+!      TMP = (max((-(abs(256.5-real(I)))/768+.1)/.125*7.5-.5,0.))*200.
+      TMP = 600.
       IT = 1
       DO 161 K = 1,NK3
   161 IF (TMP .GT. ZZ(K)) hx(I,J)=MAX(K,IT)+(TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))
+      hx(I,J) = max(hx(I,J),1.)
+      LU(I,J) = 1
+      alb(I,J) = 15.
+      grf(I,J) = 10.
+      lai(I,J) = 4.
+      SHDMAX(I,J) = 10.
+      SHDMIN(I,J) = 10.
+      SLOPE(I,J) = 1
+      SOIL(I,J) = 1
+      elseif (I .gt. 196 .and. I .lt. 317) then
+      TMP = 600.-(abs(I-256.5)-20.)*15
+      IT = 1
+      DO 162 K = 1,NK3
+  162 IF (TMP .GT. ZZ(K)) hx(I,J)=MAX(K,IT)+(TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))
       hx(I,J) = max(hx(I,J),1.)
       LU(I,J) = 7
       alb(I,J) = 19.
@@ -203,7 +218,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMIN(I,J) = 80.
       SLOPE(I,J) = 1
       SOIL(I,J) = 1
-      elseif (I .gt. 128 .and. I .lt. 385) then
+      elseif (I .gt. 136 .and. I .lt. 377) then
       hx(I,J) = 1.
       LU(I,J) = 1
       alb(I,J) = 15.
