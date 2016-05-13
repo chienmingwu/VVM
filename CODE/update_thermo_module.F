@@ -136,15 +136,15 @@ CONTAINS
       DO I = 1, MI1
       IF(ITYPEW(I,J,K) .NE. 1) THEN
       TH3D(I,J,K) = THBAR(K)
-!      QV3D(I,J,K) = QVBAR(K)
+      QV3D(I,J,K) = QVBAR(K)
       IF (K .EQ. NHX(I,J) ) THEN
-      QV3D(I,J,K) = QV3D(I,J,K+1)!QVBAR(K)
+!      QV3D(I,J,K) = QV3D(I,J,K+1)!QVBAR(K)
       QR3D(I,J,K) = QR3D(I,J,K+1)
       QC3D(I,J,K) = QC3D(I,J,K+1)
       QS3D(I,J,K) = QS3D(I,J,K+1)
       QG3D(I,J,K) = QG3D(I,J,K+1)
       ELSE
-      QV3D(I,J,K) = 0.
+!      QV3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
       QC3D(I,J,K) = 0.
 !      QR3D(I,J,K) = 0.

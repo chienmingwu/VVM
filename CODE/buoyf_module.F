@@ -45,37 +45,37 @@ CONTAINS
       DO 100 K=2,NK1
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
-      IF (ITYPEV(I,J,K) .NE. 1) THEN
-      FZXBU(I,J,K)=                                          &
-!       +(TH3D(I,J+1,K)-TH3D(I,J,K))/THBAR(K)                 &
-       +(TH3D(I,J+1,K+1)-TH3D(I,J,K+1))/THBAR(K+1)           &
-       +DELTA*(QV3D(I,J+1,K)-QV3D(I,J,K)) &
-       -(QP(I,J+1,K+1)-QP(I,J,K+1))
-      ELSE
+!      IF (ITYPEV(I,J,K) .NE. 1) THEN
+!      FZXBU(I,J,K)=                                          &
+!!       +(TH3D(I,J+1,K)-TH3D(I,J,K))/THBAR(K)                 &
+!       +(TH3D(I,J+1,K+1)-TH3D(I,J,K+1))/THBAR(K+1)           &
+!       +DELTA*(QV3D(I,J+1,K)-QV3D(I,J,K)) &
+!       -(QP(I,J+1,K+1)-QP(I,J,K+1))
+!      ELSE
       FZXBU(I,J,K)=                                          &
        +(TH3D(I,J+1,K)-TH3D(I,J,K))/THBAR(K)                 &
        +(TH3D(I,J+1,K+1)-TH3D(I,J,K+1))/THBAR(K+1)           &
        +DELTA*(QV3D(I,J+1,K)-QV3D(I,J,K)+QV3D(I,J+1,K+1)-QV3D(I,J,K+1)) &
        -(QP(I,J+1,K)-QP(I,J,K)+QP(I,J+1,K+1)-QP(I,J,K+1))
-      ENDIF
+!      ENDIF
   100 CONTINUE
 
       DO 110 K=2,NK1
       DO 110 J=1,MJ1
       DO 110 I=1,MI1
-      IF (ITYPEU(I,J,K) .NE. 1) THEN
-      FZYBU(I,J,K)=                                          &
-!       +(TH3D(I+1,J,K)-TH3D(I,J,K))/THBAR(K)                 &
-       +(TH3D(I+1,J,K+1)-TH3D(I,J,K+1))/THBAR(K+1)           &
-       +DELTA*(QV3D(I+1,J,K+1)-QV3D(I,J,K+1)) &
-       -(QP(I+1,J,K+1)-QP(I,J,K+1))
-      ELSE
+!      IF (ITYPEU(I,J,K) .NE. 1) THEN
+!      FZYBU(I,J,K)=                                          &
+!!       +(TH3D(I+1,J,K)-TH3D(I,J,K))/THBAR(K)                 &
+!       +(TH3D(I+1,J,K+1)-TH3D(I,J,K+1))/THBAR(K+1)           &
+!       +DELTA*(QV3D(I+1,J,K+1)-QV3D(I,J,K+1)) &
+!       -(QP(I+1,J,K+1)-QP(I,J,K+1))
+!      ELSE
       FZYBU(I,J,K)=                                          &
        +(TH3D(I+1,J,K)-TH3D(I,J,K))/THBAR(K)                 &
        +(TH3D(I+1,J,K+1)-TH3D(I,J,K+1))/THBAR(K+1)           &
        +DELTA*(QV3D(I+1,J,K)-QV3D(I,J,K)+QV3D(I+1,J,K+1)-QV3D(I,J,K+1)) &
        -(QP(I+1,J,K)-QP(I,J,K)+QP(I+1,J,K+1)-QP(I,J,K+1))
-      ENDIF
+!      ENDIF
   110 CONTINUE
 
       DO 120 K=2,NK1
@@ -84,7 +84,6 @@ CONTAINS
       FZXBU(I,J,K)=FZXBU(I,J,K)*GRAV/(2.*DYNEW)
       FZYBU(I,J,K)=FZYBU(I,J,K)*GRAV/(2.*DX)
   120 CONTINUE
-
 
 !ccwut set buoy term on topo to zero
 
@@ -101,7 +100,11 @@ CONTAINS
       ENDDO
       ENDDO
 !ccwut
-  
+ 
+!      IF(my_task .eq. 3) &
+!      PRINT*,(I,(ITYPEU(I,10,5)),FZYBU(I,10,5),QV3D(I,10,5),I=1,MI1)
+!      PRINT*,(I,(ITYPEU(I,10,5)),FZYBU(I,10,5),QV3D(I,10,5),I=1,MI1)
+ 
       ENDIF
 
    END SUBROUTINE buoyf_3d
