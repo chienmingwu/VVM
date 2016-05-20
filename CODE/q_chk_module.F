@@ -84,6 +84,10 @@ CONTAINS
       DATA CRIT,MAXIT/1.0E-06,8/
       DATA LF/.FALSE./
 
+!      IF (my_task .eq. 3) THEN
+!      PRINT*,(QV3D(I,10,3),QC3D(I,10,3),TH3D(I,10,3),I=1,MI1)
+!      PRINT*,'--------qchk_begin---------'
+!      ENDIF
 
       NNEGQC = 0
       NNEGQI = 0
@@ -328,6 +332,7 @@ CONTAINS
       DO 1000 K=2,NK2
       DO 1000 J=1,MJ1
       DO 1000 I=1,MI1
+      IF (ITYPEW(I,J,K) .eq. 1) then
       TSTAR  = TH3D(I,J,K) * PIBAR8(K)
       QVSTAR = QV3D(I,J,K)
       QCSTAR = QC3D(I,J,K)
@@ -352,7 +357,7 @@ CONTAINS
           (QCSTAR - QC1 + QFREEZE)*(2.5E6/1004.)/DT +       &
           (QFREEZE*3.336E5/DT) +       &
           (QISTAR - (QI1 + QFREEZE))*(2.8336E6/1004.)/DT)*86400.
-
+      ENDIF
  1000 CONTINUE
       CALL  BOUND_3D
 
@@ -377,6 +382,14 @@ CONTAINS
               ' NNEGT',i1,' = ',I6,' TCNEG',i1,'/TCPOS',i1,' = ',E10.3)
 
 #endif
+
+
+!      IF (my_task .eq. 3) THEN
+!      PRINT*,(QV3D(I,10,3),QC3D(I,10,4),TH3D(I,10,3),I=1,MI1)
+!      PRINT*,'--------qchk_end---------'
+!      PRINT*,(FZYBU(I,10,4),FZYBU(I,10,5),FZYBU(I,10,6),I=1,MI1)
+!      ENDIF
+
    END SUBROUTINE q_chk_3d
 
 !-----7---------------------------------------------------------------72
@@ -696,8 +709,10 @@ CONTAINS
 !      tmp = 1.
       DO 100 J = 1, MJ1
       DO 100 I = 1, MI1
+      IF (ITYPEW(I,J,K) .eq. 1) then
       tem(1) = tem(1) + tmp*A(I,J,K)
       tem(2) = tem(2) + tmp*MIN(0.,A(I,J,K))
+      ENDIF
   100 CONTINUE
       CALL MPI_ALLREDUCE(tem,sum,2,MPI_dbl_kind, MPI_SUM, MPI_COMM_WORLD, mpierr)
 
@@ -710,7 +725,7 @@ CONTAINS
       DO 200 J = 1, MJ1
       DO 200 I = 1, MI1
 !      tem(1) = tem(1) + A(I,J,K)
-      A(I,J,K) = tmp*MAX(0.,A(I,J,K))
+      IF (ITYPEW(I,J,K) .eq. 1) A(I,J,K) = tmp*MAX(0.,A(I,J,K))
   200 CONTINUE
 
 !      tem(2) = 0.
