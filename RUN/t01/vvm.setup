@@ -6,7 +6,7 @@
 
 set echo  # echoes the commands
 
-set expname = case3_grass
+set expname = case3_grass_nowind
 
 # hardscrabble configuration
 set subdir = '../..'
