@@ -127,8 +127,8 @@ CONTAINS
       QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
 !ccwu stable env.
-      T1(7:21)=T1(7:21)+10.
-      QV1(7:21)=QV1(7:21)*0.5
+!      T1(7:21)=T1(7:21)+10.
+!      QV1(7:21)=QV1(7:21)*0.5
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -330,23 +330,23 @@ CONTAINS
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
-      if (.false.) then
+      if (.true.) then
 !     PROFILES OF RHO, RHOz, AND GAMMA
       do k=1,nk3
-      if(zt(k) .le. 12000.) then
-      thbar(k)=300.+43.*((zt(k)/12000.)**1.25)
+      if(zt(k) .le. 2000.) then
+      thbar(k)=300.+10.*((zt(k)/2000.)**1.25)
       else
-      thbar(k)=343.*exp(9.8*(zt(k)-12000.)/1004./213.)
+      thbar(k)=310.*exp(9.8*(zt(k)-2000.)/1004./213.)
       endif
       enddo
 
       do k=1,nk3
-      if(zt(k) .le. 4000.) then
-      qvbar(k)=0.0161-0.000003375*zt(k)
-      elseif(zt(k) .gt. 4000. .and. zt(k) .le. 8000.) then
-      qvbar(k)=0.0026-0.00000065*(zt(k)-4000.)
+      if(zt(k) .le. 2000.) then
+      qvbar(k)=0.0160-0.000005*zt(k)
+      elseif(zt(k) .gt. 2000. .and. zt(k) .le. 7000.) then
+      qvbar(k)=0.0060*2000*2000/zt(k)/zt(k)
       else
-      qvbar(k)=0.
+      qvbar(k)=max(0.,0.0005-0.0000025*(zt(k)-7000.))
       endif
       enddo
 
