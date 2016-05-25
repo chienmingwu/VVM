@@ -178,7 +178,10 @@ PRIVATE
       rkm,   &  ! eddy viscosity coefficient (m**2/s)
       rkz,   &  ! easy, vertical eddy viscosity coefficient  (m**2/s)
                 ! bypass min(critmn,rkm)
-      rkh       ! eddy diffusivity (m**2/s)
+      rkh,   &  ! eddy diffusivity (m**2/s)
+      rkq       ! easy, vertical eddy diffusivity coefficient  (m**2/s)
+                ! bypass min(critmn,rkm)
+
 
 !*****************************
 ! Vorticity tendencies due to turbulence

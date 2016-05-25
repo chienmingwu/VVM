@@ -283,6 +283,7 @@ CONTAINS
       DO 260 J=1,MJ1
       DO 260 I=1,MI1
       RKZ(I,J,K)=RKM(I,J,K)
+      RKQ(I,J,K)=RKH(I,J,K)
       RKM(I,J,K)=max(RKM(I,J,K),CRITMN)
       RKH(I,J,K)=max(RKH(I,J,K),CRITMN)
   260 CONTINUE
@@ -313,6 +314,7 @@ CONTAINS
 
 
       CALL BOUND_ARB (NK2,RKZ)
+      CALL BOUND_ARB (NK2,RKQ)
       CALL BOUND_ARB (NK2,RKM)
       CALL BOUND_ARB (NK2,RKH)
 
@@ -536,19 +538,20 @@ CONTAINS
   610 CONTINUE
 
 !ccwu
+!easy RKH-> RKQ
       DO 620 K=2,NK1
       DO 620 J=1,MJ1
       DO 620 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                      &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(TH3D(I,J,K+1)-TH3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(TH3D(I,J,K)-TH3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
      
       THSTD1(I,J,K)=(THSTD1(I,J,K)                               &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(TH3D(I,J,K+1)-TH3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(TH3D(I,J,K)-TH3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ))
   620 CONTINUE
 
@@ -560,14 +563,14 @@ CONTAINS
        +FNU(hxp)*WTH(I,J)/(RHOU(hxp)*DZ)
      
       DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(TH3D(I,J,NK2)-TH3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
      
       THSTD1(I,J,hxp)=THSTD1(I,J,hxp)                           &
         +FNU(hxp)*WTH(I,J)/(RHOU(hxp)*DZ)
      
       THSTD1(I,J,NK2)=THSTD1(I,J,NK2)                                 &
-        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(TH3D(I,J,NK2)-TH3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
   630 CONTINUE
 
@@ -606,13 +609,14 @@ CONTAINS
   611 CONTINUE
 
 !ccwu
+!easy RKH -> RKQ
       DO 621 K=2,NK1
       DO 621 J=1,MJ1
       DO 621 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                       &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))      &
                    *(TC3D(I,J,K+1,nt)-TC3D(I,J,K,nt))*DHWW1(I,J,K)                 &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1))  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1))  &
                    *(TC3D(I,J,K,nt)-TC3D(I,J,K-1,nt))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
   621 CONTINUE
 
@@ -620,7 +624,7 @@ CONTAINS
       DO 631 I=1,MI1
 
       DDX(I,J,NK2)=DDX(I,J,NK2)                                       &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1))  &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1))  &
                    *(TC3D(I,J,NK2,nt)-TC3D(I,J,NK1,nt)))/(RHOU(NK2)*DZSQ)
   631 CONTINUE
 
@@ -663,19 +667,21 @@ CONTAINS
   
 
 !ccwu
+!easy RKH -> RKQ
+
       DO 720 K=2,NK1
       DO 720 J=1,MJ1
       DO 720 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                      &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(QV3D(I,J,K+1)-QV3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(QV3D(I,J,K)-QV3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
      
       QVSTD(I,J,K)=(QVSTD(I,J,K)                                 &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(QV3D(I,J,K+1)-QV3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(QV3D(I,J,K)-QV3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ))
   720 CONTINUE
   
@@ -687,14 +693,14 @@ CONTAINS
        +FNU(hxp)*WQV(I,J)/(RHOU(hxp)*DZ)
      
       DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(QV3D(I,J,NK2)-QV3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
      
       QVSTD(I,J,hxp)=QVSTD(I,J,hxp)                                &
         +FNU(hxp)*WQV(I,J)/(RHOU(hxp)*DZ)
 
       QVSTD(I,J,NK2)=QVSTD(I,J,NK2)                                   &
-        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(QV3D(I,J,NK2)-QV3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
   730 CONTINUE
   
@@ -728,13 +734,14 @@ CONTAINS
   810 CONTINUE
 
 !ccwu
+!easy RKH -> RKQ
       DO 820 K=2,NK1
       DO 820 J=1,MJ1
       DO 820 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                      &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(QC3D(I,J,K+1)-QC3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(QC3D(I,J,K)-QC3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
   820 CONTINUE
 
@@ -742,7 +749,7 @@ CONTAINS
       DO 830 I=1,MI1
 
       DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(QC3D(I,J,NK2)-QC3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
   830 CONTINUE
 
@@ -773,13 +780,14 @@ CONTAINS
                       *(QI3D(I,J,K)-QI3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
   910 CONTINUE
 !ccwu
+!easy RKH -> RKQ
       DO 920 K=2,NK1
       DO 920 J=1,MJ1
       DO 920 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                      &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(QI3D(I,J,K+1)-QI3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(QI3D(I,J,K)-QI3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
   920 CONTINUE
 
@@ -787,7 +795,7 @@ CONTAINS
       DO 930 I=1,MI1
 
       DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(QI3D(I,J,NK2)-QI3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
   930 CONTINUE
 
