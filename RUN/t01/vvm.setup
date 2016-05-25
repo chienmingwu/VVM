@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = ring01_cr1_large_4km
+set expname = rce_vortex_cr10
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -52,10 +52,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/384/' \
-    -e '1,$s/merid_dimension/384/' \
-    -e '1,$s/zonal_decomposition/6/' \
-    -e '1,$s/merid_decomposition/6/' \
+sed -e '1,$s/zonal_dimension/512/' \
+    -e '1,$s/merid_dimension/512/' \
+    -e '1,$s/zonal_decomposition/8/' \
+    -e '1,$s/merid_decomposition/8/' \
     -e '1,$s/vert_dimension/45/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
@@ -67,9 +67,9 @@ sed -e '1,$s/zonal_dimension/384/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=17280 /
- &INPUT2 RLAT=25., RLON=120.95 /
- &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT1 NEWRUN=T, ITTADD=108000 /
+ &INPUT2 RLAT=20., RLON=120.95 /
+ &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=20.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
  &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=0.,Q1Q2=T,DTRAD=1200.,SOLVAR=F, RRTMRC=T/
 'END6'
