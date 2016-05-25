@@ -176,6 +176,8 @@ PRIVATE
 
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk2), PUBLIC ::       &
       rkm,   &  ! eddy viscosity coefficient (m**2/s)
+      rkz,   &  ! easy, vertical eddy viscosity coefficient  (m**2/s)
+                ! bypass min(critmn,rkm)
       rkh       ! eddy diffusivity (m**2/s)
 
 !*****************************

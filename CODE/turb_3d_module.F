@@ -282,6 +282,7 @@ CONTAINS
       DO 260 K=2,NK2
       DO 260 J=1,MJ1
       DO 260 I=1,MI1
+      RKZ(I,J,K)=RKM(I,J,K)
       RKM(I,J,K)=max(RKM(I,J,K),CRITMN)
       RKH(I,J,K)=max(RKH(I,J,K),CRITMN)
   260 CONTINUE
@@ -311,7 +312,7 @@ CONTAINS
 !ccwut
 
 
-
+      CALL BOUND_ARB (NK2,RKZ)
       CALL BOUND_ARB (NK2,RKM)
       CALL BOUND_ARB (NK2,RKH)
 
@@ -384,14 +385,14 @@ CONTAINS
 
 
 !ccwu
-
+!easy RKM=> RKZ
       DO 334 K=2,NK1
       DO 334 J=1,MJ1
       DO 334 I=1,MI1
       FZXTB(I,J,K)=FZXTB(I,J,K) +                        &
-       (FNU(K+1)*RHOU(K+1)*(RKM(I,J,K+1)+RKM(I,J+1,K+1)) &
+       (FNU(K+1)*RHOU(K+1)*(RKZ(I,J,K+1)+RKZ(I,J+1,K+1)) &
                 *(Z3DX(I,J,K+1)-Z3DX(I,J,K))*DHVW1(I,J,K)             &
-        - FNU(K)*RHOU(K)*(RKM(I,J,K)+RKM(I,J+1,K))       &
+        - FNU(K)*RHOU(K)*(RKZ(I,J,K)+RKZ(I,J+1,K))       &
                 *(Z3DX(I,J,K)-Z3DX(I,J,K-1))*DHVW2(I,J,K))            &
        /(2.*DZSQ*RHOZ(K))*FNZ(K)
   334 CONTINUE
@@ -438,14 +439,14 @@ CONTAINS
   342 CONTINUE
 
 !ccwu
-
+!easy rkm->rkz
       DO 344 K=2,NK1
       DO 344 J=1,MJ1
       DO 344 I=1,MI1
       FZYTB(I,J,K)=FZYTB(I,J,K) +                        &
-       (FNU(K+1)*RHOU(K+1)*(RKM(I,J,K+1)+RKM(I+1,J,K+1)) &
+       (FNU(K+1)*RHOU(K+1)*(RKZ(I,J,K+1)+RKZ(I+1,J,K+1)) &
                 *(Z3DY(I,J,K+1)-Z3DY(I,J,K))*DHUW1(I,J,K)             &
-         -FNU(K)*RHOU(K)*(RKM(I,J,K)+RKM(I+1,J,K))       &
+         -FNU(K)*RHOU(K)*(RKZ(I,J,K)+RKZ(I+1,J,K))       &
                 *(Z3DY(I,J,K)-Z3DY(I,J,K-1))*DHUW2(I,J,K))            &
        /(2.*DZSQ*RHOZ(K))*FNZ(K)
   344 CONTINUE
@@ -479,11 +480,13 @@ CONTAINS
       /(2.*DYSQ) 
   352 CONTINUE
 
+!easy RKM=>RKZ
+
       DO 354 J=1,MJ1
       DO 354 I=1,MI1
       FZTOPB(I,J)=FZTOPB(I,J) - (FNZ(NK1)*RHOZ(NK1)*                  &
-        (RKM(I,J,NK2)+RKM(I+1,J,NK2)+RKM(I,J+1,NK2)+RKM(I+1,J+1,NK2)  &
-        +RKM(I,J,NK1)+RKM(I+1,J,NK1)+RKM(I,J+1,NK1)+RKM(I+1,J+1,NK1)) &
+        (RKZ(I,J,NK2)+RKZ(I+1,J,NK2)+RKZ(I,J+1,NK2)+RKZ(I+1,J+1,NK2)  &
+        +RKZ(I,J,NK1)+RKZ(I+1,J,NK1)+RKZ(I,J+1,NK1)+RKZ(I+1,J+1,NK1)) &
        *(Z3DZ(I,J,NK2)-Z3DZ(I,J,NK1)))/(8.*DZSQ*RHOU(NK2))*FNU(NK2)
   354 CONTINUE
 
