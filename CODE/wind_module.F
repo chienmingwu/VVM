@@ -542,6 +542,10 @@ SUBROUTINE DIRECTIB
 
 END SUBROUTINE DIRECTIB
 SUBROUTINE DIRECTIB_ini
+!DRIECTIB_ini determines the height of partial steps (m) and exterior points. 
+! HXZ    : x-direction height of partial steps (m, related to Z3DY)
+! HYZ    : y-direction height of partial steps (m, related to Z3DX)
+
 
 INTEGER(kind=int_kind) :: I,J,K
 REAL(kind=dbl_kind) :: ZI,ZE,ZL,ZH
