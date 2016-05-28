@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = walkercritmn
+set expname = walkercritmn1
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -55,7 +55,7 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -e '1,$s/zonal_dimension/12288/' \
     -e '1,$s/merid_dimension/32/' \
-    -e '1,$s/zonal_decomposition/48/' \
+    -e '1,$s/zonal_decomposition/24/' \
     -e '1,$s/merid_decomposition/2/' \
     -e '1,$s/vert_dimension/45/' \
     -e '1,$s/tracer_dimension/0/' \
@@ -68,7 +68,7 @@ sed -e '1,$s/zonal_dimension/12288/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=432000 /
+ &INPUT1 NEWRUN=T, ITTADD=259200 /
  &INPUT2 RLAT=0., RLON=120.95 /
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,UVTAU=7200.,DT=20.,NOTURB=F,NOSFX=F,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=180,NWR11=1,NFLPRT=1,NRESTART=180 /
