@@ -94,7 +94,7 @@ CONTAINS
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
 !      CRITMN=100.
 !      New Value for TWP-ICE
-      CRITMN=10._dbl_kind !ccwu for LES run
+      CRITMN=100._dbl_kind !ccwu for LES run
 
       RAMD0S=(0.23_dbl_kind*DELD)**2
 
@@ -282,8 +282,8 @@ CONTAINS
       DO 260 K=2,NK2
       DO 260 J=1,MJ1
       DO 260 I=1,MI1
-      RKZ(I,J,K)=RKM(I,J,K)
-      RKQ(I,J,K)=RKH(I,J,K)
+      RKZ(I,J,K)=max(RKM(I,J,K),1.)
+      RKQ(I,J,K)=max(RKH(I,J,K),1.)
       RKM(I,J,K)=max(RKM(I,J,K),CRITMN)
       RKH(I,J,K)=max(RKH(I,J,K),CRITMN)
   260 CONTINUE
