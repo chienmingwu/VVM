@@ -41,7 +41,8 @@ CONTAINS
       TH3D(I,J,K) = TH3D(I,J,K) + A*FTH3D(I,J,K,N2) + B*FTH3D(I,J,K,N1)
       QV3D(I,J,K) = QV3D(I,J,K) + A*FQV3D(I,J,K,N2) + B*FQV3D(I,J,K,N1)
 !ez use euler method with DT = 1 
-!      QV3D(I,J,K) = QV3D(I,J,K) + FQV3D(I,J,K,N2)
+!      TH3D(I,J,K) = TH3D(I,J,K) + DT*FTH3D(I,J,K,N2)
+!      QV3D(I,J,K) = QV3D(I,J,K) + DT*FQV3D(I,J,K,N2)
       THTD3D(I,J,K) = A*FTH3D(I,J,K,N2)+B*FTH3D(I,J,K,N1)
    50 CONTINUE
 

@@ -31,12 +31,12 @@ CONTAINS
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
 !  Initialize tracer
-      DO 888 nt = 1,ntracer
-      DO 888 K = 1, NK3
-      DO 888 J = mjm,mjp 
-      DO 888 I = mim,mip 
-      TC3D(I,J,K,nt)=0.
-  888 CONTINUE
+!      DO 888 nt = 1,ntracer
+!      DO 888 K = 1, NK3
+!      DO 888 J = mjm,mjp 
+!      DO 888 I = mim,mip 
+!      TC3D(I,J,K,nt)=0.
+!  888 CONTINUE
   
   SELECT CASE (TRIM(casename))
   CASE ('GATE_PHASE_III')
@@ -45,18 +45,18 @@ CONTAINS
 ! Tracer 1 is initialized to 3x3 square columns set inside each corner of the domain.
 ! Tracer 2 is initialized to fill the 2km to 4km layer
 ! The tracers are advected without sources or sinks
-      tc3d(3:5,3:5,:,1) = 1.                ! SW corner column
-      tc3d(3:5,mj1-2:mj1,:,1) = 1.          ! NW corner column
-      tc3d(mi1-2:mi1,mj1-2:mj1,:,1) = 1.    ! NE corner column
-      tc3d(mi1-2:mi1,3:5,:,1) = 1.          ! SE corner column
+!      tc3d(3:5,3:5,:,1) = 1.                ! SW corner column
+!      tc3d(3:5,mj1-2:mj1,:,1) = 1.          ! NW corner column
+!      tc3d(mi1-2:mi1,mj1-2:mj1,:,1) = 1.    ! NE corner column
+!      tc3d(mi1-2:mi1,3:5,:,1) = 1.          ! SE corner column
       
-      DO 123 K = 1, NK3
-      DO 123 J = mjm,mjp
-      DO 123 I = mim,mip
-      IF ((ZT(K) .GE. 2000.) .AND. (ZT(K) .LE. 4000.)) THEN
-      TC3D(I,J,K,2)=1.
-      END IF
-  123 CONTINUE
+!      DO 123 K = 1, NK3
+!      DO 123 J = mjm,mjp
+!      DO 123 I = mim,mip
+!      IF ((ZT(K) .GE. 2000.) .AND. (ZT(K) .LE. 4000.)) THEN
+!      TC3D(I,J,K,2)=1.
+!      END IF
+!  123 CONTINUE
   CASE ('TWP-ICE')
 ! the twp-ice case has a specified source function
       call update_tracer_source      
@@ -103,20 +103,20 @@ CONTAINS
          i, j, k     ! do loop indices for zonal, meridional and vertical dimensions
 
       if(my_task == 0) WRITE(6,*) 'Updating Tracer...'
-      DO 123 K = 1, NK3
-      DO 123 J = mjm,mjp
-      DO 123 I = mim,mip
-      IF (ZT(K) .LE. 250.) THEN
-      TC3D(I,J,K,1)=1.
-      ELSE IF ((ZT(K) .GE. 2000.) .AND. (ZT(K) .LE. 4000.)) THEN
-      TC3D(I,J,K,2)=1.
-      ELSE IF ((ZT(K) .GE. 4000.) .AND. (ZT(K) .LE. 6000.)) THEN
-      TC3D(I,J,K,3)=1.
-      ELSE IF ((ZT(K) .GE. 14000.) .AND. (ZT(K) .LE. 17000.)) THEN
-      TC3D(I,J,K,4)=1.
-      END IF
+!      DO 123 K = 1, NK3
+!      DO 123 J = mjm,mjp
+!      DO 123 I = mim,mip
+!      IF (ZT(K) .LE. 250.) THEN
+!      TC3D(I,J,K,1)=1.
+!      ELSE IF ((ZT(K) .GE. 2000.) .AND. (ZT(K) .LE. 4000.)) THEN
+!      TC3D(I,J,K,2)=1.
+!      ELSE IF ((ZT(K) .GE. 4000.) .AND. (ZT(K) .LE. 6000.)) THEN
+!      TC3D(I,J,K,3)=1.
+!      ELSE IF ((ZT(K) .GE. 14000.) .AND. (ZT(K) .LE. 17000.)) THEN
+!      TC3D(I,J,K,4)=1.
+!      END IF
 
-  123 CONTINUE
+!  123 CONTINUE
   
    END SUBROUTINE update_tracer_source
 
