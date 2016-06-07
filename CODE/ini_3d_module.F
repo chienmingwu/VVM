@@ -470,9 +470,9 @@ CONTAINS
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
-      call RANKINE(mi_glob/2,mj_glob/2,30,100000.,13.)
+!      call RANKINE(mi_glob/2,mj_glob/2,30,100000.,13.)
 
-!      CALL RING(mi_glob/2,mj_glob/2,30,0.0021d0,20000.d0,24000.d0,38000.d0,42000.d0)
+      CALL RING(mi_glob/2,mj_glob/2,30,0.0021d0,20000.d0,24000.d0,38000.d0,42000.d0)
 
 !thick
 !      CALL RING(mi_glob/2,mj_glob/2,51,0.0021d0,20000.d0,24000.d0,38000.d0,42000.d0)
@@ -488,12 +488,12 @@ CONTAINS
       DO 660 K = 2, NK1
       DO 660 J = 1, MJ1
       DO 660 I = 1, MI1
-      Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
-                 -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
-      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
-                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
-      Z3DZ(I,J,K)=(U3DY(I+1,J,K)-U3DY(I,J,K))/DX &
-                 -(U3DX(I,J+1,K)-U3DX(I,J,K))/DYNEW
+      Z3DY(I,J,K)=RHO(K)*((W3D(I+1,J,K)-W3D(I,J,K))/DX    &
+                 -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ)
+      Z3DX(I,J,K)=RHO(K)*((W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
+                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ)
+      Z3DZ(I,J,K)=RHOZ(K)*((U3DY(I+1,J,K)-U3DY(I,J,K))/DX &
+                 -(U3DX(I,J+1,K)-U3DX(I,J,K))/DYNEW)
   660 CONTINUE
 
       call bound_3d_xy

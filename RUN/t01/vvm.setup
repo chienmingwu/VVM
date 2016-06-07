@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rce_vortex_hcr100_1
+set expname = ring_hcr1000_1
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -67,9 +67,9 @@ sed -e '1,$s/zonal_dimension/256/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=17280 /
+ &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=20., RLON=120.95 /
- &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=20.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=20.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
  &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=0.,Q1Q2=T,DTRAD=1200.,SOLVAR=F, RRTMRC=T/
 'END6'
