@@ -145,7 +145,7 @@ PROGRAM ldmain
 
 
     ITT = ITT + 1
-    CALL XSEC_CDF ( ITT )
+!    CALL XSEC_CDF ( ITT )
     if(my_task == 0) write(6,*) 'ITT=',ITT
 
     !  USE FORWARD SCHEME TO INITIALIZE
@@ -173,7 +173,7 @@ PROGRAM ldmain
     A =   3. / 2. * DT
     B = - 1. / 2. * DT
 
-    ITTNOW = ITT  + 1
+    ITTNOW = ITT!  + 1
     origin_dt = DT   !  Mars (20141225) add conserve DT
     if ( my_task == 0 ) open(unit=12345,file='iter_record.txt',status='unknown')
 
@@ -203,7 +203,6 @@ PROGRAM ldmain
         itt_align = itt_align + inner_dt
         elapse_time = elapse_time + inner_dt
         ttl_time    = ttl_time + inner_dt
-        
         if  ( ( ( itt_align - inner_dt ) < origin_dt  .and. itt_align  >= origin_dt   ) ) then
             ITT = ITT + 1
             itt_align = itt_align - origin_dt
@@ -212,15 +211,12 @@ PROGRAM ldmain
             itt_align = 0.
         endif      
 
-
-
-        
         A = 3./2. * DT
         B = -1./2. * DT
 
         PASS_SMALL_DT = DT
         PASS_BIG_DT   = origin_dt
-
+        IF (my_task .eq. 0) PRINT*,'outside',ITT,ITTMAX
         CALL AB_3D ( N1, N2, ITT )        
 
         DT   = origin_dt ! move set original dt here

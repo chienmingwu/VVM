@@ -71,7 +71,7 @@ CONTAINS
       DO 320 K = 2, NK2
       DO 320 J = 1, MJ1
       DO 320 I = mim,mip
-      TEMPI(I,J,K)=U3DX(I,J,K)!*RHOU(K)
+      TEMPI(I,J,K)=U3DX(I,J,K)*RHOU(K)
   320 CONTINUE
 
       DO 330 K = 2,NK2
@@ -81,13 +81,12 @@ CONTAINS
       UFLX(I,J,K) = UFLX(I,J,K) + min(0.d0,TEMPI(I,J,K)*Q(I,J,K))
   330 CONTINUE
 
-      if (.false.) then
 
 !     Meridional advection
       DO 420 K = 2, NK2
       DO 420 I = 1,MI1
       DO 420 J = mjm,mjp
-      TEMPI(I,J,K)=U3DY(I,J,K)!*RHOU(K)
+      TEMPI(I,J,K)=U3DY(I,J,K)*RHOU(K)
   420 CONTINUE
 
       DO 430 K = 2,NK2
@@ -102,7 +101,7 @@ CONTAINS
       DO 520 K = 1,NK1
       DO 520 J = 1,MJ1
       DO 520 I = 1,MI1
-      TEMPI(I,J,K)=W3D(I,J,K)!*RHOZ(K)
+      TEMPI(I,J,K)=W3D(I,J,K)*RHOZ(K)
   520 CONTINUE
 
       DO 530 K = 2,NK2
@@ -112,18 +111,21 @@ CONTAINS
       WFLX(I,J,K) = WFLX(I,J,K) + min(0.d0,TEMPI(I,J,K)*Q(I,J,K))
   530 CONTINUE
 
-      endif
 
       DO 600 k = 1,NK2
 !      irho(k) = 1./rho(k)
 !      iadz(k) = 1./adz(k)
       do 600 j= 1,MJ1
       do 600 i= 1,MI1
-      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
-                        +(WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
+      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX)
+!+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
+!                        +(WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
   600 CONTINUE
 
       call bound_arb(NK3,Q)
+          
+        
+      if (.false.) then
 
       do 610 k=2,NK2
       kb=k-1
@@ -141,7 +143,7 @@ CONTAINS
               U3DX(i,j,k), W3D(ib,j,k)+W3D(ib,j,kc)+W3D(i,j,k)+W3D(i,j,kc)))/RHOU(k)
   610 CONTINUE
 
-      if (.false.) then
+!      if (.false.) then
 
       DO 620 k=2,NK2
       kb=k-1
@@ -175,6 +177,8 @@ CONTAINS
   630 CONTINUE
 
       endif
+
+      if (.false.) then
 
       do 650 k=2,NK2
       kb=k-1
@@ -221,7 +225,7 @@ CONTAINS
       UFLX(i,j,k)=pp(UFLX(i,j,k))*min(1.,LMX(i,j,k), LMN(ib,j,k)) &
              - pn(UFLX(i,j,k))*min(1.,LMX(ib,j,k),LMN(i,j,k))
   710 CONTINUE
-
+      endif
       if (.false.) then
 
       do 720 k=2,nk2
@@ -244,18 +248,18 @@ CONTAINS
       ENDIF
 
 
-      do 800 k=2,nk2
-      do 800 j=1,MJ1
-      do 800 i=1,MI1
+!      do 800 k=2,nk2
+!      do 800 j=1,MJ1
+!      do 800 i=1,MI1
  ! MK: added fix for very small negative values (relative to positive values)
  !     especially  when such large numbers as
  !     hydrometeor concentrations are advected. The reason for negative values
  !     is
  !     most likely truncation error.
-
-      Q(i,j,k)=max(0.,Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
-                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(J))
-  800 CONTINUE
+!
+!      Q(i,j,k)=max(0.,Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
+!                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(J))
+!  800 CONTINUE
 
       do 810 k=2,NK2
       do 810 j=1,mj1

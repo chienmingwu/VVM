@@ -1171,7 +1171,7 @@ CONTAINS
       time_start(1) = (ITT/NXSAVG) + 1
      
       if(my_task == 0) then
-        print *,' L, R, C file output this timestep'
+        print *,' L, R, C file output this timestep',ITT
       endif
 #if defined (PARALLELIO) 
       if (first .and. itt .ne. 0) CALL cdf_open_diag
@@ -1179,7 +1179,6 @@ CONTAINS
       if (my_task == 0 .and. first .and. itt.ne.0) CALL cdf_open_diag
 #endif
       first = .false.
-      
 ! formerly OUT_tm1
       OUT_tm1(:,:,1:nk2) = qv3d(1:mi1,1:mj1,1:nk2) !easy for debug
 #if defined (PARALLELIO) 
