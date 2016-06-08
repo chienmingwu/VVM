@@ -43,7 +43,7 @@ CONTAINS
          LMX(mim:mip,mjm:mjp,NK2),LMN(mim:mip,mjm:mjp,NK2)
 ! MPDATA local three direction flux 
       REAL (KIND=dbl_kind) :: &
-         UFLX(MI1,MJ1,NK2),VFLX(MI1,MJ1,NK2),WFLX(MI1,MJ1,NK2)
+         UFLX(mim:mip,mjm:mjp,NK2),VFLX(mim:mip,mjm:mjp,NK2),WFLX(mim:mip,mjm:mjp,NK1)
 ! MPDATA local Q temporary buffer
       REAL (KIND=dbl_kind) :: &
          Q(mim:mip,mjm:mjp,NK3)
@@ -54,8 +54,7 @@ CONTAINS
          i, j, k, ib, ic, jb, jc, kb, kc    ! do loop indices for zonal, meridional and vertical dimensions
 
       Q = QTMP
-
-      call extend_ne(nk3,q,qew,qns,u3dx,uew,u3dy,vns)
+!      call extend_ne(nk3,q,qew,qns,u3dx,uew,u3dy,vns)
 
 ! easy MPDATA before updating Q, find local max and min.
       DO 100 K = 2, NK2
@@ -74,13 +73,13 @@ CONTAINS
       TEMPI(I,J,K)=U3DX(I,J,K)*RHOU(K)
   320 CONTINUE
 
+
       DO 330 K = 2,NK2
       DO 330 J = 1,MJ1
       DO 330 I = 1,mip
       UFLX(I,J,K) = max(0.d0,TEMPI(I,J,K)*Q(I-1,J,K))
       UFLX(I,J,K) = UFLX(I,J,K) + min(0.d0,TEMPI(I,J,K)*Q(I,J,K))
   330 CONTINUE
-
 
 !     Meridional advection
       DO 420 K = 2, NK2
@@ -111,21 +110,23 @@ CONTAINS
       WFLX(I,J,K) = WFLX(I,J,K) + min(0.d0,TEMPI(I,J,K)*Q(I,J,K))
   530 CONTINUE
 
+!      if (nj_sbdm .eq. 1) PRINT*, (UFLX(i+1,10,20)-UFLX(i,10,20),Q(I,10,20),I+MI1*(ni_sbdm),I=1,MI1)
 
       DO 600 k = 1,NK2
 !      irho(k) = 1./rho(k)
 !      iadz(k) = 1./adz(k)
       do 600 j= 1,MJ1
       do 600 i= 1,MI1
-      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX)
-!+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
-!                        +(WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
+      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
+                        +(WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
   600 CONTINUE
 
       call bound_arb(NK3,Q)
+
+!      if ((nj_sbdm .eq. 1) .and. (ni_sbdm .eq. 5 )) PRINT*,2525,Q(50,10,20),QTMP(50,10,20)
+
           
-        
-      if (.false.) then
+      if (.true.) then
 
       do 610 k=2,NK2
       kb=k-1
@@ -178,7 +179,7 @@ CONTAINS
 
       endif
 
-      if (.false.) then
+      if (.true.) then
 
       do 650 k=2,NK2
       kb=k-1
@@ -226,7 +227,7 @@ CONTAINS
              - pn(UFLX(i,j,k))*min(1.,LMX(ib,j,k),LMN(i,j,k))
   710 CONTINUE
       endif
-      if (.false.) then
+      if (.true.) then
 
       do 720 k=2,nk2
       do 720 j=1,mjp
@@ -248,18 +249,18 @@ CONTAINS
       ENDIF
 
 
-!      do 800 k=2,nk2
-!      do 800 j=1,MJ1
-!      do 800 i=1,MI1
+      do 800 k=2,nk2
+      do 800 j=1,MJ1
+      do 800 i=1,MI1
  ! MK: added fix for very small negative values (relative to positive values)
  !     especially  when such large numbers as
  !     hydrometeor concentrations are advected. The reason for negative values
  !     is
  !     most likely truncation error.
-!
-!      Q(i,j,k)=max(0.,Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
-!                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(J))
-!  800 CONTINUE
+
+      Q(i,j,k)=max(0.,Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
+                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(J))
+  800 CONTINUE
 
       do 810 k=2,NK2
       do 810 j=1,mj1

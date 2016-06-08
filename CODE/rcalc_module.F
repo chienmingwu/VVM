@@ -12,6 +12,8 @@ USE update_thermo_module
 USE force_3d_module
 USE advec_3d_module
 USE timer
+USE domain_decomposition
+
 
 IMPLICIT NONE
 PRIVATE
@@ -79,6 +81,7 @@ CONTAINS
       enddo
   
 #endif
+
       call timer_stop('advection')
 
       call timer_start('forcing')
@@ -193,8 +196,6 @@ CONTAINS
                              DX,DYNEW,RLAT,RLON,THBAR,THBARZ)
       call timer_stop('physics')
 
-
-
 ! Update thermodynamic variables -- Replaces call to CLOUD_3D
       CALL update_thermodynamics (N1,N2)
 
@@ -202,6 +203,6 @@ CONTAINS
       CALL NUDGE
 
 
-   END SUBROUTINE rcalc_3d
+END SUBROUTINE rcalc_3d
 
 END MODULE rcalc_module

@@ -185,9 +185,9 @@ PROGRAM ldmain
     ttl_time    = elapse_time
     ITT = ITTNOW
     itt_align = 0.
-    do while( ITT <= ITTMAX )
+    do while( ITT < ITTMAX )
     
-        if(my_task == 0)  write(6,*) 'ITT=',ITT
+        if(my_task == 0)  write(6,*) 'ITT=',ITT+1
         CALL TIME_MANAGER(ITT)
         START = ITT .GE. ITINIT
 

@@ -26,6 +26,7 @@ CONTAINS
            QP(mim:mip,mjm:mjp,NK3)
       INTEGER (KIND=int_kind) :: &
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
+
       DO 30 K=2,NK1
       DO 30 J=1,MJ1
       DO 30 I=1,MI1

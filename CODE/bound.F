@@ -264,7 +264,7 @@ CONTAINS
           th3d(mi1+i,1:mj1,k) = buff_ew(i,1:mj1,k-1,1,2)
 !#if defined (PHYSICS)
           qv3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,2,1)
-          qv3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,2,2)
+          qv3d(mi1+i,1:mj1,k) = buff_ew(i,1:mj1,k-1,2,2)
 #if defined (PHYSICS)
           qc3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,3,1)
           qc3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,3,2)

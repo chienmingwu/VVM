@@ -35,6 +35,7 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 ! Update theta from dynamics tendency term
+
       DO 50 K = 2, NK2
       DO 50 J = 1, MJ1
       DO 50 I = 1, MI1
