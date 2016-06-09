@@ -59,82 +59,23 @@ CONTAINS
 
       integer nu1, nt1, k1, k2, it
       logical lf
-      DATA NU1/10000/,NT1/10000/
-      REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
-                             es1, alphaw, pbarmb
+      DATA NU1/18/,NT1/18/
+      REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr,&
+                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(10000),PI1(10000),TV1(10000),PILOG1(10000)
-      REAL (KIND=dbl_kind) :: PQ1(10000),P1(10000),T1(10000),QV1(10000),QC1(10000)
-      REAL (KIND=dbl_kind) :: Q1OBS(10000),Q2OBS(10000),wls1(10000)
-      REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
-
-       DELZ=1.
-       sfcp=1000.
-       DO K=1,NT1
-       HEIGHT(K)=(K-1)*DELZ
-       ENDDO
-
-!************************************
-!* Puli  (2013.09.08 14) case    *
-!************************************
-
-        t1=0.
-        qv1=0.
-        qc1=0.
-        wls1=0.
-
-        do k=1,NT1
-        if(height(k) .lt. 1500.) then
-        t1(k) =298.5+(305.5-298.5)*height(k)/1500.
-        qv1(k)=15.7
-        elseif(height(k) .ge. 1500. .and. height(k) .le. 2275.) then
-        qv1(k)=15.7 -(15.7-12.7) *(height(k)-1500.)/775.
-        t1(k) =305.5+(309.-305.5)*(height(k)-1500.)/775.
-        else
-        qv1(k)=7.4 -(7.4-1.15) *(height(k)-2275.)/4100.
-        t1(k) =315.+(327.-315.)*(height(k)-2775.)/4100.
-        endif
-
-        if(qv1(k) .lt. 0.) then
-        qv1(k)=0.
-        endif
-
-        enddo
-    
-        do k=2,NT1
-        if(height(k) .le. 2275.) then
-        wls1(k)=1.5*(height(k)/2275.)
-        else
-        wls1(k)=1.5
-        endif
-        enddo
-
-
-        do k=1,NT1
-        qv1(k)=qv1(k)/1000.
-        enddo
-
-        do k=1,nt1
-        thv(k)=t1(k)*(1+0.608*qv1(k))
-        enddo
-
-
-       PI1(1)=(sfcp/1000.)**(rgas/CP)
-       DO K=2,NT1
-       THVAVG=0.5*(THV(K)+THV(K-1))
-       PI1(K)=PI1(K-1)-GRAV*DELZ/(CP*THVAVG)
-       ENDDO
-
-       DO K=1,nt1
-       p1(k)=exp(cp/rgas*log(pi1(K))+log(1000.))
-       PU1(K)=P1(K)
-       PQ1(K)=P1(K)
-       ENDDO
-
-       do k=1,nt1
-       t1(k)=t1(k)*pi1(k)
-       enddo
+           ,QCBAR(NK3),QVSBAR(NK3)
+      REAL (KIND=dbl_kind) :: ZT1(18),PI1(18),TV1(18),PILOG1(18)
+      REAL (KIND=dbl_kind) :: PQ1(18),P1(18),T1(18),QV1(18),QC1(18)
+      REAL (KIND=dbl_kind) :: Q1OBS(18),Q2OBS(18),WLS1(18),PU1(18),U1(18)
+      DATA PQ1/1006.,1000.,925.,850.,700.,500.,400.,300.,250.,200.,150. &
+             ,100.,87.5,70.,50.,30.,20.,10./   
+      DATA P1/1006.,1000.,925.,850.,700.,500.,400.,300.,250.,200.,150. &
+             ,100.,87.5,70.,50.,30.,20.,10./ 
+      DATA T1/28.6,28.2,22.4,23.4,13.2,-4.3,-13.5,-27.9,-37.3,-49.3 &
+             ,-64.7,-78.1,-81.5,-73.9,-65.9,-57.1,-47.1,-42.5/
+      DATA QV1/16.44,17.17,17.03,10.05,7.44,4.18,1.21,0.40,0.07,0.03 &
+             ,0.02,7*0./
+      DATA QC1/18*0./
 
       casename= 'GATE_PHASE_III'
 
@@ -158,8 +99,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) 
-      QV1(K)= QV1(K) 
+      T1(K) =  T1(K)+273. 
+      QV1(K)= QV1(K)*1.E-3
   100 CONTINUE
 
 
@@ -481,8 +422,8 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=-2.
-      U3DY(I,J,K)=-1.
+      U3DX(I,J,K)=5.
+      U3DY(I,J,K)=5.
   610 CONTINUE
 
       DO 660 K = 2, NK1
