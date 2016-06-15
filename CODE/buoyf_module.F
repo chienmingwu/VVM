@@ -48,9 +48,9 @@ CONTAINS
       DO 100 I=1,MI1
       FZXBU(I,J,K)=                                          &
        +(TH3D(I,J+1,K)-TH3D(I,J,K))/THBAR(K)                 &
-       +(TH3D(I,J+1,K+1)-TH3D(I,J,K+1))/THBAR(K+1)           &
-       +DELTA*(QV3D(I,J+1,K)-QV3D(I,J,K)+QV3D(I,J+1,K+1)-QV3D(I,J,K+1)) &
-       -(QP(I,J+1,K)-QP(I,J,K)+QP(I,J+1,K+1)-QP(I,J,K+1))
+       +(TH3D(I,J+1,K+1)-TH3D(I,J,K+1))/THBAR(K+1)          ! &
+!easy       +DELTA*(QV3D(I,J+1,K)-QV3D(I,J,K)+QV3D(I,J+1,K+1)-QV3D(I,J,K+1)) &
+!       -(QP(I,J+1,K)-QP(I,J,K)+QP(I,J+1,K+1)-QP(I,J,K+1))
   100 CONTINUE
 
       DO 110 K=2,NK1
@@ -58,9 +58,9 @@ CONTAINS
       DO 110 I=1,MI1
       FZYBU(I,J,K)=                                          &
        +(TH3D(I+1,J,K)-TH3D(I,J,K))/THBAR(K)                 &
-       +(TH3D(I+1,J,K+1)-TH3D(I,J,K+1))/THBAR(K+1)           &
-       +DELTA*(QV3D(I+1,J,K)-QV3D(I,J,K)+QV3D(I+1,J,K+1)-QV3D(I,J,K+1)) &
-       -(QP(I+1,J,K)-QP(I,J,K)+QP(I+1,J,K+1)-QP(I,J,K+1))
+       +(TH3D(I+1,J,K+1)-TH3D(I,J,K+1))/THBAR(K+1)          ! &
+!easy       +DELTA*(QV3D(I+1,J,K)-QV3D(I,J,K)+QV3D(I+1,J,K+1)-QV3D(I,J,K+1)) &
+!       -(QP(I+1,J,K)-QP(I,J,K)+QP(I+1,J,K+1)-QP(I,J,K+1))
   110 CONTINUE
 
       DO 120 K=2,NK1
