@@ -56,6 +56,7 @@ CONTAINS
       Q = QTMP
 !      call extend_ne(nk3,q,qew,qns,u3dx,uew,u3dy,vns)
 
+
 ! easy MPDATA before updating Q, find local max and min.
       DO 100 K = 2, NK2
       DO 100 J = 1, MJ1
@@ -121,15 +122,11 @@ CONTAINS
 !      iadz(k) = 1./adz(k)
       do 600 j= 1,MJ1
       do 600 i= 1,MI1
-!      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW + &
-!                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
-      Q(i,j,k)=Q(i,j,k) - ((VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW)! + &
+      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW + &
+                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
+!      Q(i,j,k)=Q(i,j,k) - ((VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW)! + &
 !                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
   600 CONTINUE
-
-      UFLX = 0.
-      VFLX = 0.
-      WFLX = 0.
 
       if (.true.) then
 

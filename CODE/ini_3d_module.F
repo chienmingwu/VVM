@@ -127,8 +127,8 @@ CONTAINS
       QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
 !ccwu stable env.
-      T1(7:21)=T1(7:21)+10.
-      QV1(7:21)=QV1(7:21)*0.5
+!      T1(7:21)=T1(7:21)+10.
+!      QV1(7:21)=QV1(7:21)*0.5
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -391,7 +391,7 @@ CONTAINS
       DO 500 K = 1, NK3
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
-      TH3D(I,J,K) = THBAR(K)
+      TH3D(I,J,K) = 300.!THBAR(K)
       QV3D(I,J,K) = 0.!QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -425,7 +425,7 @@ CONTAINS
       TMP=ni_sbdm*mi1+I
  502  IF( TMP .GT. 375  .and. TMP .LT. 425) QV3D(I,J,K)= 6.e-4
 
-      else
+!      else
 
       DO 503 K=1,NK2
       DO 503 J=mjm,mjp
@@ -449,6 +449,23 @@ CONTAINS
       DO 504 I=mim,mip
       TMP=nj_sbdm*mj1+j
  504  IF( TMP .GT. 375  .and. TMP .LT. 425) QV3D(I,J,K)= 6.e-4
+
+      else
+
+      DO 505 K= 1,NK2
+      DO 505 J=mjm,mjp
+      DO 505 I=mim,mip
+      TMP=((ni_sbdm*mi1+I-mi_glob/2.)*DYNEW/25000.)**2
+!      TMP=TMP+((nj_sbdm*mj1+J-mj_glob/2.)*DYNEW/25000.)**2
+      TMP=TMP+((K*DZ-9000)/3000)**2
+      TMP=sqrt(TMP)
+ 505  IF( TMP .LE. 1) TH3D(I,J,K)=TH3D(I,J,K)-2.*(COS(TMP*3.1415926)+1)/2
+
+      DO 506 K= 1,5
+      DO 506 J=mjm,mjp
+      DO 506 I=mim,mip
+ 506  QV3D(I,J,K) = 1.e-3
+
 
       endif
 
@@ -497,11 +514,11 @@ CONTAINS
 !ccwu_ini_wind 
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
-      if (ZT(K) .GT. 5000.) THEN
-      U3DY(I,J,K) = 20.
-      ELSEIF (ZT(K) .GT. 4000.) THEN
-      U3DY(I,J,K) =20* sin(pi/2.*(ZT(K) - 4000.)/1000.)**2
-      ENDIF
+!      if (ZT(K) .GT. 5000.) THEN
+!      U3DY(I,J,K) = 20.
+!      ELSEIF (ZT(K) .GT. 4000.) THEN
+!      U3DY(I,J,K) =20* sin(pi/2.*(ZT(K) - 4000.)/1000.)**2
+!      ENDIF
 
   610 CONTINUE
 
