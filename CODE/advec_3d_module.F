@@ -107,7 +107,7 @@ CONTAINS
       TEMPI(I,J,K)=W3D(I,J,K)!*RHOZ(K)
   520 CONTINUE
 
-      DO 530 K = 2,NK2
+      DO 530 K = 1,NK2
       DO 530 J = 1,MJ1
       DO 530 I = 1,MI1
       WFLX(I,J,K) = max(0.d0,TEMPI(I,J,K))*Q(I,J,K)
@@ -115,7 +115,7 @@ CONTAINS
   530 CONTINUE
       DO 531 J = 1,MJ1
       DO 531 I = 1,MI1
-      WFLX(I,J,1) = 0.d0
+!      WFLX(I,J,1) = 0.d0
       WFLX(I,J,NK3) = 0.d0
   531 CONTINUE
 
