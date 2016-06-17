@@ -78,8 +78,8 @@ CONTAINS
       DO 330 K = 2,NK2
       DO 330 J = 1,MJ1
       DO 330 I = 1,mip
-      UFLX(I,J,K) = max(0.d0,TEMPI(I,J,K))*Q(I-1,J,K)
-      UFLX(I,J,K) = UFLX(I,J,K) + min(0.d0,TEMPI(I,J,K))*Q(I,J,K)
+      UFLX(I,J,K) = max(0.d0,TEMPI(I,J,K))*Q(I,J,K)
+      UFLX(I,J,K) = UFLX(I,J,K) + min(0.d0,TEMPI(I,J,K))*Q(I+1,J,K)
   330 CONTINUE
 
 !     Meridional advection
@@ -92,8 +92,8 @@ CONTAINS
       DO 430 K = 2,NK2
       DO 430 J = 1,mjp
       DO 430 I = 1,MI1
-      VFLX(I,J,K) = max(0.d0,TEMPI(I,J,K))*Q(I,J-1,K)
-      VFLX(I,J,K) = VFLX(I,J,K) + min(0.d0,TEMPI(I,J,K))*Q(I,J,K)
+      VFLX(I,J,K) = max(0.d0,TEMPI(I,J,K))*Q(I,J,K)
+      VFLX(I,J,K) = VFLX(I,J,K) + min(0.d0,TEMPI(I,J,K))*Q(I,J+1,K)
   430 CONTINUE
 
       call bound_arb(NK2,UFLX)
@@ -110,8 +110,8 @@ CONTAINS
       DO 530 K = 2,NK2
       DO 530 J = 1,MJ1
       DO 530 I = 1,MI1
-      WFLX(I,J,K) = max(0.d0,TEMPI(I,J,K))*Q(I,J,K-1)
-      WFLX(I,J,K) = WFLX(I,J,K) + min(0.d0,TEMPI(I,J,K))*Q(I,J,K)
+      WFLX(I,J,K) = max(0.d0,TEMPI(I,J,K))*Q(I,J,K)
+      WFLX(I,J,K) = WFLX(I,J,K) + min(0.d0,TEMPI(I,J,K))*Q(I,J,K+1)
   530 CONTINUE
       DO 531 J = 1,MJ1
       DO 531 I = 1,MI1
@@ -124,12 +124,12 @@ CONTAINS
 !      iadz(k) = 1./adz(k)
       do 600 j= 1,MJ1
       do 600 i= 1,MI1
-      Q(i,j,k)=Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW+ &
+      Q(i,j,k)=Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW+ &
                            (WFLX(i,j,k)-WFLX(i,j,k-1))/DZ*FNZ(K))
 
 
-!      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW + &
-!                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
+!     Q(i,j,k)=Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW + &
+!                         (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
 !      Q(i,j,k)=Q(i,j,k) - ((VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW)! + &
 !                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
   600 CONTINUE
@@ -144,8 +144,6 @@ CONTAINS
 !      if (ni_sbdm .eq. 6 .and. nj_sbdm .eq. 1) &
 !      PRINT*,(UFLX(i,10,20),WFLX(i,10,20),I+MI1*(ni_sbdm),I=1,MI1)
 !      PRINT*,(UFLX(i+1,10,35),UFLX(i,10,35),I+MI1*(ni_sbdm),I=1,MI1)
-
-
 
 
       UFLX = 0.d0
@@ -295,8 +293,8 @@ CONTAINS
 
 !      Q(i,j,k)=max(0.,Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
 !                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(K))
-      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
-                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(K)
+      Q(i,j,k)=Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
+                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)/RHOU(K)
 
 
   800 CONTINUE
