@@ -455,11 +455,11 @@ CONTAINS
       DO 505 K= 1,NK2
       DO 505 J=mjm,mjp
       DO 505 I=mim,mip
-      TMP=((ni_sbdm*mi1+I-mi_glob/2.)*DYNEW/25000.)**2
+      TMP=((ni_sbdm*mi1+I-300.5)*DYNEW/4000.)**2
 !      TMP=TMP+((nj_sbdm*mj1+J-mj_glob/2.)*DYNEW/25000.)**2
-      TMP=TMP+((K*DZ-9000)/3000)**2
+      TMP=TMP+((K*DZ-4000)/4000)**2
       TMP=sqrt(TMP)
- 505  IF( TMP .LE. 1) TH3D(I,J,K)=TH3D(I,J,K)-2.*(COS(TMP*3.1415926)+1)/2
+ 505  IF( TMP .LE. 1) TH3D(I,J,K)=TH3D(I,J,K)-10.*(COS(TMP*3.1415926)+1)/2
 
       DO 506 K= 1,5
       DO 506 J=mjm,mjp

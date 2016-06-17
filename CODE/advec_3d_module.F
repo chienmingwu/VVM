@@ -96,6 +96,9 @@ CONTAINS
       VFLX(I,J,K) = VFLX(I,J,K) + min(0.d0,TEMPI(I,J,K))*Q(I,J,K)
   430 CONTINUE
 
+      call bound_arb(NK2,UFLX)
+      call bound_arb(NK2,VFLX)
+
 !     Vertical advection
 
       DO 520 K = 1,NK2
@@ -112,23 +115,45 @@ CONTAINS
   530 CONTINUE
       DO 531 J = 1,MJ1
       DO 531 I = 1,MI1
+      WFLX(I,J,1) = 0.d0
       WFLX(I,J,NK3) = 0.d0
   531 CONTINUE
 
-!      if (nj_sbdm .eq. 1) PRINT*, (UFLX(i+1,10,20)-UFLX(i,10,20),Q(I,10,20),I+MI1*(ni_sbdm),I=1,MI1)
-
-      DO 600 k = 1,NK2
+      DO 600 k = 2,NK2
 !      irho(k) = 1./rho(k)
 !      iadz(k) = 1./adz(k)
       do 600 j= 1,MJ1
       do 600 i= 1,MI1
-      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW + &
-                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
+      Q(i,j,k)=Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW+ &
+                           (WFLX(i,j,k)-WFLX(i,j,k-1))/DZ*FNZ(K))
+
+
+!      Q(i,j,k)=Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW + &
+!                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
 !      Q(i,j,k)=Q(i,j,k) - ((VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW)! + &
 !                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
   600 CONTINUE
 
-      if (.true.) then
+!      if (ni_sbdm .eq. 5 .and. nj_sbdm .eq. 1) &
+!      PRINT*,(UFLX(i+1,10,20)-UFLX(i,10,20),Q(I,10,20),I+MI1*(ni_sbdm),I=1,MI1)
+!      PRINT*,(UFLX(i,10,20),WFLX(i,10,20),I+MI1*(ni_sbdm),I=1,MI1)
+!      PRINT*,(Q(i,10,35),UFLX(i+1,10,35)-UFLX(i,10,35),I+MI1*(ni_sbdm),I=1,MI1)
+!      PRINT*,(Q(i,10,35),WFLX(i,10,36)-WFLX(i,10,35),I+MI1*(ni_sbdm),I=1,MI1)
+!      PRINT*,(UFLX(i+1,10,35),UFLX(i,10,35),I+MI1*(ni_sbdm),I=1,MI1)
+
+!      if (ni_sbdm .eq. 6 .and. nj_sbdm .eq. 1) &
+!      PRINT*,(UFLX(i,10,20),WFLX(i,10,20),I+MI1*(ni_sbdm),I=1,MI1)
+!      PRINT*,(UFLX(i+1,10,35),UFLX(i,10,35),I+MI1*(ni_sbdm),I=1,MI1)
+
+
+
+
+      UFLX = 0.d0
+
+      VFLX = 0.d0
+      WFLX = 0.d0
+
+      if (.false.) then
 
       call bound_arb(NK3,Q)
           
@@ -193,7 +218,7 @@ CONTAINS
       call bound_arb(NK2,WFLX)
       endif
 
-      if (.true.) then
+      if (.false.) then
 
       do 650 k=2,NK2
       kb=k-1
@@ -256,7 +281,7 @@ CONTAINS
 !      flux(k) = flux(k) + www(i,j,k)
   730 CONTINUE
 
-      ENDIF
+!      ENDIF
 
 
       do 800 k=2,nk2
@@ -275,6 +300,7 @@ CONTAINS
 
 
   800 CONTINUE
+      ENDIF
 
       do 810 k=2,NK2
       do 810 j=1,mj1
