@@ -261,7 +261,7 @@ CONTAINS
       RHOz(1) = PSFC / ( RGAS * TV(1) )
 
       DO 190 K = 2, NK3
-      RHO(K) = 1./ ALPHA(K)
+      RHO(K) = 1. / ALPHA(K)
   190 CONTINUE
 
 !     DENSITY FOR k=1/2
@@ -391,7 +391,7 @@ CONTAINS
       DO 500 K = 1, NK3
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
-      TH3D(I,J,K) = 300.!THBAR(K)
+      TH3D(I,J,K) = THBAR(K)
       QV3D(I,J,K) = 0.!QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -400,7 +400,7 @@ CONTAINS
       QG3D(I,J,K) = 0.
   500 CONTINUE
 
-      if (.false.) then
+      if (.true.) then
 
       DO 501 K=1,NK2
       DO 501 J=mjm,mjp
@@ -425,7 +425,7 @@ CONTAINS
       TMP=ni_sbdm*mi1+I
  502  IF( TMP .GT. 375  .and. TMP .LT. 425) QV3D(I,J,K)= 6.e-4
 
-!      else
+      else
 
       DO 503 K=1,NK2
       DO 503 J=mjm,mjp
@@ -450,7 +450,7 @@ CONTAINS
       TMP=nj_sbdm*mj1+j
  504  IF( TMP .GT. 375  .and. TMP .LT. 425) QV3D(I,J,K)= 6.e-4
 
-      else
+!      else
 
       DO 505 K= 1,NK2
       DO 505 J=mjm,mjp
@@ -514,11 +514,11 @@ CONTAINS
 !ccwu_ini_wind 
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
-!      if (ZT(K) .GT. 5000.) THEN
-!      U3DY(I,J,K) = 20.
-!      ELSEIF (ZT(K) .GT. 4000.) THEN
-!      U3DY(I,J,K) =20* sin(pi/2.*(ZT(K) - 4000.)/1000.)**2
-!      ENDIF
+      if (ZT(K) .GT. 5000.) THEN
+      U3DX(I,J,K) = 20.
+      ELSEIF (ZT(K) .GT. 4000.) THEN
+      U3DX(I,J,K) =20* sin(pi/2.*(ZT(K) - 4000.)/1000.)**2
+      ENDIF
 
   610 CONTINUE
 
