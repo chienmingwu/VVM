@@ -61,10 +61,12 @@ CONTAINS
       DO 100 K = 2, NK2
       DO 100 J = 1, MJ1
       DO 100 I = 1, MI1
-      LMX(I,J,K)=max(Q(i-1,j,k),Q(i+1,j,k),Q(i,j-1,k),Q(i,j+1,k), &
-                     Q(i,j,k-1),Q(i,j,k+1),Q(i,j,k))
-      LMN(I,J,K)=min(Q(i-1,j,k),Q(i+1,j,k),Q(i,j-1,k),Q(i,j+1,k), &
-                     Q(i,j,k-1),Q(i,j,k+1),Q(i,j,k))
+      LMX(I,J,K)=max(Q(i-1,j,k),Q(i+1,j,k),Q(I,J,K))
+!Q(i,j-1,k),Q(i,j+1,k), &
+!                     Q(i,j,k-1),Q(i,j,k+1),Q(i,j,k))
+      LMN(I,J,K)=min(Q(i-1,j,k),Q(i+1,j,k),Q(I,J,K))
+!Q(i,j-1,k),Q(i,j+1,k), &
+!                     Q(i,j,k-1),Q(i,j,k+1),Q(i,j,k))
   100 CONTINUE
 
 !     Zonal advection
@@ -171,7 +173,7 @@ CONTAINS
 !              +across(FNZ(K)/DZ*(Q(ib,j,kc)+Q(i,j,kc)-Q(ib,j,kb)-Q(i,j,kb)), &
 !              U3DX(i,j,k),(W3D(ib,j,k)+W3D(ib,j,kc)+W3D(i,j,k)+W3D(i,j,kc))))/RHOU(k)/DX
 
-      UFLX(i,j,k)= andiff(Q(i,j,k),Q(ic,j,k),rhou(k)*U3DX(i,j,k),1.d0/DX) &
+      UFLX(i,j,k)= rhou(k)*andiff(Q(i,j,k),Q(ic,j,k),U3DX(i,j,k),10.d0/DX/rhou(k)) &
               -(across((Q(i,jc,k)+Q(ic,jc,k)-Q(i,jb,k)-Q(ic,jb,k))/DYNEW, &
               rhou(k)*U3DX(i,j,k),rhou(k)*(U3DY(i,j,k)+U3DY(i,jc,k)+U3DY(ic,jc,k)+U3DY(ic,j,k)))               &
               +across(FNZ(K)/DZ*(Q(i,j,kc)+Q(ic,j,kc)-Q(i,j,kb)-Q(ic,j,kb)), &
@@ -188,7 +190,7 @@ CONTAINS
       DO 620 i=1,MI1
       ib=i-1
       ic=i+1
-      VFLX(i,j,k)=andiff(Q(i,j,k),Q(i,jc,k),rhou(k)*U3DY(i,j,k),1.d0/DYNEW) &
+      VFLX(i,j,k)= rhou(k)*andiff(Q(i,j,k),Q(i,jc,k),U3DY(i,j,k),10.d0/DYNEW/rhou(k)) &
               -(across((Q(ic,j,k)+Q(ic,jc,k)-Q(ib,j,k)-Q(ib,jc,k))/DX, &
                rhou(k)*U3DY(i,j,k),rhou(k)*(U3DX(i,j,k)+U3DX(i,jc,k)+U3DX(ic,jc,k)+U3DX(ic,j,k))) &
                +across(FNZ(K)/DZ*(Q(i,j,kc)+Q(i,jc,kc)-Q(i,j,kb)-Q(i,jc,kb)), &
@@ -207,7 +209,7 @@ CONTAINS
       do 630 i=1,MI1
       ib=i-1
       ic=i+1
-      WFLX(i,j,k)=andiff(Q(i,j,k),Q(i,j,kc),rhow(k)*W3D(i,j,k),FNZ(K)/DZ) &
+      WFLX(i,j,k)=andiff(rhou(k)*Q(i,j,k),rhou(kc)*Q(i,j,kc),W3D(i,j,k),10.d0*FNZ(K)/DZ/rhow(k)) &
              -(across((Q(ic,j,k)+Q(ic,j,kc)-Q(ib,j,k)-Q(ib,j,kc))/DX, &
              rhow(k)*W3D(i,j,k),rhou(k)*(U3DX(i,j,k)+U3DX(ic,j,k)) &
              +rhou(kc)*(U3DX(i,j,kc)+U3DX(ic,j,kc))) &
@@ -215,7 +217,7 @@ CONTAINS
              rhow(k)*W3D(i,j,k),rhou(k)*(U3DY(i,j,k)+U3DY(i,jc,k)) &
              +rhou(kc)*(U3DY(i,jc,kc)+U3DY(i,j,kc))))/RHOZ(K)
   630 CONTINUE
-      
+
 !      call bound_arb(NK2,WFLX)
       endif
 
@@ -250,11 +252,11 @@ CONTAINS
       jb=j-1
       do 700 i=1,MI1
       ib=i-1
-      LMX(i,j,k)=(LMX(i,j,k)-Q(i,j,k))/ &
+      LMX(i,j,k)=rhou(k)*(LMX(i,j,k)-Q(i,j,k))/ &
            ((pn(UFLX(i,j,k)) + pp(UFLX(ib,j,k)))/DX + &
             (pn(VFLX(i,j,k)) + pp(VFLX(i,jb,k)))/DYNEW + &
              FNZ(K)/DZ*(pn(WFLX(i,j,k)) + pp(WFLX(i,j,kb))) +eps)
-      LMN(i,j,k)=(Q(i,j,k)-LMN(i,j,k))/ &
+      LMN(i,j,k)=rhou(k)*(Q(i,j,k)-LMN(i,j,k))/ &
            ((pp(UFLX(i,j,k)) + pn(UFLX(ib,j,k)))/DX + &
             (pp(VFLX(i,j,k)) + pn(VFLX(i,jb,k)))/DYNEW+ &
              FNZ(K)/DZ*(pp(WFLX(i,j,k)) + pn(WFLX(i,j,kb))) +eps)
@@ -307,17 +309,17 @@ CONTAINS
 
 !      Q(i,j,k)=max(0.,Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
 !                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(K))
-      Q(i,j,k)=max(0.d0, Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
-                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)/RHOU(K))
-!      Q(i,j,k)= Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
-!                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)/RHOU(K)
+!      Q(i,j,k)=max(0.d0, Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
+!                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)/RHOU(K))
+     Q(i,j,k)= Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
+                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)/RHOU(K)
 
 
 
   800 CONTINUE
 
 
-      if (my_task .eq. 3 ) PRINT*, (Q(I,10,18),I=1,MI1)
+!      if (my_task .eq. 3 ) PRINT*, (Q(I,10,18),I=1,MI1)
 !      if (my_task .eq. 3 ) PRINT*,(UFLX(30,10,18)-UFLX(30,10,18))/DX
 
 
