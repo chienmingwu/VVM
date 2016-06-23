@@ -49,7 +49,7 @@ CONTAINS
 
       call timer_start('advection')
       CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
-      CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
+!      CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
 
 #if defined (PHYSICS)
 

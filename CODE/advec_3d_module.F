@@ -173,12 +173,25 @@ CONTAINS
 !              +across(FNZ(K)/DZ*(Q(ib,j,kc)+Q(i,j,kc)-Q(ib,j,kb)-Q(i,j,kb)), &
 !              U3DX(i,j,k),(W3D(ib,j,k)+W3D(ib,j,kc)+W3D(i,j,k)+W3D(i,j,kc))))/RHOU(k)/DX
 
-      UFLX(i,j,k)= rhou(k)*andiff(Q(i,j,k),Q(ic,j,k),U3DX(i,j,k),10.d0/DX/rhou(k)) &
+      UFLX(i,j,k)= rhou(k)*andiff(Q(i,j,k),Q(ic,j,k),U3DX(i,j,k),1.d0/DX/rhou(k)) &
               -(across((Q(i,jc,k)+Q(ic,jc,k)-Q(i,jb,k)-Q(ic,jb,k))/DYNEW, &
-              rhou(k)*U3DX(i,j,k),rhou(k)*(U3DY(i,j,k)+U3DY(i,jc,k)+U3DY(ic,jc,k)+U3DY(ic,j,k)))               &
+              U3DX(i,j,k),(U3DY(i,jb,k)+U3DY(i,j,k)+U3DY(ic,j,k)+U3DY(ic,jb,k))) &
               +across(FNZ(K)/DZ*(Q(i,j,kc)+Q(ic,j,kc)-Q(i,j,kb)-Q(ic,j,kb)), &
-              rhou(K)*U3DX(i,j,k),(rhow(k)*(W3D(i,j,k)+W3D(ic,j,k)) &
-              +rhow(kc)*(W3D(i,j,kc)+W3D(ic,j,kc)))))/RHOU(k)
+              U3DX(i,j,k),((W3D(i,j,kb)+W3D(ic,j,kb)) &
+              +(W3D(i,j,k)+W3D(ic,j,k)))))/RHOU(k)
+
+
+! wrong              -(across(FNZ(K)/DZ*(Q(i,j,kc)+Q(ic,j,kc)-Q(i,j,kb)-Q(ic,j,kb)), &
+!              U3DX(i,j,k),((W3D(i,j,kb)+W3D(ic,j,kb))+(W3D(i,j,k)+W3D(ic,j,k))))&
+!               +across(FNZ(K)/DZ*(Q(i,j,kc)+Q(ic,j,kc)-Q(i,j,kb)-Q(ic,j,kb)), &
+!              U3DX(i,j,k),((W3D(i,j,kb)+W3D(ic,j,kb)) &
+!              +(W3D(i,j,k)+W3D(ic,j,k)))))/RHOU(k)
+
+!              -(across((Q(i,jc,k)+Q(ic,jc,k)-Q(i,jb,k)-Q(ic,jb,k))/DYNEW, &
+!              U3DX(i,j,k),(U3DY(i,jb,k)+U3DY(i,j,k)+U3DY(ic,j,k)+U3DY(ic,jb,k)))               &
+!              +across(FNZ(K)/DZ*(Q(i,j,kc)+Q(ic,j,kc)-Q(i,j,kb)-Q(ic,j,kb)), &
+!              U3DX(i,j,k),((W3D(i,j,kb)+W3D(ic,j,kb)) &
+!              +(W3D(i,j,k)+W3D(ic,j,k)))))/RHOU(k)
   610 CONTINUE
 
       call bound_arb(NK2,UFLX)
@@ -190,18 +203,17 @@ CONTAINS
       DO 620 i=1,MI1
       ib=i-1
       ic=i+1
-      VFLX(i,j,k)= rhou(k)*andiff(Q(i,j,k),Q(i,jc,k),U3DY(i,j,k),10.d0/DYNEW/rhou(k)) &
+      VFLX(i,j,k)= rhou(k)*andiff(Q(i,j,k),Q(i,jc,k),U3DY(i,j,k),1.d0/DYNEW/rhou(k)) &
               -(across((Q(ic,j,k)+Q(ic,jc,k)-Q(ib,j,k)-Q(ib,jc,k))/DX, &
-               rhou(k)*U3DY(i,j,k),rhou(k)*(U3DX(i,j,k)+U3DX(i,jc,k)+U3DX(ic,jc,k)+U3DX(ic,j,k))) &
+               U3DY(i,j,k),(U3DX(ib,j,k)+U3DX(i,j,k)+U3DX(i,jc,k)+U3DX(ib,jc,k))) &
                +across(FNZ(K)/DZ*(Q(i,j,kc)+Q(i,jc,kc)-Q(i,j,kb)-Q(i,jc,kb)), &
-               rhou(k)*U3DY(i,j,k),rhow(k)*(W3D(i,j,k)+W3D(i,jc,k)) &
-               +rhow(kc)*(W3D(i,jc,kc)+W3D(i,j,kc))))/RHOU(K)
+               U3DY(i,j,k),(W3D(i,j,kb)+W3D(i,jc,kb))+(W3D(i,j,k)+W3D(i,jc,k))))/RHOU(K)
   620 CONTINUE
 
       call bound_arb(NK2,VFLX)
 
-      do 630 k=2,NK3
-      kb=k-1
+      do 630 k=1,NK2
+      kc=k+1
 !      irhow(k)=1./(rhow(k)*adz(k))
       do 630 j=1,MJ1
       jb=j-1
@@ -209,20 +221,30 @@ CONTAINS
       do 630 i=1,MI1
       ib=i-1
       ic=i+1
-      WFLX(i,j,k)=andiff(rhou(k)*Q(i,j,k),rhou(kc)*Q(i,j,kc),W3D(i,j,k),10.d0*FNZ(K)/DZ/rhow(k)) &
+      WFLX(i,j,k)=rhow(k)*andiff(Q(i,j,k),Q(i,j,kc),W3D(i,j,k),1.d0*FNZ(K)/DZ/rhow(k)) &
              -(across((Q(ic,j,k)+Q(ic,j,kc)-Q(ib,j,k)-Q(ib,j,kc))/DX, &
-             rhow(k)*W3D(i,j,k),rhou(k)*(U3DX(i,j,k)+U3DX(ic,j,k)) &
-             +rhou(kc)*(U3DX(i,j,kc)+U3DX(ic,j,kc))) &
+             W3D(i,j,k),(U3DX(ib,j,k)+U3DX(i,j,k))+(U3DX(ib,j,kc)+U3DX(i,j,kc)))&
              +across((Q(i,jc,kc)+Q(i,jc,k)-Q(i,jb,kc)-Q(i,jb,k))/DYNEW, &
-             rhow(k)*W3D(i,j,k),rhou(k)*(U3DY(i,j,k)+U3DY(i,jc,k)) &
-             +rhou(kc)*(U3DY(i,jc,kc)+U3DY(i,j,kc))))/RHOZ(K)
+             W3D(i,j,k),(U3DY(i,jb,k)+U3DY(i,j,k)) &
+             +(U3DY(i,j,kc)+U3DY(i,jb,kc))))/RHOZ(K)
+
+!             -(across((Q(ic,j,k)+Q(ic,j,kc)-Q(ib,j,k)-Q(ib,j,kc))/DX, &
+!             W3D(i,j,k),(U3DX(ib,j,k)+U3DX(i,j,k)) &
+!             +(U3DX(ib,j,kc)+U3DX(i,j,kc))) &
+!             +across((Q(i,jc,kc)+Q(i,jc,k)-Q(i,jb,kc)-Q(i,jb,k))/DYNEW, &
+!             W3D(i,j,k),(U3DY(i,jb,k)+U3DY(i,j,k)) &
+!             +(U3DY(i,j,kc)+U3DY(i,jb,kc))))/RHOZ(K)
   630 CONTINUE
+      do 631 j=1,MJ1
+      do 631 i=1,MI1
+      WFLX(i,j,NK3)=0.d0
+  631 CONTINUE
 
 !      call bound_arb(NK2,WFLX)
       endif
 
 
-      if (.true.) then
+      if (.false.) then
 
       call bound_arb(NK2,LMX)
       call bound_arb(NK2,LMN)
@@ -294,7 +316,7 @@ CONTAINS
       call bound_arb(NK2,UFLX)
       call bound_arb(NK2,VFLX)
 
-      ENDIF
+!      ENDIF
 
 !      if (my_task .eq. 3 ) PRINT*, Q(28,10,18),(UFLX(28,10,18)-UFLX(27,10,18))/DX,(VFLX(28,10,18)-VFLX(28,9,8))/DYNEW
 
@@ -317,7 +339,7 @@ CONTAINS
 
 
   800 CONTINUE
-
+      ENDIF
 
 !      if (my_task .eq. 3 ) PRINT*, (Q(I,10,18),I=1,MI1)
 !      if (my_task .eq. 3 ) PRINT*,(UFLX(30,10,18)-UFLX(30,10,18))/DX
