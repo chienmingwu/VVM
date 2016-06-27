@@ -2,6 +2,7 @@
 MODULE land_module
 
 USE kinds
+USE utils
 USE parmsld
 USE constld
 USE domain_decomposition
@@ -30,13 +31,24 @@ PRIVATE
      lRCSOIL,lSOILW,lSOILM,lQ1,&
      lSMCWLT,lSMCDRY,&
      lSMCREF,lSMCMAX,lCM
-  REAL (KIND=int_kind),dimension(MI1,MJ1), PUBLIC :: &
-     ZL,P2
+  REAL (KIND=int_kind),dimension(MI1,MJ1), PRIVATE :: &
+     ZBT,P2,P1
 
   INTEGER (KIND=int_kind), dimension(MI1,MJ1), PUBLIC::lNROOT,LU
 
-  REAL (KIND=dbl_kind),dimension(MI1,MJ1) :: TB,ZBT
+  REAL (KIND=dbl_kind),dimension(MI1,MJ1) :: &
+     TB,ZD,ZL,RHOMAP,RHOPIMAP,PIMAP,PI1MAP
 
+#if defined (SLAB)
+        REAL(kind=dbl_kind), PRIVATE::  &
+         rhoh2o,        & ! density of water [kg/m**3]
+         zdmix,         & ! constant depth of mixed layer [m]
+         zcpwater,      & ! watar heat capacity [J/K/kg]
+         zmixcap,       & ! Cw ocean heat capacity [J/K/kg]
+         zmcapdt,       & ! 1/cw*dt
+         sig,           & ! boltzman constant
+         zfluxw           ! flux change across ocean surface
+#endif
 
 !public member functions
 PUBLIC ::      &
@@ -47,7 +59,7 @@ CONTAINS
 
 !=======================================================================
    SUBROUTINE land_interface(T2,Q2,swD,lwD,SPREC,WT,WQ,VNE2D,SFCSPD,  &
-                             ZROUGH,TG,TD,QD,THVSMD) 
+                             ZROUGH,TG,TD,QD,GWET,swU,lwU) 
 
 !=======================================================================
 ! land model interface for LSM_DRV 
@@ -66,22 +78,27 @@ CONTAINS
          Q2,            &
          SPREC,         &
          SFCSPD,        &
-         TD,            &
-         QD,            &
-         THVSMD 
+         GWET 
 
       REAL (KIND=int_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::   & 
          swD,           &
-         lwD
+         lwD,           &
+         swU,           &
+         lwU
 
       REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1), INTENT(INOUT) ::    &
          WT,            &
-         WQ            
+         WQ,            &
+         TD,            &
+         QD           
         
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(INOUT) ::    &
-         VNE2D
+         VNE2D,tg
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(IN) ::    &
-         ZROUGH,tg
+         ZROUGH
+
+      REAL (KIND=dbl_kind), DIMENSION(mi1,mj1) ::    &
+         THVSMD
 
       REAL (KIND=int_kind), DIMENSION(MI1,MJ1) ::    &
          T2i,            &
@@ -93,12 +110,39 @@ CONTAINS
 
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
-      REAL (KIND=dbl_kind) ::  USTAR,VENTFC(2),MOLEN,zzz,ttt
+      REAL (KIND=dbl_kind) ::  USTAR,VENTFC(2),MOLEN,zzz,ttt,ES1,QSFC,TS
 
 #if defined (LSM)
       
-      T2i = real(T2)
-      Q2i = real(Q2)            
+
+      DO 100 J = 1,MJ1
+      DO 100 I = 1,MI1
+
+      IF (LU(I,J) .eq. 16) THEN
+#if defined (SLAB)
+! 2. Ocean temperature
+! calculate net fluxes
+        zfluxw=swD(I,J)-swU(I,J) +lwD(I,J)-lwU(I,J)   &
+              -CP*WT(I,J)-HLF*WQ(I,J)
+!       Ocean temperature (tg)
+        TG(I,J)=TG(i,j)+zmcapdt*zfluxw
+#endif
+ 
+      ES1  = ES ( TG(I,J) )
+      QSFC = ES1 * 0.622 / ( P1(I,J) - ES1 )
+      TS   = CP * TG(I,J) + GRAV * ZL(I,J)
+
+      TD(I,J) = TS-TD(I,J)
+      QD(I,J) = ABS(GWET(I,J))*(QSFC-QD(I,J))
+
+      THVSMD(I,J) = TG(I,J)*PI1MAP(I,J)-T2(I,J)                         &
+               +ABS(GWET(I,J))*TB(I,J)*(DELTA*(QSFC-Q2(I,J)))
+      ENDIF
+          
+      T2i(I,J) = T2(I,J)*PIMAP(I,J)
+      Q2i(I,J) = Q2(I,J)/(1+Q2(I,J))
+  100 CONTINUE
+            
       SPRECi = real(SPREC)
       SFCSPDi =real(SFCSPD)
 
@@ -119,21 +163,23 @@ CONTAINS
 
       WT(I,J) = dble(WTi(I,J))
       WQ(I,J) = dble(WQi(I,J))
-!      PRINT*, lALBEDO(10,10),lT1(10,10),'land'
       albdo(I,J) = lALBEDO(I,J)
       sstxy(I,J) = lT1(I,J)
-
+      TG(I,J) = lT1(I,J)
       ELSE
-! OCEAN part      
 
       CALL SFLUX_2D (0._dbl_kind,TB(I,J),THVSMD(I,J),SFCSPD(I,J), &
-                     ZBT(I,J),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
+                     ZD(I,J),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
 
       WT(I,J) = VENTFC(2)*TD(I,J)
       WQ(I,J) = VENTFC(2)*QD(I,J)
       VNE2D(I,J) = VENTFC(1)
+      sstxy(I,J) = TG(I,J) !varying SST to radiation
       ENDIF
 !      if (J .eq. 10 .and. I .eq. 10) PRINT*,WT(I,J),WQ(I,J),VNE2D(I,J)
+
+      WT(I,J) = WT(I,J)*RHOPIMAP(I,J)
+      WQ(I,J) = WQ(I,J)*RHOMAP(I,J)
 
   200 CONTINUE
 
@@ -301,10 +347,11 @@ CONTAINS
    END SUBROUTINE SFLUX_2D
 
 !-----7---------------------------------------------------------------72
-   SUBROUTINE land_ini(hx)
+   SUBROUTINE land_ini(hx,tg)
 
 
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(IN) :: hx
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(INOUT) :: tg
 #if defined (LSM)
 
 ! input the following varibles to lsm routine
@@ -312,8 +359,12 @@ CONTAINS
    real (kind=int_kind), dimension(mi1,mj1):: & 
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
-   INTEGER (KIND=int_kind):: i,j,hxp,itmp,jtmp
+   INTEGER (KIND=int_kind):: i,j,itmp,jtmp
    CHARACTER(50):: FILENAME
+   INTEGER (KIND=int_kind) :: hxp, hx1
+   REAL (KIND=dbl_kind) :: CP
+
+   CP = 1004.5
 
 ! surface pressure
       WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)') &
@@ -338,11 +389,14 @@ CONTAINS
       hxp=INT(hx(I,J))+1
 
 ! INPUT for SFLX_2D
-         ZBT(I,J)         = .5*DZ/FNT(hx(I,J)+1)
+         ZBT(I,J)          = .5*DZ/FNT(hxp)
+         ZD(I,J)          = .5*DZ/FNT(hxp)
          TB(I,J)          = THBAR(hxp)
-                
-         ZL(I,J)          = .5*DZ/FNT(hx(I,J)+1)
+         ZL(I,J)          = ZW(hxp-1)
          P2(I,J)          = PBAR(hxp)
+         P1(I,J)          = PBAR(hxp-1)
+         PIMAP(I,J)       = PIBAR(hxp)
+         PI1MAP(I,J)      = 1./PIBAR(hxp-1)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
          lT1(I,J)         = thbar(hx(I,J))*pibar(INT(hx(I,J)))
          lST(I,J,1)       = 297.0995
@@ -384,7 +438,7 @@ CONTAINS
          lFDOWN      = -9.9999996E+35
          lEC         = -9.9999996E+35
          lEDIR       = -9.9999996E+35
-         lET       = -9.9999996E+35
+         lET         = -9.9999996E+35
          lETT        = -9.9999996E+35
          lESNOW      = -9.9999996E+35
          lDRIP       = -9.9999996E+35
@@ -419,28 +473,56 @@ CONTAINS
          lNROOT      = -999999
                
       call LSM_DRV_ini(DT*NSFLUX,LU,SOIL,SLOPE, &
-                       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZL,&
+                       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN,P2,ZBT,&
                        lALBEDO,lEMISSI,lCMC,lT1,lST,lSM,lSL,lET,lSMAV)
 
    albdo = lALBEDO
-   sstxy = lT1
+!   sstxy = lT1
 
 !easy define surface temperature and albedo over water surface.
 !note that TG must equal to lT1 in order to compute the sflux_2d i
    DO J=1,MJ1
    DO I=1,MI1
 
+   hx1 =INT( hx(I,J))
+
+! determine surface temp of water body
    IF (LU(I,J) .eq. 16) THEN
-   IF (INT(HX(I,J)) .eq. 1) THEN
-   lT1(I,J) = SST
+   IF (hx1 .eq. 1) THEN
+   TG(I,J) = SST
    ELSE
-   lT1(I,J) = thbar(hx(I,J))*pibar(INT(hx(I,J)))
+   TG(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
-   albdo(I,J) = .3
+   ELSE
+   TG(I,J) = lT1(I,J)
    ENDIF
+
+   sstxy(I,J) = TG(I,J)
+
+! define unit of WQ and WV
+   IF (LU(I,J) .eq. 16) THEN
+   RHOMAP(I,J) = RHOZ(hx1)
+   ELSE
+   RHOMAP(I,J) = 1.
+   ENDIF
+   RHOPIMAP(I,J) = RHOMAP(I,J)/(CP*PIBAR(hx1))
 
    ENDDO
    ENDDO
+
+
+#if defined (SLAB)
+
+! 1. Set up constants
+
+        rhoh2o = 1024.75         !density of water [kg/m**3]
+        zdmix=10._dbl_kind       ! constant depth of mixed layer
+        zcpwater=4218._dbl_kind  ! watar heat capacity
+        zmixcap=rhoh2o*zcpwater*zdmix  !Cw ocean heat capacity
+        zmcapdt=nsflux*dt/zmixcap       !1/cw*dt
+        sig= 5.66E-8             ! boltzman constant
+
+#endif
 
 #endif
 

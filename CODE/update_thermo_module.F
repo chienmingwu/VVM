@@ -35,15 +35,20 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 ! Update theta from dynamics tendency term
+
       DO 50 K = 2, NK2
       DO 50 J = 1, MJ1
       DO 50 I = 1, MI1
       TH3D(I,J,K) = TH3D(I,J,K) + A*FTH3D(I,J,K,N2) + B*FTH3D(I,J,K,N1)
+!      QV3D(I,J,K) = QV3D(I,J,K) + A*FQV3D(I,J,K,N2) + B*FQV3D(I,J,K,N1)
+!ez use euler method with DT = 1 
+!      TH3D(I,J,K) = TH3D(I,J,K) + DT*FTH3D(I,J,K,N2)
+!      QV3D(I,J,K) = QV3D(I,J,K) + DT*FQV3D(I,J,K,N2)
       THTD3D(I,J,K) = A*FTH3D(I,J,K,N2)+B*FTH3D(I,J,K,N1)
    50 CONTINUE
 
 !ccwut set physics variables on topo to zero
-      DO K = 2, maxtopo
+      DO K = 1, maxtopo
       DO J = 1, MJ1
       DO I = 1, MI1
       IF(ITYPEW(I,J,K) .NE. 1) THEN
@@ -90,19 +95,20 @@ CONTAINS
                   + A*FQI3D(I,J,K,N2)+B*FQI3D(I,J,K,N1)
 
       QC3D(I,J,K) = QC3D(I,J,K)            &
-                  + DT * QCAD_MICRO(I,J,K) &
+!easy close micro physice effect
+!                  + DT * QCAD_MICRO(I,J,K) &
                   + A*FQC3D(I,J,K,N2)+B*FQC3D(I,J,K,N1)
 
       QR3D(I,J,K) = QR3D(I,J,K)            &
-                  + DT * QRAD_MICRO(I,J,K) &
+!                  + DT * QRAD_MICRO(I,J,K) &
                   + A*FQR3D(I,J,K,N2)+B*FQR3D(I,J,K,N1)
 
       QS3D(I,J,K) = QS3D(I,J,K)            &
-                  + DT * QSAD_MICRO(I,J,K) &
+!                  + DT * QSAD_MICRO(I,J,K) &
                   + A*FQS3D(I,J,K,N2)+B*FQS3D(I,J,K,N1)
 
       QG3D(I,J,K) = QG3D(I,J,K)            &
-                  + DT * QGAD_MICRO(I,J,K) &
+!                  + DT * QGAD_MICRO(I,J,K) &
                   + A*FQG3D(I,J,K,N2)+B*FQG3D(I,J,K,N1)
      
       QVTD3D(I,J,K) = DT * QVAD_MICRO(I,J,K) &
@@ -130,20 +136,45 @@ CONTAINS
 
 
 !ccwut set physics variables on topo to zero
+
       DO K = 2, maxtopo
       DO J = 1, MJ1
       DO I = 1, MI1
       IF(ITYPEW(I,J,K) .NE. 1) THEN
       TH3D(I,J,K) = THBAR(K)
-      QV3D(I,J,K) = 0.
-      QC3D(I,J,K) = 0.
+      QV3D(I,J,K) = QVBAR(K)
+      IF (K .EQ. NHX(I,J) ) THEN
+!      QV3D(I,J,K) = QV3D(I,J,K+1)!QVBAR(K)
+      QR3D(I,J,K) = QR3D(I,J,K+1)
+      QC3D(I,J,K) = QC3D(I,J,K+1)
+      QS3D(I,J,K) = QS3D(I,J,K+1)
+      QG3D(I,J,K) = QG3D(I,J,K+1)
+      ELSE
+!      QV3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
+      QC3D(I,J,K) = 0.
+!      QR3D(I,J,K) = 0.
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.
+      ENDIF
       ENDIF
       ENDDO
       ENDDO
       ENDDO
+
+      DO J = 1, MJ1
+      DO I = 1, MI1
+      IF(ITYPEW(I,J,1) .NE. 1 .and. ITYPEW(I,J,2) .NE. 1) THEN
+      TH3D(I,J,1) = THBAR(1)
+      QV3D(I,J,1) = QVBAR(1)
+      QC3D(I,J,1) = QC3D(I,J,2)
+      QR3D(I,J,1) = QR3D(I,J,2)
+      QS3D(I,J,1) = QS3D(I,J,2)
+      QG3D(I,J,1) = QG3D(I,J,2)
+      ENDIF
+      ENDDO
+      ENDDO
+
 !ccwut
 
 

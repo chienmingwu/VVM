@@ -82,8 +82,9 @@ CONTAINS
       DO 510 J = 1, MJ1
       DO 510 I = 1, MI1
       QV3D(I,J,K) = QV3D(I,J,K) + DT*QVAD3(I,J,K)
-      QI3D(I,J,K) = QI3D(I,J,K) + DT*QIAD3(I,J,K)
-      QC3D(I,J,K) = QC3D(I,J,K) + DT*QCAD3(I,J,K)
+! easy close qc test
+!      QI3D(I,J,K) = QI3D(I,J,K) + DT*QIAD3(I,J,K)
+!      QC3D(I,J,K) = QC3D(I,J,K) + DT*QCAD3(I,J,K)
       QVTD3D(I,J,K) = QVTD3D(I,J,K)+ DT*QVAD3(I,J,K)
   510 CONTINUE
 #endif

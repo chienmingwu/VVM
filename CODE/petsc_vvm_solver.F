@@ -118,7 +118,7 @@ USE petscdmda
 
 IMPLICIT NONE
 PRIVATE
-PetscInt, PARAMETER, PRIVATE:: nlevel = 6, nlv = nlevel-1
+PetscInt, PARAMETER, PRIVATE:: nlevel = 5, nlv = nlevel-1
 PetscInt, PRIVATE:: i,j,k,kt,npt,np
 PetscInt, PRIVATE:: ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
 PetscInt, PRIVATE:: ctx3,ctx2
@@ -150,9 +150,9 @@ Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
 PetscInt, PRIVATE:: MXIT = 2000
-PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
-PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-6,dtol_TopPsi = 1.d2
-PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-6,dtol_TopChi = 1.d2
+PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-12,dtol_Conti = 1.d2
+PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-10,dtol_TopPsi = 1.d2
+PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-10,dtol_TopChi = 1.d2
 !PetscViewer viewer
 
 PUBLIC :: petsc_solver_initialize,petsc_solver_finalize,petsc_solve_3d, &
@@ -183,7 +183,7 @@ SUBROUTINE petsc_solver_initialize
 
     call DMDACreate3d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                       &
       DM_BOUNDARY_PERIODIC,DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,MI_glob/(2**nlv), &
-      MJ_glob/(2**nlv),NK2-2,nsbdm_x,nsbdm_y,1,1,nhalo,PETSC_NULL_INTEGER,      &
+      MJ_glob/(2**nlv),NK2-1,nsbdm_x,nsbdm_y,1,1,nhalo,PETSC_NULL_INTEGER,      &
       PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da3(nlevel),ierr)
 
     call DMDASetUniformCoordinates(da3(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
@@ -198,12 +198,14 @@ SUBROUTINE petsc_solver_initialize
     call DMDAGetCorners(da3(1),ixx,iy,iz,mx,my,mz,ierr)
     call DMDAGetGhostCorners(da3(1),ixg,iyg,izg,mxg,myg,mzg,ierr)
 
-    npt=mi_glob*mj_glob*(NK2-2)
+    npt=mi_glob*mj_glob*(NK2-1)
     np=nsbdm_x*nsbdm_y
 
     call MatCreateAIJ(MPI_COMM_WORLD,npt/np,npt/np,npt,npt,7, &
          PETSC_NULL_INTEGER,5,PETSC_NULL_INTEGER,Cmat,ierr)
     call OperatorConti(Cmat)
+
+    PRINT*,'90009090'
 
 ! http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP
 ! Connect KSP with DM grid -- KSPSetDM
@@ -425,7 +427,7 @@ SUBROUTINE petsc_solver_finalize
     enddo
 END SUBROUTINE petsc_solver_finalize
 SUBROUTINE petsc_solve_3d(F,X)
-REAL (KIND=dbl_kind), INTENT(INOUT)::F(mi1,mj1,nk2-2)
+REAL (KIND=dbl_kind), INTENT(INOUT)::F(mi1,mj1,nk2-1)
 REAL (KIND=dbl_kind), INTENT(INOUT)::X(mi1+2,mj1+2,nk2)
 PetscInt its
 PetscReal norm
@@ -464,7 +466,7 @@ PetscReal norm
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + (k - izg)*mxg*myg + 1
-      X(I-ixx+2,J-iy+2,K+2) = tmp(ip+kt) / RHOZ(K+2)
+      X(I-ixx+2,J-iy+2,K+1) = tmp(ip+kt) / RHOZ(K+1)
       enddo
       enddo
       enddo
@@ -588,7 +590,7 @@ SUBROUTINE OperatorConti(jac)
       PetscInt row,i1,i7,i6,irow,jrow,krow
       PetscInt col(7),iseven
       PetscScalar two,one,lambda,c1,c2,ctmp,tem,dzsq
-      PetscScalar vv(7),AN(NK2-2),BN(NK2-2),CN(NK2-2),B_loc(NK2),BU(NK2)
+      PetscScalar vv(7),AN(NK2-1),BN(NK2-1),CN(NK2-1),B_loc(NK2),BU(NK2)
       ISLocalToGlobalMapping ltogm
 
       one    = 1.
@@ -601,22 +603,21 @@ SUBROUTINE OperatorConti(jac)
       c2 = -1.d0/(DYNEW*DYNEW)
       ctmp = -2.d0*(c1+c2)
 
-      do K = 1, Nk2-2
-      B_loc(K) = 1. / ( RHOZ(K+1) * FNZ(K+1) )
-      BU(K) = FNU(K+1) / RHOU(K+1)
+      do K = 1, Nk2-1
+      B_loc(K) = 1. / ( RHOZ(K) * FNZ(K) )
+      BU(K) = FNU(K) / RHOU(K)
       enddo
-      BU(Nk2-1) = FNU(Nk2) / RHOU(Nk2)
+      BU(Nk2) = FNU(Nk2) / RHOU(Nk2)
 
       DZSQ = DZ*DZ
-      do K = 1, Nk2-2
+      do K = 1, Nk2-1
       TEM = 1. / ( B_loc(K) * DZSQ )
       AN(K) = - BU(K) * TEM
       CN(K) = - BU(K+1) * TEM
       BN(K) = -( AN(K) + CN(K) )
       enddo
       AN(1) = 0.
-      CN(Nk2-2) = 0.
-
+      CN(Nk2-1) = 0.
 
       call DMGetLocalToGlobalMapping(da3(1),ltogm,ierr)
       call ISLocalToGlobalMappingGetIndices(ltogm,ltog,idltog,ierr)

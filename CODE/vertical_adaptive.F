@@ -255,8 +255,8 @@ CONTAINS
         comp_buffer%G_3dk2(19,:,:,in_k)     =  qgad_micro(:,:,out_k)
         comp_buffer%G_3dk2(20,:,:,in_k)     =  rkm(:,:,out_k)
         comp_buffer%G_3dk2(21,:,:,in_k)     =  rkh(:,:,out_k)
-        comp_buffer%G_3dk2(22,:,:,in_k)     =  z3dxt(:,:,out_k)
-        comp_buffer%G_3dk2(23,:,:,in_k)     =  z3dyt(:,:,out_k)
+!        comp_buffer%G_3dk2(22,:,:,in_k)     =  z3dxt(:,:,out_k)
+!        comp_buffer%G_3dk2(23,:,:,in_k)     =  z3dyt(:,:,out_k)
 
         comp_buffer%G_in3dk2_2(1,:,:,in_k,:) =   fth3d(:,:,out_k,:)
         comp_buffer%G_in3dk2_2(2,:,:,in_k,:) =   fqv3d(:,:,out_k,:)
@@ -359,8 +359,8 @@ CONTAINS
         qgad_micro(:,:,out_k)=        comp_buffer%G_3dk2(19,:,:,in_k)     
         rkm(:,:,out_k)       =        comp_buffer%G_3dk2(20,:,:,in_k)     
         rkh(:,:,out_k)       =        comp_buffer%G_3dk2(21,:,:,in_k)     
-        z3dxt(:,:,out_k)     =        comp_buffer%G_3dk2(22,:,:,in_k)     
-        z3dyt(:,:,out_k)     =        comp_buffer%G_3dk2(23,:,:,in_k)     
+!        z3dxt(:,:,out_k)     =        comp_buffer%G_3dk2(22,:,:,in_k)     
+!        z3dyt(:,:,out_k)     =        comp_buffer%G_3dk2(23,:,:,in_k)     
 
         fth3d(:,:,out_k,:)   =        comp_buffer%G_in3dk2_2(1,:,:,in_k,:) 
         fqv3d(:,:,out_k,:)   =        comp_buffer%G_in3dk2_2(2,:,:,in_k,:) 
@@ -639,7 +639,7 @@ CONTAINS
                     !current_mag = ( u3dx_now ** 2 + u3dy_now ** 2 + w3d_now ** 2 ) ** 0.5
                     current_mag = max ( abs( w3d_now) , abs( vtr_now ) , abs(vtg_now) )
                     !grid_length = ( ( DX **2 + DYNEW ** 2 + ( ZZ(k+1) - ZZ(K) ) ** 2 ) ** 0.5 ) * 0.2 ! USE FNZ ?
-                    grid_length = ( DZ ) / fnz(k) * 0.6 !ccwu
+                    grid_length = ( DZ ) / fnz(k) * 1.0 !ccwu
                     
                     current_mag = grid_length / max( current_mag , 1.E-6 )
                                        

@@ -12,6 +12,8 @@ USE update_thermo_module
 USE force_3d_module
 USE advec_3d_module
 USE timer
+USE domain_decomposition
+
 
 IMPLICIT NONE
 PRIVATE
@@ -47,9 +49,11 @@ CONTAINS
 
       call timer_start('advection')
       CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
+!      CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
+
 #if defined (PHYSICS)
 
-      CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
+!      CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
   
       CALL ADVEC_3D ( QR3D, FQR3D(1,1,1,L), HYSG3D )
       
@@ -77,6 +81,7 @@ CONTAINS
       enddo
   
 #endif
+
       call timer_stop('advection')
 
       call timer_start('forcing')
@@ -191,8 +196,6 @@ CONTAINS
                              DX,DYNEW,RLAT,RLON,THBAR,THBARZ)
       call timer_stop('physics')
 
-
-
 ! Update thermodynamic variables -- Replaces call to CLOUD_3D
       CALL update_thermodynamics (N1,N2)
 
@@ -200,6 +203,6 @@ CONTAINS
       CALL NUDGE
 
 
-   END SUBROUTINE rcalc_3d
+END SUBROUTINE rcalc_3d
 
 END MODULE rcalc_module

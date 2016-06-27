@@ -31,7 +31,7 @@
       integer i,j,k,ierr
 
       integer NLID(2)
-      integer idx,idy
+      integer idx,idy,nvaridx,nvaridy
 
       REAL*8 DT,DX,DYNEW,DZ,DZ1,ALADV,ZB,TOP,TMP,WRXMU,UVTAU
       LOGICAL NOTURB,NOSFX,BUOY
@@ -75,7 +75,6 @@
       DO 51 K = 1, NK3
       ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
    51 CONTINUE
-
 ! import INPUT FILE 
       IF (TWTOPO) THEN
 ! IMPORT topography date
@@ -170,6 +169,16 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   100 CONTINUE
 
       ELSE
+      
+      DO J=1,MJ_GLOB
+      YM(J)=J
+      ENDDO
+
+      DO I=1,MI_GLOB
+      XM(I)=I
+      ENDDO
+
+      if (.false.) then
 
       OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
       READ(15,*) xt
@@ -231,6 +240,32 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ENDIF
 
+      HX = 1 
+
+ 
+!      DO 500 J = 1,MJ_GLOB
+!      DO 500 I = 1,MI_GLOB
+!
+!      hx(I,J) = 1
+!      LU(I,J) = 16
+!      alb(I,J) = 15.
+!      grf(I,J) = 10.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 1
+! 
+!  500 CONTINUE
+
+!      DO 600 I = 1, MI_GLOB
+!  600 XT (I) = I*DX
+
+!      DO 700 J = 1,MJ_GLOB
+!  700 YT (J) = J*DYNEW
+
+      ENDIF
+
       NP = 0
 
       DO 800 J = 1,MJ_GLOB
@@ -275,11 +310,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
 
-
-      ierr = nf_def_dim(ncid, "lat", MJ_GLOB, idy)
-      print*,'ERRor', nf_strerror(ierr)
-
-      ierr = nf_def_dim(ncid, "lon", MI_GLOB, idx)
+      ierr = nf_def_dim(ncid, "y", MJ_GLOB, idy)
+      ierr = nf_def_dim(ncid, "x", MI_GLOB, idx)
       print*,'ERRor', nf_strerror(ierr)
 
       nlid(2) = idy
@@ -355,7 +387,5 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ierr = nf_close(ncid)
       print*,'ERRor', nf_strerror(ierr)
-
-      
 
       end

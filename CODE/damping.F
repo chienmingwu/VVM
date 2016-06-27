@@ -24,7 +24,8 @@ CONTAINS
 
       INTEGER (KIND=int_kind) ::         &
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
-   
+
+!      IF (.false.) THEN         
       IF (CRAD.NE.0.) THEN
 !-------------------------
 !     Gravity Wave Damping (Rayleigh type)
@@ -56,6 +57,7 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
 
+!      IF (.false.) then
       IF (CRAD.NE.0.) THEN
 !     Gravity Wave Damping (Rayleigh type)
 !-----------------------------------------
@@ -83,7 +85,8 @@ CONTAINS
 !-------------------------
       END IF
 
-      IF (CRAD1.NE.0.) THEN
+!      IF (.false.) then
+     IF (CRAD1.NE.0.) THEN
 !     Newtonian Cooling - Original Code plus thtd3d counter
 !------------------------------------------
 
