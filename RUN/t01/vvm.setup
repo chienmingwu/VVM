@@ -41,7 +41,6 @@ cat > definesld.com << 'END1'
 #define PERIODIC
 #define PARALLELIO
 #define RADCODE
->>>>>>> MPDATA
 'END1'
 cat definesld.com
 
