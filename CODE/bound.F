@@ -112,11 +112,9 @@ CONTAINS
         do j = 1,nhalo
           buff_ns(1:mi1,j,k-1,1,3) = th3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,1,4) = th3d(1:mi1,j,k)
-!#if defined (PHYSICS)
+#if defined (PHYSICS)
           buff_ns(1:mi1,j,k-1,2,3) = qv3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,2,4) = qv3d(1:mi1,j,k)
-
-#if defined (PHYSICS)
           buff_ns(1:mi1,j,k-1,3,3) = qc3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,3,4) = qc3d(1:mi1,j,k)
           buff_ns(1:mi1,j,k-1,4,3) = qi3d(1:mi1,mj1-nhalo+j,k)
@@ -136,12 +134,9 @@ CONTAINS
         DO i=1,nhalo
           buff_ew(i,1:mj1,k-1,1,3) = th3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,1,4) = th3d(i,1:mj1,k)
-!#if defined (PHYSICS)
+#if defined (PHYSICS)
           buff_ew(i,1:mj1,k-1,2,3) = qv3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,2,4) = qv3d(i,1:mj1,k)
-
-#if defined (PHYSICS)
-
           buff_ew(i,1:mj1,k-1,3,3) = qc3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,3,4) = qc3d(i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,4,3) = qi3d(mi1-nhalo+i,1:mj1,k)
@@ -237,10 +232,9 @@ CONTAINS
         DO j=1,nhalo
           th3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,1,1)
           th3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,1,2)
-!if defined (PHYSICS)
+#if defined (PHYSICS)
           qv3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,2,1)
           qv3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,2,2)
-#if defined (PHYSICS)
           qc3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,3,1)
           qc3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,3,2)
           qi3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,4,1)
@@ -263,10 +257,9 @@ CONTAINS
         DO i=1,nhalo
           th3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,1,1)
           th3d(mi1+i,1:mj1,k) = buff_ew(i,1:mj1,k-1,1,2)
-!#if defined (PHYSICS)
+#if defined (PHYSICS)
           qv3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,2,1)
           qv3d(mi1+i,1:mj1,k) = buff_ew(i,1:mj1,k-1,2,2)
-#if defined (PHYSICS)
           qc3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,3,1)
           qc3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,3,2)
           qi3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,4,1)
@@ -404,10 +397,8 @@ CONTAINS
       DO 1300 I=mim,mip
       TH3D(I,J,1)=TH3D(I,J,2)
       TH3D(I,J,NK3)=TH3D(I,J,NK2)
-!#if defined (PHYSICS)
-      QV3D(I,J,1)=QV3D(I,J,2)
 #if defined (PHYSICS)
-
+      QV3D(I,J,1)=QV3D(I,J,2)
       QC3D(I,J,1)=QC3D(I,J,2)
       QI3D(I,J,1)=QI3D(I,J,2)
       QR3D(I,J,1)=QR3D(I,J,2)

@@ -227,7 +227,7 @@ CONTAINS
       terma(I,J,K)=terma(I,J,K)/RHOU(K)
   570 CONTINUE
 
-ut set flux convergence on topo to zero
+!ccwut set flux convergence on topo to zero
 
       DO K=2,maxtopo
       DO J=1,MJ1

@@ -430,8 +430,8 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=8.
-      U3DY(I,J,K)=-2.
+      U3DX(I,J,K)=0.
+      U3DY(I,J,K)=0.
   610 CONTINUE
 
       DO 660 K = 2, NK1

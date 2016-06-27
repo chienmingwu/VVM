@@ -216,7 +216,6 @@ PROGRAM ldmain
 
         PASS_SMALL_DT = DT
         PASS_BIG_DT   = origin_dt
-        IF (my_task .eq. 0) PRINT*,'outside',ITT,ITTMAX
         CALL AB_3D ( N1, N2, ITT )        
 
         DT   = origin_dt ! move set original dt here
@@ -230,7 +229,6 @@ PROGRAM ldmain
         if ( my_task == 0 ) write(12345,'(A4,I6,A13,F10.4,A12,F10.4,A8,F15.12,A9,F10.6)')  &
             & 'ITT=',ITT,', ElapseTime=',elapse_time ,', totalTime=' ,ttl_time,&
               ' ,align=',(origin_dt-itt_align),' ,var_dt=',inner_dt
-       
 
         lc35 = MOD ( ITT,   NXS ) .EQ. 0
 
