@@ -48,31 +48,31 @@ CONTAINS
 !-----------------------------------------------------------------------
 
       call timer_start('advection')
-!      CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
-      CALL ADVEC_Q3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
+      CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
+!      CALL ADVEC_Q3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
 
 #if defined (PHYSICS)
 !easy use MPDATA 
 
-      CALL ADVEC_Q3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
+!      CALL ADVEC_Q3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
   
-      CALL ADVEC_Q3D ( QR3D, FQR3D(1,1,1,L), HYSG3D )
+!      CALL ADVEC_Q3D ( QR3D, FQR3D(1,1,1,L), HYSG3D )
       
-      CALL ADVEC_Q3D ( QC3D, FQC3D(1,1,1,L), term4 )
+!      CALL ADVEC_Q3D ( QC3D, FQC3D(1,1,1,L), term4 )
 
-      CALL ADVEC_Q3D ( QI3D, FQI3D(1,1,1,L), term4 )
+!      CALL ADVEC_Q3D ( QI3D, FQI3D(1,1,1,L), term4 )
 
-      CALL ADVEC_Q3D ( QS3D, FQS3D(1,1,1,L), term4 )
+!      CALL ADVEC_Q3D ( QS3D, FQS3D(1,1,1,L), term4 )
 
-!      CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
+      CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
 
-!      CALL ADVEC_3D ( QR3D, FQR3D(1,1,1,L), HYSG3D )
+      CALL ADVEC_3D ( QR3D, FQR3D(1,1,1,L), HYSG3D )
 
-!      CALL ADVEC_3D ( QC3D, FQC3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( QC3D, FQC3D(1,1,1,L), term4 )
 
-!      CALL ADVEC_3D ( QI3D, FQI3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( QI3D, FQI3D(1,1,1,L), term4 )
 
-!      CALL ADVEC_3D ( QS3D, FQS3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( QS3D, FQS3D(1,1,1,L), term4 )
 
       DO 160 K = 2, NK2
       DO 160 J = 1, MJ1
@@ -80,9 +80,9 @@ CONTAINS
       HYSG3D(I,J,K)=HYSG3D(I,J,K) + TERM4(I,J,K)
   160 CONTINUE
 
-      CALL ADVEC_Q3D ( QG3D, FQG3D(1,1,1,L), term4 )
+!      CALL ADVEC_Q3D ( QG3D, FQG3D(1,1,1,L), term4 )
 
-!      CALL ADVEC_3D ( QG3D, FQG3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( QG3D, FQG3D(1,1,1,L), term4 )
 
       DO 170 K = 2, NK2
       DO 170 J = 1, MJ1

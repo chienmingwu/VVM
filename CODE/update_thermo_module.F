@@ -92,20 +92,19 @@ CONTAINS
                   + A*FQI3D(I,J,K,N2)+B*FQI3D(I,J,K,N1)
 
       QC3D(I,J,K) = QC3D(I,J,K)            &
-!easy close micro physice effect
-!                  + DT * QCAD_MICRO(I,J,K) &
+                  + DT * QCAD_MICRO(I,J,K) &
                   + A*FQC3D(I,J,K,N2)+B*FQC3D(I,J,K,N1)
 
       QR3D(I,J,K) = QR3D(I,J,K)            &
-!                  + DT * QRAD_MICRO(I,J,K) &
+                  + DT * QRAD_MICRO(I,J,K) &
                   + A*FQR3D(I,J,K,N2)+B*FQR3D(I,J,K,N1)
 
       QS3D(I,J,K) = QS3D(I,J,K)            &
-!                  + DT * QSAD_MICRO(I,J,K) &
+                  + DT * QSAD_MICRO(I,J,K) &
                   + A*FQS3D(I,J,K,N2)+B*FQS3D(I,J,K,N1)
 
       QG3D(I,J,K) = QG3D(I,J,K)            &
-!                  + DT * QGAD_MICRO(I,J,K) &
+                  + DT * QGAD_MICRO(I,J,K) &
                   + A*FQG3D(I,J,K,N2)+B*FQG3D(I,J,K,N1)
      
       QVTD3D(I,J,K) = DT * QVAD_MICRO(I,J,K) &

@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = MPDATA-gate-all
+set expname = MPDATA-gate-old
 
 # hardscrabble configuration
 set subdir = '../..'
