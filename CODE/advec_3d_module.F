@@ -252,8 +252,8 @@ CONTAINS
 
       if (.true.) then
 
-      call bound_arb(NK2,LMX)
-      call bound_arb(NK2,LMN)
+!      call bound_arb(NK2,LMX)
+!      call bound_arb(NK2,LMN)
 
       do 650 k=2,NK2
       kb=k-1
@@ -269,10 +269,6 @@ CONTAINS
       LMN(i,j,k)=min(Q(ib,j,k),Q(ic,j,k),Q(i,jb,k), &
                   Q(i,jc,k),Q(i,j,kb),Q(i,j,kc),Q(i,j,k),LMN(i,j,k))
   650 CONTINUE
-
-!      call bound_arb(NK2,LMX)
-!      call bound_arb(NK2,LMN)
-
 
       do 700 k=2,NK2
       kb=k-1
@@ -290,8 +286,10 @@ CONTAINS
              FNZ(K)/DZ*(pp(WFLX(i,j,k)) + pn(WFLX(i,j,kb))) +eps)
   700 CONTINUE
 
-      call bound_arb(NK2,LMX)
-      call bound_arb(NK2,LMN)
+!      call bound_arb(NK2,LMX)
+!      call bound_arb(NK2,LMN)
+
+      call bound_mpdata(LMX,LMN)     
 
       do 710 k=2,nk2
       do 710 j=1,mj1
@@ -318,13 +316,8 @@ CONTAINS
 !      flux(k) = flux(k) + www(i,j,k)
   730 CONTINUE
 
-
-!      call bound_arb(NK2,UFLX)
-!      call bound_arb(NK2,VFLX)
-
       ENDIF
 
-!      if (my_task .eq. 3 ) PRINT*, Q(28,10,18),(UFLX(28,10,18)-UFLX(27,10,18))/DX,(VFLX(28,10,18)-VFLX(28,9,8))/DYNEW
 
       do 800 k=2,nk2
       TMP = 1.d0/RHOU(K)
@@ -345,9 +338,6 @@ CONTAINS
 
   800 CONTINUE
 !      ENDIF
-
-!      if (my_task .eq. 3 ) PRINT*, (Q(I,10,18),I=1,MI1)
-!      if (my_task .eq. 3 ) PRINT*,(UFLX(30,10,18)-UFLX(30,10,18))/DX
 
 
 !      ENDIF
