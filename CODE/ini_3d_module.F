@@ -113,7 +113,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 302.
+      SST = T1(1) * 0.1 + 273.16 + DSST 
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA

@@ -556,10 +556,10 @@ CONTAINS
  !     most likely truncation error.
 !      Q(i,j,k)=max(0.,Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
 !                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(K))
-!      Q(i,j,k)=max(0.d0, Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
+      Q(i,j,k)=max(0.d0, Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
+                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ))
+!      Q(i,j,k)= Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
 !                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)
-      Q(i,j,k)= Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
-                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)
 
   800 CONTINUE
 !      ENDIF
