@@ -59,46 +59,82 @@ CONTAINS
 
       integer nu1, nt1, k1, k2, it
       logical lf
-      DATA NU1/33/,NT1/21/
+      DATA NU1/10000/,NT1/10000/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(21),T1(21),QV1(21),QC1(21)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
-             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
-             ,133.6,111.3,92.6/
-      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
-             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
-             ,-726.4,-755.8,-749.0/
-      DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
-              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
-      DATA QC1/21*0./
+      REAL (KIND=dbl_kind) :: ZT1(10000),PI1(10000),TV1(10000),PILOG1(10000)
+      REAL (KIND=dbl_kind) :: PQ1(10000),P1(10000),T1(10000),QV1(10000),QC1(10000)
+      REAL (KIND=dbl_kind) :: Q1OBS(10000),Q2OBS(10000),wls1(10000)
+      REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
+       DELZ=1.
+       sfcp=1000.
+       DO K=1,NT1
+       HEIGHT(K)=(K-1)*DELZ
+       ENDDO
 
-      REAL (KIND=dbl_kind) ::  PU1(33),U1(33)
-      DATA PU1/1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
-                858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
-                618.6, 581.3, 543.9, 506.8, 470.2, 434.1, 398.9,   &
-                364.6, 331.4, 299.4, 268.7, 239.5, 211.8, 185.8,   &
-                161.6, 139.4, 119.2, 101.4,  85.8 /
-      DATA U1/ -1.0,  -1.0,  -1.4,  -1.7,  -1.8,  -2.1,  -2.6,  -3.6,   &
-               -4.9,  -6.7,  -8.7, -10.6, -12.2, -13.2, -13.1, -12.0,   &
-               -9.7,  -6.6,  -3.2,  -0.3,   1.3,   1.3,   0.4,  -1.0,   &
-               -2.9,  -4.3,  -4.5,  -2.8,  -0.6,  -0.5,  -2.2,  -2.5,   &
-               -3.0 / 
+!************************************
+!* Puli  (2013.09.08 14) case    *
+!************************************
+
+        t1=0.
+        qv1=0.
+        qc1=0.
+        wls1=0.
+
+        do k=1,NT1
+        if(height(k) .lt. 1500.) then
+        t1(k) =298.5+(305.5-298.5)*height(k)/1500.
+        qv1(k)=15.7
+        elseif(height(k) .ge. 1500. .and. height(k) .le. 2275.) then
+        qv1(k)=15.7 -(15.7-12.7) *(height(k)-1500.)/775.
+        t1(k) =305.5+(309.-305.5)*(height(k)-1500.)/775.
+        else
+        qv1(k)=7.4 -(7.4-1.15) *(height(k)-2275.)/4100.
+        t1(k) =315.+(327.-315.)*(height(k)-2775.)/4100.
+        endif
+
+        if(qv1(k) .lt. 0.) then
+        qv1(k)=0.
+        endif
+
+        enddo
+    
+        do k=2,NT1
+        if(height(k) .le. 2275.) then
+        wls1(k)=1.5*(height(k)/2275.)
+        else
+        wls1(k)=1.5
+        endif
+        enddo
+
+
+        do k=1,NT1
+        qv1(k)=qv1(k)/1000.
+        enddo
+
+        do k=1,nt1
+        thv(k)=t1(k)*(1+0.608*qv1(k))
+        enddo
+
+
+       PI1(1)=(sfcp/1000.)**(rgas/CP)
+       DO K=2,NT1
+       THVAVG=0.5*(THV(K)+THV(K-1))
+       PI1(K)=PI1(K-1)-GRAV*DELZ/(CP*THVAVG)
+       ENDDO
+
+       DO K=1,nt1
+       p1(k)=exp(cp/rgas*log(pi1(K))+log(1000.))
+       PU1(K)=P1(K)
+       PQ1(K)=P1(K)
+       ENDDO
+
+       do k=1,nt1
+       t1(k)=t1(k)*pi1(k)
+       enddo
 
       casename= 'GATE_PHASE_III'
 
@@ -112,7 +148,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 302.
+      SST = 298.5
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -122,8 +158,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04
+      T1(K) =  T1(K) 
+      QV1(K)= QV1(K) 
   100 CONTINUE
 
 
@@ -134,7 +170,7 @@ CONTAINS
 
 !     *** MIXED LAYER PROFILE ***
 
-      T1(3) = PI1(3) * T1(2) / PI1(2)
+!      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
@@ -281,7 +317,7 @@ CONTAINS
 
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,20,PQ1,LF)
+      K1 = INDEXR(PBAR(K)*0.01,10000,PQ1,LF)
       K2 = K1 + 1
       Q1LS (K) =  &
         FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
@@ -292,6 +328,19 @@ CONTAINS
       Q2LS (K) = 0.0
       END IF
   200 CONTINUE
+
+!ccwu for subsidence 
+      DO 201 K = 2, NK3
+
+      K1 = INDEXR(PBAR(K)*0.01,NT1,PQ1,LF) !ccwu change with pq1 accordingly
+      K2 = K1 + 1
+      WLS (K) =  &
+        FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLS1(K1),PQ1(K2),wls1(K2))
+  201 CONTINUE
+
+!ccwu change omega mb/hr to w/dz 1/s
+
+      WLS=-WLS/RHO/9.8*FNZ/DZ*100./3600.
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
 !     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
@@ -318,40 +367,6 @@ CONTAINS
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       vG(:)   = 0.
-
-      DO 250 K = 1, NK3
-      IF (ZT(K) .LT. 3000.) THEN
-        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
-      ELSEIF (ZT(K) .LT. 8000.) THEN
-        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
-      ELSEIF (ZT(K) .LT. 13000.) THEN
-        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
-      ELSE
-        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
-      ENDIF
-
-      T(K) = THBAR(K) * PIBAR(K)
-      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
-      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
-      IF (T(K) .LE. 233.15) THEN
-        ES1 = ESI
-      ELSE IF (T(K) .LT. 273.15) THEN
-        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
-      ELSE
-        ES1 = ESW
-      ENDIF
-      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
-!CCCCCCCCCCCCCCCCCC
-      IF (ZT(K) .LE. 1500) THEN
-        H(K) = 0.82
-      ELSE IF (ZT(K) .LE. 12000) THEN
-        H(K) = (ZT(K)-8000)**2/132031250.+0.5
-      ELSE
-        H(K) = 0.50
-      END IF
-!CCCCCCCCCCCCCCCCCC
-      QVBAR(K) = H(K) * QVSBAR(K)
-  250 CONTINUE
 
 !     OCEAN POINTS
 
@@ -466,8 +481,8 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=2.12
-      U3DY(I,J,K)=2.12
+      U3DX(I,J,K)=-2.
+      U3DY(I,J,K)=-1.
   610 CONTINUE
 
       DO 660 K = 2, NK1

@@ -28,7 +28,8 @@ CONTAINS
 ! Default is no tracer.
 
       INTEGER (KIND=int_kind) ::   &
-         i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
+         i, j, k ,nt, & ! do loop indices for zonal, meridional and vertical dimensions
+         tempim,tempjm
 
 !  Initialize tracer
       DO 888 nt = 1,ntracer
@@ -40,23 +41,17 @@ CONTAINS
   
   SELECT CASE (TRIM(casename))
   CASE ('GATE_PHASE_III')
-! This is to set up test tracers for the GATE PHASE III case. Their only
-!  purpose is for testing and debugging.
-! Tracer 1 is initialized to 3x3 square columns set inside each corner of the domain.
-! Tracer 2 is initialized to fill the 2km to 4km layer
-! The tracers are advected without sources or sinks
-      tc3d(3:5,3:5,:,1) = 1.                ! SW corner column
-      tc3d(3:5,mj1-2:mj1,:,1) = 1.          ! NW corner column
-      tc3d(mi1-2:mi1,mj1-2:mj1,:,1) = 1.    ! NE corner column
-      tc3d(mi1-2:mi1,3:5,:,1) = 1.          ! SE corner column
-      
-      DO 123 K = 1, NK3
+! Tracer for TaiChung fire power plant 
+
       DO 123 J = mjm,mjp
       DO 123 I = mim,mip
-      IF ((ZT(K) .GE. 2000.) .AND. (ZT(K) .LE. 4000.)) THEN
-      TC3D(I,J,K,2)=1.
+      tempim=mi1*ni_sbdm+i
+      tempjm=mj1*nj_sbdm+j
+      if(tempim .eq. 398. .and. tempjm .eq. 645.) then
+      TC3D(I,J,6,1)=1.
       END IF
   123 CONTINUE
+
   CASE ('TWP-ICE')
 ! the twp-ice case has a specified source function
       call update_tracer_source      
@@ -75,47 +70,36 @@ CONTAINS
       LOGICAL (KIND=log_kind) :: decay_loc
 
   SELECT CASE (TRIM(casename))
-  CASE ('TWP-ICE')
-!   Universal tracer decay with 6-hour e-folding time (TWP-ICE)
-      DO 301 nt=1,ntracer
-      DO 301 K=1,NK3
-      DO 301 J=mjm,mjp
-      DO 301 I=mim,mip
-      TC3D(I,J,K,nt)=TC3D(I,J,K,nt) - DT*(TC3D(I,J,K,nt)/21600.)
-  301 CONTINUE
+  CASE ('GATE_PHASE_III')
+!   Universal tracer decay with 6-hour e-folding time 
+!      DO 301 nt=1,ntracer
+!      DO 301 K=1,NK3
+!      DO 301 J=mjm,mjp
+!      DO 301 I=mim,mip
+!      TC3D(I,J,K,nt)=TC3D(I,J,K,nt) - DT*(TC3D(I,J,K,nt)/21600.)
+!  301 CONTINUE
   
-! the twp-ice case has a specified source function
+! the case has a specified source function
+
       call update_tracer_source      
+
   END SELECT
   
    END SUBROUTINE update_tracer
 
 !=======================================================================
    SUBROUTINE UPDATE_TRACER_source
-!  Here the TWP-ICE specified source layers of the tracer are set to 1.0
-!  TRACER1: 00000-00250 m
-!  TRACER2: 02000-04000 m
-!  TRACER3: 04000-06000 m
-!  TRACER4: 14000-17000 m
-!=======================================================================
-
       INTEGER (KIND=int_kind) ::   &
-         i, j, k     ! do loop indices for zonal, meridional and vertical dimensions
+         i, j, k, &     ! do loop indices for zonal, meridional and vertical dimensions
+         tempim,tempjm
 
-      if(my_task == 0) WRITE(6,*) 'Updating Tracer...'
-      DO 123 K = 1, NK3
       DO 123 J = mjm,mjp
       DO 123 I = mim,mip
-      IF (ZT(K) .LE. 250.) THEN
-      TC3D(I,J,K,1)=1.
-      ELSE IF ((ZT(K) .GE. 2000.) .AND. (ZT(K) .LE. 4000.)) THEN
-      TC3D(I,J,K,2)=1.
-      ELSE IF ((ZT(K) .GE. 4000.) .AND. (ZT(K) .LE. 6000.)) THEN
-      TC3D(I,J,K,3)=1.
-      ELSE IF ((ZT(K) .GE. 14000.) .AND. (ZT(K) .LE. 17000.)) THEN
-      TC3D(I,J,K,4)=1.
+      tempim=mi1*ni_sbdm+i
+      tempjm=mj1*nj_sbdm+j
+      if(tempim .eq. 398. .and. tempjm .eq. 645.) then
+      TC3D(I,J,6,1)=1.
       END IF
-
   123 CONTINUE
   
    END SUBROUTINE update_tracer_source
