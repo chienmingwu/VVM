@@ -53,7 +53,8 @@
      1 HXV(MI_GLOB,MJ_GLOB)
 
       INTEGER (kind=int_kind) maxtopo,itypeu(MI_GLOB,MJ_GLOB,NK2),
-     1 itypev(MI_GLOB,MJ_GLOB,NK2),itypeW(MI_GLOB,MJ_GLOB,NK2)
+     1 itypev(MI_GLOB,MJ_GLOB,NK2),itypeW(MI_GLOB,MJ_GLOB,NK2),
+     1 NHX(MI_GLOB,MJ_GLOB),NXU(MI_GLOB,MJ_GLOB), NXV(MI_GLOB,MJ_GLOB)
      
       R = 6378137.0
       ZB = 0. 
@@ -154,7 +155,7 @@
       DO 150  JP = JI,JE
       DO 150  IP = II,IE
       TMP = TMP + DATA(IP,JP)
-C      TMP = MAX(TMP,DATA(IP,JP))
+!      TMP = MAX(TMP,DATA(IP,JP))
   150 CONTINUE
       TMP = TMP / REAL(JE - JI + 1 ) / REAL(IE - II + 1)
 
@@ -229,7 +230,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       IF (TMP .GT. 0.) HX(I,J) = 2.
       DO K=2,NK1
-      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      IF(TMP.GE.ZZ(K))HX(I,J)=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
 
       ENDDO
       IF(HX(I,J).LT.0) HX(I,J)=0
@@ -249,6 +250,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       NP = NP +1
       ENDIF
       HX(I,J) = MAX(HX(I,J),1.)
+      NHX(I,J) = INT(HX(I,J))
   800 CONTINUE
       TMP = maxval(HX)
       maxtopo = INT(TMP) + 1
@@ -257,30 +259,99 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       itypev = 1
       itypew = 1
 
-      DO J=2,MJ_GLOB-1
-      DO I=2,MI_GLOB-1
-      NN=INT(HX(I,J))
-      IF(NN .NE. 0) THEN
-      DO K=2,NN
-      ITYPEU(I,J,K)=0
-      ITYPEV(I,J,K)=0
-      ITYPEW(I,J,K)=0
-      ENDDO
-      ENDIF
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
+!      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
+!      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
+
+      HXU(I,J) = MAX(HX(I,J),HX(I+1,J))
+      HXV(I,J) = MAX(HX(I,J),HX(I,J+1))
       ENDDO
       ENDDO
 
-      DO K=2,NK2
-      DO J=2,MJ_GLOB-1
-      DO I=2,MI_GLOB-1
-      NN=ITYPEW(I,J,K)
-      IF(NN .EQ. 0) THEN
-      ITYPEU(I-1,J,K)=0
-      ITYPEV(I,J-1,K)=0
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
+      DO K=1,NHX(I,J)
+      ITYPEW(I,J,K)=0
+      ENDDO
+
+      DO K=1,NXU(I,J)-1
+      ITYPEU(I,J,K)=0
+      ENDDO
+      IF (NXU(I,J) .GE. 1) ITYPEU(I,J,NXU(I,J)) = -1
+      IF (NXU(I,J) .EQ. 0) ITYPEU(I,J,1) = -1
+
+      DO K=1,NXV(I,J)-1
+      ITYPEV(I,J,K)=0
+      ENDDO
+      IF (NXV(I,J) .GE. 1) ITYPEV(I,J,NXV(I,J)) = -1
+      IF (NXV(I,J) .EQ. 0) ITYPEV(I,J,1) = -1
+
+      ENDDO
+      ENDDO
+
+      DO K=2,maxtopo
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I-1,J,K) .EQ. 1) THEN
+!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I+1,J,K) ) THEN
+      ITYPEU(I-1,J,K) = -1
+!      ITYPEV(I-1,J,K) = -1
       ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I+1,J,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I-1,J,K) .GT. ITYPEW(I,J,K) ) THEN
+      ITYPEU(I,J,K) = -1
+      ITYPEV(I,J,K) = -1
+      ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J-1,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I,J+1,K) ) THEN
+!      ITYPEU(I,J-1,K) = -1
+      ITYPEV(I,J-1,K) = -1
+      ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J+1,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I,J-1,K) .GT. ITYPEW(I,J,K) ) THEN
+      ITYPEU(I,J,K) = -1
+      ITYPEV(I,J,K) = -1
+      ENDIF
+
       ENDDO
       ENDDO
       ENDDO
+
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
+
+      IF (ITYPEU(I,J,2) .NE. 1 ) THEN
+      ITYPEU(I,J,1) = 0
+      ENDIF
+      IF (ITYPEV(I,J,2) .NE. 1 ) THEN
+      ITYPEU(I,J,1) = 0
+      ENDIF
+
+      ENDDO
+      ENDDO
+
+! easy boundary condition
+      DO K=1,maxtopo
+      DO J=1,mj_glob
+      ITYPEU(1,J,K) = ITYPEU(mi_glob-1,J,K)
+      ITYPEU(mi_glob,J,K) = ITYPEU(2,J,K)
+      ITYPEV(1,J,K) = ITYPEV(mi_glob-1,J,K)
+      ITYPEV(mi_glob,J,K) = ITYPEV(2,J,K)
+      ITYPEW(1,J,K) = ITYPEW(mi_glob-1,J,K)
+      ITYPEW(mi_glob,J,K) = ITYPEW(2,J,K)
+      ENDDO
+ 
+      DO I=1,mi_glob
+      ITYPEU(I,1,K) = ITYPEU(I,mj_glob-1,K)
+      ITYPEU(I,mj_glob,K) = ITYPEU(I,2,K)
+      ITYPEV(I,1,K) = ITYPEV(I,mj_glob-1,K)
+      ITYPEV(I,mj_glob,K) = ITYPEV(I,2,K)
+      ITYPEW(I,1,K) = ITYPEW(I,mj_glob-1,K)
+      ITYPEW(I,mj_glob,K) = ITYPEW(I,2,K)
+      ENDDO
+      ENDDO
+
 
 !      OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
 !      WRITE(16)HX 
@@ -314,6 +385,13 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       WRITE(16) ((INT(soil(I,J)),I=II,IE),J=JI,JE)
       CLOSE(16)
   900 CONTINUE
+
+!      DO I=1,mi_glob
+!      DO J=1,mj_glob
+!      TMP =(HX(I,J)-NHX(I,J))*(ZZ(NHX(I,J)+1)-ZZ(NHX(I,J)))
+!      HX(I,J)=ZZ(NHX(I,J)) + TMP
+!      ENDDO
+!      ENDDO
 
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)

@@ -255,8 +255,8 @@ CONTAINS
         comp_buffer%G_3dk2(19,:,:,in_k)     =  qgad_micro(:,:,out_k)
         comp_buffer%G_3dk2(20,:,:,in_k)     =  rkm(:,:,out_k)
         comp_buffer%G_3dk2(21,:,:,in_k)     =  rkh(:,:,out_k)
-        comp_buffer%G_3dk2(22,:,:,in_k)     =  z3dxt(:,:,out_k)
-        comp_buffer%G_3dk2(23,:,:,in_k)     =  z3dyt(:,:,out_k)
+!        comp_buffer%G_3dk2(22,:,:,in_k)     =  z3dxt(:,:,out_k)
+!        comp_buffer%G_3dk2(23,:,:,in_k)     =  z3dyt(:,:,out_k)
 
         comp_buffer%G_in3dk2_2(1,:,:,in_k,:) =   fth3d(:,:,out_k,:)
         comp_buffer%G_in3dk2_2(2,:,:,in_k,:) =   fqv3d(:,:,out_k,:)
@@ -359,8 +359,8 @@ CONTAINS
         qgad_micro(:,:,out_k)=        comp_buffer%G_3dk2(19,:,:,in_k)     
         rkm(:,:,out_k)       =        comp_buffer%G_3dk2(20,:,:,in_k)     
         rkh(:,:,out_k)       =        comp_buffer%G_3dk2(21,:,:,in_k)     
-        z3dxt(:,:,out_k)     =        comp_buffer%G_3dk2(22,:,:,in_k)     
-        z3dyt(:,:,out_k)     =        comp_buffer%G_3dk2(23,:,:,in_k)     
+!        z3dxt(:,:,out_k)     =        comp_buffer%G_3dk2(22,:,:,in_k)     
+!        z3dyt(:,:,out_k)     =        comp_buffer%G_3dk2(23,:,:,in_k)     
 
         fth3d(:,:,out_k,:)   =        comp_buffer%G_in3dk2_2(1,:,:,in_k,:) 
         fqv3d(:,:,out_k,:)   =        comp_buffer%G_in3dk2_2(2,:,:,in_k,:) 

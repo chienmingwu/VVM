@@ -11,6 +11,7 @@ USE bound
 USE update_tracer_module
 USE z_coord
 USE domain_decomposition
+USE wind_module,only:DIRECTIB_ini
 #if defined (DIFFUSION)
 USE TURB_3D_module
 #endif
@@ -101,6 +102,7 @@ CONTAINS
         endif
 
         enddo
+
     
         do k=2,NT1
         if(height(k) .le. 2275.) then
@@ -109,7 +111,6 @@ CONTAINS
         wls1(k)=1.5
         endif
         enddo
-
 
         do k=1,NT1
         qv1(k)=qv1(k)/1000.
@@ -162,7 +163,6 @@ CONTAINS
       QV1(K)= QV1(K) 
   100 CONTINUE
 
-
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
       PI1(K) = ( P1(K) / PZERO ) ** RBCP
@@ -181,7 +181,7 @@ CONTAINS
       QV8 = QV1(K)
       QC8 = 0.D0
       QI8 = 0.D0
-      if (my_task .eq. 0) print*, T8,P8,QV8,K
+!      if (my_task .eq. 0) print*, K,T8,P8
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
       QC1(K) = 0.
@@ -195,6 +195,7 @@ CONTAINS
       TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
   130 CONTINUE
 
+      PRINT*,'==================',my_task,'========================='
 
       ZT1(1) = Zz(1)
 
@@ -262,6 +263,7 @@ CONTAINS
       QV8 = QVBAR(K)
       QC8 = 0.D0
       QI8 = 0.D0
+      if (my_task .eq. 0) print*, K,T8,P8
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QVBAR(K) = QV8
       ES1 = ES ( T(K) )
@@ -273,9 +275,8 @@ CONTAINS
 
   160 CONTINUE
 
-      IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
 
-
+!      IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
 
 !     PROFILES OF RHO, RHOz, AND GAMMA
 
@@ -377,7 +378,7 @@ CONTAINS
       if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
- 
+
       locean = .true.
       psfx = .false.
 
@@ -497,6 +498,8 @@ CONTAINS
 
       CALL BOUND_3D_XY
 
+      CALL DIRECTIB_ini
+
 
 #if defined (AREAMN)
 !-------------------
@@ -579,18 +582,32 @@ CONTAINS
       CLOSE(99)
 
       call bound_arb(1,HX)
+
+      DO J=mjm,MJ1
+      DO I=mim,MI1
+!      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
+!      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
+
+      HXU(I,J) = MAX(HX(I,J),HX(I+1,J))
+      HXV(I,J) = MAX(HX(I,J),HX(I,J+1))
+      ENDDO
+      ENDDO
+
+      call bound_arb(1,HXU)
+      call bound_arb(1,HXV)
+
+      DO J=mjm,mjp
+      DO I=mim,mip
+
+      NHX(I,J) = INT(HX(I,J))
+      NXU(I,J) = INT(HXU(I,J))
+      NXV(I,J) = INT(HXV(I,J))
+      ENDDO
+      ENDDO
+
       call bound_int_arb(NK2,ITYPEW)
       call bound_int_arb(NK2,ITYPEU)
       call bound_int_arb(NK2,ITYPEV)
-
-
-      DO I=1,mi1
-      DO J=1,mj1
-      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
-      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
-      ENDDO
-      ENDDO
-
 
 #else
       hx=1

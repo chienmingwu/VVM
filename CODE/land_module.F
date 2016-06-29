@@ -140,12 +140,14 @@ CONTAINS
                +ABS(GWET(I,J))*TB(I,J)*(DELTA*(QSFC-Q2(I,J)))
       ENDIF
           
-      T2i(I,J) = T2(I,J)*PIMAP(I,J)
-      Q2i(I,J) = Q2(I,J)/(1+Q2(I,J))
+      T2i(I,J) = real( T2(I,J)*PIMAP(I,J))
+      Q2i(I,J) = real(Q2(I,J)/(1+Q2(I,J)))
   100 CONTINUE
             
       SPRECi = real(SPREC)
       SFCSPDi =real(SFCSPD)
+
+      if (ni_sbdm .eq. 3 ) PRINT*, SFCSPDi(10,10),SPRECi(10,10)
 
       CALL LSM_DRV(SFCSPDi,T2i,Q2i,swD,lwD,SPRECi,WQi,WTi, &
 ! LSM inout variables

@@ -609,13 +609,18 @@ CONTAINS
       END SUBROUTINE bound_3d_xy
 
 !-----7---------------------------------------------------------------72
-      SUBROUTINE BOUND_3DT_XY
+      SUBROUTINE BOUND_3DT_XY(Z3DXT,Z3DYT)
 ! This routine updates the halo for the x- and y-components of vorticity
 
 ! local variables
       INTEGER (KIND=int_kind) ::    &
          i, j, k,   &    ! do loop indices for zonal, meridional and vertical dimensions
          ip, im, ii      ! high index, low index, intermediate index
+
+      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk2), INTENT(INOUT):: &
+         z3dxt,    &  ! x-component of vorticity, dw/dy-dv/dz (1/s)
+         z3dyt        ! y-component of vorticity, dw/dx-du/dz (1/s)
+
 
 #if defined (PERIODIC)
 
