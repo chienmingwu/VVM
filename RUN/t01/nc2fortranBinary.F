@@ -11,8 +11,8 @@
       character(23) FILENAME
 
       integer NX, NY
-      parameter (NX = 1024, NY = 1024)
-      REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
+      parameter (NX = 2405, NY = 4805)
+      REAL*4 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
       REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB)
       LOGICAL TWTOPO 
@@ -180,6 +180,13 @@
   100 CONTINUE
 
       ELSE
+! wei-liang 
+
+      OPEN(unit=15,file=
+     1 'RUNDATA/LSM/topography/o.f.cut_srtm_from_usrdf.dat',
+     1 form='unformatted',access='direct',recl=nx*ny)
+      READ(15,rec=1) data
+      close(15)
       
       OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
       READ(15,*) xt
