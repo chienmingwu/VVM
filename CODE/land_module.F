@@ -147,7 +147,7 @@ CONTAINS
       SPRECi = real(SPREC)
       SFCSPDi =real(SFCSPD)
 
-      if (ni_sbdm .eq. 3 ) PRINT*, SFCSPDi(10,10),SPRECi(10,10)
+!      if (ni_sbdm .eq. 3 ) PRINT*, SFCSPDi(10,10),SPRECi(10,10)
 
       CALL LSM_DRV(SFCSPDi,T2i,Q2i,swD,lwD,SPRECi,WQi,WTi, &
 ! LSM inout variables
