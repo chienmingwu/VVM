@@ -230,7 +230,7 @@
 
       IF (TMP .GT. 0.) HX(I,J) = 2.
       DO K=2,NK1
-      IF(TMP.GE.ZZ(K))HX(I,J)=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
 
       ENDDO
       IF(HX(I,J).LT.0) HX(I,J)=0
