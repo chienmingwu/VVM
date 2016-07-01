@@ -251,9 +251,10 @@
       ENDIF
       HX(I,J) = MAX(HX(I,J),1.)
       NHX(I,J) = INT(HX(I,J))
+      TMP = MAX(TMP,HX(I,J))
   800 CONTINUE
-      TMP = maxval(HX)
-      maxtopo = INT(TMP) + 1
+!      TMP = maxval(HX)
+      maxtopo = INT(TMP) + 2
 
       itypeu = 1
       itypev = 1
@@ -271,9 +272,20 @@
 
       DO J=2,mj_glob-1
       DO I=2,mi_glob-1
+
+      NHX(I,J) = INT(HX(I,J))
+      NXU(I,J) = INT(HXU(I,J))
+      NXV(I,J) = INT(HXV(I,J))
+      ENDDO
+      ENDDO
+
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
       DO K=1,NHX(I,J)
       ITYPEW(I,J,K)=0
       ENDDO
+
+
 
       DO K=1,NXU(I,J)-1
       ITYPEU(I,J,K)=0
@@ -386,12 +398,13 @@
       CLOSE(16)
   900 CONTINUE
 
-!      DO I=1,mi_glob
-!      DO J=1,mj_glob
-!      TMP =(HX(I,J)-NHX(I,J))*(ZZ(NHX(I,J)+1)-ZZ(NHX(I,J)))
-!      HX(I,J)=ZZ(NHX(I,J)) + TMP
-!      ENDDO
-!      ENDDO
+      DO I=1,mi_glob
+      DO J=1,mj_glob
+      TMP =(HX(I,J)-NHX(I,J))*(ZZ(NHX(I,J)+1)-ZZ(NHX(I,J)))
+      HX(I,J)=ZZ(NHX(I,J)) + TMP
+
+      ENDDO
+      ENDDO
 
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
