@@ -387,11 +387,11 @@
         endif
         TH3D(i,j,k) = theta(i,k-1)
         QV3D(i,j,k) = qv(i,k-1)
-!        QC3D(i,j,k) = qc(i,k-1)
-!        QI3D(i,j,k) = qi(i,k-1)
-!        QS3D(i,j,k) = qs(i,k-1)
-!        QG3D(i,j,k) = qg(i,k-1)
-!        QR3D(i,j,k) = qr(i,k-1)
+        QC3D(i,j,k) = qc(i,k-1)
+        QI3D(i,j,k) = qi(i,k-1)
+        QS3D(i,j,k) = qs(i,k-1)
+        QG3D(i,j,k) = qg(i,k-1)
+        QR3D(i,j,k) = qr(i,k-1)
   500 CONTINUE
 
 #if defined (MICROCODE)

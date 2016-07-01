@@ -345,7 +345,7 @@ CONTAINS
 !                                       qcstar, qistar, qfreeze
       TH3D(I,J,K) = TSTAR / PIBAR8(K)
       QV3D(I,J,K) = QVSTAR
-!      QC3D(I,J,K) = QCSTAR
+      QC3D(I,J,K) = QCSTAR
       QI3D(I,J,K) = QISTAR
 !-----------------------------------------------------------------------
       
