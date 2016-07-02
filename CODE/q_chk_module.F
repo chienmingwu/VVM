@@ -245,7 +245,7 @@ CONTAINS
 !        '     TC1' )
 !      enddo
 
-      if (.false.) then
+!      if (.false.) then
 
       IF ( NNEGQC .GT. 0 ) CALL FILL_GLO_3D(QC3D,'      QC' )
       IF ( NNEGQI .GT. 0 ) CALL FILL_GLO_3D(QI3D,'      QI' )
@@ -257,7 +257,7 @@ CONTAINS
        IF ( NNEGT(nt) .GT. 0 ) CALL FILL_GLO_3D(TC3D(:,:,:,nt),'     TC1' )
       enddo
 
-      endif
+!      endif
 
 !     DO K=2,NK2
 !      invfnt = fnt(k)/RHOU(K)
