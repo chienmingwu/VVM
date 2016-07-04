@@ -24,7 +24,7 @@ module rad
   ! effective radii on model domain
   real, dimension(:,:,:), allocatable :: &
        lwUp_3d, lwDown_3d, &
-       swUp_3d, swDown_3d, &
+       swUp_3d, swDown_3d, sw_dif_Down_3d, & ! easy sw_dif_Down shadow effect
        lwHeatingRate_3d, swHeatingRate_3d, &
        lwp_3d, iwp_3d, &
        reliq_3d, reice_3d
@@ -89,7 +89,8 @@ module rad
        swUp , &           ! upward shortwave radiative flux (W/m2)
        swDown , &         ! downward shortwave radiative flux (W/m2)
        swUpClearSky , &   ! clearsky upward shortwave radiative flux (W/m2)
-       swDownClearSky     ! clearsky downward shortwave radiative flux (W/m2)
+       swDownClearSky, &  ! clearsky downward shortwave radiative flux (W/m2)
+       sw_dif_down        ! easy diffusive short wave radition for shadow effect
 
 ! Shortwave and longwave heating rate outputs in K/day
       real (kind=kind_rb), dimension(:,:), allocatable :: &

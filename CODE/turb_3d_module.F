@@ -13,7 +13,6 @@ USE domain_decomposition
 #if defined (LSM)
 USE land_module, only:land_interface,land_ini
 USE rad, only:lwDown_3D,swDown_3D,lwUp_3d, swUp_3d
-
 #endif
 
 IMPLICIT NONE
@@ -879,8 +878,6 @@ CONTAINS
       lwD(I,J) = lwDown_3D(I,J,hxp)
       swU(I,J) = swUp_3D(I,J,hxp)
       lwU(I,J) = lwUp_3D(I,J,hxp)
-
-
 
 !     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
       QD(I,J) = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)

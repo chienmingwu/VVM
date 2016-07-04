@@ -181,6 +181,7 @@
            lwDown_3d(nx,ny,nzm), &
            swUp_3d(nx,ny,nzm), &
            swDown_3d(nx,ny,nzm), &
+           sw_dif_down_3d(nx,ny,nzm), &
            lwHeatingRate_3d(nx,ny,nzm), &
            swHeatingRate_3d(nx,ny,nzm), &
            lwp_3d(nx,ny,nzm), &
@@ -277,6 +278,7 @@
              lwDownClearSky, &
              swUp, &
              swDown, &
+             sw_dif_down, &
              swUpClearSky, &
              swDownClearSky, &
              swHeatingRate, &
@@ -324,6 +326,7 @@
              lwDownClearSky(1,nzrad+2), &
              swUp(1,nzrad+2), &
              swDown(1,nzrad+2), &
+             sw_dif_Down(1,nzrad+2), & ! easy shadow effect 
              swUpClearSky(1,nzrad+2), &
              swDownClearSky(1,nzrad+2), &
              swHeatingRate(1,nzrad+1), &
@@ -463,7 +466,7 @@
            lwUp,lwDown,lwUpClearSky,lwDownClearSky, &
            swUp,swDown,swUpClearSky,swDownClearSky, &
            swHeatingRate, &
-           swHeatingRateClearSky, &
+           swHeatingRateClearSky, sw_dif_Down, &
            lwHeatingRate, &
            lwHeatingRateClearSky, &
            coszrs, &
@@ -511,7 +514,9 @@
       lwUp_3d(i, j, k:nzm)          = lwUp(1,1:nzt)
       lwDown_3d(i, j, k:nzm)        = lwDown(1,1:nzt)
       swUp_3d(i, j, k:nzm)          = swUp(1,1:nzt)
-      swDown_3d(i, j, k:nzm)        = swDown(1,1:nzt)
+! easy test diffusive raidiation
+      swDown_3d(i, j, k:nzm)        = swDown(1,1:nzt) - sw_dif_Down(1,1:nzt) 
+      sw_dif_down_3d(i, j, k:nzm)   = sw_dif_Down(1,1:nzt)
       lwp_3d(i, j, k:nzm)           = LWP(1,1:nzt)
       iwp_3d(i, j, k:nzm)           = IWP(1,1:nzt)
       reliq_3d(i, j, k:nzm)         = liquidRe(1,1:nzt)
