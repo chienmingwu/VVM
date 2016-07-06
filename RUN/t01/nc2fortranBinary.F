@@ -228,8 +228,8 @@
       DO J=1,mj_glob
       TMP=DBLE(hgt(I,J))
 
-      IF (TMP .GT. 0.) HX(I,J) = 2.
-      DO K=2,NK1
+!      IF (TMP .GT. 0.) HX(I,J) = 2.
+      DO K=1,NK1
 ! Full steps
 !      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
 ! Partial steps
