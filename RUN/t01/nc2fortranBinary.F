@@ -27,11 +27,12 @@
 
       integer ncid, nvarid
       integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope, 
-     1        nsoil, nlon, nlat
-      integer i,j,k,ierr
+     1        nsoil, nlon, nlat, nheight, numask, nvmask, nthmask
 
-      integer NLID(2)
-      integer idx,idy,nvaridx,nvaridy
+      integer i,j,k,nn,ierr
+
+      integer NLID(3)
+      integer idx,idy,idz,nvaridx,nvaridy,nvaridz
 
       REAL*8 DT,DX,DYNEW,DZ,DZ1,ALADV,ZB,TOP,TMP,WRXMU,UVTAU
       LOGICAL NOTURB,NOSFX,BUOY
@@ -46,11 +47,15 @@
      1  slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
-      REAL*8 ZZ(NK3)      
+      REAL*8 ZZ(NK3),ZT(NK2) 
 
-      REAL (KIND=int_kind) HX(MI_GLOB,MJ_GLOB)
+      REAL (KIND=dbl_kind) HX(MI_GLOB,MJ_GLOB),HXU(MI_GLOB,MJ_GLOB),
+     1 HXV(MI_GLOB,MJ_GLOB)
 
- 
+      INTEGER (kind=int_kind) maxtopo,itypeu(MI_GLOB,MJ_GLOB,NK2),
+     1 itypev(MI_GLOB,MJ_GLOB,NK2),itypeW(MI_GLOB,MJ_GLOB,NK2),
+     1 NHX(MI_GLOB,MJ_GLOB),NXU(MI_GLOB,MJ_GLOB), NXV(MI_GLOB,MJ_GLOB)
+     
       R = 6378137.0
       ZB = 0. 
       PI = 3.14159265358979323846264338327 
@@ -75,6 +80,11 @@
       DO 51 K = 1, NK3
       ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
    51 CONTINUE
+
+      DO 52 K = 1, NK2
+      ZT(K) = .5*(ZZ(K)+ZZ(K+1))
+   52 CONTINUE
+
 
 ! import INPUT FILE 
       IF (TWTOPO) THEN
@@ -145,7 +155,7 @@
       DO 150  JP = JI,JE
       DO 150  IP = II,IE
       TMP = TMP + DATA(IP,JP)
-C      TMP = MAX(TMP,DATA(IP,JP))
+!      TMP = MAX(TMP,DATA(IP,JP))
   150 CONTINUE
       TMP = TMP / REAL(JE - JI + 1 ) / REAL(IE - II + 1)
 
@@ -171,15 +181,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
       
-      DO J=1,MJ_GLOB
-      YM(J)=J
-      ENDDO
-
-      DO I=1,MI_GLOB
-      XM(I)=I
-      ENDDO
-
-
       HX = 1
       DO 500 J = 1,MJ_GLOB
       DO 500 I = 1,MI_GLOB
@@ -238,9 +239,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMIN(I,J) = 10.
       SLOPE(I,J) = 1
       SOIL(I,J) = 1
-      endif 
-   
- 
+      endif
   500 CONTINUE
 
       DO 600 I = 1, MI_GLOB
@@ -252,7 +251,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ENDIF
 
       NP = 0
-
+      TMP = 0
       DO 800 J = 1,MJ_GLOB
       DO 800 I = 1,MI_GLOB
       IF (HX(I+1,J) .GT. HX(I,J) .AND. HX(I-1,J) .GT. HX(I,J) .AND.
@@ -260,7 +259,120 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       HX(I,J) =MIN(HX(I+1,J),HX(I-1,J),HX(I,J+1),HX(I,J-1))
       NP = NP +1
       ENDIF
+      HX(I,J) = MAX(HX(I,J),1.)
+      NHX(I,J) = INT(HX(I,J))
+      TMP = MAX(TMP,HX(I,J))
   800 CONTINUE
+!      TMP = maxval(HX)
+      maxtopo = INT(TMP) + 2
+
+      itypeu = 1
+      itypev = 1
+      itypew = 1
+
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
+!      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
+!      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
+
+      HXU(I,J) = MAX(HX(I,J),HX(I+1,J))
+      HXV(I,J) = MAX(HX(I,J),HX(I,J+1))
+      ENDDO
+      ENDDO
+
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
+
+      NHX(I,J) = INT(HX(I,J))
+      NXU(I,J) = INT(HXU(I,J))
+      NXV(I,J) = INT(HXV(I,J))
+      ENDDO
+      ENDDO
+
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
+      DO K=1,NHX(I,J)
+      ITYPEW(I,J,K)=0
+      ENDDO
+
+
+
+      DO K=1,NXU(I,J)-1
+      ITYPEU(I,J,K)=0
+      ENDDO
+      IF (NXU(I,J) .GE. 1) ITYPEU(I,J,NXU(I,J)) = -1
+      IF (NXU(I,J) .EQ. 0) ITYPEU(I,J,1) = -1
+
+      DO K=1,NXV(I,J)-1
+      ITYPEV(I,J,K)=0
+      ENDDO
+      IF (NXV(I,J) .GE. 1) ITYPEV(I,J,NXV(I,J)) = -1
+      IF (NXV(I,J) .EQ. 0) ITYPEV(I,J,1) = -1
+
+      ENDDO
+      ENDDO
+
+      DO K=2,maxtopo
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I-1,J,K) .EQ. 1) THEN
+!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I+1,J,K) ) THEN
+      ITYPEU(I-1,J,K) = -1
+!      ITYPEV(I-1,J,K) = -1
+      ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I+1,J,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I-1,J,K) .GT. ITYPEW(I,J,K) ) THEN
+      ITYPEU(I,J,K) = -1
+      ITYPEV(I,J,K) = -1
+      ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J-1,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I,J+1,K) ) THEN
+!      ITYPEU(I,J-1,K) = -1
+      ITYPEV(I,J-1,K) = -1
+      ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J+1,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I,J-1,K) .GT. ITYPEW(I,J,K) ) THEN
+      ITYPEU(I,J,K) = -1
+      ITYPEV(I,J,K) = -1
+      ENDIF
+
+      ENDDO
+      ENDDO
+      ENDDO
+
+      DO J=2,mj_glob-1
+      DO I=2,mi_glob-1
+
+      IF (ITYPEU(I,J,2) .NE. 1 ) THEN
+      ITYPEU(I,J,1) = 0
+      ENDIF
+      IF (ITYPEV(I,J,2) .NE. 1 ) THEN
+      ITYPEU(I,J,1) = 0
+      ENDIF
+
+      ENDDO
+      ENDDO
+
+! easy boundary condition
+      DO K=1,maxtopo
+      DO J=1,mj_glob
+      ITYPEU(1,J,K) = ITYPEU(mi_glob-1,J,K)
+      ITYPEU(mi_glob,J,K) = ITYPEU(2,J,K)
+      ITYPEV(1,J,K) = ITYPEV(mi_glob-1,J,K)
+      ITYPEV(mi_glob,J,K) = ITYPEV(2,J,K)
+      ITYPEW(1,J,K) = ITYPEW(mi_glob-1,J,K)
+      ITYPEW(mi_glob,J,K) = ITYPEW(2,J,K)
+      ENDDO
+ 
+      DO I=1,mi_glob
+      ITYPEU(I,1,K) = ITYPEU(I,mj_glob-1,K)
+      ITYPEU(I,mj_glob,K) = ITYPEU(I,2,K)
+      ITYPEV(I,1,K) = ITYPEV(I,mj_glob-1,K)
+      ITYPEV(I,mj_glob,K) = ITYPEV(I,2,K)
+      ITYPEW(I,1,K) = ITYPEW(I,mj_glob-1,K)
+      ITYPEW(I,mj_glob,K) = ITYPEW(I,2,K)
+      ENDDO
+      ENDDO
 
 
 !      OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
@@ -276,7 +388,11 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)')
      1 'RUNDATA/TOPO',IP,'_',JP,'.dat'
       OPEN(unit=16,file=FILENAME,form='unformatted')
-      WRITE(16) ((DBLE(HX(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) maxtopo
+      WRITE(16) ((HX(I,J),I=II,IE),J=JI,JE)
+      WRITE(16) (((ITYPEU(I,J,K),I=II,IE),J=JI,JE),K=1,NK2)
+      WRITE(16) (((ITYPEV(I,J,K),I=II,IE),J=JI,JE),K=1,NK2)
+      WRITE(16) (((ITYPEW(I,J,K),I=II,IE),J=JI,JE),K=1,NK2)
       CLOSE(16) 
       WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)')
      1 'RUNDATA/LSM',IP,'_',JP,'.dat'
@@ -292,15 +408,31 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       CLOSE(16)
   900 CONTINUE
 
+      DO I=1,mi_glob
+      DO J=1,mj_glob
+      TMP =(HX(I,J)-NHX(I,J))*(ZZ(NHX(I,J)+1)-ZZ(NHX(I,J)))
+      HX(I,J)=ZZ(NHX(I,J)) + TMP
+
+      ENDDO
+      ENDDO
+
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
 
+      ierr = nf_def_dim(ncid, "z", NK2, idz)
       ierr = nf_def_dim(ncid, "y", MJ_GLOB, idy)
       ierr = nf_def_dim(ncid, "x", MI_GLOB, idx)
       print*,'ERRor', nf_strerror(ierr)
 
+      nlid(3) = idz
       nlid(2) = idy
       nlid(1) = idx
+
+
+      ierr = nf_def_var(ncid, "height", NF_FLOAT, 1, nlid(3), nheight)
+      ierr = nf_put_att_text(ncid, nheight, 'long_name',1 , 'z')
+      ierr = nf_put_att_text(ncid, nheight, 'units',13, 'degrees_north')
+      print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_def_var(ncid, "lat", NF_FLOAT, 1, nlid(2), nlat)
       ierr = nf_put_att_text(ncid, nlat, 'long_name',1 , 'y')
@@ -312,7 +444,16 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_put_att_text(ncid, nlon, 'units',12, 'degrees_east')
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_def_var(ncid, "TOPO", NF_FLOAT, 2, nlid, ntopo)
+      ierr = nf_def_var(ncid, "TOPO", NF_double, 2, nlid, ntopo)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "u_mask", NF_INT, 3, nlid, numask)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "v_mask", NF_INT, 3, nlid, nvmask)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "th_mask", NF_INT, 3, nlid, nthmask)
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_def_var(ncid, "albedo", NF_FLOAT, 2, nlid, nalb)
@@ -342,16 +483,26 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
 
+      ierr = nf_put_var_real(ncid, nheight, ZT)
+      print*,'ERRor', nf_strerror(ierr)
+
       ierr = nf_put_var_real(ncid, nlat, yt)
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_put_var_real(ncid, nlon, xt)
       print*,'ERRor', nf_strerror(ierr)
 
-
-      ierr = nf_put_var_real(ncid, ntopo, HX)
+      ierr = nf_put_var_double(ncid, ntopo, HX)
       print*,'ERRor', nf_strerror(ierr)
 
+      ierr = nf_put_var_int(ncid, numask, ITYPEU)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_put_var_int(ncid, nvmask, ITYPEV)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_put_var_int(ncid, nthmask, ITYPEW)
+      print*,'ERRor', nf_strerror(ierr)
       ierr = nf_put_var_real(ncid, nalb, alb)
       print*,'ERRor', nf_strerror(ierr)
       ierr = nf_put_var_real(ncid, ngrf, grf)
@@ -368,7 +519,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       print*,'ERRor', nf_strerror(ierr)
       ierr = nf_put_var_real(ncid, nsoil, soil)
       print*,'ERRor', nf_strerror(ierr)
-
 
       ierr = nf_close(ncid)
       print*,'ERRor', nf_strerror(ierr)

@@ -543,16 +543,14 @@ CONTAINS
 !      DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-
       PRINT*,FILENAME
-
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+      READ(99) maxtopo
       READ(99) ((HX(I,J),I=1,MI1),J=1,MJ1)
+      READ(99) (((ITYPEU(I,J,K),I=1,MI1),J=1,MJ1),K=1,NK2)
+      READ(99) (((ITYPEV(I,J,K),I=1,MI1),J=1,MJ1),K=1,NK2)
+      READ(99) (((ITYPEW(I,J,K),I=1,MI1),J=1,MJ1),K=1,NK2)
       CLOSE(99)
-
-      tmp = maxval(HX)
-      CALL MPI_ALLREDUCE(tmp,H,1,MPI_dbl_kind, MPI_MAX, MPI_COMM_WORLD, mpierr)
-      maxtopo=INT(H) + 1
 
       call bound_arb(1,HX)
 
@@ -578,70 +576,7 @@ CONTAINS
       ENDDO
       ENDDO
 
-      DO J=1,MJ1
-      DO I=1,MI1
-      DO K=1,NHX(I,J)
-      ITYPEW(I,J,K)=0
-      ENDDO
-
-      DO K=1,NXU(I,J)-1
-      ITYPEU(I,J,K)=0
-      ENDDO
-      IF (NXU(I,J) .GE. 1) ITYPEU(I,J,NXU(I,J)) = -1
-      IF (NXU(I,J) .EQ. 0) ITYPEU(I,J,1) = -1
-
-      DO K=1,NXV(I,J)-1
-      ITYPEV(I,J,K)=0
-      ENDDO
-      IF (NXV(I,J) .GE. 1) ITYPEV(I,J,NXV(I,J)) = -1
-      IF (NXV(I,J) .EQ. 0) ITYPEV(I,J,1) = -1
-
-      ENDDO
-      ENDDO
-
       call bound_int_arb(NK2,ITYPEW)
-
-      DO K=2,maxtopo
-      DO J=1,mjp
-      DO I=1,mip
-      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I-1,J,K) .EQ. 1) THEN
-!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I+1,J,K) ) THEN
-      ITYPEU(I-1,J,K) = -1
-!      ITYPEV(I-1,J,K) = -1
-      ENDIF
-      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I+1,J,K) .EQ. 1 ) THEN
-!      IF (ITYPEW(I-1,J,K) .GT. ITYPEW(I,J,K) ) THEN
-      ITYPEU(I,J,K) = -1
-      ITYPEV(I,J,K) = -1
-      ENDIF
-      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J-1,K) .EQ. 1 ) THEN
-!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I,J+1,K) ) THEN
-!      ITYPEU(I,J-1,K) = -1
-      ITYPEV(I,J-1,K) = -1
-      ENDIF
-      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J+1,K) .EQ. 1 ) THEN
-!      IF (ITYPEW(I,J-1,K) .GT. ITYPEW(I,J,K) ) THEN
-      ITYPEU(I,J,K) = -1
-      ITYPEV(I,J,K) = -1
-      ENDIF
-
-      ENDDO
-      ENDDO
-      ENDDO
-
-      DO J=1,mjp
-      DO I=1,mip
-
-      IF (ITYPEU(I,J,2) .NE. 1 ) THEN
-      ITYPEU(I,J,1) = 0
-      ENDIF
-      IF (ITYPEV(I,J,2) .NE. 1 ) THEN
-      ITYPEU(I,J,1) = 0
-      ENDIF
-
-      ENDDO
-      ENDDO
-
       call bound_int_arb(NK2,ITYPEU)
       call bound_int_arb(NK2,ITYPEV)
 

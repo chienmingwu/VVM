@@ -871,6 +871,8 @@ CONTAINS
 #if defined (LSM) 
       INTEGER (KIND=int_kind) :: ivar ! index for LSM masking out
 #endif
+
+
       INTEGER (KIND=int_kind)     ::   &
          n2, &
          itp1, itp5  ! logical unit numbers
@@ -1084,7 +1086,8 @@ CONTAINS
 !      STD_LSM(I,J,63)=STD_LSM(I,J,63)+lNROOT(I,J)
 !      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
 !========
-      ENDIF
+
+      ENDIF !easy
  1227 CONTINUE
 
 #endif

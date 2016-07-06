@@ -7,6 +7,7 @@ USE parmsld
 USE constld
 USE domain_decomposition
 USE rrtm_vars, only: sstxy,albdo
+USE OUTPUT_NC, only: realval
 !===hchun=================================
 USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
@@ -146,7 +147,7 @@ CONTAINS
       SPRECi = real(SPREC)
       SFCSPDi =real(SFCSPD)
 
-      if (ni_sbdm .eq. 3 ) PRINT*, SFCSPDi(10,10),SPRECi(10,10)
+!      if (ni_sbdm .eq. 3 ) PRINT*, SFCSPDi(10,10),SPRECi(10,10)
 
       CALL LSM_DRV(SFCSPDi,T2i,Q2i,swD,lwD,SPRECi,WQi,WTi, &
 ! LSM inout variables
@@ -436,7 +437,7 @@ CONTAINS
          lSNEQV      = -9.9999996E+35
          lALBEDO     = -9.9999996E+35
          lCH         = -9.9999996E+35
-         lETA        = -9.9999996E+35
+         lETA        = realval!-9.9999996E+35
          lFDOWN      = -9.9999996E+35
          lEC         = -9.9999996E+35
          lEDIR       = -9.9999996E+35
@@ -481,8 +482,7 @@ CONTAINS
    albdo = lALBEDO
 !   sstxy = lT1
 
-
-!easy define surface temperature and albedo over water surface. 
+!easy define surface temperature and albedo over water surface.
 !note that TG must equal to lT1 in order to compute the sflux_2d i
    DO J=1,MJ1
    DO I=1,MI1

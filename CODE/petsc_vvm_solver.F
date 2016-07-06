@@ -150,7 +150,7 @@ Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
 PetscInt, PRIVATE:: MXIT = 2000
-PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-9,dtol_Conti = 1.d2
+PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
 PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-6,dtol_TopPsi = 1.d2
 PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-6,dtol_TopChi = 1.d2
 !PetscViewer viewer
@@ -204,8 +204,6 @@ SUBROUTINE petsc_solver_initialize
     call MatCreateAIJ(MPI_COMM_WORLD,npt/np,npt/np,npt,npt,7, &
          PETSC_NULL_INTEGER,5,PETSC_NULL_INTEGER,Cmat,ierr)
     call OperatorConti(Cmat)
-
-    PRINT*,'90009090'
 
 ! http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP
 ! Connect KSP with DM grid -- KSPSetDM
@@ -505,9 +503,9 @@ PetscReal norm
       IF ( MY_TASK .EQ. 0) THEN
       call KSPGetIterationNumber(Toppsi,its,ierr)
       call KSPGetResidualNorm(Toppsi,norm,ierr)
-      write(6,100) norm,its,vsum
+      write(6,100) norm,its
       ENDIF
- 100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
+ 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
 
       call vecsum(v1,vsum,ierr)
 !      call vecshift(v1,vsum*tpts, ierr)
@@ -558,9 +556,9 @@ PetscReal norm
       IF ( MY_TASK .EQ. 0) THEN
       call KSPGetIterationNumber(Topchi,its,ierr)
       call KSPGetResidualNorm(Topchi,norm,ierr)
-      write(6,100) norm,its,vsum
+      write(6,100) norm,its
       ENDIF
- 100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
+ 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
 
       call vecsum(v2,vsum,ierr)
 !      call vecshift(v2,vsum*tpts,ierr)
