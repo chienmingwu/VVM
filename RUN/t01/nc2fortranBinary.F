@@ -29,6 +29,9 @@
       integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope, 
      1        nsoil, nlon, nlat, nheight, numask, nvmask, nthmask
 
+! radiation input
+      integer nsl,nas 
+
       integer i,j,k,nn,ierr
 
       integer NLID(3)
@@ -56,6 +59,9 @@
      1 itypev(MI_GLOB,MJ_GLOB,NK2),itypeW(MI_GLOB,MJ_GLOB,NK2),
      1 NHX(MI_GLOB,MJ_GLOB),NXU(MI_GLOB,MJ_GLOB), NXV(MI_GLOB,MJ_GLOB)
      
+      real (kind=dbl_kind) :: a1, a2, b1, b2, s1, s2, aae, aas
+      real (kind=int_kind) , dimension(mi_glob,mj_glob):: sl, as
+
       R = 6378137.0
       ZB = 0. 
       PI = 3.14159265358979323846264338327 
@@ -374,7 +380,6 @@
       ENDDO
       ENDDO
 
-
 !      OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
 !      WRITE(16)HX 
 !      CLOSE(16)
@@ -415,6 +420,39 @@
 
       ENDDO
       ENDDO
+! add Wei-liang radiation input
+      do j = 1, mj_glob
+      do i = 1, mi_glob
+        a1 = hx(i-1,j-1) + 2*hx(i-1,j) + hx(i-1,j+1)
+        a2 = hx(i+1,j-1) + 2*hx(i+1,j) + hx(i+1,j+1)
+        b1 = (a1-a2) / 4 / dynew
+        a1 = hx(i-1,j-1) + 2*hx(i,j-1) + hx(i+1,j-1)
+        a2 = hx(i-1,j+1) + 2*hx(i,j+1) + hx(i+1,j+1)
+        b2 = (a1-a2) / 4 / dx
+
+        s2 = sqrt(b1**2+b2**2)
+        sl(i,j) = atan(s2) / pi * 180
+c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
+        as(i,j) = atan2(b2,b1) / pi * 180
+      enddo
+      enddo
+      where (as < 0) as = as + 360
+      where (as > 360) as = as - 360
+
+      DO 950 JP = 1,nsbdm_y
+      JI = (JP-1)*MJ1+1
+      JE = (JP)*MJ1
+      DO 950 IP = 1,nsbdm_x
+      II = (IP-1)*MI1+1
+      IE = (IP)*MI1
+      WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)')
+     1 'RUNDATA/LSM',IP,'_',JP,'.dat'
+      OPEN(unit=16,file=FILENAME,form='unformatted')
+      WRITE(16) (((sl(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((as(I,J)),I=II,IE),J=JI,JE)
+      CLOSE(16)
+  950 CONTINUE
+  
 
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
@@ -480,6 +518,12 @@
       ierr = nf_def_var(ncid, "SOIL", NF_FLOAT, 2, nlid, nsoil)
       print*,'ERRor', nf_strerror(ierr)
 
+      ierr = nf_def_var(ncid, "SLOPE_angle", NF_FLOAT, 2, nlid, nsl)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "ASPECT_angle", NF_FLOAT, 2, nlid, nas)
+      print*,'ERRor', nf_strerror(ierr)
+
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
 
@@ -518,6 +562,11 @@
       ierr = nf_put_var_real(ncid, nslope, slope)
       print*,'ERRor', nf_strerror(ierr)
       ierr = nf_put_var_real(ncid, nsoil, soil)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_put_var_real(ncid, nsl, sl)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nas, as)
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_close(ncid)
