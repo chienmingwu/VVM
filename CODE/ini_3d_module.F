@@ -623,6 +623,18 @@ CONTAINS
 #else
       hx=1
       maxtopo=2
+
+      DO J=mjm,mjp
+      DO I=mim,mip
+        
+      ITYPEU(I,J,1) = 0
+      ITYPEV(I,J,1) = 0
+      ITYPEW(I,J,1) = 0
+
+      ENDDO
+      ENDDO
+
+
 #endif
 
       ENDSUBROUTINE PTSPEC
