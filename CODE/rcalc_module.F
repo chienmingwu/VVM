@@ -48,8 +48,8 @@ CONTAINS
 !-----------------------------------------------------------------------
 
       call timer_start('advection')
-!      CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
-      CALL ADVEC_Q3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
+      CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
+!      CALL ADVEC_Q3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
 
 #if defined (PHYSICS)
 !easy use MPDATA 

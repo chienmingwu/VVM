@@ -700,8 +700,10 @@ CONTAINS
 !      tmp = 1.
       DO 100 J = 1, MJ1
       DO 100 I = 1, MI1
+      IF (ITYPEW(I,J,K) .eq. 1) THEN
       tem(1) = tem(1) + tmp*A(I,J,K)
       tem(2) = tem(2) + tmp*MIN(0.,A(I,J,K))
+      ENDIF
   100 CONTINUE
       CALL MPI_ALLREDUCE(tem,sum,2,MPI_dbl_kind, MPI_SUM, MPI_COMM_WORLD, mpierr)
 
@@ -714,7 +716,7 @@ CONTAINS
       DO 200 J = 1, MJ1
       DO 200 I = 1, MI1
 !      tem(1) = tem(1) + A(I,J,K)
-      A(I,J,K) = tmp*MAX(0.,A(I,J,K))
+      IF (ITYPEW(I,J,K) .eq. 1) A(I,J,K) = tmp*MAX(0.,A(I,J,K))
   200 CONTINUE
 
 !      tem(2) = 0.
