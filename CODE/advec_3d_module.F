@@ -157,28 +157,26 @@ CONTAINS
       terma(I,J,K)=terma(I,J,K)-(FLXI(I,J,K)-FLXI(I,J-1,K))/(2.*DYNEW)
   450 CONTINUE
 
-!     Vertical advection
-
-      DO 520 K=2,NK1
+      DO 520 K=1,NK1
       DO 520 J=1,MJ1
       DO 520 I=1,MI1
       TEMPI(I,J,K)=W3D(I,J,K)*RHOZ(K)
   520 CONTINUE
 
-      DO 530 K=2,NK1
+      DO 530 K=1,NK1
       DO 530 J=1,MJ1
       DO 530 I=1,MI1
       UPI(I,J,K)=0.5*(TEMPI(I,J,K)+ABS(TEMPI(I,J,K)))
       UMI(I,J,K)=0.5*(TEMPI(I,J,K)-ABS(TEMPI(I,J,K)))
   530 CONTINUE
-      DO 537 K=2,NK1
+      DO 537 K=1,NK1
       DO 537 J=1,MJ1
       DO 537 I=1,MI1
       UPSRI(I,J,K)=SQRT(UPI(I,J,K))
       UMSRI(I,J,K)=SQRT(ABS(UMI(I,J,K)))
   537 CONTINUE
 
-      DO 540 K=3,NK1-1
+      DO 540 K=2,NK1-1
       DO 540 J=1,MJ1
       DO 540 I=1,MI1
       FLXI(I,J,K)=TEMPI(I,J,K)*(Q(I,J,K+1)+Q(I,J,K))       &
@@ -198,18 +196,18 @@ CONTAINS
          FLXi(I,J,NK1)=TEMPI(I,J,NK1)*(Q(I,J,NK2)+Q(I,J,NK1))
       ENDIF
 
-      IF(TEMPI(I,J,2).GE.0.) THEN
-         FLXI(I,J,2)=TEMPI(I,J,2)*(Q(I,J,3)+Q(I,J,2))
+      IF(TEMPI(I,J,1).GE.0.) THEN
+         FLXI(I,J,1)=TEMPI(I,J,1)*(Q(I,J,2)+Q(I,J,1))
       ELSE
-         FLXI(I,J,2)=TEMPI(I,J,2)*(Q(I,J,3)+Q(I,J,2))  &
-           -ALADV*(UMI(I,J,2)*(Q(I,J,2)-Q(I,J,3))    &
-           +UMSRI(I,J,2)*UMSRI(I,J,3)*(Q(I,J,3)-Q(I,J,4)))/3.
+         FLXI(I,J,1)=TEMPI(I,J,1)*(Q(I,J,2)+Q(I,J,1))  &
+           -ALADV*(UMI(I,J,1)*(Q(I,J,1)-Q(I,J,2))    &
+           +UMSRI(I,J,1)*UMSRI(I,J,2)*(Q(I,J,2)-Q(I,J,3)))/3.
       ENDIF
   545 CONTINUE
 
       DO 547 J=1,MJ1
       DO 547 I=1,MI1
-      FLXI(I,J, 1)= 0.
+!      FLXI(I,J, 1)= 0.
       FLXI(I,J,NK2)= 0.
   547 CONTINUE
 
@@ -556,10 +554,10 @@ CONTAINS
  !     most likely truncation error.
 !      Q(i,j,k)=max(0.,Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
 !                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(K))
-      Q(i,j,k)=max(0.d0, Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
-                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ))
-!      Q(i,j,k)= Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
-!                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)
+!      Q(i,j,k)=max(0.d0, Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
+!                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ))
+      Q(i,j,k)= Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
+                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)
 
   800 CONTINUE
 !      ENDIF

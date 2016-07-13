@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = MPDATA-gate2
+set expname = MPDATA-gate-q3
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -67,10 +67,10 @@ sed -e '1,$s/zonal_dimension/128/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=86400 /
+ &INPUT1 NEWRUN=T, ITTADD=360 /
  &INPUT2 RLAT=15. /
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360 /
+ &INPUT4 NXS=1,NXSAVG=5,NWR11=1,NFLPRT=1,NRESTART=5 /
  &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,SOLVAR=F /
 'END6'
 cat INPUT
