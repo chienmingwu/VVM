@@ -69,9 +69,12 @@
 #-----------------------------------------------------------------------------
 # specify the shell to avoid surprises in weird environments
 SHELL	= /bin/csh
+#easy petsc directory 
+PNETCDF          = /home/j40mog00/pnetcdf
+PETSC_DIR        = /home/j40mog00/petsc360
+FORTRAN_COMPLIER = mpif90
 
-PETSC_DIR        = /opt/petsc-intel
-include ${PETSC_DIR}/conf/variables
+include ${PETSC_DIR}/lib/petsc/conf/variables
 #-----------------------------------------------------------------------------
 # Read the universal makefile to define the processor-dependent information
 #-----------------------------------------------------------------------------
@@ -166,13 +169,12 @@ clobber :
 	rm -f *.o $(BINDIR)/*.$(SUF) *.h *.mod $(MAIN)
 #	echo $(OBJS)
 topography :
-	ifort -c ../../CODE/RRTMG/kinds.F -free 
-	${CPP} -p $(BINDIR)/PARMSLD.f90 > PARMSLD.f	
+	ifort -c ../../CODE/RRTMG/kinds.F -free
+	${CPP} -p $(BINDIR)/PARMSLD.f90 > PARMSLD.f
 	ifort -c PARMSLD.f -free
 	${CPP} -p nc2fortranBinary.F > nc2fortranBinary.f
-	ifort -c nc2fortranBinary.f  -I/opt/netcdf4-intel/include
-	ifort -o $(BINDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o -L/opt/netcdf4-intel/lib -lnetcdf -lnetcdff 
-#	$(CPP) -p nc2fortranBinary.F > nc2fortranBinary.f
-#	ifort -c nc2fortranBinary.f -L/opt/netcdf4-intel/lib -lnetcdf -lnetcdff
+	ifort -c nc2fortranBinary.f  -I$(NETCDF)/include
+	ifort -o $(BINDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o -L$(NETCDF)/lib -lnetcdf -lnetcdff
+
 
 

@@ -5,8 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = puli_sub_partial3
+set expname = puli_sub_partial5
 
+source /pkg/local/Modules/3.2.10/init/csh
+module load compiler/intel/2016
+module load netcdf/4.4.0/intel-2016
 # hardscrabble configuration
 set subdir = '../..'
 

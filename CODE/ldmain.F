@@ -121,15 +121,14 @@ PROGRAM ldmain
 !      call MPI_INIT(mpierr)
     CALL PetscInitialize(PETSC_NULL_CHARACTER,mpierr)
     call domain_init
-
     call timer_start('total vvm')
+
 
     call timer_start('initialize')
     CALL INPUT_3D ( ITT )
     call timer_stop('initialize')
 
     if(my_task == 0) write(6,*) 'ITTOUT=',ITT
-
       !  Initialization
     IF (ITT .EQ. 0) THEN
 
@@ -259,6 +258,8 @@ PROGRAM ldmain
 
     call timer_stop('total vvm')
     if(my_task == 0) call timer_write('vvm')
+
+
 !-----------------------------------------------------------------------
     CALL petsc_solver_finalize
     CALL PETSCFINALIZE(mpierr)
