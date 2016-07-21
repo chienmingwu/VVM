@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = shadowPulis5_3
+set expname = shadowPulis5_r
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -95,7 +95,8 @@ cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
-./nc2fortranBinary > tmp.out
+./nc2fortranBinary
+#> tmp.out
 
 
 # GLDAS

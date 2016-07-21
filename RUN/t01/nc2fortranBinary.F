@@ -8,7 +8,7 @@
       parameter (FILE_NAME=
      1 '../../RUNDATA/ASTER_GDEM_TWTOPO/data/Taiwan_30m_topo.nc')
 
-      character(23) FILENAME
+      character(27) FILENAME
 
       integer NX, NY
       parameter (NX = 1024, NY = 1024)
@@ -61,6 +61,13 @@
      
       real (kind=dbl_kind) :: a1, a2, b1, b2, s1, s2, aae, aas
       real (kind=int_kind) , dimension(mi_glob,mj_glob):: sl, as
+
+! Wei-Liang shadow effect input
+      integer (kind=int_Kind), PARAMETER:: NDA = 18
+      real (kind=int_kind):: 
+     1           svf(mi_glob,mj_glob),  ! sky view factor
+     1           tcf(mi_glob,mj_glob),  ! terrain configuration factor
+     1           hor(nda,mi_glob,mj_glob)  ! zenith angle of horizons of sectors
 
       R = 6378137.0
       ZB = 0. 
@@ -420,9 +427,16 @@
 
       ENDDO
       ENDDO
+
 ! add Wei-liang radiation input
-      do j = 1, mj_glob
-      do i = 1, mi_glob
+      open(21, file='/data/W.easy/shadow/ideal/Puli.svf.bin',
+     1 form='unformatted', status='old')
+      read(21) svf
+      read(21) tcf
+      read(21) hor
+      close(21)
+      do j = 2,mj_glob-1
+      do i = 2,mi_glob-1
         a1 = hx(i-1,j-1) + 2*hx(i-1,j) + hx(i-1,j+1)
         a2 = hx(i+1,j-1) + 2*hx(i+1,j) + hx(i+1,j+1)
         b1 = (a1-a2) / 4 / dynew
@@ -439,21 +453,27 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       where (as < 0) as = as + 360
       where (as > 360) as = as - 360
 
+
+      IF (.true.) THEN
+
       DO 950 JP = 1,nsbdm_y
       JI = (JP-1)*MJ1+1
       JE = (JP)*MJ1
       DO 950 IP = 1,nsbdm_x
       II = (IP-1)*MI1+1
       IE = (IP)*MI1
-      WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)')
-     1 'RUNDATA/LSM',IP,'_',JP,'.dat'
+      WRITE(FILENAME,'(A14,I3.3,A1,I3.3,A4)')
+     1 'RUNDATA/SHADOW',IP,'_',JP,'.dat'
       OPEN(unit=16,file=FILENAME,form='unformatted')
-      WRITE(16) (((sl(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((as(I,J)),I=II,IE),J=JI,JE)
+      PRINT*, FILENAME
+      write(16) (((sl(I,J)),I=II,IE),J=JI,JE)
+      write(16) (((as(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((svf(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((tcf(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((hor(K,I,J),I=II,IE),J=JI,JE),K=1,NDA)
       CLOSE(16)
   950 CONTINUE
-  
-
+      ENDIF
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
 
