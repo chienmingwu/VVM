@@ -56,6 +56,17 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
           PIBAR, &  ! Exner function at model layers
           RHO       ! Density at model layers
 
+! Wei-Liang shadow effect 
+      character(27) FILENAME
+      real (kind=dbl_kind) , dimension(nx,ny):: sl, as
+
+! Wei-Liang shadow effect input
+      integer (kind=int_Kind), PARAMETER:: NDA = 18
+      real (kind=int_kind):: &
+                svf(nx,ny), & ! sky view factor
+                tcf(nx,ny), & ! terrain configuration factor
+                hor(nda,nx,ny)  ! zenith angle of horizons of secto
+
 !------------------------------------------------------------------
 ! Local variables
 !------------------------------------------------------------------
@@ -72,7 +83,7 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
           lon       ! longitudes (radians)
 
       INTEGER (KIND=int_kind) :: &
-          I,J,K,m, &
+          I,J,K,m, II,IE,JI,JE, &
           KRAD,    &
           CU_ITT = -1 ! Mars add to prevent too much rad
       REAL (KIND=dbl_kind), PARAMETER :: &
@@ -200,6 +211,17 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
 
 ! Read in trace gases
       CALL trace_gas_input(MI1, MJ1, NK2-1, PBAR(2:NK3-1), PBARZ)
+
+      WRITE(FILENAME,'(A14,I3.3,A1,I3.3,A4)') &
+      'RUNDATA/SHADOW',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      PRINT*,FILENAME
+      OPEN(unit=18,file=FILENAME,form='unformatted',STATUS='OLD')
+      READ(18) (((sl(I,J)),I=1,MI1),J=1,MJ1)
+      READ(18) (((as(I,J)),I=1,MI1),J=1,MJ1)
+      READ(18) (((svf(I,J)),I=1,MI1),J=1,MJ1)
+      READ(18) (((tcf(I,J)),I=1,MI1),J=1,MJ1)
+      READ(18) (((hor(K,I,J),K=1,NDA),I=1,MI1),J=1,MJ1)
+      CLOSE(18)
 
    SELECT CASE(trim(casename))
       CASE ('TWP-ICE')
