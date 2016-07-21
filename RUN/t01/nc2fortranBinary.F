@@ -8,7 +8,7 @@
       parameter (FILE_NAME=
      1 '../../RUNDATA/ASTER_GDEM_TWTOPO/data/Taiwan_30m_topo.nc')
 
-      character(23) FILENAME
+      character(27) FILENAME
 
       integer NX, NY
       parameter (NX = 2405, NY = 4805)
@@ -55,7 +55,18 @@
       INTEGER (kind=int_kind) maxtopo,itypeu(MI_GLOB,MJ_GLOB,NK2),
      1 itypev(MI_GLOB,MJ_GLOB,NK2),itypeW(MI_GLOB,MJ_GLOB,NK2),
      1 NHX(MI_GLOB,MJ_GLOB),NXU(MI_GLOB,MJ_GLOB), NXV(MI_GLOB,MJ_GLOB)
-     
+! radiation input
+      integer nsl,nas
+      real (kind=dbl_kind) :: a1, a2, b1, b2, s1, s2, aae, aas
+      real (kind=int_kind) , dimension(mi_glob,mj_glob):: sl, as
+      integer (kind=int_Kind), PARAMETER:: NDA = 18
+      real (kind=int_kind)::
+     1           svf(mi_glob,mj_glob),  ! sky view factor
+     1           tcf(mi_glob,mj_glob),  ! terrain configuration factor
+     1           hor(nda,mi_glob,mj_glob)  ! zenith angle of horizons of sectors
+
+
+ 
       R = 6378137.0
       ZB = 0. 
       PI = 3.14159265358979323846264338327 
@@ -393,12 +404,54 @@
       CLOSE(16)
   900 CONTINUE
 
-!      DO I=1,mi_glob
-!      DO J=1,mj_glob
-!      TMP =(HX(I,J)-NHX(I,J))*(ZZ(NHX(I,J)+1)-ZZ(NHX(I,J)))
-!      HX(I,J)=ZZ(NHX(I,J)) + TMP
-!      ENDDO
-!      ENDDO
+      DO I=1,mi_glob
+      DO J=1,mj_glob
+      TMP =(HX(I,J)-NHX(I,J))*(ZZ(NHX(I,J)+1)-ZZ(NHX(I,J)))
+      HX(I,J)=ZZ(NHX(I,J)) + TMP
+      ENDDO
+      ENDDO
+
+! add Wei-liang radiation input
+      open(21, file='/data/W.easy/shadow/Taiwan/Taiwan.svf.500m.bin',
+     1 form='unformatted', status='old')
+      read(21) svf
+      read(21) tcf
+      read(21) hor
+      close(21)
+      do j = 2,mj_glob-1
+      do i = 2,mi_glob-1
+        a1 = hx(i-1,j-1) + 2*hx(i-1,j) + hx(i-1,j+1)
+        a2 = hx(i+1,j-1) + 2*hx(i+1,j) + hx(i+1,j+1)
+        b1 = (a1-a2) / 4 / dynew
+        a1 = hx(i-1,j-1) + 2*hx(i,j-1) + hx(i+1,j-1)
+        a2 = hx(i-1,j+1) + 2*hx(i,j+1) + hx(i+1,j+1)
+        b2 = (a1-a2) / 4 / dx
+
+        s2 = sqrt(b1**2+b2**2)
+        sl(i,j) = atan(s2) / pi * 180
+c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
+        as(i,j) = atan2(b2,b1) / pi * 180
+      enddo
+      enddo
+      where (as < 0) as = as + 360
+      where (as > 360) as = as - 360
+
+      DO 950 JP = 1,nsbdm_y
+      JI = (JP-1)*MJ1+1
+      JE = (JP)*MJ1
+      DO 950 IP = 1,nsbdm_x
+      II = (IP-1)*MI1+1
+      IE = (IP)*MI1
+      WRITE(FILENAME,'(A14,I3.3,A1,I3.3,A4)')
+     1 'RUNDATA/SHADOW',IP,'_',JP,'.dat'
+      OPEN(unit=16,file=FILENAME,form='unformatted')
+      write(16) (((sl(I,J)),I=II,IE),J=JI,JE)
+      write(16) (((as(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((svf(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((tcf(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((hor(K,I,J),I=II,IE),J=JI,JE),K=1,NDA)
+      CLOSE(16)
+  950 CONTINUE
 
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
