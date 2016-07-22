@@ -317,8 +317,8 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
         FTHRAD(I,J,K)  = qrad(I,J,K-1) / PIBAR(K)
         FULWO(I,J,K)   = lwUp_3d(I,J,K-1)
         FDLWO(I,J,K)   = lwDown_3d(I,J,K-1)
-        FUSWO(I,J,K)   = swUp_3d(I,J,K-1) + sw_dif_down_3d(I,J,K-1) !add diff
-        FDSWO(I,J,K)   = swDown_3d(I,J,K-1)
+        FUSWO(I,J,K)   = swUp_3d(I,J,K-1) 
+        FDSWO(I,J,K)   = swDown_3d(I,J,K-1) + sw_dif_down_3d(I,J,K-1) !add diff
         DTRADLW(I,J,K) = lwHeatingRate_3d(I,J,K-1)
         DTRADSW(I,J,K) = swHeatingRate_3d(I,J,K-1)
   140 CONTINUE
