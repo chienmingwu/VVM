@@ -132,7 +132,7 @@
                                  lwUp,lwDown,lwUpClearSky,lwDownClearSky, &
                                  swUp,swDown,swUpClearSky,swDownClearSky, &
                                  swHeatingRate, &
-                                 swHeatingRateClearSky, &
+                                 swHeatingRateClearSky, sw_dif_Down, &
                                  lwHeatingRate, &
                                  lwHeatingRateClearSky, &
                                  coszrs, &
@@ -224,7 +224,8 @@
          swUp, &            ! upward shortwave radiative flux (W/m2)
          swDown, &          ! downward shortwave radiative flux (W/m2)
          swUpClearSky, &    ! clearsky upward shortwave radiative flux (W/m2)
-         swDownClearSky     ! clearsky downward shortwave radiative flux (W/m2)
+         swDownClearSky, &  ! clearsky downward shortwave radiative flux (W/m2)
+         sw_dif_down        ! easy shadow effect 
 
 ! Heating rate outputs in K/day
       real (kind=kind_rb), intent(out), dimension(nx,nzm+1) :: &
@@ -503,7 +504,7 @@
         call albedo(ocean, albdo, real(solarZenithAngleCos(:)), &
              asdir(:), aldir(:), asdif(:), aldif(:))
                
-
+! easy with shadow effect output
         call rrtmg_sw(nx, nzm+1, overlap,                     & 
              layerP, interfaceP, layerT, interfaceT, surfaceT, &
              h2ovmr, o3vmr, co2vmr, ch4vmr, n2ovmr, o2vmr,     &
@@ -513,7 +514,8 @@
              dummyTauCloudSW, dummyCloudPropsSW, dummyCloudPropsSW, dummyCloudPropsSW, &
              IWP, LWP, iceRe, liquidRe,  &
              dummyAerosolProps, dummyAerosolProps, dummyAerosolProps, dummyAerosolProps2, &
-             swUp, swDown, swHeatingRate, swUpClearSky, swDownClearSky, swHeatingRateClearSky)
+             swUp, swDown, swHeatingRate, swUpClearSky, swDownClearSky, swHeatingRateClearSky, &
+             sw_dif_Down)
 
         if(lat.eq.1.AND.masterproc) then
           if(doshortwave) then 

@@ -58,7 +58,7 @@
 ! radiation input
       integer nsl,nas
       real (kind=dbl_kind) :: a1, a2, b1, b2, s1, s2, aae, aas
-      real (kind=int_kind) , dimension(mi_glob,mj_glob):: sl, as
+      real (kind=dbl_kind) , dimension(mi_glob,mj_glob):: sl, as
       integer (kind=int_Kind), PARAMETER:: NDA = 18
       real (kind=int_kind)::
      1           svf(mi_glob,mj_glob),  ! sky view factor
@@ -449,7 +449,7 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       write(16) (((as(I,J)),I=II,IE),J=JI,JE)
       WRITE(16) (((svf(I,J)),I=II,IE),J=JI,JE)
       WRITE(16) (((tcf(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((hor(K,I,J),I=II,IE),J=JI,JE),K=1,NDA)
+      WRITE(16) (((hor(K,I,J),K=1,NDA),I=II,IE),J=JI,JE)
       CLOSE(16)
   950 CONTINUE
 
@@ -464,7 +464,6 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       nlid(3) = idz
       nlid(2) = idy
       nlid(1) = idx
-
 
       ierr = nf_def_var(ncid, "height", NF_FLOAT, 1, nlid(3), nheight)
       ierr = nf_put_att_text(ncid, nheight, 'long_name',1 , 'z')

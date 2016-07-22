@@ -85,7 +85,8 @@
              taucld  ,ssacld  ,asmcld  ,fsfcld  , &
              cicewp  ,cliqwp  ,reice   ,reliq   , &
              tauaer  ,ssaaer  ,asmaer  ,ecaer   , &
-             swuflx  ,swdflx  ,swhr    ,swuflxc ,swdflxc ,swhrc)
+             swuflx  ,swdflx  ,swhr    ,swuflxc ,swdflxc ,swhrc, &
+             difdflux)
 
 ! ------- Description -------
 
@@ -413,7 +414,7 @@
       real(kind=rb) :: swnflx(nlay+2)         ! Total sky shortwave net flux (W/m2)
       real(kind=rb) :: swnflxc(nlay+2)        ! Clear sky shortwave net flux (W/m2)
       real(kind=rb) :: dirdflux(nlay+2)       ! Direct downward shortwave surface flux
-      real(kind=rb) :: difdflux(nlay+2)       ! Diffuse downward shortwave surface flux
+      real(kind=rb), intent(out) :: difdflux(nlay+2)       ! Diffuse downward shortwave surface flux
       real(kind=rb) :: uvdflx(nlay+2)         ! Total sky downward shortwave flux, UV/vis  
       real(kind=rb) :: nidflx(nlay+2)         ! Total sky downward shortwave flux, near-IR 
       real(kind=rb) :: dirdnuv(nlay+2)        ! Direct downward shortwave flux, UV/vis
