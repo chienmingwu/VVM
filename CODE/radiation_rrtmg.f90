@@ -67,6 +67,13 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
                 tcf(nx,ny), & ! terrain configuration factor
                 hor(nda,nx,ny)  ! zenith angle of horizons of secto
 
+      real (kind= dbl_kind) :: SZA, SAA, tt, pp, gg, decl, ha 
+      real (kind= dbl_kind), parameter ::  e00 = 229.18d0, &
+       ec0 =  0.000075d0, ec1 =  0.001868d0, ec2 = -0.014615d0, &
+       es1 = -0.032077d0, es2 = -0.040849d0, dc0 =  0.006918d0, &
+       dc1 = -0.399912d0, dc2 = -0.006758d0, dc3 = -0.002697d0, &
+       ds1 =  0.070257d0, ds2 =  0.000907d0, ds3 =  0.000148d0
+
 !------------------------------------------------------------------
 ! Local variables
 !------------------------------------------------------------------
@@ -236,7 +243,7 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       ENDDO
       CASE ('GATE_PHASE_III')
       DO k = 1, NK2-1
-!        o3(:,:,k) = O3BAR_gate(NK2-k+1)
+        !        o3(:,:,k) = O3BAR_gate(NK2-k+1)
       o3(:,:,k)= .4800E-07
       co2(:,:,k)=0.54e-3
       ch4(:,:,k)=0.94e-6
@@ -322,7 +329,22 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
         DTRADLW(I,J,K) = lwHeatingRate_3d(I,J,K-1)
         DTRADSW(I,J,K) = swHeatingRate_3d(I,J,K-1)
   140 CONTINUE
-  
+ 
+      if (my_task .eq. 0) PRINT*,'----',day0,day
+! easy direct modification
+      DO 141 J=1, MJ1
+      DO 141 I=1, MI1
+
+      decl = 0.! day 
+      ha = 2.d0*pi*(day-day0) ! time 
+      SZA = sin(lat)*sin(decl) + cos(lat)*cos(decl)*cos(ha)      
+      tt = acos(SZA)
+      pp = (sin(lat)*cos(tt)-sin(decl)) / (cos(lat)*sin(tt))
+      pp = acos(-pp)
+      SIA = SZA*cos(sl)+sin(tt)*sin(sl)*cos(pp-as)
+      SwDown_3d(I,J,NHX(I,J)) = SwDown_3d(I,J,NHX(I,J)) * SIA/SZA/cos(sl(I,J))
+      if (SIA .LE. 0.) SwDown_3d(I,J,NHX(I,J)) = 0.
+  141 CONTINUE
      
       DO 150 K = 1, NK1
       DO 150 J = 1, MJ1
@@ -371,3 +393,5 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
 
       RETURN
       END SUBROUTINE RADIATION_RRTMG
+
+
