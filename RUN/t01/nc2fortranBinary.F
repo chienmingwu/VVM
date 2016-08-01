@@ -27,8 +27,7 @@
 
       integer ncid, nvarid
       integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope, 
-     1        nsoil, nlon, nlat, nheight, numask, nvmask, nthmask,
-     1        nas, nsl
+     1        nsoil, nlon, nlat, nheight, numask, nvmask, nthmask
 
       integer i,j,k,nn,ierr
 
@@ -57,7 +56,7 @@
      1 itypev(MI_GLOB,MJ_GLOB,NK2),itypeW(MI_GLOB,MJ_GLOB,NK2),
      1 NHX(MI_GLOB,MJ_GLOB),NXU(MI_GLOB,MJ_GLOB), NXV(MI_GLOB,MJ_GLOB)
 ! radiation input
-      integer nsl,nas
+      integer nsl,nas,ntcf, nsvf
       real (kind=dbl_kind) :: a1, a2, b1, b2, s1, s2, aae, aas
       real (kind=dbl_kind) , dimension(mi_glob,mj_glob):: sl, as
       integer (kind=int_Kind), PARAMETER:: NDA = 18
@@ -523,7 +522,12 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       ierr = nf_def_var(ncid, "ASPECT_angle", NF_FLOAT, 2, nlid, nas)
       print*,'ERRor', nf_strerror(ierr)
 
+      ierr = nf_def_var(ncid, "terrain_configuration_factor", NF_FLOAT,
+     1                  2, nlid, ntcf)
+      print*,'ERRor', nf_strerror(ierr)
 
+      ierr = nf_def_var(ncid, "sky_view_factor", NF_FLOAT, 2, nlid,nsvf)
+      print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
@@ -564,11 +568,15 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       print*,'ERRor', nf_strerror(ierr)
       ierr = nf_put_var_real(ncid, nsoil, soil)
       print*,'ERRor', nf_strerror(ierr)
+
       ierr = nf_put_var_real(ncid, nsl, sl)
       print*,'ERRor', nf_strerror(ierr)
       ierr = nf_put_var_real(ncid, nas, as)
       print*,'ERRor', nf_strerror(ierr)
-
+      ierr = nf_put_var_real(ncid, ntcf, tcf)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nsvf, svf)
+      print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_close(ncid)
       print*,'ERRor', nf_strerror(ierr)
