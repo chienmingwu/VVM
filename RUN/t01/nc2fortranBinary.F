@@ -455,6 +455,29 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       where (as < 0) as = as + 360
       where (as > 360) as = as - 360
 
+
+      do j = 2,mj_glob-1
+        sl(1,j) = sl(mi_glob-1,j)
+        as(1,j) = as(mi_glob-1,j)
+        sl(mi_glob-1,j) = sl(2,j)
+        as(mi_glob-1,j) = as(2,j)
+        svf(1,j) = svf(mi_glob-1,j)
+        tcf(1,j) = tcf(mi_glob-1,j)
+        svf(mi_glob-1,j) = svf(2,j)
+        tcf(mi_glob-1,j) = tcf(2,j)
+      enddo
+
+      do i = 2,mi_glob-1
+        sl(i,1) = sl(i,mj_glob-1)
+        as(i,1) = as(i,mj_glob-1)
+        sl(i,mj_glob-1) = sl(i,2)
+        as(i,mj_glob-1) = as(i,2)
+        svf(i,1) = svf(i,mj_glob-1)
+        tcf(i,1) = tcf(i,mj_glob-1)
+        svf(i,mj_glob-1) = svf(i,2)
+        tvf(i,mj_glob-1) = tcf(i,2)
+      enddo
+
       DO 950 JP = 1,nsbdm_y
       JI = (JP-1)*MJ1+1
       JE = (JP)*MJ1

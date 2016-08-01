@@ -64,8 +64,8 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       integer (kind=int_Kind), PARAMETER:: NDA = 18
       real (kind=int_kind):: &
                 svf(nx,ny), & ! sky view factor
-                tcf(nx,ny), & ! terrain configuration factor
-                hor(nda,nx,ny)  ! zenith angle of horizons of secto
+                tcf(nx,ny)!, & ! terrain configuration factor
+! easy, if use hor application                hor(nda,nx,ny)  ! zenith angle of horizons of secto
 
       real (kind= dbl_kind) :: SZA, SAA, tt, ppp, gg, decl, ha, latt, lonn, eqtime 
       real (kind= dbl_kind), parameter ::  e00 = 229.18d0, &
@@ -227,7 +227,8 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       READ(18) (((as(I,J)),I=1,MI1),J=1,MJ1)
       READ(18) (((svf(I,J)),I=1,MI1),J=1,MJ1)
       READ(18) (((tcf(I,J)),I=1,MI1),J=1,MJ1)
-      READ(18) (((hor(K,I,J),K=1,NDA),I=1,MI1),J=1,MJ1)
+! easy, if use further application 
+!      READ(18) (((hor(K,I,J),K=1,NDA),I=1,MI1),J=1,MJ1)
       CLOSE(18)
 
    SELECT CASE(trim(casename))
@@ -317,6 +318,35 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       CALL rad_full()
 !---------------------------------------------------
 
+! easy based on topography, adjust direct and diffisive shadow effect 
+      DO 130 J=1, MJ1
+      DO 130 I=1, MI1
+
+! easy, use fixed latitude and longitude
+      latt = RLAT * pi/180.d0
+      lonn = RLON * pi/180.d0
+
+      gg = 2*pi/365 * day
+      eqtime = e00 * (ec0 + ec1*cos(gg)   + es1*sin(gg) &
+                         + ec2*cos(2*gg) + es2*sin(2*gg))
+
+      decl = dc0 + dc1*cos(gg) + dc2*cos(2*gg) + dc3*cos(3*gg) &
+                 + ds1*sin(gg) + ds2*sin(2*gg) + ds3*sin(3*gg)
+
+      ha = 2.d0*pi*(day-day0) ! time
+      SZA = sin(latt)*sin(decl) + cos(latt)*cos(decl)*cos(ha)
+      tt = acos(SZA)
+      ppp = (sin(latt)*cos(tt)-sin(decl)) / (cos(latt)*sin(tt))
+      ppp = acos(-ppp)
+      SAA = SZA*cos(sl(I,J))+sin(tt)*sin(sl(I,J))*cos(ppp-as(I,J))
+      SwDown_3d(I,J,NHX(I,J)) = SwDown_3d(I,J,NHX(I,J)) * SAA/SZA/cos(sl(I,J))
+      if (SAA .LE. 0.) SwDown_3d(I,J,NHX(I,J)) = 0.
+
+      sw_dif_down_3d(I,J,NHX(I,J) ) = svf(I,J) * sw_dif_down_3d(I,J,NHX(I,J))/cos(sl(I,J)
+  130 CONTINUE
+
+
+
 ! Calculate potential temperature tendency term
       DO 140 K = 2, NK2
       DO 140 J = 1, MJ1
@@ -330,32 +360,6 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
         DTRADSW(I,J,K) = swHeatingRate_3d(I,J,K-1)
   140 CONTINUE
  
-      if (my_task .eq. 0) PRINT*,'----',day0,day
-! easy direct modification
-      DO 141 J=1, MJ1
-      DO 141 I=1, MI1
-
-      latt = 0.*pi/180.d0
-      lonn = lon(I) * pi/180.d0
-
-
-      gg = 2*pi/365 * day
-      eqtime = e00 * (ec0 + ec1*cos(gg)   + es1*sin(gg) &
-                         + ec2*cos(2*gg) + es2*sin(2*gg))
-
-      decl = dc0 + dc1*cos(gg) + dc2*cos(2*gg) + dc3*cos(3*gg) &
-                 + ds1*sin(gg) + ds2*sin(2*gg) + ds3*sin(3*gg)
-
-      ha = 2.d0*pi*(day-day0) ! time 
-      SZA = sin(latt)*sin(decl) + cos(latt)*cos(decl)*cos(ha)      
-      tt = acos(SZA)
-      ppp = (sin(latt)*cos(tt)-sin(decl)) / (cos(latt)*sin(tt))
-      ppp = acos(-ppp)
-      SAA = SZA*cos(sl(I,J))+sin(tt)*sin(sl(I,J))*cos(ppp-as(I,J))
-      SwDown_3d(I,J,NHX(I,J)) = SwDown_3d(I,J,NHX(I,J)) * SAA/SZA/cos(sl(I,J))
-      if (SAA .LE. 0.) SwDown_3d(I,J,NHX(I,J)) = 0.
-  141 CONTINUE
-     
       DO 150 K = 1, NK1
       DO 150 J = 1, MJ1
       DO 150 I = 1, MI1
