@@ -27,7 +27,8 @@
 
       integer ncid, nvarid
       integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope, 
-     1        nsoil, nlon, nlat, nheight, numask, nvmask, nthmask
+     1        nsoil, nlon, nlat, nheight, numask, nvmask, nthmask,
+     1        nas, nsl
 
       integer i,j,k,nn,ierr
 
@@ -516,6 +517,14 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       ierr = nf_def_var(ncid, "SOIL", NF_FLOAT, 2, nlid, nsoil)
       print*,'ERRor', nf_strerror(ierr)
 
+      ierr = nf_def_var(ncid, "SLOPE_angle", NF_FLOAT, 2, nlid, nsl)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "ASPECT_angle", NF_FLOAT, 2, nlid, nas)
+      print*,'ERRor', nf_strerror(ierr)
+
+
+
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
 
@@ -555,6 +564,11 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       print*,'ERRor', nf_strerror(ierr)
       ierr = nf_put_var_real(ncid, nsoil, soil)
       print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nsl, sl)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nas, as)
+      print*,'ERRor', nf_strerror(ierr)
+
 
       ierr = nf_close(ncid)
       print*,'ERRor', nf_strerror(ierr)
