@@ -330,7 +330,7 @@ CONTAINS
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
 
-      if (.true.) then
+      if (.false.) then
 !     PROFILES OF RHO, RHOz, AND GAMMA
 ! easy advection schem test
 
@@ -400,7 +400,7 @@ CONTAINS
       QG3D(I,J,K) = 0.
   500 CONTINUE
 
-      if (.false.) then
+      if (.true.) then
 
       DO 501 K=1,NK2
       DO 501 J=mjm,mjp
@@ -408,22 +408,21 @@ CONTAINS
 !      IF ((ni_sbdm*mi1+I-mi_glob/2.)*DX .GT. 25000.) THEN
 !      TMP=((ni_sbdm*mi1+I-mi_glob/2.-50)*DX/25000.)**2!
 !      ELSEIF ((ni_sbdm*mi1+I-mi_glob/2.)*DX .LT. -25000.)THEN
-      TMP=((ni_sbdm*mi1+I-mi_glob/2.+100)*DX/25000.)**2
+      TMP=((ni_sbdm*mi1+I-mi_glob/2.+.5)*DX/25000.)**2
 !      ELSE
 !      TMP=((ni_sbdm*mi1+I-mi_glob/2.)*DX/25000.)**2
 !      ENDIF
 
-      TMP=TMP + ((K*DZ-9000)/3000)**2
+      TMP=TMP + ((K*DZ-3100)/3000)**2
       TMP=sqrt(TMP)
 !  501 CONTINUE
- 501  IF( TMP .LE. 1) QV3D(I,J,K)=QV3D(I,J,K)+.001*(COS(TMP*3.1415926)+1)/2
+ 501  IF( TMP .LE. 1) TH3D(I,J,K)=TH3D(I,J,K)+10*(COS(TMP*3.1415926)+1)/2
 
-
-      DO 502 K=12,24
-      DO 502 J=mjm,mjp
-      DO 502 I=mim,mip
-      TMP=ni_sbdm*mi1+I
- 502  IF( TMP .GT. 375  .and. TMP .LT. 425) QV3D(I,J,K)= 6.e-4
+!      DO 502 K=12,24
+!      DO 502 J=mjm,mjp
+!      DO 502 I=mim,mip
+!      TMP=ni_sbdm*mi1+I
+! 502  IF( TMP .GT. 375  .and. TMP .LT. 425) QV3D(I,J,K)= 6.e-4
           
       elseif (.false.) then
 
