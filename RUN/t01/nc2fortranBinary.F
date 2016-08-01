@@ -30,7 +30,7 @@
      1        nsoil, nlon, nlat, nheight, numask, nvmask, nthmask
 
 ! radiation input
-      integer nsl,nas 
+      integer nsl,nas,ntcf,nsvf 
 
       integer i,j,k,nn,ierr
 
@@ -565,6 +565,13 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       ierr = nf_def_var(ncid, "ASPECT_angle", NF_FLOAT, 2, nlid, nas)
       print*,'ERRor', nf_strerror(ierr)
 
+      ierr = nf_def_var(ncid, " terrain_configuration_factor", NF_FLOAT,
+     1                  2, nlid, ntcf)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "sky_view_factor", NF_FLOAT, 2, nlid,nsvf)
+      print*,'ERRor', nf_strerror(ierr)
+
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
 
@@ -608,6 +615,10 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       ierr = nf_put_var_real(ncid, nsl, sl)
       print*,'ERRor', nf_strerror(ierr)
       ierr = nf_put_var_real(ncid, nas, as)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, ntcf, tcf)
+      print*,'ERRor', nf_strerror(ierr)
+      ierr = nf_put_var_real(ncid, nsvf, svf)
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_close(ncid)
