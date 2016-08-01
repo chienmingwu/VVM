@@ -475,7 +475,7 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
         svf(i,1) = svf(i,mj_glob-1)
         tcf(i,1) = tcf(i,mj_glob-1)
         svf(i,mj_glob-1) = svf(i,2)
-        tvf(i,mj_glob-1) = tcf(i,2)
+        tcf(i,mj_glob-1) = tcf(i,2)
       enddo
 
       DO 950 JP = 1,nsbdm_y
@@ -565,7 +565,7 @@ c       as(i,j) = 90 - atan2(b2,b1) / pi * 180
       ierr = nf_def_var(ncid, "ASPECT_angle", NF_FLOAT, 2, nlid, nas)
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_def_var(ncid, " terrain_configuration_factor", NF_FLOAT,
+      ierr = nf_def_var(ncid, "terrain_configuration_factor", NF_FLOAT,
      1                  2, nlid, ntcf)
       print*,'ERRor', nf_strerror(ierr)
 
