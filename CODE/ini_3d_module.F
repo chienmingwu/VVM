@@ -408,15 +408,15 @@ CONTAINS
 !      IF ((ni_sbdm*mi1+I-mi_glob/2.)*DX .GT. 25000.) THEN
 !      TMP=((ni_sbdm*mi1+I-mi_glob/2.-50)*DX/25000.)**2!
 !      ELSEIF ((ni_sbdm*mi1+I-mi_glob/2.)*DX .LT. -25000.)THEN
-      TMP=((ni_sbdm*mi1+I-mi_glob/2.+.5)*DX/25000.)**2
+      TMP=((ni_sbdm*mi1+I-mi_glob/2.+.5)*DX/4000.)**2
 !      ELSE
-!      TMP=((ni_sbdm*mi1+I-mi_glob/2.)*DX/25000.)**2
+      TMP=TMP + ((nj_sbdm*mj1+j-mj_glob/2.)*DYNEW/4000.)**2
 !      ENDIF
 
-      TMP=TMP + ((K*DZ-3100)/3000)**2
+      TMP=TMP + ((K*DZ-2500)/2000)**2
       TMP=sqrt(TMP)
 !  501 CONTINUE
- 501  IF( TMP .LE. 1) TH3D(I,J,K)=TH3D(I,J,K)+10*(COS(TMP*3.1415926)+1)/2
+ 501  IF( TMP .LE. 1) TH3D(I,J,K)=TH3D(I,J,K)+4.*(COS(TMP*3.1415926)+1)/2
 
 !      DO 502 K=12,24
 !      DO 502 J=mjm,mjp
