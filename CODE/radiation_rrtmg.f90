@@ -57,17 +57,19 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
           RHO       ! Density at model layers
 
 ! Wei-Liang shadow effect 
+
+      LOGICAL (KIND=log_kind), SAVE :: shadow_effect = .true.
       character(27) FILENAME
-      real (kind=dbl_kind) , dimension(nx,ny):: sl, as
+      real (kind=dbl_kind) , dimension(nx,ny), save:: sl, as
 
 ! Wei-Liang shadow effect input
       integer (kind=int_Kind), PARAMETER:: NDA = 18
-      real (kind=int_kind):: &
+      real (kind=int_kind), save:: &
                 svf(nx,ny), & ! sky view factor
                 tcf(nx,ny)!, & ! terrain configuration factor
 ! easy, if use hor application                hor(nda,nx,ny)  ! zenith angle of horizons of secto
 
-      real (kind= dbl_kind) :: SZA, SAA, tt, ppp, gg, decl, ha, latt, lonn, eqtime 
+      real (kind= dbl_kind) , save:: SZA, SAA, tt, ppp, gg, decl, ha, latt, lonn, eqtime 
       real (kind= dbl_kind), parameter ::  e00 = 229.18d0, &
        ec0 =  0.000075d0, ec1 =  0.001868d0, ec2 = -0.014615d0, &
        es1 = -0.032077d0, es2 = -0.040849d0, dc0 =  0.006918d0, &
@@ -318,6 +320,7 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       CALL rad_full()
 !---------------------------------------------------
 
+      if (shadow_effect) then
 ! easy based on topography, adjust direct and diffisive shadow effect 
       DO 130 J=1, MJ1
       DO 130 I=1, MI1
@@ -342,9 +345,9 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       SwDown_3d(I,J,NHX(I,J)) = SwDown_3d(I,J,NHX(I,J)) * SAA/SZA/cos(sl(I,J))
       if (SAA .LE. 0.) SwDown_3d(I,J,NHX(I,J)) = 0.
 
-      sw_dif_down_3d(I,J,NHX(I,J) ) = svf(I,J) * sw_dif_down_3d(I,J,NHX(I,J))/cos(sl(I,J)
+      sw_dif_down_3d(I,J,NHX(I,J) ) = svf(I,J) * sw_dif_down_3d(I,J,NHX(I,J))/cos(sl(I,J))
   130 CONTINUE
-
+      endif
 
 
 ! Calculate potential temperature tendency term
