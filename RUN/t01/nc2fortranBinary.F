@@ -48,7 +48,7 @@
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
       REAL*8 ZZ(NK3),ZT(NK2) 
-
+      REAL*4 ZT4(NK2)
       REAL (KIND=dbl_kind) HX(MI_GLOB,MJ_GLOB),HXU(MI_GLOB,MJ_GLOB),
      1 HXV(MI_GLOB,MJ_GLOB)
 
@@ -83,6 +83,7 @@
 
       DO 52 K = 1, NK2
       ZT(K) = .5*(ZZ(K)+ZZ(K+1))
+      ZT4(K) = ZT(K)
    52 CONTINUE
 
 
@@ -423,19 +424,22 @@
       nlid(1) = idx
 
 
-      ierr = nf_def_var(ncid, "height", NF_FLOAT, 1, nlid(3), nheight)
+      ierr = nf_def_var(ncid, "z", NF_FLOAT, 1, nlid(3), nheight)
       ierr = nf_put_att_text(ncid, nheight, 'long_name',1 , 'z')
-      ierr = nf_put_att_text(ncid, nheight, 'units',13, 'degrees_north')
+      ierr = nf_put_att_text(ncid, nheight, 'units',1, 'm')
+      ierr = nf_put_att_text(ncid, nheight, 'cartesian_axis',1,'Z') 
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_def_var(ncid, "lat", NF_FLOAT, 1, nlid(2), nlat)
+      ierr = nf_def_var(ncid, "y", NF_FLOAT, 1, nlid(2), nlat)
       ierr = nf_put_att_text(ncid, nlat, 'long_name',1 , 'y')
       ierr = nf_put_att_text(ncid, nlat, 'units',13, 'degrees_north')
+      ierr = nf_put_att_text(ncid, nlat, 'cartesian_axis',1,'Y')
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_def_var(ncid, "lon", NF_FLOAT, 1, nlid(1), nlon)
+      ierr = nf_def_var(ncid, "x", NF_FLOAT, 1, nlid(1), nlon)
       ierr = nf_put_att_text(ncid, nlon, 'long_name',1, 'x')
       ierr = nf_put_att_text(ncid, nlon, 'units',12, 'degrees_east')
+      ierr = nf_put_att_text(ncid, nlon, 'cartesian_axis',1,'X')
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_def_var(ncid, "TOPO", NF_double, 2, nlid, ntopo)
@@ -477,7 +481,7 @@
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_put_var_real(ncid, nheight, ZT)
+      ierr = nf_put_var_real(ncid, nheight, ZT4)
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_put_var_real(ncid, nlat, yt)
