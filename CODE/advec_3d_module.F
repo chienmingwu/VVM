@@ -109,7 +109,7 @@ CONTAINS
       TEMPI(I,J,K)=W3D(I,J,K)*RHOZ(K)
   520 CONTINUE
 
-      DO 530 K = 1,NK2
+      DO 530 K = 1,NK1
       DO 530 J = 1,MJ1
       DO 530 I = 1,MI1
       WFLX(I,J,K) = max(0.d0,TEMPI(I,J,K))*Q(I,J,K)
@@ -118,7 +118,7 @@ CONTAINS
       DO 531 J = 1,MJ1
       DO 531 I = 1,MI1
 !      WFLX(I,J,1) = 0.d0
-      WFLX(I,J,NK3) = 0.d0
+      WFLX(I,J,NK2) = 0.d0
   531 CONTINUE
 
       DO 600 k = 2,NK2
@@ -137,7 +137,7 @@ CONTAINS
 !                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
   600 CONTINUE
 
-      if (.false.) then
+      if (.true.) then
 
       call bound_arb(NK3,Q)
           
@@ -212,7 +212,7 @@ CONTAINS
 
 !      call bound_arb(NK2,VFLX)
 
-      do 630 k=1,NK2
+      do 630 k=1,NK1
       kc=k+1
 !      irhow(k)=1./(rhow(k)*adz(k))
 
@@ -243,7 +243,7 @@ CONTAINS
   630 CONTINUE
       do 631 j=1,MJ1
       do 631 i=1,MI1
-      WFLX(i,j,NK3)=0.d0
+      WFLX(i,j,NK2)=0.d0
   631 CONTINUE
 
 !      call bound_arb(NK2,WFLX)
@@ -307,7 +307,7 @@ CONTAINS
              - pn(VFLX(i,j,k))*min(1.,LMX(i,j,k),LMN(i,jc,k))
   720 CONTINUE
     
-      do 730 k=2,nk3
+      do 730 k=2,nk1
       kc=k+1
       do 730 j=1,mj1
       do 730 i=1,mi1
@@ -315,8 +315,13 @@ CONTAINS
              - pn(WFLX(i,j,k))*min(1.,LMX(i,j,k),LMN(i,j,kc))
 !      flux(k) = flux(k) + www(i,j,k)
   730 CONTINUE
+      
+      do 740 j=1,mj1
+      do 740 i=1,mi1
+      WFLX(i,j,NK2)= 0. 
+  740 CONTINUE
 
-!      ENDIF
+      ENDIF
 
 
       do 800 k=2,nk2
@@ -337,7 +342,7 @@ CONTAINS
                      +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)
 
   800 CONTINUE
-      ENDIF
+!      ENDIF
 
 
 !      ENDIF
