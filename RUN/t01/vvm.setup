@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = puli_sub_partial_shadow
+set expname = puli_sub_partial_shadow1
 
 # hardscrabble configuration
 set subdir = '../..'
