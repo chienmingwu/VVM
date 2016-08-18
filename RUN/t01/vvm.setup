@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = MPDATA-warm2
+set expname = MPDATA-warm1
 
 # hardscrabble configuration
 set subdir = '../..'

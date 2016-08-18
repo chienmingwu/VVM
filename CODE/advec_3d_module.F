@@ -129,7 +129,7 @@ CONTAINS
       do 600 j= 1,MJ1
       do 600 i= 1,MI1
       Q(i,j,k)=Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW+ &
-                           (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
+                           (WFLX(i,j,k)-WFLX(i,j,k-1))/DZ*FNZ(K))
 
 !     Q(i,j,k)=Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW + &
 !                         (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
@@ -137,7 +137,7 @@ CONTAINS
 !                          (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
   600 CONTINUE
 
-      if (.true.) then
+      if (.false.) then
 
       call bound_arb(NK3,Q)
           
@@ -321,7 +321,7 @@ CONTAINS
       WFLX(i,j,NK2)= 0. 
   740 CONTINUE
 
-      ENDIF
+!      ENDIF
 
 
       do 800 k=2,nk2
@@ -342,10 +342,8 @@ CONTAINS
                      +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)
 
   800 CONTINUE
-!      ENDIF
+      ENDIF
 
-
-!      ENDIF
       do 810 k=2,NK2
       do 810 j=1,mj1
       do 810 i=1,mi1
