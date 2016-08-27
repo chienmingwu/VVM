@@ -57,9 +57,9 @@ CONTAINS
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
 
-      integer nu1, nt1, k1, k2, it
+      integer nu1, nt1, nq1, k1, k2, it
       logical lf
-      DATA NU1/33/,NT1/21/
+      DATA NU1/6/,NT1/21/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
@@ -273,7 +273,7 @@ CONTAINS
 
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,20,PQ1,LF)
+      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
       K2 = K1 + 1
       Q1LS (K) =  &
         FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
