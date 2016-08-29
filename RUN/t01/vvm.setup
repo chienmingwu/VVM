@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = gate_shear
+set expname = gate_shearh
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -52,11 +52,11 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/256/' \
-    -e '1,$s/merid_dimension/256/' \
-    -e '1,$s/zonal_decomposition/8/' \
-    -e '1,$s/merid_decomposition/8/' \
-    -e '1,$s/vert_dimension/34/' \
+sed -e '1,$s/zonal_dimension/1024/' \
+    -e '1,$s/merid_dimension/1024/' \
+    -e '1,$s/zonal_decomposition/16/' \
+    -e '1,$s/merid_decomposition/16/' \
+    -e '1,$s/vert_dimension/45/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -69,7 +69,7 @@ sed -e '1,$s/zonal_dimension/256/' \
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=0./
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=30,SCALE=6.,Q1Q2=T,DTRAD=120./
 'END6'
