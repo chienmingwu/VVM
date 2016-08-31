@@ -332,7 +332,7 @@ CONTAINS
       TEMPI(I,J,K)=W3D(I,J,K)*RHOZ(K)
   520 CONTINUE
 
-      DO 530 K = 1,NK2
+      DO 530 K = 1,NK1
       DO 530 J = 1,MJ1
       DO 530 I = 1,MI1
       WFLX(I,J,K) = max(0.d0,TEMPI(I,J,K))*Q(I,J,K)
@@ -341,7 +341,7 @@ CONTAINS
       DO 531 J = 1,MJ1
       DO 531 I = 1,MI1
 !      WFLX(I,J,1) = 0.d0
-      WFLX(I,J,NK3) = 0.d0
+      WFLX(I,J,NK2) = 0.d0
   531 CONTINUE
 
       DO 600 k = 2,NK2
@@ -352,7 +352,7 @@ CONTAINS
       do 600 j= 1,MJ1
       do 600 i= 1,MI1
       Q(i,j,k)=Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW+ &
-                           (WFLX(i,j,k)-WFLX(i,j,k-1))/DZ*FNZ(K))
+                           (WFLX(i,j,k)-WFLX(i,j,k-1))/DZ*FNT(K)) ! ez update FNZ -> FNT
 
 !     Q(i,j,k)=Q(i,j,k) - ((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW + &
 !                         (WFLX(i,j,k+1)-WFLX(i,j,k))/DZ*FNZ(K))
@@ -396,7 +396,7 @@ CONTAINS
       UFLX(i,j,k)= rhou(k)*andiff(Q(i,j,k),Q(ic,j,k),U3DX(i,j,k),TMP/DX) &
               -TMP*(across((Q(i,jc,k)+Q(ic,jc,k)-Q(i,jb,k)-Q(ic,jb,k))/DYNEW, &
               U3DX(i,j,k),(U3DY(i,jb,k)+U3DY(i,j,k)+U3DY(ic,j,k)+U3DY(ic,jb,k))) &
-              +across(FNZ(K)/DZ*(Q(i,j,kc)+Q(ic,j,kc)-Q(i,j,kb)-Q(ic,j,kb)), &
+              +across(FNT(K)/DZ*(Q(i,j,kc)+Q(ic,j,kc)-Q(i,j,kb)-Q(ic,j,kb)), &
               U3DX(i,j,k),((W3D(i,j,kb)+W3D(ic,j,kb)) &
               +(W3D(i,j,k)+W3D(ic,j,k)))))
 
@@ -429,13 +429,13 @@ CONTAINS
       VFLX(i,j,k)= rhou(k)*andiff(Q(i,j,k),Q(i,jc,k),U3DY(i,j,k),TMP/DYNEW) &
               -TMP*(across((Q(ic,j,k)+Q(ic,jc,k)-Q(ib,j,k)-Q(ib,jc,k))/DX, &
                U3DY(i,j,k),(U3DX(ib,j,k)+U3DX(i,j,k)+U3DX(i,jc,k)+U3DX(ib,jc,k))) &
-               +across(FNZ(K)/DZ*(Q(i,j,kc)+Q(i,jc,kc)-Q(i,j,kb)-Q(i,jc,kb)), &
+               +across(FNT(K)/DZ*(Q(i,j,kc)+Q(i,jc,kc)-Q(i,j,kb)-Q(i,jc,kb)), &
                U3DY(i,j,k),(W3D(i,j,kb)+W3D(i,jc,kb))+(W3D(i,j,k)+W3D(i,jc,k))))
   620 CONTINUE
 
 !      call bound_arb(NK2,VFLX)
 
-      do 630 k=1,NK2
+      do 630 k=1,NK1
       kc=k+1
 !      irhow(k)=1./(rhow(k)*adz(k))
 
@@ -450,7 +450,7 @@ CONTAINS
       do 630 i=1,MI1
       ib=i-1
       ic=i+1
-      WFLX(i,j,k)=rhow(k)*andiff(Q(i,j,k),Q(i,j,kc),W3D(i,j,k),TMP*FNZ(K)/DZ) &
+      WFLX(i,j,k)=rhow(k)*andiff(Q(i,j,k),Q(i,j,kc),W3D(i,j,k),TMP*FNT(K)/DZ) &
              -TMP*(across((Q(ic,j,k)+Q(ic,j,kc)-Q(ib,j,k)-Q(ib,j,kc))/DX, &
              W3D(i,j,k),(U3DX(ib,j,k)+U3DX(i,j,k))+(U3DX(ib,j,kc)+U3DX(i,j,kc)))&
              +across((Q(i,jc,kc)+Q(i,jc,k)-Q(i,jb,kc)-Q(i,jb,k))/DYNEW, &
@@ -466,11 +466,10 @@ CONTAINS
   630 CONTINUE
       do 631 j=1,MJ1
       do 631 i=1,MI1
-      WFLX(i,j,NK3)=0.d0
+      WFLX(i,j,NK2)=0.d0
   631 CONTINUE
 
 !      call bound_arb(NK2,WFLX)
-      endif
 
 
       if (.true.) then
@@ -502,11 +501,11 @@ CONTAINS
       LMX(i,j,k)=rhou(k)*(LMX(i,j,k)-Q(i,j,k))/ &
            ((pn(UFLX(i,j,k)) + pp(UFLX(ib,j,k)))/DX + &
             (pn(VFLX(i,j,k)) + pp(VFLX(i,jb,k)))/DYNEW + &
-             FNZ(K)/DZ*(pn(WFLX(i,j,k)) + pp(WFLX(i,j,kb))) +eps)
+             FNT(K)/DZ*(pn(WFLX(i,j,k)) + pp(WFLX(i,j,kb))) +eps)
       LMN(i,j,k)=rhou(k)*(Q(i,j,k)-LMN(i,j,k))/ &
            ((pp(UFLX(i,j,k)) + pn(UFLX(ib,j,k)))/DX + &
             (pp(VFLX(i,j,k)) + pn(VFLX(i,jb,k)))/DYNEW+ &
-             FNZ(K)/DZ*(pp(WFLX(i,j,k)) + pn(WFLX(i,j,kb))) +eps)
+             FNT(K)/DZ*(pp(WFLX(i,j,k)) + pn(WFLX(i,j,kb))) +eps)
   700 CONTINUE
 
 !      call bound_arb(NK2,LMX)
@@ -530,7 +529,7 @@ CONTAINS
              - pn(VFLX(i,j,k))*min(1.,LMX(i,j,k),LMN(i,jc,k))
   720 CONTINUE
     
-      do 730 k=2,nk3
+      do 730 k=2,nk1
       kc=k+1
       do 730 j=1,mj1
       do 730 i=1,mi1
@@ -538,6 +537,12 @@ CONTAINS
              - pn(WFLX(i,j,k))*min(1.,LMX(i,j,k),LMN(i,j,kc))
 !      flux(k) = flux(k) + www(i,j,k)
   730 CONTINUE
+
+      do 740 j=1,mj1
+      do 740 i=1,mi1
+      WFLX(i,j,NK2)= 0. 
+  740 CONTINUE
+
 
       ENDIF
 
@@ -554,13 +559,16 @@ CONTAINS
  !     most likely truncation error.
 !      Q(i,j,k)=max(0.,Q(i,j,k) - ((UFLX(i+1,j,k)-UFLX(i,j,k))/DX+(VFLX(i,j+1,k)-VFLX(i,j,k))/DYNEW &
 !                     +(WFLX(i,j,k+1)-WFLX(i,j,k))*FNZ(k)/DZ)/RHOU(K))
+! second order with nonoscillation
 !      Q(i,j,k)=max(0.d0, Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
-!                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ))
+!                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNT(k)/DZ))
+
+! second order without nonoscillation
       Q(i,j,k)= Q(i,j,k) - TMP*((UFLX(i,j,k)-UFLX(i-1,j,k))/DX+(VFLX(i,j,k)-VFLX(i,j-1,k))/DYNEW &
-                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNZ(k)/DZ)
+                     +(WFLX(i,j,k)-WFLX(i,j,k-1))*FNT(k)/DZ)
 
   800 CONTINUE
-!      ENDIF
+      ENDIF
 
 
 !      ENDIF
