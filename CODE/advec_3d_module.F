@@ -413,6 +413,17 @@ CONTAINS
 !              +(W3D(i,j,k)+W3D(ic,j,k)))))/RHOU(k)
   610 CONTINUE
 
+      TMP = DT/RHOU(NK2)
+      do 611 j=1,MJ1
+      jb=j-1
+      jc=j+1
+      do 611 i=mim,mi1
+      ic=i+1
+      UFLX(i,j,NK2)= rhou(NK2)*andiff(Q(i,j,NK2),Q(ic,j,NK2),U3DX(i,j,NK2),TMP/DX) &
+              -TMP*(across((Q(i,jc,NK2)+Q(ic,jc,NK2)-Q(i,jb,NK2)-Q(ic,jb,NK2))/DYNEW, &
+              U3DX(i,j,NK2),(U3DY(i,jb,NK2)+U3DY(i,j,NK2)+U3DY(ic,j,NK2)+U3DY(ic,jb,NK2))))
+  611 continue
+
 !      call bound_arb(NK2,UFLX)
       DO 620 k=2,NK2
       kb=k-1
@@ -432,6 +443,17 @@ CONTAINS
                +across(FNT(K)/DZ*(Q(i,j,kc)+Q(i,jc,kc)-Q(i,j,kb)-Q(i,jc,kb)), &
                U3DY(i,j,k),(W3D(i,j,kb)+W3D(i,jc,kb))+(W3D(i,j,k)+W3D(i,jc,k))))
   620 CONTINUE
+
+      TMP = DT/RHOU(NK2)
+      DO 621 j=mjm,mj1
+      jc=j+1
+      DO 621 i=1,MI1
+      ib=i-1
+      ic=i+1
+      VFLX(i,j,NK2)= rhou(NK2)*andiff(Q(i,j,NK2),Q(i,jc,NK2),U3DY(i,j,NK2),TMP/DYNEW) &
+              -TMP*(across((Q(ic,j,NK2)+Q(ic,jc,NK2)-Q(ib,j,NK2)-Q(ib,jc,NK2))/DX, &
+               U3DY(i,j,NK2),(U3DX(ib,j,NK2)+U3DX(i,j,NK2)+U3DX(i,jc,NK2)+U3DX(ib,jc,NK2))))
+  621 CONTINUE
 
 !      call bound_arb(NK2,VFLX)
 
