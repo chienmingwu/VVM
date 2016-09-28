@@ -153,7 +153,7 @@ CONTAINS
 
       NSFLUX  = 6
       ALADV   = 1._dbl_kind
-      UVTAU   = 7200.
+      UVTAU   = 0.
 
       NOTURB  = .FALSE.
       BUOY    = .TRUE.

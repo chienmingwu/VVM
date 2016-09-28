@@ -130,8 +130,9 @@ CONTAINS
       T1(K) =  T1(K) 
       QV1(K)= QV1(K)*1.E-3
   100 CONTINUE
-
-
+! add water to 925mb-825mb to make it saturated
+      QV1(10:19)=QV1(10:19)+1.E-3
+ 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
       PI1(K) = ( P1(K) / PZERO ) ** RBCP
@@ -450,8 +451,8 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=-10.6
-      U3DY(I,J,K)=-10.6
+      U3DX(I,J,K)=0.
+      U3DY(I,J,K)=0.
   610 CONTINUE
 
       DO 660 K = 2, NK1

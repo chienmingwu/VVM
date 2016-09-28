@@ -152,8 +152,11 @@ CONTAINS
 
 #if defined (AREAMN)
       IF (UVTAU.EQ.0.) THEN
-      UTMN = UTMN0
-      VTMN = VTMN0
+!ccwu for NE exp.
+!      UTMN = UTMN0
+!      VTMN = VTMN0
+      UTMN = -10.6
+      VTMN = -10.6
       RETURN
       END  IF
 #endif
