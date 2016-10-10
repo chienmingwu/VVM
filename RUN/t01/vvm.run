@@ -54,7 +54,7 @@ sed -e 's/expname/'${expname}'/g' \
     -e 's/np_threads/4/g' \
     -e 's/total_cores/4/g' ../../RUN/run.sh > run.sh
 
-qsub run.sh
+#qsub run.sh
 #rm run.sh
 
 exit
