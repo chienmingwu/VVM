@@ -120,6 +120,7 @@ CONTAINS
       integer (kind=mpi_offset_kind), dimension(5) :: start, count
       real(kind=dbl_kind) :: dtem(1)
       real(kind=real_kind) :: rtem(1)
+      real(kind=real_kind) :: time_prev_l(2)
 #endif
 
 !JH   The fort number (LTP_RST) 13 is given to generate "...E01". 
@@ -146,12 +147,12 @@ CONTAINS
         call fname_nc(ltp_rst, EXPHDR, 'rst1_'//timestamp_string, filnam_nc)
         nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
                             mpi_info_null, ncid_rst)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err,ncid_rst)
 
         call fname_nc(ltp_rst, EXPHDR, 'rst2_'//timestamp_string, filnam_nc)
         nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
                             mpi_info_null, ncid_rst_tend)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err,ncid_rst_tend)
         
         if (my_task == 0) write(6,*) 'rstart_nc: ncid_rst, ncid_rst_tend = ',ncid_rst,ncid_rst_tend
 
@@ -179,22 +180,24 @@ CONTAINS
 ! Inquire time id and store time
         nc_err = nfmpi_put_var_real(ncid_rst, time_id_rst, rtem )
         time_l = rtem(1)
-        if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid_rst, time_id_rst)
+        if (nc_err /= NF_NOERR) call check_err2(nc_err, ncid_rst, time_id_rst)
 
 
 ! store iwrite
         nc_err = nfmpi_put_var_int(ncid_rst, iwrite_id_rst, iwrite )
-        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err,ncid_rst)
 ! store ifile
         nc_err = nfmpi_put_var_int(ncid_rst, ifile_id_rst, ifile )
-        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err,ncid_rst)
       endif
       nc_err = nfmpi_end_indep_data(ncid_rst)
 
       nc_err = nfmpi_begin_indep_data(ncid_rst_tend)
       if(my_task == 0) then
-        nc_err = nfmpi_put_var_real(ncid_rst_tend, time_id_rst_tend, (/time_prev, time_l/))
-        if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid_rst_tend, time_id_rst_tend)
+        time_prev_l(1) = time_prev
+        time_prev_l(2) = time_l
+        nc_err = nfmpi_put_var_real(ncid_rst_tend, time_id_rst_tend, time_prev_l)
+        if (nc_err /= NF_NOERR) call check_err2(nc_err, ncid_rst_tend, time_id_rst_tend)
       endif
       nc_err = nfmpi_end_indep_data(ncid_rst_tend)
 
@@ -203,11 +206,11 @@ CONTAINS
 
         call fname_nc(ltp_rst, EXPHDR, 'rst1_'//timestamp_string, filnam_nc)
         nc_err = nf90_create(filnam_nc, cmode=or(nf90_clobber,nf90_64bit_offset), ncid=ncid_rst)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err,ncid_rst)
 
         call fname_nc(ltp_rst, EXPHDR, 'rst2_'//timestamp_string, filnam_nc)
         nc_err = nf90_create(filnam_nc, cmode=or(nf90_clobber,nf90_64bit_offset), ncid=ncid_rst_tend)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err,ncid_rst_tend)
         
         if (my_task == 0) write(6,*) 'rstart_nc: ncid_rst, ncid_rst_tend = ',ncid_rst,ncid_rst_tend
 
@@ -234,17 +237,17 @@ CONTAINS
 !!------------------------------------------------------------------------------
 ! Inquire time id and store time
         nc_err = nf90_put_var(ncid_rst, time_id_rst, time_l)
-        if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid_rst, time_id_rst)
+        if (nc_err /= NF_NOERR) call check_err2(nc_err, ncid_rst, time_id_rst)
 
         nc_err = nf90_put_var(ncid_rst_tend, time_id_rst_tend, (/time_prev, time_l/))
-        if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid_rst_tend, time_id_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err2(nc_err, ncid_rst_tend, time_id_rst_tend)
 
 ! store iwrite
         nc_err = nf90_put_var(ncid_rst, iwrite_id_rst, iwrite)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err,ncid_rst)
 ! store ifile
         nc_err = nf90_put_var(ncid_rst, ifile_id_rst, ifile)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err,ncid_rst)
 
       endif
 #endif
@@ -261,48 +264,48 @@ CONTAINS
 !                  OUT_TMR(1:mi1,1:mj1,NK2)
                   nc_err = nfmpi_put_vara_double_all(ncid_rst, th3d_id_rst,       &
                   start(1:3), count(1:3), th3d(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk3, th3d, iobuffh(:,:,1:nk3))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, th3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
       
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, z3dx_id_rst,       &
                   start(1:3), count(1:3), z3dx(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk2, z3dx, iobuffh(:,:,1:nk2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, z3dx_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, z3dy_id_rst,       &
                   start(1:3), count(1:3), z3dy(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk2, z3dy, iobuffh(:,:,1:nk2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, z3dy_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, z3dz_id_rst,       &
                   start(1:3), count(1:3), z3dz(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk3, z3dz, iobuffh(:,:,1:nk3))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, z3dz_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
@@ -312,72 +315,72 @@ CONTAINS
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qv3d_id_rst,       &
                   start(1:3), count(1:3), qv3d(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk3, qv3d, iobuffh(:,:,1:nk3))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, qv3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
       
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qc3d_id_rst,       &
                   start(1:3), count(1:3), qc3d(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk3, qc3d, iobuffh(:,:,1:nk3))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, qc3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qr3d_id_rst,       &
                   start(1:3), count(1:3), qr3d(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk3, qr3d, iobuffh(:,:,1:nk3))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, qr3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qi3d_id_rst,       &
                   start(1:3), count(1:3), qi3d(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk3, qi3d, iobuffh(:,:,1:nk3))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, qi3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qs3d_id_rst,       &
                   start(1:3), count(1:3), qs3d(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk3, qs3d, iobuffh(:,:,1:nk3))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, qs3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qg3d_id_rst,       &
                   start(1:3), count(1:3), qg3d(1:mi1,1:mj1,1:nk2) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(nk3, qg3d, iobuffh(:,:,1:nk3))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, qg3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
@@ -398,7 +401,7 @@ CONTAINS
         enddo
         if(my_task == 0) then
           nc_err = nf90_put_var(ncid_rst, tc3d_id_rst, iobuffh_tc(1:mi_glob,1:mj_glob,1:nk2,:))
-          if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+          if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
         endif
 #endif
       endif
@@ -418,25 +421,25 @@ CONTAINS
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, uw_id_rst,       &
                   start(1:2), count(1:2), uw(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, wv_id_rst,       &
                   start(1:2), count(1:2), wv(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, wth_id_rst,       &
                   start(1:2), count(1:2), wth(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, wqv_id_rst,       &
                   start(1:2), count(1:2), wqv(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, sprec_id_rst,       &
                   start(1:2), count(1:2), sprec(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, olr_id_rst,       &
                   start(1:2), count(1:2), olr(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, prec25_id_rst,       &
                   start(1:2), count(1:2), prec25(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(1, uw, iobuffh(:,:,1))
       call gather_h(1, wv, iobuffh(:,:,2))
@@ -448,25 +451,25 @@ CONTAINS
 
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, uw_id_rst, iobuffh(1:mi_glob,1:mj_glob,1))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, wv_id_rst, iobuffh(1:mi_glob,1:mj_glob,2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, wth_id_rst, iobuffh(1:mi_glob,1:mj_glob,3))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, wqv_id_rst, iobuffh(1:mi_glob,1:mj_glob,4))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, sprec_id_rst, iobuffh(1:mi_glob,1:mj_glob,5))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, olr_id_rst, iobuffh(1:mi_glob,1:mj_glob,6))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, prec25_id_rst, iobuffh(1:mi_glob,1:mj_glob,7))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
@@ -475,26 +478,26 @@ CONTAINS
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, tg_id_rst,       &
                   start(1:2), count(1:2), tg(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, zrough_id_rst,       &
                   start(1:2), count(1:2), zrough(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, gwet_id_rst,       &
                   start(1:2), count(1:2), gwet(1:mi1,1:mj1) )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 #else
       call gather_h(1, tg, iobuffh(:,:,1))
       call gather_h(1, zrough, iobuffh(:,:,2))
       call gather_h(1, gwet, iobuffh(:,:,3))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, tg_id_rst, iobuffh(1:mi_glob,1:mj_glob,1))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, zrough_id_rst, iobuffh(1:mi_glob,1:mj_glob,2))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, gwet_id_rst, iobuffh(1:mi_glob,1:mj_glob,3))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
 
@@ -506,19 +509,19 @@ CONTAINS
       if(my_task == 0) then
       dtem(1) = utmn
       nc_err = nfmpi_put_var_double(ncid_rst, utmn_id_rst, dtem )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       dtem(1) = vtmn
       nc_err = nfmpi_put_var_double(ncid_rst, vtmn_id_rst, dtem )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
       nc_err = nfmpi_end_indep_data(ncid_rst)
 #else
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, utmn_id_rst, utmn)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, vtmn_id_rst, vtmn)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
 #endif
       
@@ -531,39 +534,39 @@ CONTAINS
       start(4) = 1
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fth3d_id_rst,       &
                   start(1:4), count(1:4), fth3d )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(nk2, fth3d(:,:,:,1), iobuff(:,:,:,1))
       call gather(nk2, fth3d(:,:,:,2), iobuff(:,:,:,2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fth3d_id_rst, iobuff)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fzx_id_rst,       &
                   start(1:4), count(1:4), fzx )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(nk2, fzx(:,:,:,1), iobuff(:,:,:,1))
       call gather(nk2, fzx(:,:,:,2), iobuff(:,:,:,2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fzx_id_rst, iobuff)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fzy_id_rst,       &
                   start(1:4), count(1:4), fzy )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(nk2, fzy(:,:,:,1), iobuff(:,:,:,1))
       call gather(nk2, fzy(:,:,:,2), iobuff(:,:,:,2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fzy_id_rst, iobuff)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
@@ -571,13 +574,13 @@ CONTAINS
       count(3) = 2
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fztop_id_rst,       &
                   start(1:3), count(1:3), fztop )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(2, fztop, iobuff(:,:,1,:))
       if(my_task == 0) then
         iobuff_2d_tend(:,:,:) = iobuff(:,:,1,:)
         nc_err = nf90_put_var(ncid_rst_tend, fztop_id_rst, iobuff_2d_tend)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
@@ -587,78 +590,78 @@ CONTAINS
       count(3) = nk2; count(4) = 2
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqv3d_id_rst,       &
                   start(1:4), count(1:4), fqv3d )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(nk2, fqv3d(:,:,:,1), iobuff(:,:,:,1))
       call gather(nk2, fqv3d(:,:,:,2), iobuff(:,:,:,2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fqv3d_id_rst, iobuff)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqc3d_id_rst,       &
                   start(1:4), count(1:4), fqc3d )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(nk2, fqc3d(:,:,:,1), iobuff(:,:,:,1))
       call gather(nk2, fqc3d(:,:,:,2), iobuff(:,:,:,2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fqc3d_id_rst, iobuff)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqr3d_id_rst,       &
                   start(1:4), count(1:4), fqr3d )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(nk2, fqr3d(:,:,:,1), iobuff(:,:,:,1))
       call gather(nk2, fqr3d(:,:,:,2), iobuff(:,:,:,2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fqr3d_id_rst, iobuff)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqi3d_id_rst,       &
                   start(1:4), count(1:4), fqi3d )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(nk2, fqi3d(:,:,:,1), iobuff(:,:,:,1))
       call gather(nk2, fqi3d(:,:,:,2), iobuff(:,:,:,2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fqi3d_id_rst, iobuff)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqs3d_id_rst,       &
                   start(1:4), count(1:4), fqs3d )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(nk2, fqs3d(:,:,:,1), iobuff(:,:,:,1))
       call gather(nk2, fqs3d(:,:,:,2), iobuff(:,:,:,2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fqs3d_id_rst, iobuff)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqg3d_id_rst,       &
                   start(1:4), count(1:4), fqg3d )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       call gather(nk2, fqg3d(:,:,:,1), iobuff(:,:,:,1))
       call gather(nk2, fqg3d(:,:,:,2), iobuff(:,:,:,2))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fqg3d_id_rst, iobuff)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
@@ -672,7 +675,7 @@ CONTAINS
         start(5) = 1; count(5) = ntracer
         nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, ftc3d_id_rst,       &
                   start(1:5), count(1:5), ftc3d )
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
         do nt = 1,ntracer
           call gather(nk2, ftc3d(:,:,:,1,nt), iobuff(:,:,:,1))
@@ -682,7 +685,7 @@ CONTAINS
 
         if(my_task == 0) then
           nc_err = nf90_put_var(ncid_rst_tend, ftc3d_id_rst, iobuff_tc)
-          if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+          if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
         endif
 #endif
       endif 
@@ -696,26 +699,26 @@ CONTAINS
 #if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fthrad_id_rst,       &
                   start(1:3), count(1:3), fthrad )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       nc_err = nfmpi_begin_indep_data(ncid_rst_tend)
       if(my_task == 0) then
       nc_err = nfmpi_put_var_double(ncid_rst_tend, futmn_id_rst, FUTMN )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       nc_err = nfmpi_put_var_double(ncid_rst_tend, fvtmn_id_rst, FvTMN )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
       nc_err = nfmpi_end_indep_data(ncid_rst_tend)
 #else
       call gather(nk2, fthrad, iobuff(:,:,:,1))
       if(my_task == 0) then
         nc_err = nf90_put_var(ncid_rst_tend, fthrad_id_rst, iobuff(:,:,:,1))
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 
         nc_err = nf90_put_var(ncid_rst_tend, futmn_id_rst, FUTMN)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 
         nc_err = nf90_put_var(ncid_rst_tend, fvtmn_id_rst, FVTMN)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
@@ -732,83 +735,83 @@ CONTAINS
       if(my_task == 0) then
       nc_err = nfmpi_put_var_double(ncid_rst, rdhour_id_rst, dtem(1) )
       rdhour = dtem(1)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, thbar_id_rst, THBAR )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, qvbar_id_rst, QVBAR )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, wls_id_rst, WLS )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, q1ls_id_rst, Q1LS )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, q2ls_id_rst, Q2LS )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, z3dx0_id_rst, Z3DX0 )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, z3dy0_id_rst, Z3DY0 )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, thinc_id_rst, THINC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, qvinc_id_rst, QVINC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, wlsinc_id_rst, WLSINC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, q1inc_id_rst, Q1INC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, q2inc_id_rst, Q2INC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, dx0inc_id_rst, DX0INC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_put_var_double(ncid_rst, dy0inc_id_rst, DY0INC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       endif
       nc_err = nfmpi_end_indep_data(ncid_rst)
 #else
       if (my_task == 0) then
         nc_err = nf90_put_var(ncid_rst, rdhour_id_rst, RDHOUR)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, thbar_id_rst, THBAR)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, qvbar_id_rst, QVBAR)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, wls_id_rst, WLS)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, q1ls_id_rst, Q1LS)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, q2ls_id_rst, Q2LS)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, z3dx0_id_rst, Z3DX0)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, z3dy0_id_rst, Z3DY0)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, thinc_id_rst, THINC)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, qvinc_id_rst, QVINC)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, wlsinc_id_rst, WLSINC)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, q1inc_id_rst, Q1INC)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, q2inc_id_rst, Q2INC)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, dx0inc_id_rst, DX0INC)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_put_var(ncid_rst, dy0inc_id_rst, DY0INC)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)  
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)  
       endif  
 #endif
 
@@ -816,16 +819,16 @@ CONTAINS
       
 #if defined (PARALLELIO) 
       nc_err = nfmpi_close(ncid_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_close(ncid_rst_tend)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
 #else
       if (my_task == 0) then
         nc_err = nf90_close(ncid_rst)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst)
 
         nc_err = nf90_close(ncid_rst_tend)
-        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+        if (nc_err /= NF_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
 #endif
 
@@ -851,8 +854,8 @@ CONTAINS
       INTEGER (KIND=int_kind), INTENT(IN) ::  &
          ITT     ! time step count
 
-      REAL (KIND=real_kind) :: TIME_L, TIME_R
-      REAL (KIND=real_kind), SAVE :: TIME_C
+      REAL (KIND=real_kind), dimension(1)  :: TIME_L, TIME_R
+      REAL (KIND=real_kind), dimension(1), SAVE :: TIME_C
 
 ! *** FOR STANDARD OUTPUT DATA (L-FILE) temporary storage array
       REAL (KIND=tm_kind) :: OUT_TM1(1:mi1,1:mj1,NK2)

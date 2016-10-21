@@ -1,21 +1,28 @@
+#!/bin/bash
 #PBS -l nodes=np_nodes:ppn=np_threads
+#PBS -l walltime=0:10:00
+#PBS -l mem=2GB
 #PBS -N expname
-#PBS -o expname.out
+#PBS -M mhc431@nyu.edu
+#PBS -o expname.out 
 #PBS -e expname.err
+ 
+module purge
+module load petsc/openmpi/intel/3.6.4
+module load pnetcdf/openmpi/intel/1.5.0 
 
-export LD_LIBRARY_PATH=/opt/hdf5-intel/lib:/opt/netcdf4-intel/lib:/opt/openmpi-intel/lib:$LD_LIBRARY_PATH  
-export PATH=/opt/openmpi-intel/bin:$PATH  
-
-NPROCS=`wc -l < $PBS_NODEFILE`
-
-cd $PBS_O_WORKDIR
+RUNDIR=$SCRATCH/VVM/DATA/expname
+cd $RUNDIR
 
 export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
-
-/opt/openmpi-intel/bin/mpirun -np total_cores ./vvm < INPUT | tee OUTPUT  
-
+mpirun -np total_cores ./vvm < INPUT | tee OUTPUT 
 date >> runtime
+
+# leave a blank line at the end
+
+
+
 
 

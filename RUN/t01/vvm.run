@@ -30,7 +30,8 @@ setenv EXPHDR_tmp ${expname}" "${subdir}
 
 cd ${subdir}
 
-set file = ../../RUN/t01/PARMSLD.f
+#set file = ../../RUN/t01/PARMSLD.f
+set file = PARMSLD.f
 
 set nx = `grep "nsbdm_x = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_x = //g'`
 set ny = `grep "nsbdm_y = " ${file} |sed 's/, .*$//g' |sed 's/^.*nsbdm_y = //g'`
@@ -54,7 +55,7 @@ sed -e 's/expname/'${expname}'/g' \
     -e 's/np_threads/4/g' \
     -e 's/total_cores/4/g' ../../RUN/run.sh > run.sh
 
-#qsub run.sh
+qsub run.sh
 #rm run.sh
 
 exit

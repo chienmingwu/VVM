@@ -42,6 +42,7 @@ cat > definesld.com << 'END1'
 #define DIFFUSION
 #define PHYSICS
 #define MICROCODE
+#define PARALLELIO
 #define RADCODE
 'END1'
 cat definesld.com
@@ -66,7 +67,7 @@ sed -e '1,$s/zonal_dimension/128/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=8640 /
+ &INPUT1 NEWRUN=T, ITTADD=360 /
  &INPUT2 RLAT=15. /
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
