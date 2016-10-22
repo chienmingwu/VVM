@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe
+set expname = tpe0716
 
 # hardscrabble configuration
 set subdir = '../..'

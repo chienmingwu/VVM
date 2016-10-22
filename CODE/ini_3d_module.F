@@ -67,7 +67,7 @@ CONTAINS
           ,QCBAR(NK3),QVSBAR(NK3)
       REAL (KIND=dbl_kind) :: ZT1(18),PI1(18),TV1(18),PILOG1(18)
       REAL (KIND=dbl_kind) :: PQ1(20),P1(18),T1(18),QV1(18),QC1(18)
-      REAL (KIND=dbl_kind) :: Q1OBS(18),Q2OBS(18),WLS1(18),PU1(18),U1(18)
+      REAL (KIND=dbl_kind) :: Q1OBS(18),Q2OBS(18),WLS1(18),PU1(18),U1(18),V1(18)
       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
               ,111.3,92.6/
