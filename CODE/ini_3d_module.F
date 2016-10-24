@@ -389,7 +389,7 @@ CONTAINS
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
 !ccwu turn on the if for restarting
-      IF (.true.) then
+      IF (.false.) then
       WRITE(FILENAME,'(A27,I3.3,A1,I3.3,A4)') &
       '../rank01bw/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
@@ -460,7 +460,7 @@ CONTAINS
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
-      call RANKINE(mi_glob/2+192,mj_glob/2-64,30,50000.,15.)
+      call RANKINE(mi_glob/2+192,mj_glob/2,30,50000.,15.)
       call bound_arb(nk3,u3dx)
       call bound_arb(nk3,u3dy)
 

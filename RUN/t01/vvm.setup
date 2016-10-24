@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rank02bws3a150
+set expname = rank01bw
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -45,8 +45,6 @@ cat > definesld.com << 'END1'
 #define PARALLELIO
 #define CORIOLIS
 #define RADCODE
-#define AREAMN
-#define TOPOGRAPHY
 'END1'
 cat definesld.com
 
