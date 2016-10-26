@@ -439,7 +439,7 @@ CONTAINS
 !     3. SET UP CIRCULATION
 !*******************************************
 !ccwu if true, then restart
-      if (.true.) then
+      if (.false.) then
       
       Call bound_3d_xy
 
@@ -460,7 +460,7 @@ CONTAINS
       U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
-      call RANKINE(mi_glob/2+192,mj_glob/2,30,50000.,15.)
+      call RANKINE(mi_glob/2+192,mj_glob/2,30,50000.,25.)
       call bound_arb(nk3,u3dx)
       call bound_arb(nk3,u3dy)
 
