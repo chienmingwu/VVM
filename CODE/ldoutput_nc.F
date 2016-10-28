@@ -831,6 +831,17 @@ CONTAINS
 
       ENDIF      
 !sync L files when restart is done
+!ccwu out put restart file
+      IF (ITT .EQ. ITTADD) THEN
+
+      WRITE(FILENAME,'(A16,I3.3,A1,I3.3,A4)') &
+      'RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='UNKNOWN')
+      WRITE(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
+      CLOSE(99)
+
+      ENDIF
+
 #if defined (PARALLELIO) 
       call output_nc_sync
 #else
