@@ -44,7 +44,7 @@ PRIVATE
 ! *** FOR DATA STORAGE FILE MANAGEMENT
       CHARACTER*50 F_HEADER
       CHARACTER*8 FILNAM
-
+      CHARACTER*50 FILENAME
       REAL (KIND=real_kind) :: C_s(80)
 !      INTEGER (KIND=int_kind), public :: IC_s(60)
 !      REAL (KIND=dbl_kind), public :: C_8(80)

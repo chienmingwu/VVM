@@ -309,8 +309,10 @@ CONTAINS
       DO I=1,148
 
       DO 210 K = 1, NK3
-      Q1LS (K,I) = -1.* SCALEQ * Q1LS (K,I) / PIBAR(K) / SECDAY
-      Q2LS (K,I) = SCALEQ * Q2LS (K,I) / (GAMFAC * SECDAY)
+!      Q1LS (K,I) = -1.* SCALEQ * Q1LS (K,I) / PIBAR(K) / SECDAY
+      Q1LS (K,I) = -1.* 3. * Q1LS (K,I) / PIBAR(K) / SECDAY
+!      Q2LS (K,I) = SCALEQ * Q2LS (K,I) / (GAMFAC * SECDAY)
+      Q2LS (K,I) = 6. * Q2LS (K,I) / (GAMFAC * SECDAY)
   210 CONTINUE
       ENDDO
 
@@ -389,7 +391,7 @@ CONTAINS
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
 !ccwu turn on the if for restarting
-      IF (.false.) then
+      IF (.true.) then
       WRITE(FILENAME,'(A27,I3.3,A1,I3.3,A4)') &
       '../rank01bw/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
@@ -439,7 +441,7 @@ CONTAINS
 !     3. SET UP CIRCULATION
 !*******************************************
 !ccwu if true, then restart
-      if (.false.) then
+      if (.true.) then
       
       Call bound_3d_xy
 

@@ -49,7 +49,7 @@
       ZB = 0. 
       PI = 3.14159265358979323846264338327 
 
-      DGR = -pi/2.*80./180.
+      DGR = -pi*15./180. !15 for 105 degree 
 
       NAMELIST /INPUT3/ DT,DX,DYNEW,DZ,DZ1,DOMAIN,ZB,NOTURB,NOSFX 
      1                 ,NSFLUX,ALADV,UVTAU,BUOY,NOTHERM,WRXMU
@@ -171,12 +171,12 @@
 
   100 CONTINUE
 
-!ccwu move topo  for 12 points (24km)
+!ccwu move topo  for 25 points (50km)
 
       HXtmp=0
       do i=1,mi_glob
       do j=50,mj_glob
-      HXtmp(I,J+12)=HX(I,J)
+      HXtmp(I,J-25)=HX(I,J)
       enddo
       enddo
 
