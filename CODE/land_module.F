@@ -466,8 +466,7 @@ CONTAINS
    albdo = lALBEDO
    sstxy = lT1
 
-
-!easy define surface temperature and albedo over water surface. 
+!easy define surface temperature and albedo over water surface.
 !note that TG must equal to lT1 in order to compute the sflux_2d i
    DO J=1,MJ1
    DO I=1,MI1

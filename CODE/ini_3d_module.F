@@ -48,7 +48,7 @@ CONTAINS
          scaleq=0._dbl_kind, & !
          rkappa,             &
          rkappai,            &
-         gamfac, a0, z00, xr, yr, zr, dist,tmp,ESW,ESI
+         gamfac, a0, z00, xr, yr, zr, dist,tmp
       REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
       REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
@@ -125,9 +125,6 @@ CONTAINS
       T1(K) =  T1(K) * 1.E-01 + 273.16
       QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
-!ccwu stable env.
-      T1(7:21)=T1(7:21)+10.
-      QV1(7:21)=QV1(7:21)*0.5
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
