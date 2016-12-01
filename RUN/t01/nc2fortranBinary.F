@@ -171,12 +171,12 @@
 
   100 CONTINUE
 
-!ccwu move topo  for 25 points (50km)
+!ccwu move topo  for 37 points (75km)
 
       HXtmp=0
       do i=1,mi_glob
       do j=50,mj_glob
-      HXtmp(I,J-25)=HX(I,J)
+      HXtmp(I,J-37)=HX(I,J)
       enddo
       enddo
 
