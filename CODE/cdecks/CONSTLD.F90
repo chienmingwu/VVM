@@ -152,4 +152,8 @@ PRIVATE
       
 !---------------------------------------------------------------------
 
+   INTEGER (KIND=int_kind), PUBLIC ::           &
+      petsc_cr        ! 1 for default criterion, 0 for manual solver. 
+
+
 END MODULE constld

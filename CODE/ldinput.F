@@ -69,7 +69,7 @@ CONTAINS
       NAMELIST /INPUT5/ ZRSEA,DSST,SCALE,IX,ITINIT,ITSTOP         &
                        ,DTHMAX,DTPERT,Z1PERT,Z2PERT               &
                        ,CRAD,CRAD1,Q1Q2,DTRAD,CAMRC,RRTMRC        &
-                       ,DTABSEM,SOLVAR
+                       ,DTABSEM,SOLVAR,petsc_cr
 !      NAMELIST /INPUT6/ ITTMAX,CZ1,CZ2,SST,F,NRAD
 !***********************************************************************
       DATA SFCRHO/1.160007D0/,OMEGA/7.292E-5/
@@ -211,6 +211,8 @@ CONTAINS
                   ! number of calls to the CAM radiation, to ensure
                   ! that NABSEM is a multiple of NRAD.
 
+      petsc_cr = 1
+
       if(my_task == 0)  then
         READ (15, INPUT2)
         READ (15, INPUT3)
@@ -336,7 +338,7 @@ CONTAINS
       ITTMAX = MAXITT
       NOUT = (ITTMAX/NXS) + 1
 
-   CALL petsc_solver_initialize
+   CALL petsc_solver_initialize(petsc_cr)
 
    END SUBROUTINE input_3d 
 
