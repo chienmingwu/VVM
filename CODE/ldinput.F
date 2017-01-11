@@ -69,7 +69,7 @@ CONTAINS
       NAMELIST /INPUT5/ ZRSEA,DSST,SCALE,IX,ITINIT,ITSTOP         &
                        ,DTHMAX,DTPERT,Z1PERT,Z2PERT               &
                        ,CRAD,CRAD1,Q1Q2,DTRAD,CAMRC,RRTMRC        &
-                       ,DTABSEM,SOLVAR
+                       ,DTABSEM,SOLVAR,petsc_cr
 !      NAMELIST /INPUT6/ ITTMAX,CZ1,CZ2,SST,F,NRAD
 !***********************************************************************
       DATA SFCRHO/1.160007D0/,OMEGA/7.292E-5/
@@ -153,7 +153,7 @@ CONTAINS
 
       NSFLUX  = 6
       ALADV   = 1._dbl_kind
-      UVTAU   = 0.
+      UVTAU   = 7200.
 
       NOTURB  = .FALSE.
       BUOY    = .TRUE.
@@ -195,7 +195,7 @@ CONTAINS
       Z1PERT = 0.
       Z2PERT = 100._dbl_kind
 
-      CRAD   = 1. / (60._dbl_kind*60._dbl_kind)
+      CRAD   = 1. / 3600._dbl_kind
       CRAD1  = 1. / 86400._dbl_kind  !only used for newtownian cooling
       DTRAD  = 300._dbl_kind ! Interval between calls to CEMRAD
 
@@ -210,6 +210,8 @@ CONTAINS
                   ! in the CAM radiation.  Defined in terms of the 
                   ! number of calls to the CAM radiation, to ensure
                   ! that NABSEM is a multiple of NRAD.
+
+      petsc_cr = 1
 
       if(my_task == 0)  then
         READ (15, INPUT2)
@@ -336,7 +338,7 @@ CONTAINS
       ITTMAX = MAXITT
       NOUT = (ITTMAX/NXS) + 1
 
-   CALL petsc_solver_initialize
+   CALL petsc_solver_initialize(petsc_cr)
 
    END SUBROUTINE input_3d 
 

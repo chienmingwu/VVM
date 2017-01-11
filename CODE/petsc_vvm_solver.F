@@ -118,7 +118,6 @@ USE petscdmda
 
 IMPLICIT NONE
 PRIVATE
-PetscInt, PARAMETER, PRIVATE:: nlevel = 6, nlv = nlevel-1
 PetscInt, PRIVATE:: i,j,k,kt,npt,np
 PetscInt, PRIVATE:: ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
 PetscInt, PRIVATE:: ctx3,ctx2
@@ -128,24 +127,29 @@ PetscOffset, PRIVATE:: ip
 PetscErrorCode, PRIVATE:: ierr
 Vec, PRIVATE::v,vl,rhs,v1,v2
 PC, PRIVATE::PC_Conti,PC_Toppsi,PC_Topchi
-DM, PRIVATE::da3(nlevel),da2(nlevel)
 KSP Conti,Toppsi,Topchi
-! Set method and preconditioning
+#if defined (PETSCMG)
+PetscInt, PARAMETER, PRIVATE:: nlevel = 6, nlv = nlevel-1
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPFBCGS, pc_type_Conti = PCMG
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPFBCGS, pc_type_toppsi = PCMG
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPFBCGS, pc_type_topchi = PCMG
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCNONE
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCNONE
-!Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCNONE
 
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_conti = KSPCG, spc_type_Conti = PCBJACOBI
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_toppsi = KSPCG, spc_type_toppsi = PCBJACOBI
 Character(len=*), PARAMETER, PRIVATE :: sksp_type_topchi = KSPCG, spc_type_topchi = PCBJACOBI
-
 !sub-ksp and respect pc for PCMG setting
 PC, PRIVATE::spc_Conti(2*nlevel-1),spc_topChi(2*nlevel-1),spc_topPsi(2*nlevel-1)
 KSP sksp_Conti(2*nlevel-1),sksp_topChi(2*nlevel-1),sksp_topPsi(2*nlevel-1)
 
+#else
+PetscInt, PARAMETER, PRIVATE:: nlevel = 1, nlv = 0
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCEISENSTAT
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCEISENSTAT
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCEISENSTAT
+!sub-ksp and respect pc for PCMG setting
+
+#endif
+DM, PRIVATE::da3(nlevel),da2(nlevel)
 Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
@@ -153,6 +157,7 @@ PetscInt, PRIVATE:: MXIT = 2000
 PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
 PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-6,dtol_TopPsi = 1.d2
 PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-6,dtol_TopChi = 1.d2
+
 !PetscViewer viewer
 
 PUBLIC :: petsc_solver_initialize,petsc_solver_finalize,petsc_solve_3d, &
@@ -172,7 +177,7 @@ subroutine ComputeTOPBC(ksp,JJ,jac,ctx,ierr)
 END SUBROUTINE
 END INTERFACE
 CONTAINS
-SUBROUTINE petsc_solver_initialize
+SUBROUTINE petsc_solver_initialize(petsc_cr)
 
 !-----------------------------------------------------------------------
 
@@ -180,6 +185,21 @@ SUBROUTINE petsc_solver_initialize
 ! http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/DM/DMDACreate3d.html
 ! Get the grid information about grid size @ global by
 ! DMDAGetCorners and DMDAGetGhostCorners
+PetscInt, intent(in) :: petsc_cr
+
+! set additional criterion if petsc_cr == 1 
+if (petsc_cr .eq. 1) then
+MXIT = 2000
+tol_Conti = 1.d-15
+atol_Conti=1.d-10
+dtol_Conti = 1.d2
+tol_TopPsi = 1.d-15
+atol_TopPsi=1.d-8
+dtol_TopPsi = 1.d2
+tol_TopChi = 1.d-15
+atol_TopChi=1.d-8
+dtol_TopChi = 1.d2
+endif
 
     call DMDACreate3d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                       &
       DM_BOUNDARY_PERIODIC,DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,MI_glob/(2**nlv), &
@@ -226,7 +246,7 @@ SUBROUTINE petsc_solver_initialize
     call KSPGetPC(Conti,PC_Conti,ierr)
     call PCSetType(PC_Conti,pc_type_conti,ierr)
     IF (pc_type_conti .eq. PCEISENSTAT) call PCEisenstatSetOmega(PC_Conti,Omega,ierr)
-    IF (pc_type_conti .eq. PCMG) THEN
+#if defined (PETSCMG)
     call PCSetDM(PC_Conti,da3(1),ierr)
     call PCMGSetLevels(PC_Conti, nlevel,PETSC_NULL_OBJECT,ierr)
     call PCMGSetCycleType(PC_Conti, PC_MG_CYCLE_V,ierr)
@@ -254,14 +274,11 @@ SUBROUTINE petsc_solver_initialize
     call PCSetType(spc_Conti(2*nlevel-I),spc_type_conti,ierr)
     IF (spc_type_conti .eq. PCEISENSTAT) call PCEisenstatSetOmega(spc_Conti(2*nlevel-I),Omega,ierr)
     ENDDO
-
     call PCMGGetCoarseSolve(PC_Conti,sksp_Conti(nlevel),ierr)
     call KSPSetType(sksp_Conti(nlevel),sksp_type_conti,ierr)
     call KSPGetPC(sksp_Conti(nlevel),spc_Conti(nlevel),ierr)
     call PCSetType(spc_Conti(nlevel),spc_type_conti,ierr)
-
-    ENDIF
-
+#endif
     call KSPSetFromOptions(Conti,ierr)
     call KSPSetTolerances(Conti,tol_Conti,atol_Conti,dtol_Conti,mxit,ierr)
 ! Create a global vector and set initial guess as following
@@ -276,6 +293,7 @@ SUBROUTINE petsc_solver_initialize
     call VecDestroy(rhs,ierr)
 ! Create 2d grid for top equations
 ! The grid information can be used in both 2d and 3d grid.
+
 
     call DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                &
       DM_BOUNDARY_PERIODIC,DMDA_STENCIL_BOX,MI_glob/(2**nlv),MJ_glob/(2**nlv), &
@@ -312,7 +330,8 @@ SUBROUTINE petsc_solver_initialize
     call KSPSetType(Toppsi, ksp_type_toppsi,ierr)
     call KSPGetPC(Toppsi,PC_Toppsi,ierr)
     call PCSetType(PC_Toppsi,pc_type_toppsi,ierr)
-    IF (pc_type_toppsi .eq. PCMG) THEN
+
+#if defined (PETSCMG)
 
     call PCSetDM(PC_Toppsi,da2(1),ierr)
     call PCMGSetLevels(PC_Toppsi, nlevel,PETSC_NULL_OBJECT,ierr)
@@ -346,7 +365,7 @@ SUBROUTINE petsc_solver_initialize
     call KSPGetPC(sksp_toppsi(nlevel),spc_toppsi(nlevel),ierr)
     call PCSetType(spc_toppsi(nlevel),spc_type_toppsi,ierr)
 
-    ENDIF
+#endif
     IF (pc_type_toppsi .eq. PCEISENSTAT) call PCEisenstatSetOmega(PC_Toppsi,Omega,ierr)
     call KSPSetTolerances(Toppsi,tol_Toppsi,atol_Toppsi,dtol_Toppsi,mxit,ierr)
     call VecSet(rhs,0.d0,ierr)
@@ -363,8 +382,9 @@ SUBROUTINE petsc_solver_initialize
     call KSPSetType(Topchi, ksp_type_topchi,ierr)
     call KSPGetPC(Topchi,PC_Topchi,ierr)
     call PCSetType(PC_Topchi,pc_type_topchi,ierr)
-    IF (pc_type_topchi .eq. PCMG) THEN
+!    IF (pc_type_topchi .eq. PCMG) THEN
 
+#if defined (PETSCMG)
     call PCSetDM(PC_Topchi,da2(1),ierr)
     call PCMGSetLevels(PC_Topchi, nlevel,PETSC_NULL_OBJECT,ierr)
     call PCMGSetCycleType(PC_Topchi, PC_MG_CYCLE_V,ierr)
@@ -397,7 +417,7 @@ SUBROUTINE petsc_solver_initialize
     call KSPGetPC(sksp_topchi(nlevel),spc_topchi(nlevel),ierr)
     call PCSetType(spc_topchi(nlevel),spc_type_topchi,ierr)
 
-    ENDIF
+#endif
     IF (pc_type_topchi .eq. PCEISENSTAT) call PCEisenstatSetOmega(PC_Topchi,Omega,ierr)
     call KSPSetTolerances(Topchi,tol_Topchi,atol_Topchi,dtol_Topchi,mxit,ierr)
 

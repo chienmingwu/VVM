@@ -196,8 +196,7 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       nrad = NRADD
       nstat = 100000
       nrestart = 0
-      
-      sstxy(:,:) = tg(:,:)
+!      sstxy(:,:) = tg(:,:)
 
 ! Read in trace gases
       CALL trace_gas_input(MI1, MJ1, NK2-1, PBAR(2:NK3-1), PBARZ)

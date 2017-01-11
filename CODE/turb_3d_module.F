@@ -12,7 +12,8 @@ USE utils
 USE domain_decomposition
 #if defined (LSM)
 USE land_module, only:land_interface,land_ini
-USE rad, only:lwDown_3D,swDown_3D
+USE rad, only:lwDown_3D,swDown_3D,lwUp_3d, swUp_3d
+
 #endif
 
 IMPLICIT NONE
@@ -92,9 +93,9 @@ CONTAINS
       DELD=(DX*DYNEW*DZ)**POWE
 
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
-!      CRITMN=100.
+!      CRITMN=10. for complex topography and short run
 !      New Value for TWP-ICE
-      CRITMN=10._dbl_kind !ccwu for LES run
+      CRITMN=1._dbl_kind !ccwu for LES run
 
       RAMD0S=(0.23_dbl_kind*DELD)**2
 
@@ -826,7 +827,9 @@ CONTAINS
 
       REAL (KIND=int_kind) ::    &
          swD(MI1,MJ1),           & ! surface short wave flux input for LSM
-         lwD(MI1,MJ1)             ! surface long wave flux input fof LSM
+         lwD(MI1,MJ1),           & ! surface long wave flux input fof LSM
+         swU(MI1,MJ1),           & ! surface short wave flux output for LSM
+         lwU(MI1,MJ1)              ! surface long wave flux output fof LSM
 
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
@@ -870,30 +873,25 @@ CONTAINS
 
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
-      ztmp = .5*DZ/FNT(hxp)
 
-      T2(I,J) = TH3D(I,J,hxp)*PIBAR(hxp)
-      QG(I,J) = QV3D(I,J,hxp)/(1+QV3D(I,J,hxp))
+      T2(I,J) = TH3D(I,J,hxp)
+      QG(I,J) = QV3D(I,J,hxp)
       swD(I,J) = swDown_3D(I,J,hxp)
       lwD(I,J) = lwDown_3D(I,J,hxp)
+      swU(I,J) = swUp_3D(I,J,hxp)
+      lwU(I,J) = lwUp_3D(I,J,hxp)
 
-      ES1  = ES ( TG(I,J) )
-      QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 )
-      TS   = CP * TG(I,J) + GRAV * ZW(hx1)
+
 
 !     SURFACE VALUES OF LIQUID WATER STATIC ENERGY AND TOTAL WATER
-      Q    = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
-      T    = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)    &
+      QD(I,J) = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
+      TD(I,J) = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)    &
              -(HLF+HLM)*QI3D(I,J,hxp)
 
-      TD(I,J) = TS-T 
-      QD(I,J) = ABS(GWET(I,J))*(QSFC-Q)
-      THVSMD(I,J) = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
-               +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
   105 CONTINUE
 
       call land_interface(T2,QG,swD,lwD,sprec(1:mi1,1:mj1),WT,WQ, &
-                          VEN2D,SPEEDTP,ZROUGH,TG,TD,QD,THVSMD)
+                          VEN2D,SPEEDTP,ZROUGH,TG,TD,QD,GWET,swU,lwU)
 
 #else
 !==========================================================
@@ -920,6 +918,18 @@ CONTAINS
 
       CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ztmp,ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
+
+
+      if (my_task .eq. 0 ) THEN
+
+      if (i .eq. 10 .and. j .eq. 10 ) THEN 
+      print*,'TB = ', THBAR(hxp)
+      print*,'THVSMD = ', THVSM
+      print*,'speed = ', SPEEDM
+      print*,'zd = ', ztmp
+      print*,'zrough = ',ZROUGH1
+      endif
+      endif
 
       if(psfx) THEN
         WT(I,J) = fss(i,j) 
@@ -973,10 +983,15 @@ CONTAINS
       hxu1=INT(hxu(I,J))
       hxv1=INT(hxv(I,J))
 
+#if defined (LSM)
+!easy WQ/ETAKIN and WT/SHEAT already time rho in LSM and maskout in
+!land_interface.F
+      WQV(I,J) = WQ(I,J)
+      WTH(I,J) = WT(I,J)     
+#else
       WQV(I,J) = WQ(I,J)*RHOZ(hx1)
       WTH(I,J) = WT(I,J)*RHOZ(hx1)/(CP*PIBAR(hx1))
-!      WQV(I,J)=0.
-!      WTH(I,J)=0. !turn on momentum drag, not surface fluxes
+#endif
 
       if(hxu1 .gt. 0) then
       UW(I,J)  = UW(I,J)*RHOZ(hxu1)
@@ -989,9 +1004,10 @@ CONTAINS
       WV(I,J)  = WV(I,J)*RHOZ(hx1)
       endif
   130 CONTINUE
+      if (my_task .eq. 0 ) print*,'sensible heat = ', WTH(10,10)
+      if (my_task .eq. 0 ) print*,'latent heat = ',WQV(10,10)
 
    END SUBROUTINE sflux_3d
-
 !-----7---------------------------------------------------------------72
    SUBROUTINE SFLUX_2D (SIGMAU,THVM,THVSM,SPEED1,ZR,ZROUGH,USTAR,   &
        VENTFC,MOLEN )
@@ -1321,7 +1337,7 @@ SUBROUTINE TURB_3D_INI
 
 
 #if defined (LSM)
-      call land_ini(hx)
+      call land_ini(hx,tg)
 #endif
 #endif
 
