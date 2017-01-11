@@ -188,16 +188,16 @@ SUBROUTINE petsc_solver_initialize(petsc_cr)
 PetscInt, intent(in) :: petsc_cr
 
 ! set additional criterion if petsc_cr == 1 
-if (petsc_cr .eq. 0) then
+if (petsc_cr .eq. 1) then
 MXIT = 2000
 tol_Conti = 1.d-15
-atol_Conti=1.d-8
+atol_Conti=1.d-10
 dtol_Conti = 1.d2
 tol_TopPsi = 1.d-15
-atol_TopPsi=1.d-6
+atol_TopPsi=1.d-8
 dtol_TopPsi = 1.d2
 tol_TopChi = 1.d-15
-atol_TopChi=1.d-6
+atol_TopChi=1.d-8
 dtol_TopChi = 1.d2
 endif
 
