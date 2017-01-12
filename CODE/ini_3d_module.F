@@ -60,36 +60,82 @@ CONTAINS
       logical lf
 
 
-      DATA NU1/6/,NT1/18/
+      DATA NU1/10000/,NT1/10000/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(18),PI1(18),TV1(18),PILOG1(18)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(18),T1(18),QV1(18),QC1(18)
-      REAL (KIND=dbl_kind) :: Q1OBS(18),Q2OBS(18),WLS1(18),PU1(18),U1(18),V1(18)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA P1/1006., 1000., 925., 850.,700., 500., 400., 300., 250., &
-              200., 150., 100., 94.3, 70., 50., 30., 20., 10./
-      DATA T1/29.2, 27.8, 24.6, 23.8, 12.8, -1.7, -12.7, -27.7, &
-              -36.9, -48.9, -63.7, -79.9, -81.5, -74.7, -64.5, &
-              -53.3, -51.3, -37.7/
-      DATA QV1/18.17, 18.98, 14.8, 9.66, 7.76, 0.54, 0.18, 0.82, &
-               0.25, 0.06, 0.01, 7*0./
-      DATA QC1/18*0./
-      DATA U1/0.515, 0.515, 11.42, 12.58, 10.75, 3.94, -3.37, &
-              -1.86, -5.6, -7.96, 10.63, 12.08, 15.37, 17.23, &
-              -3.48, 19.37, -7.91,21.74/
-      DATA V1/0.89, 0.89, 9.58, 5.87, 0.94, 3.3, -2.36, -6.95, -8.0, &
-              -11.37, 1.87, 4.39, 7.17, 8.04, -19.75, 5.19, -21.74, &
-               7.91/
-      PU1=P1
+      REAL (KIND=dbl_kind) :: ZT1(10000),PI1(10000),TV1(10000),PILOG1(10000)
+      REAL (KIND=dbl_kind) :: PQ1(10000),P1(10000),T1(10000),QV1(10000),QC1(10000)
+      REAL (KIND=dbl_kind) :: Q1OBS(10000),Q2OBS(10000),wls1(10000)
+      REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
 
-      WLS1=0.
-      Q1OBS=0.
-      Q2OBS=0.
+       DELZ=1.
+       sfcp=1000.
+       DO K=1,NT1
+       HEIGHT(K)=(K-1)*DELZ
+       ENDDO
+
+!************************************
+!* Puli  (2013.09.08 14) case    *
+!************************************
+
+        t1=0.
+        qv1=0.
+        qc1=0.
+        wls1=0.
+
+        do k=1,NT1
+        if(height(k) .lt. 1500.) then
+        t1(k) =298.5+(305.5-298.5)*height(k)/1500.
+        qv1(k)=15.7
+        elseif(height(k) .ge. 1500. .and. height(k) .le. 2275.) then
+        qv1(k)=15.7 -(15.7-12.7) *(height(k)-1500.)/775.
+        t1(k) =305.5+(309.-305.5)*(height(k)-1500.)/775.
+        else
+        qv1(k)=7.4 -(7.4-1.15) *(height(k)-2275.)/4100.
+        t1(k) =315.+(327.-315.)*(height(k)-2775.)/4100.
+        endif
+
+        if(qv1(k) .lt. 0.) then
+        qv1(k)=0.
+        endif
+
+        enddo
+    
+        do k=2,NT1
+        if(height(k) .le. 2275.) then
+        wls1(k)=1.5*(height(k)/2275.)
+        else
+        wls1(k)=1.5
+        endif
+        enddo
+
+
+        do k=1,NT1
+        qv1(k)=qv1(k)/1000.
+        enddo
+
+        do k=1,nt1
+        thv(k)=t1(k)*(1+0.608*qv1(k))
+        enddo
+
+
+       PI1(1)=(sfcp/1000.)**(rgas/CP)
+       DO K=2,NT1
+       THVAVG=0.5*(THV(K)+THV(K-1))
+       PI1(K)=PI1(K-1)-GRAV*DELZ/(CP*THVAVG)
+       ENDDO
+
+       DO K=1,nt1
+       p1(k)=exp(cp/rgas*log(pi1(K))+log(1000.))
+       PU1(K)=P1(K)
+       PQ1(K)=P1(K)
+       ENDDO
+
+       do k=1,nt1
+       t1(k)=t1(k)*pi1(k)
+       enddo
 
       casename= 'GATE_PHASE_III'
 
@@ -103,7 +149,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T1(1)+273.
+      SST = 298.5
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -113,8 +159,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K)+273.
-      QV1(K)= QV1(K)*1.E-3
+      T1(K) =  T1(K)
+      QV1(K)= QV1(K)
   100 CONTINUE
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -436,8 +482,8 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=UG(K)
-      U3DY(I,J,K)=VG(K)
+      U3DX(I,J,K)=-2.
+      U3DY(I,J,K)=-1.
   610 CONTINUE
 
       DO 660 K = 2, NK1
