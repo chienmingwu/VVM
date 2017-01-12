@@ -93,7 +93,7 @@ CONTAINS
       DELD=(DX*DYNEW*DZ)**POWE
 
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
-!      CRITMN=100.
+!      CRITMN=10. for complex topography and short run
 !      New Value for TWP-ICE
       CRITMN=1._dbl_kind !ccwu for LES run
 
