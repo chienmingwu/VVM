@@ -188,16 +188,16 @@ SUBROUTINE petsc_solver_initialize(petsc_cr)
 PetscInt, intent(in) :: petsc_cr
 
 ! set additional criterion if petsc_cr == 1 
-if (petsc_cr .eq. 1) then
+if (petsc_cr .eq. 0) then
 MXIT = 2000
 tol_Conti = 1.d-15
-atol_Conti=1.d-10
+atol_Conti=1.d-8
 dtol_Conti = 1.d2
 tol_TopPsi = 1.d-15
-atol_TopPsi=1.d-8
+atol_TopPsi=1.d-6
 dtol_TopPsi = 1.d2
 tol_TopChi = 1.d-15
-atol_TopChi=1.d-8
+atol_TopChi=1.d-6
 dtol_TopChi = 1.d2
 endif
 
@@ -523,9 +523,9 @@ PetscReal norm
       IF ( MY_TASK .EQ. 0) THEN
       call KSPGetIterationNumber(Toppsi,its,ierr)
       call KSPGetResidualNorm(Toppsi,norm,ierr)
-      write(6,100) norm,its
+      write(6,100) norm,its,vsum
       ENDIF
- 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+ 100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
 
       call vecsum(v1,vsum,ierr)
 !      call vecshift(v1,vsum*tpts, ierr)
@@ -576,9 +576,9 @@ PetscReal norm
       IF ( MY_TASK .EQ. 0) THEN
       call KSPGetIterationNumber(Topchi,its,ierr)
       call KSPGetResidualNorm(Topchi,norm,ierr)
-      write(6,100) norm,its
+      write(6,100) norm,its,vsum
       ENDIF
- 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+ 100  format('Norm of error = ',e11.4,',  Iterations = ',i5,', vsum =', e11.4)
 
       call vecsum(v2,vsum,ierr)
 !      call vecshift(v2,vsum*tpts,ierr)
