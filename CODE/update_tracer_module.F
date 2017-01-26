@@ -48,71 +48,71 @@ CONTAINS
       tempim=mi1*ni_sbdm+i
       tempjm=mj1*nj_sbdm+j
 
-      if(tempim .eq. 398. .and. tempjm .eq. 645.) then
+      if(tempim .eq. 398 .and. tempjm .eq. 645) then
       TC3D(I,J,6,1)=1.
       END IF
 
-      if(tempim .eq. 573. .and. tempjm .eq. 840.) then
+      if(tempim .eq. 573 .and. tempjm .eq. 840) then
       TC3D(I,J,6,2)=1.
       END IF
 
-      if(tempim .eq. 668. .and. tempjm .eq. 848.) then
+      if(tempim .eq. 668 .and. tempjm .eq. 848) then
       TC3D(I,J,5,3)=1.
       END IF
 
-      if(tempim .eq. 337. .and. tempjm .eq. 354.) then
+      if(tempim .eq. 337 .and. tempjm .eq. 354) then
       TC3D(I,J,6,4)=1.
       END IF
 
-      if(tempim .eq. 575. .and. tempjm .eq. 821.) then
+      if(tempim .eq. 575 .and. tempjm .eq. 821) then
       TC3D(I,J,7,5)=1.
       END IF
 
-      if(tempim .eq. 487. .and. tempjm .eq. 746.) then
+      if(tempim .eq. 487 .and. tempjm .eq. 746) then
       TC3D(I,J,6,6)=1.
       END IF
 
-      if(tempim .eq. 339. .and. tempjm .eq. 558.) then
+      if(tempim .eq. 339 .and. tempjm .eq. 558) then
       TC3D(I,J,6,7)=1.
       END IF
 
-      if(tempim .eq. 339. .and. tempjm .eq. 322.) then
+      if(tempim .eq. 339 .and. tempjm .eq. 322) then
       TC3D(I,J,5,8)=1.
       END IF
 
-      if(tempim .eq. 382. .and. tempjm .eq. 278.) then
+      if(tempim .eq. 382 .and. tempjm .eq. 278) then
       TC3D(I,J,6,9)=1.
       END IF
 
-      if(tempim .eq. 368. .and. tempjm .eq. 283.) then
+      if(tempim .eq. 368 .and. tempjm .eq. 283) then
       TC3D(I,J,6,10)=1.
       END IF
 
-      if(tempim .eq. 370. .and. tempjm .eq. 285.) then
+      if(tempim .eq. 370 .and. tempjm .eq. 285) then
       TC3D(I,J,6,11)=1.
       END IF
 
-      if(tempim .eq. 399. .and. tempjm .eq. 645.) then
+      if(tempim .eq. 399 .and. tempjm .eq. 645) then
       TC3D(I,J,6,12)=1.
       END IF
 
-      if(tempim .eq. 646. .and. tempjm .eq. 601.) then
+      if(tempim .eq. 646 .and. tempjm .eq. 601) then
       TC3D(I,J,6,13)=1.
       END IF
 
-      if(tempim .eq. 692. .and. tempjm .eq. 725.) then
+      if(tempim .eq. 692 .and. tempjm .eq. 725) then
       TC3D(I,J,6,14)=1.
       END IF
 
-      if(tempim .eq. 367. .and. tempjm .eq. 322.) then
+      if(tempim .eq. 367 .and. tempjm .eq. 322) then
       TC3D(I,J,6,15)=1.
       END IF
 
-      if(tempim .eq. 369. .and. tempjm .eq. 283.) then
+      if(tempim .eq. 369 .and. tempjm .eq. 283) then
       TC3D(I,J,6,16)=1.
       END IF
 
-      if(tempim .eq. 380. .and. tempjm .eq. 274.) then
+      if(tempim .eq. 380 .and. tempjm .eq. 274) then
       TC3D(I,J,6,17)=1.
       END IF
 
@@ -163,71 +163,71 @@ CONTAINS
       DO 123 I = mim,mip
       tempim=mi1*ni_sbdm+i
       tempjm=mj1*nj_sbdm+j
-      if(tempim .eq. 398. .and. tempjm .eq. 645.) then
+      if(tempim .eq. 398 .and. tempjm .eq. 645) then
       TC3D(I,J,6,1)=1.
       END IF
 
-      if(tempim .eq. 573. .and. tempjm .eq. 840.) then
+      if(tempim .eq. 573 .and. tempjm .eq. 840) then
       TC3D(I,J,6,2)=1.
       END IF
 
-      if(tempim .eq. 668. .and. tempjm .eq. 848.) then
+      if(tempim .eq. 668 .and. tempjm .eq. 848) then
       TC3D(I,J,5,3)=1.
       END IF
 
-      if(tempim .eq. 337. .and. tempjm .eq. 354.) then
+      if(tempim .eq. 337 .and. tempjm .eq. 354) then
       TC3D(I,J,6,4)=1.
       END IF
 
-      if(tempim .eq. 575. .and. tempjm .eq. 821.) then
+      if(tempim .eq. 575 .and. tempjm .eq. 821) then
       TC3D(I,J,7,5)=1.
       END IF
 
-      if(tempim .eq. 487. .and. tempjm .eq. 746.) then
+      if(tempim .eq. 487 .and. tempjm .eq. 746) then
       TC3D(I,J,6,6)=1.
       END IF
 
-      if(tempim .eq. 339. .and. tempjm .eq. 558.) then
+      if(tempim .eq. 339 .and. tempjm .eq. 558) then
       TC3D(I,J,6,7)=1.
       END IF
 
-      if(tempim .eq. 339. .and. tempjm .eq. 322.) then
+      if(tempim .eq. 339 .and. tempjm .eq. 322) then
       TC3D(I,J,5,8)=1.
       END IF
 
-      if(tempim .eq. 382. .and. tempjm .eq. 278.) then
+      if(tempim .eq. 382 .and. tempjm .eq. 278) then
       TC3D(I,J,6,9)=1.
       END IF
 
-      if(tempim .eq. 368. .and. tempjm .eq. 283.) then
+      if(tempim .eq. 368 .and. tempjm .eq. 283) then
       TC3D(I,J,6,10)=1.
       END IF
 
-      if(tempim .eq. 370. .and. tempjm .eq. 285.) then
+      if(tempim .eq. 370 .and. tempjm .eq. 285) then
       TC3D(I,J,6,11)=1.
       END IF
 
-      if(tempim .eq. 399. .and. tempjm .eq. 645.) then
+      if(tempim .eq. 399 .and. tempjm .eq. 645) then
       TC3D(I,J,6,12)=1.
       END IF
 
-      if(tempim .eq. 646. .and. tempjm .eq. 601.) then
+      if(tempim .eq. 646 .and. tempjm .eq. 601) then
       TC3D(I,J,6,13)=1.
       END IF
 
-      if(tempim .eq. 692. .and. tempjm .eq. 725.) then
+      if(tempim .eq. 692 .and. tempjm .eq. 725) then
       TC3D(I,J,6,14)=1.
       END IF
 
-      if(tempim .eq. 367. .and. tempjm .eq. 322.) then
+      if(tempim .eq. 367 .and. tempjm .eq. 322) then
       TC3D(I,J,6,15)=1.
       END IF
 
-      if(tempim .eq. 369. .and. tempjm .eq. 283.) then
+      if(tempim .eq. 369 .and. tempjm .eq. 283) then
       TC3D(I,J,6,16)=1.
       END IF
 
-      if(tempim .eq. 380. .and. tempjm .eq. 274.) then
+      if(tempim .eq. 380 .and. tempjm .eq. 274) then
       TC3D(I,J,6,17)=1.
       END IF
 

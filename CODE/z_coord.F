@@ -4,6 +4,7 @@ USE kinds
 USE PARMSLD
 USE CONSTLD
 
+
 IMPLICIT NONE
 PRIVATE
 
@@ -49,7 +50,7 @@ CONTAINS
 
       PRINT*,KT,KT1,ZZ(KT)
 
-      ZZ(1) = ZB 
+      ZZ(1) = ZB
       FNZ(1) = DZ/DZ1
 
       DO 42 K = 2,KT1-1
@@ -80,6 +81,7 @@ CONTAINS
    52 CONTINUE
 
       FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
+
 
    END SUBROUTINE COORDS_2D
 
