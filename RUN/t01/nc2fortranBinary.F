@@ -198,6 +198,25 @@ C      TMP = MAX(TMP,DATA(IP,JP))
      
   500 CONTINUE
 
+!ccwu half land
+
+      DO 501 J = 1,MJ_GLOB
+      DO 501 I = MI_GLOB/2+1,MI_GLOB
+
+
+      hx(I,J) = 1
+      LU(I,J) = 13
+      alb(I,J) = 11.
+      grf(I,J) = 95.
+      lai(I,J) = 4.
+      SHDMAX(I,J) = 95.
+      SHDMIN(I,J) = 95.
+      SLOPE(I,J) = 1
+      SOIL(I,J) = 1
+
+  501 CONTINUE
+
+
 
       DO 600 I = 1, MI_GLOB
   600 XT (I) = I*DX
