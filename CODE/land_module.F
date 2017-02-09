@@ -413,10 +413,10 @@ CONTAINS
          PI1MAP(I,J)      = 1./PIBAR(hxp-1)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
          lT1(I,J)         = thbar(hx(I,J))*pibar(INT(hx(I,J)))
-         lST(I,J,1)       = lT1
-         lST(I,J,2)       = lT1
-         lST(I,J,3)       = lT1
-         lST(I,J,4)       = lT1
+         lST(I,J,1)       = lT1(I,J)
+         lST(I,J,2)       = lT1(I,J)
+         lST(I,J,3)       = lT1(I,J)
+         lST(I,J,4)       = lT1(I,J)
          lSM(I,J,1)       = 0.3281597
          lSM(I,J,2)       = 0.3240254
          lSM(I,J,3)       = 0.3013114
