@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = scs_land
+set expname = scs_land_small
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -43,7 +43,6 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define PARALLELIO
-#define AREAMN
 #define PETSCMG
 #define TOPOGRAPHY
 #define LSM
@@ -73,7 +72,7 @@ sed -e '1,$s/zonal_dimension/512/' \
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=86400 /
  &INPUT2 RLAT=0.,RLON=120./
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=250.,DZ1=50.,DT=0.1,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=250.,DZ1=50.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1. /
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=30,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr = 0/
 'END6'
