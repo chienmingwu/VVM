@@ -203,8 +203,27 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       DO 501 J = 1,MJ_GLOB
       DO 501 I = MI_GLOB/2+1,MI_GLOB-MI_GLOB/4
 
+! add 1000m height mountain      
 
-      hx(I,J) = 1
+      if(I .lt. MI_GLOB/2+64) then
+      tmp=(I-MI_GLOB/2)*1000./64.
+      else
+      tmp=1000.+(MI_GLOB/2+64-I)*1000./64.
+      endif
+
+      DO K=2,NK1
+      IF(tmp .GE. ZZ(K)) THEN
+      HX(I,J)=K
+     1         +NINT((tmp-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      ENDIF
+
+      IF(HX(I,J) .LT. 0) THEN
+      HX(I,J)=0
+      ENDIF
+
+      ENDDO
+
+  
       LU(I,J) = 13
       alb(I,J) = 11.
       grf(I,J) = 95.
