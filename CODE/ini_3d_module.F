@@ -59,44 +59,73 @@ CONTAINS
 
       integer nu1, nt1, nq1, k1, k2, it
       logical lf
-      DATA NU1/6/,NT1/29/,NQ1/20/
+      DATA NU1/10000/,NT1/10000/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(29),PI1(29),TV1(29),PILOG1(29)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(29),T1(29),QV1(29),QC1(29)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0,775.0 &
-             ,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0,350.0 &
-             ,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0,70.0 &
-             ,50./
-      DATA T1/301.246,299.169,297.515,296.35,295.014,293.752,292.521,291.309,290.106 &
-             ,288.867,287.545,284.466,280.821,276.82,272.996,268.835,263.996,258.415&
-             ,251.848,243.709,233.844,228.075,221.699,214.639,206.84,198.676,191.745&
-             ,194.587,206.771/
-      DATA QV1/0.0179026,0.0174521,0.0164586,0.0150866,0.013841,0.0124337,0.0110566 &
-              ,0.00974031,0.00858361,0.00759569,0.00676534,0.00555704,0.00457475,0.00363432 &
-              ,0.00280347,0.00208696,0.00147428,0.000984061,0.000624419,0.000359956,0.000167552 &
-              ,0.000100977,5.50747e-05,2.7595e-05,1.2715e-05,5.39508e-06,2.6389e-06,2.24212e-06&
-              ,2.29645e-06/
-      DATA QC1/29*0./
+      REAL (KIND=dbl_kind) :: ZT1(10000),PI1(10000),TV1(10000),PILOG1(10000)
+      REAL (KIND=dbl_kind) :: PQ1(10000),P1(10000),T1(10000),QV1(10000),QC1(10000)
+!mjo forcing 
+      REAL (KIND=real_kind) ::  Q1temp(15),Q2temp(15)
+      REAL (KIND=dbl_kind) ::   Q1OBS(15),Q2OBS(15)
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
+      REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
 
-      REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
-      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
-      DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
+      REAL (KIND=dbl_kind) :: ESW
+
+       DELZ=1.
+       sfcp=1000.
+       DO K=1,NT1
+       HEIGHT(K)=(K-1)*DELZ
+       ENDDO
+
+!************************************
+!* Texiera constant theta backgroud profile  *
+!************************************
+!t1 = theta_l
+!qv1= qt
+        do k=1,NT1
+        u1(k)=0.
+        enddo
+
+        do k=1,NT1
+        qv1(k)=0.
+        enddo
+
+        do k=1,NT1
+        t1(k)=300. 
+        enddo
+
+        do k=1,nt1
+        t1(k)=t1(k)+2.5e6/1004.5*qc1(k)
+        qv1(k)=qv1(k)-qc1(k)
+        enddo
+
+        do k=1,nt1
+        thv(k)=t1(k)*(1+0.608*qv1(k)-qc1(k))
+        enddo
+
+
+       PI1(1)=(sfcp/1000.)**(rgas/CP)
+       DO K=2,NT1
+       THVAVG=0.5*(THV(K)+THV(K-1))
+       PI1(K)=PI1(K-1)-GRAV*DELZ/(CP*THVAVG)
+       ENDDO
+
+       DO K=1,nt1
+       p1(k)=exp(cp/rgas*log(pi1(K))+log(1000.))
+       PU1(K)=P1(K)
+       PQ1(K)=P1(K)
+       ENDDO
+
+       do k=1,nt1
+       t1(k)=t1(k)*pi1(k)
+       enddo
+
+!ccwu turn off  q1q2
+       Q1OBS=0.
+       Q2OBS=0.
 
       casename= 'GATE_PHASE_III'
 
@@ -110,7 +139,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 302.8
+      SST = 291.
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -317,6 +346,41 @@ CONTAINS
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)
       VG(NK3) = VG(NK2)
+
+!ccwu apply new initial profiles here
+
+      do k=1,NK3
+      if(ZT(k) .le. 840.) then
+      QVBAR(k)=9.0/1000.
+      else
+      QVBAR(k)=4.0/1000.
+      endif
+      enddo
+
+      do k=1,NK3
+      if(ZT(k) .le. 840.) then
+      THBAR(k)=289.0
+      else
+      THBAR(k)=297.5+(ZT(k)-840.)**(1./3.)
+      endif
+      enddo
+
+      do k=1,NK3
+      if(ZT(k) .le. 600) then
+      QCBAR(k)=0.
+      elseif(ZT(k) .gt. 600 .and. ZT(k) .le. 840) then
+      QCBAR(k)=(0.5-0.5*(840.-ZT(k))/240.)/1000.
+      else
+      QCBAR(k)=0.
+      endif
+      enddo
+      do k=1,NK3
+      THBAR(k)=THBAR(k)+2.5e6/1004.5*QCBAR(k)
+      QVBAR(k)=QVBAR(k)-QCBAR(k)
+      T(K)=THBAR(K)*PIBAR(K)
+      enddo
+
+
 
 !     OCEAN POINTS
 

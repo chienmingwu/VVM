@@ -33,7 +33,30 @@ CONTAINS
      
 ! local variables
       INTEGER (KIND=int_kind) ::   &
-         i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
+         i, j, k, kk ,nt,invk ! do loop indices for zonal, meridional and vertical dimensions
+
+!add simple subsidence effects
+!wbar=-omega/(rho*g)
+!dT/dt= -wbar*(dT/dz)
+!dqv/dt=-wbar*(dqv/dz)
+!dqc/dt=-wbar*(dqc/dz)
+      REAL (KIND=dbl_kind) :: &
+      wbar(nk3)  ! dw/dz subsidence in m/s unit 
+
+      do  k=1,nk3
+      wbar(k)=-1.75e-6*zt(k)*FNZ(K)/DZ
+      enddo
+
+      do k=2,nk2
+      do j=1,mj1
+      do i=1,mi1
+      TH3D(I,J,K)=TH3D(I,J,K)-DT*WBAR(K)*(TH3D(I,J,K+1)-TH3D(I,J,K))
+      QV3D(I,J,K)=QV3D(I,J,K)-DT*WBAR(K)*(QV3D(I,J,K+1)-QV3D(I,J,K))
+      QC3D(I,J,K)=QC3D(I,J,K)-DT*WBAR(K)*(QC3D(I,J,K+1)-QC3D(I,J,K))
+      enddo
+      enddo
+      enddo
+
 ! Update theta from dynamics tendency term
       DO 50 K = 2, NK2
       DO 50 J = 1, MJ1
