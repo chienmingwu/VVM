@@ -200,38 +200,38 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
 !ccwu half land
 
-      DO 501 J = 1,MJ_GLOB
-      DO 501 I = MI_GLOB/2+1,MI_GLOB-MI_GLOB/4
+!      DO 501 J = 1,MJ_GLOB
+!      DO 501 I = MI_GLOB/2+1,MI_GLOB-MI_GLOB/4
 ! add 1000m height mountain    
 ! move three points to the left  
-
-      if(I .lt. MI_GLOB/2+32) then
-      tmp=(I-MI_GLOB/2+3)*950./32.
-      else
-      tmp=950.+(MI_GLOB/2+32-I+3)*950./32.
-      endif
-
-      DO K=2,NK1
-      IF(tmp .GE. ZZ(K)) THEN
-      HX(I,J)=K
-     1         +NINT((tmp-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-      ENDIF
-
-      IF(HX(I,J) .LT. 0) THEN
-      HX(I,J)=1
-      ENDIF
-      ENDDO
-
-      LU(I,J) = 13
-      alb(I,J) = 11.
-      grf(I,J) = 95.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 95.
-      SHDMIN(I,J) = 95.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 1
-
-  501 CONTINUE
+!
+!      if(I .lt. MI_GLOB/2+32) then
+!      tmp=(I-MI_GLOB/2+3)*950./32.
+!      else
+!      tmp=950.+(MI_GLOB/2+32-I+3)*950./32.
+!      endif
+!
+!      DO K=2,NK1
+!      IF(tmp .GE. ZZ(K)) THEN
+!      HX(I,J)=K
+!     1         +NINT((tmp-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!      ENDIF
+!
+!      IF(HX(I,J) .LT. 0) THEN
+!      HX(I,J)=1
+!      ENDIF
+!      ENDDO
+!
+!      LU(I,J) = 13
+!      alb(I,J) = 11.
+!      grf(I,J) = 95.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 95.
+!      SHDMIN(I,J) = 95.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 1
+!
+!  501 CONTINUE
 
 
 

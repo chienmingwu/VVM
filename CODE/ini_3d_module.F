@@ -48,7 +48,7 @@ CONTAINS
          scaleq=0._dbl_kind, & !
          rkappa,             &
          rkappai,            &
-         gamfac, a0, z00, xr, yr, zr, dist,tmp,ESW,ESI
+         gamfac, a0, z00, xr, yr, zr, dist,tmp
       REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
       REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
@@ -70,9 +70,9 @@ CONTAINS
       REAL (KIND=real_kind) ::  Q1temp(15),Q2temp(15)
       REAL (KIND=dbl_kind) ::   Q1OBS(15),Q2OBS(15)
 
-      REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
+      REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),V1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
 
-      REAL (KIND=dbl_kind) :: ESW
+      REAL (KIND=dbl_kind) :: ESW,ESI
 
        DELZ=1.
        sfcp=1000.
@@ -87,6 +87,7 @@ CONTAINS
 !qv1= qt
         do k=1,NT1
         u1(k)=0.
+        v1(k)=0.
         enddo
 
         do k=1,NT1
