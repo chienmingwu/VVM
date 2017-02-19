@@ -46,17 +46,12 @@ if ( $pth < 4 || $ppn >= 36) then
 echo 'bad cores.'
 exit
 endif
-set outname = `echo $expname | awk '{print substr($0,1,3)}'`
 
-sed -e 's/expname.out/'${outname}'.out/g' \
-    -e 's/expname.err/'${outname}'.err/g' \
-    -e 's/expname/'${expname}'/g' \
+sed -e 's/expname/'${expname}'/g' \
     -e 's/np_nodes/1/g' \
-    -e 's/np_threads/16/g' \
-    -e 's/total_cores/16/g' ../../RUN/run.sh > run.sh
-
+    -e 's/np_threads/4/g' \
+    -e 's/total_cores/4/g' ../../RUN/run.sh > run.sh
 qsub run.sh
-#rm run.sh
 
 exit
 
