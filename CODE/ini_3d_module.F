@@ -95,7 +95,7 @@ CONTAINS
 
       REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
       DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
+      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
       DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
 
       casename= 'GATE_PHASE_III'
@@ -431,7 +431,7 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=0.
+      U3DX(I,J,K)=UG(K)
       U3DY(I,J,K)=0.
   610 CONTINUE
 
