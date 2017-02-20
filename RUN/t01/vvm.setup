@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = scs_land_small_topo_shear
+set expname = scs_land_small_topo_shear_large
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -56,9 +56,9 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/512/' \
+sed -e '1,$s/zonal_dimension/1024/' \
     -e '1,$s/merid_dimension/256/' \
-    -e '1,$s/zonal_decomposition/16/' \
+    -e '1,$s/zonal_decomposition/32/' \
     -e '1,$s/merid_decomposition/8/' \
     -e '1,$s/vert_dimension/45/' \
     -e '1,$s/tracer_dimension/0/' \
