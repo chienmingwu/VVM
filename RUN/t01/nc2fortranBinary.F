@@ -201,7 +201,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !ccwu half land
 
       DO 501 J = 1,MJ_GLOB
-      DO 501 I = MI_GLOB/2+1,MI_GLOB-MI_GLOB/4
+      DO 501 I = MI_GLOB/2+1,MI_GLOB-MI_GLOB/2+128
 ! add 1000m height mountain    
 ! move three points to the left  
 
