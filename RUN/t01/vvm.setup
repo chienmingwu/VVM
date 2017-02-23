@@ -57,8 +57,8 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -e '1,$s/zonal_dimension/128/' \
     -e '1,$s/merid_dimension/128/' \
-    -e '1,$s/zonal_decomposition/2/' \
-    -e '1,$s/merid_decomposition/2/' \
+    -e '1,$s/zonal_decomposition/4/' \
+    -e '1,$s/merid_decomposition/4/' \
     -e '1,$s/vert_dimension/150/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
