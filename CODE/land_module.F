@@ -111,6 +111,7 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
       REAL (KIND=dbl_kind) ::  USTAR,VENTFC(2),MOLEN,zzz,ttt,ES1,QSFC,TS
+      REAL (KIND=dbl_kind) :: tempim,tempjm !global index
 
 #if defined (LSM)
       
@@ -128,6 +129,16 @@ CONTAINS
 !       Ocean temperature (tg)
         TG(I,J)=TG(i,j)+zmcapdt*zfluxw
 #endif
+
+!ccwu add TG gradient
+
+      tempim=dble(mi1*ni_sbdm+i)
+      if(tempim .le.256) then
+      TG(I,J)=300.+(512.-384.)/383.*3.+(tempim)/383.*3.
+      else
+      TG(I,J)=300.+(tempim-384.)/383.*3.
+      endif
+!ccwu
  
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( P1(I,J) - ES1 )
