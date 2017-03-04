@@ -131,13 +131,13 @@ CONTAINS
 #endif
 
 !ccwu add TG gradient
-
-      tempim=dble(mi1*ni_sbdm+i)
-      if(tempim .le.256) then
-      TG(I,J)=300.+(512.-384.)/383.*3.+(tempim)/383.*3.
-      else
-      TG(I,J)=300.+(tempim-384.)/383.*3.
-      endif
+!
+!      tempim=dble(mi1*ni_sbdm+i)
+!      if(tempim .le.256) then
+!      TG(I,J)=300.+(512.-384.)/383.*3.+(tempim)/383.*3.
+!      else
+!      TG(I,J)=300.+(tempim-384.)/383.*3.
+!      endif
 !ccwu
  
       ES1  = ES ( TG(I,J) )

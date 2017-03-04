@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = scs_land_small_topo_sst
+set expname = scs_land_small_topo_r_shear
 
 # hardscrabble configuration
 set subdir = '../..'
