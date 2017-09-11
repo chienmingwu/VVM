@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = scs_land_small_topo_shear_tau86400
+set expname = scs_land_small_topo_slab
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -47,7 +47,7 @@ cat > definesld.com << 'END1'
 #define TOPOGRAPHY
 #define LSM
 #define RADCODE
-#define AREAMN
+#define SLAB
 'END1'
 cat definesld.com
 
