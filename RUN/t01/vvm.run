@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = scs_land_small_topo_vwind
+set expname = scs_land_small_topo_restart
 set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
@@ -51,8 +51,8 @@ set outname = `echo $expname | awk '{print substr($0,1,3)}'`
 sed -e 's/expname.out/'${outname}'.out/g' \
     -e 's/expname.err/'${outname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/np_nodes/16/g' \
-    -e 's/np_threads/4/g' \
+    -e 's/np_nodes/8/g' \
+    -e 's/np_threads/8/g' \
     -e 's/total_cores/64/g' ../../RUN/run.sh > run.sh
 
 qsub run.sh

@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = scs_land_small_topo_vwind
+set expname = scs_land_small_topo_restart
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -47,7 +47,6 @@ cat > definesld.com << 'END1'
 #define TOPOGRAPHY
 #define LSM
 #define RADCODE
-#define AREAMN
 'END1'
 cat definesld.com
 
@@ -71,7 +70,7 @@ sed -e '1,$s/zonal_dimension/512/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=86400 /
+ &INPUT1 NEWRUN=T, ITTADD=25920 /
  &INPUT2 RLAT=0.,RLON=120./
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /

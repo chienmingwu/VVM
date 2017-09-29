@@ -56,6 +56,7 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
+      CHARACTER (50) FILENAME
 
       integer nu1, nt1, nq1, k1, k2, it
       logical lf
@@ -374,6 +375,16 @@ CONTAINS
 !*********************************************************
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
+
+!ccwu turn on the if for restarting
+      IF (.false.) then
+      WRITE(FILENAME,'(A27,I3.3,A1,I3.3,A4)') &
+      '../rank01bw/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+      READ(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
+      CLOSE(99)
+      ELSE
+
       DO 500 K = 1, NK3
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
@@ -386,7 +397,8 @@ CONTAINS
       QG3D(I,J,K) = 0.
   500 CONTINUE
 
-
+      ENDIF
+!ccwu 
       DO 515 K = 1, NK2
       DO 515 J = 1, MJ1
       DO 515 I = 1, MI1
