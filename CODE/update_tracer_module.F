@@ -42,7 +42,8 @@ CONTAINS
   SELECT CASE (TRIM(casename))
   CASE ('GATE_PHASE_III')
 ! Tracer for TaiChung fire power plant 
-
+!ccwu turn off tracer
+      if (.false.) then
       DO 123 J = mjm,mjp
       DO 123 I = mim,mip
       tempim=mi1*ni_sbdm+i
@@ -117,6 +118,8 @@ CONTAINS
       END IF
 
   123 CONTINUE
+      endif
+!ccwu turn off tracer
 
   CASE ('TWP-ICE')
 ! the twp-ice case has a specified source function
@@ -158,6 +161,8 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k, &     ! do loop indices for zonal, meridional and vertical dimensions
          tempim,tempjm
+!ccwu turn off tracer
+      if (.false.) then 
 
       DO 123 J = mjm,mjp
       DO 123 I = mim,mip
@@ -230,9 +235,11 @@ CONTAINS
       if(tempim .eq. 380 .and. tempjm .eq. 274) then
       TC3D(I,J,6,17)=1.
       END IF
-
-
+      
   123 CONTINUE
+
+      endif
+!ccwu turn off tracer
   
    END SUBROUTINE update_tracer_source
 

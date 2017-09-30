@@ -86,15 +86,15 @@ CONTAINS
         wls1=0.
 
         do k=1,NT1
-        if(height(k) .lt. 1500.) then
-        t1(k) =298.5+(305.5-298.5)*height(k)/1500.
-        qv1(k)=15.7
-        elseif(height(k) .ge. 1500. .and. height(k) .le. 2275.) then
-        qv1(k)=15.7 -(15.7-12.7) *(height(k)-1500.)/775.
-        t1(k) =305.5+(309.-305.5)*(height(k)-1500.)/775.
+        if(height(k) .lt. 2700.) then
+        t1(k) =289.+(300.-289.)*height(k)/2700.
+        qv1(k)=9.
+        elseif(height(k) .ge. 2700. .and. height(k) .le. 2800.) then
+        qv1(k)=9.  +(0.1-9.)   *(height(k)-2700.)/100.
+        t1(k) =300.+(310.-300.)*(height(k)-2700.)/100.
         else
-        qv1(k)=7.4 -(7.4-1.15) *(height(k)-2275.)/4100.
-        t1(k) =315.+(327.-315.)*(height(k)-2775.)/4100.
+        qv1(k)=0.1
+        t1(k) =310.+(318.-310.)*(height(k)-2800.)/3200.
         endif
 
         if(qv1(k) .lt. 0.) then
@@ -103,14 +103,6 @@ CONTAINS
 
         enddo
     
-        do k=2,NT1
-        if(height(k) .le. 2275.) then
-        wls1(k)=1.5*(height(k)/2275.)
-        else
-        wls1(k)=1.5
-        endif
-        enddo
-
 
         do k=1,NT1
         qv1(k)=qv1(k)/1000.
@@ -149,7 +141,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 298.5
+      SST = 289.
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -482,8 +474,8 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=-2.
-      U3DY(I,J,K)=-1.
+      U3DX(I,J,K)=-10.
+      U3DY(I,J,K)=-3.
   610 CONTINUE
 
       DO 660 K = 2, NK1

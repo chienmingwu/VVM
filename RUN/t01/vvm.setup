@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = puli_tracer
+set expname = xitou
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -59,10 +59,10 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -e '1,$s/zonal_dimension/1024/' \
     -e '1,$s/merid_dimension/1024/' \
-    -e '1,$s/zonal_decomposition/16/' \
+    -e '1,$s/zonal_decomposition/8/' \
     -e '1,$s/merid_decomposition/8/' \
     -e '1,$s/vert_dimension/60/' \
-    -e '1,$s/tracer_dimension/17/' \
+    -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
 # For restart --------------------
