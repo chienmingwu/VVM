@@ -443,7 +443,7 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
       U3DX(I,J,K)=0.
-      U3DY(I,J,K)=5.
+      U3DY(I,J,K)=0.
   610 CONTINUE
 
       DO 660 K = 2, NK1
