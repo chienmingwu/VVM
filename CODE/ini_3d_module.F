@@ -377,9 +377,9 @@ CONTAINS
 !*********************************************************
 
 !ccwu turn on the if for restarting
-      IF (.false.) then
+      IF (.true.) then
       WRITE(FILENAME,'(A27,I3.3,A1,I3.3,A4)') &
-      '../rank01bw/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      '../scs_restart/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
       READ(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
       CLOSE(99)
