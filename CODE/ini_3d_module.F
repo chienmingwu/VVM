@@ -56,7 +56,7 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
-      CHARACTER (50) FILENAME
+      CHARACTER (60) FILENAME
 
       integer nu1, nt1, nq1, k1, k2, it
       logical lf
@@ -378,7 +378,7 @@ CONTAINS
 
 !ccwu turn on the if for restarting
       IF (.true.) then
-      WRITE(FILENAME,'(A27,I3.3,A1,I3.3,A4)') &
+      WRITE(FILENAME,'(A30,I3.3,A1,I3.3,A4)') &
       '../scs_restart/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
       READ(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
@@ -428,6 +428,12 @@ CONTAINS
 !*******************************************
 !     3. SET UP CIRCULATION
 !*******************************************
+!ccwu if true, then restart
+      if (.true.) then
+
+      Call bound_3d_xy
+
+      ELSE
 
       DO 600 K = 1, NK2
       DO 600 J = mjm,mjp
@@ -458,6 +464,8 @@ CONTAINS
 
       CALL BOUND_3D_XY
 
+      endif
+!ccwu end restart
 
 #if defined (AREAMN)
 !-------------------
