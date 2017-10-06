@@ -383,6 +383,25 @@ CONTAINS
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
       READ(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
       CLOSE(99)
+
+!ccwu retain homogeneous wind fields
+      DO 6101 K = 1, NK3
+      DO 6101 J = mjm,mjp
+      DO 6101 I = mim,mip
+      Z3DZ(I,J,K)=0.
+      U3DX(I,J,K)=UG(K)
+      U3DY(I,J,K)=0.
+  6101 CONTINUE
+
+      DO 6601 K = 2, NK1
+      DO 6601 J = 1, MJ1
+      DO 6601 I = 1, MI1
+      Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
+                 -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
+      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
+                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
+  6601 CONTINUE
+
       ELSE
 
       DO 500 K = 1, NK3

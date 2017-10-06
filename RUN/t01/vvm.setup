@@ -47,7 +47,7 @@ cat > definesld.com << 'END1'
 #define TOPOGRAPHY
 #define LSM
 #define RADCODE
-#define SETWIND
+#define AREAMN
 'END1'
 cat definesld.com
 
