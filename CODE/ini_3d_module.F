@@ -389,7 +389,7 @@ CONTAINS
       DO 6101 J = mjm,mjp
       DO 6101 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=UG(K)
+      U3DX(I,J,K)=5.
       U3DY(I,J,K)=0.
   6101 CONTINUE
 
