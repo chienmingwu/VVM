@@ -96,7 +96,7 @@ CONTAINS
 
       REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
       DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
+      DATA U1/  5.0, 4.0, 0.0,  -2.0, -2.0, -2.0/
 
       casename= 'GATE_PHASE_III'
 
@@ -389,7 +389,7 @@ CONTAINS
       DO 6101 J = mjm,mjp
       DO 6101 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=3.
+      U3DX(I,J,K)=UG(K)
       U3DY(I,J,K)=0.
   6101 CONTINUE
 
