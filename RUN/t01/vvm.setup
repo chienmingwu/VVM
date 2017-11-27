@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = xitou
+set expname = xitou_cold
 
 # hardscrabble configuration
 set subdir = '../..'
