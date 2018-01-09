@@ -377,7 +377,7 @@ CONTAINS
 !*********************************************************
 
 !ccwu turn on the if for restarting
-      IF (.true.) then
+      IF (.false.) then
       WRITE(FILENAME,'(A30,I3.3,A1,I3.3,A4)') &
       '../scs_restart/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
@@ -448,7 +448,7 @@ CONTAINS
 !     3. SET UP CIRCULATION
 !*******************************************
 !ccwu if true, then restart
-      if (.true.) then
+      if (.false.) then
 
       Call bound_3d_xy
 
@@ -467,7 +467,7 @@ CONTAINS
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
 !ccwu_ini_wind 
-      U3DX(I,J,K)=5.
+      U3DX(I,J,K)=UG(K)
       U3DY(I,J,K)=0.
   610 CONTINUE
 
