@@ -122,6 +122,7 @@ PetscInt, PRIVATE:: i,j,k,kt,npt,np
 PetscInt, PRIVATE:: ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
 PetscInt, PRIVATE:: ctx3,ctx2
 PetscScalar, PRIVATE:: tmp(1)
+PetscScalar, POINTER, PRIVATE:: ttmp(:)
 PetscScalar, PRIVATE:: vsum,tpts = -1.d0/dble(mi_glob*mj_glob)
 PetscOffset, PRIVATE:: ip
 PetscErrorCode, PRIVATE:: ierr
@@ -586,14 +587,14 @@ PetscReal norm
       call DMGlobalToLocalBegin(da2(1),v2,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da2(1),v2,INSERT_VALUES,vl,ierr)
 
-      call VecGetArray(vl,tmp,ip,ierr)
+      call VecGetArrayF90(vl,ttmp,ierr)
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + 1
-      X(I-ixx+2,J-iy+2) = tmp(ip+kt)
+      X(I-ixx+2,J-iy+2) = ttmp(kt)
       enddo
       enddo
-      call VecRestoreArray(vl,tmp,ip,ierr)
+      call VecRestoreArrayF90(vl,ttmp,ierr)
 
     call VecDestroy(rhs,ierr)
     call VecDestroy(vl,ierr)
