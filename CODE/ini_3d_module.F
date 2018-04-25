@@ -110,7 +110,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 302.8
+      SST = 302.8-3.
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -377,7 +377,7 @@ CONTAINS
 !*********************************************************
 
 !ccwu turn on the if for restarting
-      IF (.false.) then
+      IF (.true.) then
       WRITE(FILENAME,'(A30,I3.3,A1,I3.3,A4)') &
       '../scs_restart/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
       OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
@@ -448,7 +448,7 @@ CONTAINS
 !     3. SET UP CIRCULATION
 !*******************************************
 !ccwu if true, then restart
-      if (.false.) then
+      if (.true.) then
 
       Call bound_3d_xy
 
