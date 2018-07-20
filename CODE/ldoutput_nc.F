@@ -38,13 +38,12 @@ PRIVATE
 
 
       INTEGER (KIND=int_kind), PARAMETER ::             &
-         IVAR1=6,IVAR2=6,IVAR3=1,IVAR4=ntracer,IVAR5=7, & ! number of fields in
-         IVAR6=6,IVAR7=3,IVAR8=2,IVAR9=15,IVAR10=62        !  each output variable class
+         ZVAR1=6,IVAR2=6,IVAR3=1,IVAR4=ntracer,IVAR5=7, & ! number of fields in
+         IVAR6=6,IVAR7=3,IVAR8=2,IVAR9=15,IVAR10=62       !  each output variable class
 
 ! *** FOR DATA STORAGE FILE MANAGEMENT
       CHARACTER*50 F_HEADER
       CHARACTER*8 FILNAM
-      CHARACTER*50 FILENAME
 
       REAL (KIND=real_kind) :: C_s(80)
 !      INTEGER (KIND=int_kind), public :: IC_s(60)
@@ -358,7 +357,71 @@ CONTAINS
       endif
 #endif
 
-#if defined (PARALLELIO) 
+#if defined (MICROP3)
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, nc3d_id_rst,       &
+                  start(1:3), count(1:3), nc3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+#else
+      call gather_h(nk3, nc3d, iobuffh(:,:,1:nk3))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst, nc3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      endif
+#endif
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, nr3d_id_rst,       &
+                  start(1:3), count(1:3), nr3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+#else
+      call gather_h(nk3, nr3d, iobuffh(:,:,1:nk3))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst, nr3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      endif
+#endif
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, ni3d_id_rst,       &
+                  start(1:3), count(1:3), ni3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+#else
+      call gather_h(nk3, ni3d, iobuffh(:,:,1:nk3))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst, ni3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      endif
+#endif
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qrim3d_id_rst,       &
+                  start(1:3), count(1:3), qrim3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+#else
+      call gather_h(nk3, qrim3d, iobuffh(:,:,1:nk3))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst, qrim3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      endif
+#endif
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, brim3d_id_rst,       &
+                  start(1:3), count(1:3), brim3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+#else
+      call gather_h(nk3, brim3d, iobuffh(:,:,1:nk3))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst, brim3d_id_rst, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      endif
+#endif
+
+#else
+!QS and QG
+#if defined (PARALLELIO)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qs3d_id_rst,       &
                   start(1:3), count(1:3), qs3d(1:mi1,1:mj1,1:nk2) )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
@@ -370,7 +433,7 @@ CONTAINS
       endif
 #endif
 
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qg3d_id_rst,       &
                   start(1:3), count(1:3), qg3d(1:mi1,1:mj1,1:nk2) )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
@@ -382,6 +445,7 @@ CONTAINS
       endif
 #endif
 
+#endif
 #endif
 
 !------------------------------------------------------------------------------
@@ -637,7 +701,76 @@ CONTAINS
       endif
 #endif
 
-#if defined (PARALLELIO) 
+#if defined (MICROP3)
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fnc3d_id_rst,       &
+                  start(1:4), count(1:4), fnc3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+#else
+      call gather(nk2, fnc3d(:,:,:,1), iobuff(:,:,:,1))
+      call gather(nk2, fnc3d(:,:,:,2), iobuff(:,:,:,2))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst_tend, fnc3d_id_rst, iobuff)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      endif
+#endif
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fnr3d_id_rst,       &
+                  start(1:4), count(1:4), fnr3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+#else
+      call gather(nk2, fnr3d(:,:,:,1), iobuff(:,:,:,1))
+      call gather(nk2, fnr3d(:,:,:,2), iobuff(:,:,:,2))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst_tend, fnr3d_id_rst, iobuff)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      endif
+#endif
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fni3d_id_rst,       &
+                  start(1:4), count(1:4), fni3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+#else
+      call gather(nk2, fni3d(:,:,:,1), iobuff(:,:,:,1))
+      call gather(nk2, fni3d(:,:,:,2), iobuff(:,:,:,2))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst_tend, fni3d_id_rst, iobuff)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      endif
+#endif
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqrim3d_id_rst,       &
+                  start(1:4), count(1:4), fqrim3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+#else
+      call gather(nk2, fqrim3d(:,:,:,1), iobuff(:,:,:,1))
+      call gather(nk2, fqrim3d(:,:,:,2), iobuff(:,:,:,2))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst_tend, fqrim3d_id_rst, iobuff)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      endif
+#endif
+
+#if defined (PARALLELIO)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fbrim3d_id_rst,       &
+                  start(1:4), count(1:4), fbrim3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+#else
+      call gather(nk2, fbrim3d(:,:,:,1), iobuff(:,:,:,1))
+      call gather(nk2, fbrim3d(:,:,:,2), iobuff(:,:,:,2))
+      if(my_task == 0) then
+        nc_err = nf90_put_var(ncid_rst_tend, fbrim3d_id_rst, iobuff)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      endif
+#endif
+
+#else
+! QS and QG
+#if defined (PARALLELIO)
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqs3d_id_rst,       &
                   start(1:4), count(1:4), fqs3d )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
@@ -650,7 +783,7 @@ CONTAINS
       endif
 #endif
 
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqg3d_id_rst,       &
                   start(1:4), count(1:4), fqg3d )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
@@ -663,6 +796,7 @@ CONTAINS
       endif
 #endif
 
+#endif
 #endif
 
 ! Tracer tendency
@@ -832,18 +966,6 @@ CONTAINS
 
       ENDIF      
 !sync L files when restart is done
-!ccwu out put restart file
-      IF (ITT .EQ. ITTADD) THEN
-
-      WRITE(FILENAME,'(A16,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='UNKNOWN')
-      WRITE(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
-      CLOSE(99)
-
-      ENDIF
-
-
 #if defined (PARALLELIO) 
       call output_nc_sync
 #else
@@ -1295,8 +1417,57 @@ CONTAINS
         call CDF_WRITE_4D(ncid_qi, 'qi', TIME_L, time_start, out_glob, (/ 1,1,1,time_start(1) /))
 #endif
 
+#if defined (MICROP3)
+
+      OUT_tm1(:,:,1:nk2) = nc3d(1:mi1,1:mj1,1:nk2)
+#if defined (PARALLELIO)
+        call pCDF_WRITE_4D(ncid_nc, 'nc', TIME_L, time_start, out_tm1, nk2 )
+#else
+      CALL gather(nk2,out_tm1(:,:,:), out_glob(:,:,:))
+      if(my_task == 0) &
+        call CDF_WRITE_4D(ncid_nc, 'nc', TIME_L, time_start, out_glob, (/ 1,1,1,time_start(1) /))
+#endif
+
+      OUT_tm1(:,:,1:nk2) = nr3d(1:mi1,1:mj1,1:nk2)
+#if defined (PARALLELIO)
+        call pCDF_WRITE_4D(ncid_nr, 'nr', TIME_L, time_start, out_tm1, nk2 )
+#else
+      CALL gather(nk2,out_tm1(:,:,:), out_glob(:,:,:))
+      if(my_task == 0) &
+        call CDF_WRITE_4D(ncid_nr, 'nr', TIME_L, time_start, out_glob, (/ 1,1,1,time_start(1) /))
+#endif
+
+      OUT_tm1(:,:,1:nk2) = ni3d(1:mi1,1:mj1,1:nk2)
+#if defined (PARALLELIO)
+        call pCDF_WRITE_4D(ncid_ni, 'ni', TIME_L, time_start, out_tm1, nk2 )
+#else
+      CALL gather(nk2,out_tm1(:,:,:), out_glob(:,:,:))
+      if(my_task == 0) &
+        call CDF_WRITE_4D(ncid_ni, 'ni', TIME_L, time_start, out_glob, (/ 1,1,1,time_start(1) /))
+#endif
+
+      OUT_tm1(:,:,1:nk2) = qrim3d(1:mi1,1:mj1,1:nk2)
+#if defined (PARALLELIO)
+        call pCDF_WRITE_4D(ncid_qrim, 'qrim', TIME_L, time_start, out_tm1, nk2 )
+#else
+      CALL gather(nk2,out_tm1(:,:,:), out_glob(:,:,:))
+      if(my_task == 0) &
+        call CDF_WRITE_4D(ncid_qrim, 'qrim', TIME_L, time_start, out_glob, (/ 1,1,1,time_start(1) /))
+#endif
+
+      OUT_tm1(:,:,1:nk2) = brim3d(1:mi1,1:mj1,1:nk2)
+#if defined (PARALLELIO)
+        call pCDF_WRITE_4D(ncid_brim, 'brim', TIME_L, time_start, out_tm1, nk2 )
+#else
+      CALL gather(nk2,out_tm1(:,:,:), out_glob(:,:,:))
+      if(my_task == 0) &
+        call CDF_WRITE_4D(ncid_brim, 'brim', TIME_L, time_start, out_glob, (/ 1,1,1,time_start(1) /))
+#endif
+
+#else
+! QS and QG
       OUT_tm1(:,:,1:nk2) = qs3d(1:mi1,1:mj1,1:nk2)
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
         call pCDF_WRITE_4D(ncid_qs, 'qs', TIME_L, time_start, out_tm1, nk2 )
 #else
       CALL gather(nk2,out_tm1(:,:,:), out_glob(:,:,:))
@@ -1305,12 +1476,14 @@ CONTAINS
 #endif
 
       OUT_tm1(:,:,1:nk2) = qg3d(1:mi1,1:mj1,1:nk2)
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
         call pCDF_WRITE_4D(ncid_qg, 'qg', TIME_L, time_start, out_tm1, nk2 )
 #else
       CALL gather(nk2,out_tm1(:,:,:), out_glob(:,:,:))
       if(my_task == 0) &
         call CDF_WRITE_4D(ncid_qg, 'qg', TIME_L, time_start, out_glob, (/ 1,1,1,time_start(1) /))
+#endif
+
 #endif
 #endif
 

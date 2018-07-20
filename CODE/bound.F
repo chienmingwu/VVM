@@ -44,12 +44,24 @@ CONTAINS
 #if defined (MPI)
 
 #if defined (PHYSICS)
+
+#if defined (MICROP3)
+      REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
+         buff_c(nhalo, nhalo,nk1,10+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
+         buff_ns(1:mi1,nhalo,nk1,10+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
+                                          !                  3 send to n, 4 send to south
+         buff_ew(nhalo,1:mj1,nk1,10+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
+                                         !                  3 send to e, 4 send to w
+
+#else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
          buff_c(nhalo, nhalo,nk1,7+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
          buff_ns(1:mi1,nhalo,nk1,7+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
                                           !                  3 send to n, 4 send to south
          buff_ew(nhalo,1:mj1,nk1,7+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
                                          !                  3 send to e, 4 send to w
+#endif
+
 #else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension 1 = th3d
          buff_c(nhalo, nhalo,nk1,1,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
@@ -63,9 +75,17 @@ CONTAINS
       INTEGER (KIND=int_kind), DIMENSION(MPI_STATUS_SIZE,16) :: status
             
 #if defined (PHYSICS)
+
+#if defined (MICROP3)
+      size_ns = nhalo*(10+ntracer)*(nk2-1)*(mi1)
+      size_ew = nhalo*(10+ntracer)*(nk2-1)*(mj1)
+      size_c = (10+ntracer)*(nk2-1)*nhalo*nhalo
+#else
       size_ns = nhalo*(7+ntracer)*(nk2-1)*(mi1)
       size_ew = nhalo*(7+ntracer)*(nk2-1)*(mj1)
       size_c = (7+ntracer)*(nk2-1)*nhalo*nhalo
+#endif
+
 #else
       size_ns = nhalo*(nk2-1)*(mi1)
       size_ew = nhalo*(nk2-1)*(mj1)
@@ -120,14 +140,34 @@ CONTAINS
           buff_ns(1:mi1,j,k-1,4,4) = qi3d(1:mi1,j,k)
           buff_ns(1:mi1,j,k-1,5,3) = qr3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,5,4) = qr3d(1:mi1,j,k)
+#if defined (MICROP3)
+          buff_ns(1:mi1,j,k-1,6,3)  = nc3d(1:mi1,mj1-nhalo+j,k)
+          buff_ns(1:mi1,j,k-1,6,4)  = nc3d(1:mi1,j,k)
+          buff_ns(1:mi1,j,k-1,7,3)  = nr3d(1:mi1,mj1-nhalo+j,k)
+          buff_ns(1:mi1,j,k-1,7,4)  = nr3d(1:mi1,j,k)
+          buff_ns(1:mi1,j,k-1,8,3)  = ni3d(1:mi1,mj1-nhalo+j,k)
+          buff_ns(1:mi1,j,k-1,8,4)  = ni3d(1:mi1,j,k)
+          buff_ns(1:mi1,j,k-1,9,3)  = qrim3d(1:mi1,mj1-nhalo+j,k)
+          buff_ns(1:mi1,j,k-1,9,4)  = qrim3d(1:mi1,j,k)
+          buff_ns(1:mi1,j,k-1,10,3) = brim3d(1:mi1,mj1-nhalo+j,k)
+          buff_ns(1:mi1,j,k-1,10,4) = brim3d(1:mi1,j,k)
+
+          DO nt = 1,ntracer
+            buff_ns(1:mi1,j,k-1,10+nt,3) = tc3d(1:mi1,mj1-nhalo+j,k,nt)
+            buff_ns(1:mi1,j,k-1,10+nt,4) = tc3d(1:mi1,j,k,nt)
+          enddo
+#else
           buff_ns(1:mi1,j,k-1,6,3) = qs3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,6,4) = qs3d(1:mi1,j,k)
           buff_ns(1:mi1,j,k-1,7,3) = qg3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,7,4) = qg3d(1:mi1,j,k)
+
           DO nt = 1,ntracer
             buff_ns(1:mi1,j,k-1,7+nt,3) = tc3d(1:mi1,mj1-nhalo+j,k,nt)
             buff_ns(1:mi1,j,k-1,7+nt,4) = tc3d(1:mi1,j,k,nt)
           enddo 
+#endif
+
 #endif
         enddo 
         DO i=1,nhalo
@@ -142,14 +182,34 @@ CONTAINS
           buff_ew(i,1:mj1,k-1,4,4) = qi3d(i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,5,3) = qr3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,5,4) = qr3d(i,1:mj1,k)
+#if defined (MICROP3)
+          buff_ew(i,1:mj1,k-1,6,3)  = nc3d(mi1-nhalo+i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,6,4)  = nc3d(i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,7,3)  = nr3d(mi1-nhalo+i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,7,4)  = nr3d(i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,8,3) = ni3d(mi1-nhalo+i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,8,4) = ni3d(i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,9,3) = qrim3d(mi1-nhalo+i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,9,4) = qrim3d(i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,10,3) = brim3d(mi1-nhalo+i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,10,4) = brim3d(i,1:mj1,k)
+
+          DO nt = 1,ntracer
+            buff_ew(i,1:mj1,k-1,10+nt,3) = tc3d(mi1-nhalo+i,1:mj1,k,nt)
+            buff_ew(i,1:mj1,k-1,10+nt,4) = tc3d(i,1:mj1,k,nt)
+          enddo
+#else
           buff_ew(i,1:mj1,k-1,6,3) = qs3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,6,4) = qs3d(i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,7,3) = qg3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,7,4) = qg3d(i,1:mj1,k)
+
           DO nt = 1,ntracer
             buff_ew(i,1:mj1,k-1,7+nt,3) = tc3d(mi1-nhalo+i,1:mj1,k,nt)
             buff_ew(i,1:mj1,k-1,7+nt,4) = tc3d(i,1:mj1,k,nt)
           enddo  
+#endif
+
 #endif
         enddo 
 !        do j = 1,nhalo
@@ -230,24 +290,44 @@ CONTAINS
       DO K=2,nk2
         DO j=1,nhalo
           th3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,1,1)
-          th3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,1,2)
+          th3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,1,2)
 #if defined (PHYSICS)
           qv3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,2,1)
-          qv3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,2,2)
+          qv3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,2,2)
           qc3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,3,1)
-          qc3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,3,2)
+          qc3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,3,2)
           qi3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,4,1)
-          qi3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,4,2)
+          qi3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,4,2)
           qr3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,5,1)
-          qr3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,5,2)
+          qr3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,5,2)
+#if defined (MICROP3)
+          nc3d(1:mi1,j-nhalo,k)   = buff_ns(1:mi1,j,k-1,6,1)
+          nc3d(1:mi1,mj1+j,k)     = buff_ns(1:mi1,j,k-1,6,2)
+          nr3d(1:mi1,j-nhalo,k)   = buff_ns(1:mi1,j,k-1,7,1)
+          nr3d(1:mi1,mj1+j,k)     = buff_ns(1:mi1,j,k-1,7,2)
+          ni3d(1:mi1,j-nhalo,k)   = buff_ns(1:mi1,j,k-1,8,1)
+          ni3d(1:mi1,mj1+j,k)     = buff_ns(1:mi1,j,k-1,8,2)
+          qrim3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,9,1)
+          qrim3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,9,2)
+          brim3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,10,1)
+          brim3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,10,2)
+
+          DO nt = 1,ntracer
+            tc3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,10+nt,1)
+            tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,10+nt,2)
+          enddo
+#else
           qs3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,6,1)
-          qs3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,6,2)
+          qs3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,6,2)
           qg3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,7,1)
-          qg3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,7,2)
+          qg3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,7,2)
+
           DO nt = 1,ntracer
             tc3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,7+nt,1)
-            tc3d(1:mi1,mj1+j,k,nt) = buff_ns(1:mi1,j,k-1,7+nt,2)
+            tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,7+nt,2)
           enddo
+#endif
+
 #endif
         enddo 
 
@@ -255,24 +335,44 @@ CONTAINS
 ! unpack the e-w recv buffer
         DO i=1,nhalo
           th3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,1,1)
-          th3d(mi1+i,1:mj1,k) = buff_ew(i,1:mj1,k-1,1,2)
+          th3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,1,2)
 #if defined (PHYSICS)
           qv3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,2,1)
-          qv3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,2,2)
+          qv3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,2,2)
           qc3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,3,1)
-          qc3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,3,2)
+          qc3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,3,2)
           qi3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,4,1)
-          qi3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,4,2)
+          qi3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,4,2)
           qr3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,5,1)
-          qr3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,5,2)
+          qr3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,5,2)
+#if defined (MICROP3)
+          nc3d(i-nhalo,1:mj1,k)   = buff_ew(i,1:mj1,k-1,6,1)
+          nc3d(mi1+i,1:mj1,k)     = buff_ew(i,1:mj1,k-1,6,2)
+          nr3d(i-nhalo,1:mj1,k)   = buff_ew(i,1:mj1,k-1,7,1)
+          nr3d(mi1+i,1:mj1,k)     = buff_ew(i,1:mj1,k-1,7,2)
+          ni3d(i-nhalo,1:mj1,k)   = buff_ew(i,1:mj1,k-1,8,1)
+          ni3d(mi1+i,1:mj1,k)     = buff_ew(i,1:mj1,k-1,8,2)
+          qrim3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,9,1)
+          qrim3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,9,2)
+          brim3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,10,1)
+          brim3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,10,2)
+
+          DO nt = 1,ntracer
+            tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,10+nt,1)
+            tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,10+nt,2)
+          enddo
+#else
           qs3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,6,1)
-          qs3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,6,2)
+          qs3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,6,2)
           qg3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,7,1)
-          qg3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,7,2)
+          qg3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,7,2)
+
           DO nt = 1,ntracer
             tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,7+nt,1)
-            tc3d(mi1+i,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,7+nt,2)
+            tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,7+nt,2)
           enddo  
+#endif
+
 #endif
         enddo 
 
@@ -335,15 +435,32 @@ CONTAINS
       QC3D(im,J,K)=QC3D(ii,J,K)
       QI3D(im,J,K)=QI3D(ii,J,K)
       QR3D(im,J,K)=QR3D(ii,J,K)
+#if defined (MICROP3)
+      NC3D(im,J,K)  =NC3D(ii,J,K)
+      NR3D(im,J,K)  =NR3D(ii,J,K)
+      NI3D(im,J,K)  =NI3D(ii,J,K)
+      QRIM3D(im,J,K)=QRIM3D(ii,J,K)
+      BRIM3D(im,J,K)=BRIM3D(ii,J,K)
+#else
       QS3D(im,J,K)=QS3D(ii,J,K)
       QG3D(im,J,K)=QG3D(ii,J,K)
+#endif
 
       QV3D(ip,J,K)=QV3D(i,J,K)
       QC3D(ip,J,K)=QC3D(i,J,K)
       QI3D(ip,J,K)=QI3D(i,J,K)
       QR3D(ip,J,K)=QR3D(i,J,K)
+#if defined (MICROP3)
+      NC3D(ip,J,K)  =NC3D(i,J,K)
+      NR3D(ip,J,K)  =NR3D(i,J,K)
+      NI3D(ip,J,K)  =NI3D(i,J,K)
+      QRIM3D(ip,J,K)=QRIM3D(i,J,K)
+      BRIM3D(ip,J,K)=BRIM3D(i,J,K)
+#else
       QS3D(ip,J,K)=QS3D(i,J,K)
       QG3D(ip,J,K)=QG3D(i,J,K)
+#endif
+
 #endif
  1100 CONTINUE
 
@@ -368,15 +485,32 @@ CONTAINS
       QC3D(I,im,K)=QC3D(I,ii,K)
       QI3D(I,im,K)=QI3D(I,ii,K)
       QR3D(I,im,K)=QR3D(I,ii,K)
+#if defined (MICROP3)
+      NC3D(I,im,K)  =NC3D(I,ii,K)
+      NR3D(I,im,K)  =NR3D(I,ii,K)
+      NI3D(I,im,K)  =NI3D(I,ii,K)
+      QRIM3D(I,im,K)=QRIM3D(I,ii,K)
+      BRIM3D(I,im,K)=BRIM3D(I,ii,K)
+#else
       QS3D(I,im,K)=QS3D(I,ii,K)
       QG3D(I,im,K)=QG3D(I,ii,K)
+#endif
 
       QV3D(I,ip,K)=QV3D(I,j,K)
       QC3D(I,ip,K)=QC3D(I,j,K)
       QI3D(I,ip,K)=QI3D(I,j,K)
       QR3D(I,ip,K)=QR3D(I,j,K)
+#if defined (MICROP3)
+      NC3D(I,ip,K)  =NC3D(I,j,K)
+      NR3D(I,ip,K)  =NR3D(I,j,K)
+      NI3D(I,ip,K)  =NI3D(I,j,K)
+      QRIM3D(I,ip,K)=QRIM3D(I,j,K)
+      BRIM3D(I,ip,K)=BRIM3D(I,j,K)
+#else
       QS3D(I,ip,K)=QS3D(I,j,K)
       QG3D(I,ip,K)=QG3D(I,j,K)
+#endif
+
 #endif
  1200 CONTINUE
 
@@ -401,15 +535,32 @@ CONTAINS
       QC3D(I,J,1)=QC3D(I,J,2)
       QI3D(I,J,1)=QI3D(I,J,2)
       QR3D(I,J,1)=QR3D(I,J,2)
+#if defined (MICROP3)
+      NC3D(I,J,1)  =NC3D(I,J,2)
+      NR3D(I,J,1)  =NR3D(I,J,2)
+      NI3D(I,J,1)  =NI3D(I,J,2)
+      QRIM3D(I,J,1)=QRIM3D(I,J,2)
+      BRIM3D(I,J,1)=BRIM3D(I,J,2)
+#else
       QS3D(I,J,1)=QS3D(I,J,2)
       QG3D(I,J,1)=QG3D(I,J,2)
+#endif
 
       QV3D(I,J,NK3)=QV3D(I,J,NK2)
       QC3D(I,J,NK3)= 0.
       QI3D(I,J,NK3)= 0.
       QR3D(I,J,NK3)= 0.
+#if defined (MICROP3)
+      NC3D(I,J,NK3)= 0.
+      NR3D(I,J,NK3)= 0.
+      NI3D(I,J,NK3)= 0.
+      QRIM3D(I,J,NK3)= 0.
+      BRIM3D(I,J,NK3)= 0.
+#else
       QS3D(I,J,NK3)= 0.
       QG3D(I,J,NK3)= 0.
+#endif
+
 #endif
  1300 CONTINUE
 

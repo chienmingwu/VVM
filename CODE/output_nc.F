@@ -35,7 +35,12 @@ PRIVATE
 
 ! NetCDF ids
       integer (KIND=int_kind), public :: &
-          ncid_th, ncid_qv, ncid_qc, ncid_qr, ncid_qi, ncid_qs, ncid_qg, &
+          ncid_th, ncid_qv, ncid_qc, ncid_qr, ncid_qi, &
+#if defined (MICROP3)
+          ncid_nc, ncid_nr, ncid_ni, ncid_qrim, ncid_brim, &
+#else
+          ncid_qs, ncid_qg, &
+#endif
           ncid_z3dx, ncid_z3dy, ncid_z3dz, ncid_u, ncid_v, ncid_w, ncid_tc, &
           ncid_rad, ncid_phys
 
@@ -89,8 +94,16 @@ PRIVATE
           qc3d_id_rst, &   ! cloud water mixing ratio
           qr3d_id_rst, &   ! rain mixing ratio
           qi3d_id_rst, &   ! cloud ice mixing ratio
+#if defined (MICROP3)
+          nc3d_id_rst,   & ! cloud water number mixing ratio
+          nr3d_id_rst,   & ! rain number mixing ratio
+          ni3d_id_rst,   & ! cloud ice number mixing ratio
+          qrim3d_id_rst, & ! riming cloud ice mixing ratio
+          brim3d_id_rst, & ! riming cloud ice volume mixing ratio
+#else
           qs3d_id_rst, &   ! snow mixing ratio
           qg3d_id_rst, &   ! graupel mixing ratio
+#endif
           tc3d_id_rst, &   ! passive tracer mixing ratio
           tg_id_rst, &     ! surface temperature
           zrough_id_rst, & ! surface roughness length
@@ -120,8 +133,16 @@ PRIVATE
           fqc3d_id_rst, &  ! cloud water tendency
           fqr3d_id_rst, &  ! rain tendency
           fqi3d_id_rst, &  ! cloud ice tendency
+#if defined (MICROP3)
+          fnc3d_id_rst,  & ! cloud water number tendency
+          fnr3d_id_rst,  & ! rain number tendency
+          fni3d_id_rst,  & ! cloud ice number tendency
+          fqrim3d_id_rst,& ! riming cloud ice tendency
+          fbrim3d_id_rst,& ! riming cloud ice volume tendency
+#else
           fqs3d_id_rst, &  ! snow tendency
           fqg3d_id_rst, &  ! graupel tendency
+#endif
           ftc3d_id_rst, &  ! passive tracer tendency
           futmn_id_rst, &  ! tendency of the area-mean of zonal velocity
           fvtmn_id_rst, &  ! tendency of the area-mean of meridional velocity
@@ -372,9 +393,136 @@ CONTAINS
                           'zt', 'yt', 'xt')
 #endif
 
+#if defined (MICROP3)
+! NC3D
+      call fname_nc(itp1, EXPHDR, 'nc3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_nc)
+      CALL pCDF_INI_THERMO (ncid_nc, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL pCDF_INI_4DVAR (ncid_nc, 'nc', 'cloud water number mixing ratio', &
+                          'cloud_water_number_mixing_ratio', 'kg-1', &
+                          'zt', 'yt', 'xt')
+#else
+      nc_err = nf90_create(filnam_nc, cmode=or(nf90_clobber,nf90_64bit_offset), ncid=ncid_nc)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_nc)
+
+      CALL CDF_INI_THERMO (ncid_nc, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2),  &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL CDF_INI_4DVAR (ncid_nc, 'nc', 'cloud water number mixing ratio', &
+                       'cloud_water_number_mixing_ratio', 'kg-1', &
+                          'zt', 'yt', 'xt')
+#endif
+
+! NR3D
+      call fname_nc(itp1, EXPHDR, 'nr3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_nr)
+      CALL pCDF_INI_THERMO (ncid_nr, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL pCDF_INI_4DVAR (ncid_nr, 'nr', 'rain number mixing ratio', &
+                          'rain_number_mixing_ratio', 'kg-1', &
+                          'zt', 'yt', 'xt')
+#else
+      nc_err = nf90_create(filnam_nc, cmode=or(nf90_clobber,nf90_64bit_offset), ncid=ncid_nr)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_nr)
+
+      CALL CDF_INI_THERMO (ncid_nr, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2),  &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL CDF_INI_4DVAR (ncid_nr, 'nr', 'rain number mixing ratio', &
+                       'rain_number_mixing_ratio', 'kg-1', &
+                          'zt', 'yt', 'xt')
+#endif
+
+! NI3D
+      call fname_nc(itp1, EXPHDR, 'ni3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_ni)
+      CALL pCDF_INI_THERMO (ncid_ni, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL pCDF_INI_4DVAR (ncid_ni, 'ni', 'cloud ice number mixing ratio', &
+                          'cloud_ice_number_mixing_ratio', 'kg-1', &
+                          'zt', 'yt', 'xt')
+#else
+      nc_err = nf90_create(filnam_nc, cmode=or(nf90_clobber,nf90_64bit_offset), ncid=ncid_ni)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_ni)
+
+      CALL CDF_INI_THERMO (ncid_ni, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2),  &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL CDF_INI_4DVAR (ncid_ni, 'ni', 'cloud ice number mixing ratio', &
+                       'cloud_ice_number_mixing_ratio', 'kg-1', &
+                          'zt', 'yt', 'xt')
+#endif
+
+! QRIM3D
+      call fname_nc(itp1, EXPHDR, 'qrim3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_qrim)
+      CALL pCDF_INI_THERMO (ncid_qrim, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL pCDF_INI_4DVAR (ncid_qrim, 'qrim', 'riming cloud ice mixing ratio', &
+                          'riming_cloud_ice_mixing_ratio', 'kg kg-1', &
+                          'zt', 'yt', 'xt')
+#else
+      nc_err = nf90_create(filnam_nc, cmode=or(nf90_clobber,nf90_64bit_offset), ncid=ncid_qrim)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_qrim)
+
+      CALL CDF_INI_THERMO (ncid_qrim, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2),  &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL CDF_INI_4DVAR (ncid_qrim, 'qrim', 'riming cloud ice mixing ratio', &
+                       'riming_cloud_ice_mixing_ratio', 'kg kg-1', &
+                          'zt', 'yt', 'xt')
+#endif
+
+! BRIM3D
+      call fname_nc(itp1, EXPHDR, 'brim3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_brim)
+      CALL pCDF_INI_THERMO (ncid_brim, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL pCDF_INI_4DVAR (ncid_brim, 'brim', 'riming cloud ice volume mixing ratio', &
+                          'riming_cloud_ice_volume_mixing_ratio', 'm^3 kg-1', &
+                          'zt', 'yt', 'xt')
+#else
+      nc_err = nf90_create(filnam_nc, cmode=or(nf90_clobber,nf90_64bit_offset), ncid=ncid_brim)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_brim)
+
+      CALL CDF_INI_THERMO (ncid_brim, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2),  &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL CDF_INI_4DVAR (ncid_brim, 'brim', 'riming cloud ice volume mixing ratio', &
+                       'riming_cloud_ice_volume_mixing_ratio', 'm^3 kg-1', &
+                          'zt', 'yt', 'xt')
+#endif
+
+#else
 ! QS3D
       call fname_nc(itp1, EXPHDR, 'qs3d', filnam_nc)
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
                             mpi_info_null, ncid_qs)
       CALL pCDF_INI_THERMO (ncid_qs, time_len, &
@@ -391,7 +539,7 @@ CONTAINS
       CALL CDF_INI_THERMO (ncid_qs, time_len, &
                            nk2, mj_glob, mi_glob, zt(1:nk2),  &
                            yt(1:mj_glob), xt(1:mi_glob))
-                        
+
       CALL CDF_INI_4DVAR (ncid_qs, 'qs', 'snow mixing ratio', &
                        'snow_mixing_ratio', 'kg kg-1', &
                           'zt', 'yt', 'xt')
@@ -399,7 +547,7 @@ CONTAINS
 
 ! QG3D
       call fname_nc(itp1, EXPHDR, 'qg3d', filnam_nc)
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
                             mpi_info_null, ncid_qg)
       CALL pCDF_INI_THERMO (ncid_qg, time_len, &
@@ -410,16 +558,19 @@ CONTAINS
                           'graupel_mixing_ratio', 'kg kg-1', &
                           'zt', 'yt', 'xt')
 #else
-      nc_err = nf90_create(filnam_nc, cmode=or(nf90_clobber,nf90_64bit_offset), ncid=ncid_qg)
+      nc_err = nf90_create(filnam_nc, cmode=or(nf90_clobber,nf90_64bit_offset),
+ncid=ncid_qg)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_qg)
 
       CALL CDF_INI_THERMO (ncid_qg, time_len, &
                            nk2, mj_glob, mi_glob, zt(1:nk2),  &
                            yt(1:mj_glob), xt(1:mi_glob))
-                        
+
       CALL CDF_INI_4DVAR (ncid_qg, 'qg', 'graupel mixing ratio', &
                        'graupel_mixing_ratio', 'kg kg-1', &
                           'zt', 'yt', 'xt')
+#endif
+
 #endif
 #endif
 
@@ -2300,6 +2451,110 @@ CONTAINS
       nc_err = nf90_put_att(ncid, qi3d_id_rst, 'missing_value', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
+#if defined (MICROP3)
+
+! nc3d ------------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'nc3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim /), nc3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nc3d_id_rst, 'long_name', 'cloud water number mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nc3d_id_rst, 'standard_name', 'cloud_water_number_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nc3d_id_rst, 'units', 'kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nc3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nc3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! nr3d ------------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'nr3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim /), nr3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nr3d_id_rst, 'long_name', 'rain number mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nr3d_id_rst, 'standard_name', 'rain_number_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nr3d_id_rst, 'units', 'kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nr3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, nr3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! ni3d ------------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'ni3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim /), ni3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, ni3d_id_rst, 'long_name', 'cloud ice number mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, ni3d_id_rst, 'standard_name', 'cloud_ice_number_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, ni3d_id_rst, 'units', 'kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, ni3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, ni3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! qrim3d ------------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'qrim3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim /), qrim3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, qrim3d_id_rst, 'long_name', 'riming cloud ice mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, qrim3d_id_rst, 'standard_name', 'riming_cloud_ice_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, qrim3d_id_rst, 'units', 'kg kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, qrim3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, qrim3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! brim3d ------------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'brim3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim /), brim3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, brim3d_id_rst, 'long_name', 'riming cloud ice volume mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, brim3d_id_rst, 'standard_name', 'riming_cloud_ice_volume_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, brim3d_id_rst, 'units', 'm^3 kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, brim3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, brim3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+#else
+
 ! qs3d ------------------------------------------------------------------------
 
       nc_err = nf90_def_var(ncid, 'qs3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim /), qs3d_id_rst)
@@ -2307,16 +2562,16 @@ CONTAINS
 
       nc_err = nf90_put_att(ncid, qs3d_id_rst, 'long_name', 'snow mixing ratio')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, qs3d_id_rst, 'standard_name', 'snow_mixing_ratio')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, qs3d_id_rst, 'units', 'kg kg-1')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, qs3d_id_rst, '_FillValue', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, qs3d_id_rst, 'missing_value', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
@@ -2327,18 +2582,20 @@ CONTAINS
 
       nc_err = nf90_put_att(ncid, qg3d_id_rst, 'long_name', 'graupel mixing ratio')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, qg3d_id_rst, 'standard_name', 'graupel_mixing_ratio')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, qg3d_id_rst, 'units', 'kg kg-1')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, qg3d_id_rst, '_FillValue', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, qg3d_id_rst, 'missing_value', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+#endif
 #endif
 
 ! tracers ---------------------------------------------------------------------
@@ -3344,6 +3601,115 @@ CONTAINS
       nc_err = nf90_put_att(ncid, fqi3d_id_rst, 'missing_value', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
+#if defined (MICROP3)
+
+! fnc3d -----------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'fnc3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim, time_dim /), fnc3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnc3d_id_rst, 'long_name', 'tendency of cloud water number due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnc3d_id_rst, 'standard_name', 'nc_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnc3d_id_rst, 'units', 'kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnc3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnc3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! fnr3d -----------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'fnr3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim, time_dim /), fnr3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnr3d_id_rst, 'long_name', 'tendency of rain number due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnr3d_id_rst, 'standard_name', 'nr_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnr3d_id_rst, 'units', 'kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnr3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fnr3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! fni3d -----------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'fni3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim, time_dim /), fni3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fni3d_id_rst, 'long_name', 'tendency of cloud ice number due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fni3d_id_rst, 'standard_name', 'ni_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fni3d_id_rst, 'units', 'kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fni3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fni3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! fqrim3d -----------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'fqrim3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim, time_dim /), fqrim3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fqrim3d_id_rst, 'long_name', 'tendency of riming cloud ice due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fqrim3d_id_rst, 'standard_name', 'qrim_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fqrim3d_id_rst, 'units', 'kg kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fqrim3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fqrim3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! fbrim3d -----------------------------------------------------------------------
+
+      nc_err = nf90_def_var(ncid, 'fbrim3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim, time_dim /), fbrim3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fbrim3d_id_rst, 'long_name', 'tendency of riming cloud ice volume due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fbrim3d_id_rst, 'standard_name', 'brim_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fbrim3d_id_rst, 'units', 'm^3 kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fbrim3d_id_rst, '_FillValue', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nf90_put_att(ncid, fbrim3d_id_rst, 'missing_value', dblval)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+#else
+
 ! fqs3d -----------------------------------------------------------------------
 
       nc_err = nf90_def_var(ncid, 'fqs3d', NF90_DOUBLE, (/ xc_dim, yc_dim, zc_dim, time_dim /), fqs3d_id_rst)
@@ -3352,16 +3718,16 @@ CONTAINS
       nc_err = nf90_put_att(ncid, fqs3d_id_rst, 'long_name', 'tendency of snow due &
               &to advection and falling with terminal velocity')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, fqs3d_id_rst, 'standard_name', 'qs_tendency_dynamics')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, fqs3d_id_rst, 'units', 'kg kg-1 s-1')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, fqs3d_id_rst, '_FillValue', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, fqs3d_id_rst, 'missing_value', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
@@ -3373,18 +3739,21 @@ CONTAINS
       nc_err = nf90_put_att(ncid, fqg3d_id_rst, 'long_name', 'tendency of graupel due &
               &to advection and falling with terminal velocity')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, fqg3d_id_rst, 'standard_name', 'qg_tendency_dynamics')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, fqg3d_id_rst, 'units', 'kg kg-1 s-1')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, fqg3d_id_rst, '_FillValue', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nf90_put_att(ncid, fqg3d_id_rst, 'missing_value', dblval)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+
+#endif
 #endif
 
 ! ftc3d -----------------------------------------------------------------------
@@ -3905,8 +4274,53 @@ CONTAINS
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_qi)
 #endif
 
+#if defined (MICROP3)
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_nc = ',ncid_nc
+#if defined (PARALLELIO)
+      nc_err = nfmpi_sync(ncid_nc)
+#else
+      nc_err = nf90_sync(ncid_nc)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_nc)
+#endif
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_nr = ',ncid_nr
+#if defined (PARALLELIO)
+      nc_err = nfmpi_sync(ncid_nr)
+#else
+      nc_err = nf90_sync(ncid_nr)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_nr)
+#endif
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_ni = ',ncid_ni
+#if defined (PARALLELIO)
+      nc_err = nfmpi_sync(ncid_ni)
+#else
+      nc_err = nf90_sync(ncid_ni)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_ni)
+#endif
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_qrim = ',ncid_qrim
+#if defined (PARALLELIO)
+      nc_err = nfmpi_sync(ncid_qrim)
+#else
+      nc_err = nf90_sync(ncid_qrim)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_qrim)
+#endif
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_brim = ',ncid_brim
+#if defined (PARALLELIO)
+      nc_err = nfmpi_sync(ncid_brim)
+#else
+      nc_err = nf90_sync(ncid_brim)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_brim)
+#endif
+
+#else
+! QS and QG
+
 !      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_qs = ',ncid_qs
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_sync(ncid_qs)
 #else
       nc_err = nf90_sync(ncid_qs)
@@ -3914,11 +4328,14 @@ CONTAINS
 #endif
 
 !      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_qg = ',ncid_qg
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_sync(ncid_qg)
 #else
       nc_err = nf90_sync(ncid_qg)
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_qg)
+#endif
+
+
 #endif
 #endif
 
@@ -4063,8 +4480,53 @@ CONTAINS
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_qi)
 #endif
 
+#if defined (MICROP3)
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_nc = ',ncid_nc
+#if defined (PARALLELIO)
+      nc_err = nfmpi_close(ncid_nc)
+#else
+      nc_err = nf90_close(ncid_nc)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_nc)
+#endif
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_nr = ',ncid_nr
+#if defined (PARALLELIO)
+      nc_err = nfmpi_close(ncid_nr)
+#else
+      nc_err = nf90_close(ncid_nr)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_nr)
+#endif
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_ni = ',ncid_ni
+#if defined (PARALLELIO)
+      nc_err = nfmpi_close(ncid_ni)
+#else
+      nc_err = nf90_close(ncid_ni)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_ni)
+#endif
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_qrim = ',ncid_qrim
+#if defined (PARALLELIO)
+      nc_err = nfmpi_close(ncid_qrim)
+#else
+      nc_err = nf90_close(ncid_qrim)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_qrim)
+#endif
+
+!      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_brim = ',ncid_brim
+#if defined (PARALLELIO)
+      nc_err = nfmpi_close(ncid_brim)
+#else
+      nc_err = nf90_close(ncid_brim)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_brim)
+#endif
+
+#else
+! QS and QG
+
 !      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_qs = ',ncid_qs
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_close(ncid_qs)
 #else
       nc_err = nf90_close(ncid_qs)
@@ -4072,11 +4534,13 @@ CONTAINS
 #endif
 
 !      if (my_task == 0) write(6,*) 'OUTPUT_NC_CLOSE: closing ncid_qg = ',ncid_qg
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_close(ncid_qg)
 #else
       nc_err = nf90_close(ncid_qg)
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_qg)
+#endif
+
 #endif
 #endif
 
@@ -4231,9 +4695,57 @@ CONTAINS
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_qi)
 #endif
 
+#if defined (MICROP3)
+
+! NC3D
+      call fname_nc(itp1, EXPHDR, 'nc3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_open(mpi_comm_world, filnam_nc, nf_write, mpi_info_null, ncid_nc)
+#else
+      nc_err = nf90_open(filnam_nc, NF90_WRITE, ncid_nc)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_nc)
+#endif
+
+! NR3D
+      call fname_nc(itp1, EXPHDR, 'nr3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_open(mpi_comm_world, filnam_nc, nf_write, mpi_info_null, ncid_nr)
+#else
+      nc_err = nf90_open(filnam_nc, NF90_WRITE, ncid_nr)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_nr)
+#endif
+
+! NR3D
+      call fname_nc(itp1, EXPHDR, 'ni3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_open(mpi_comm_world, filnam_nc, nf_write, mpi_info_null, ncid_ni)
+#else
+      nc_err = nf90_open(filnam_nc, NF90_WRITE, ncid_ni)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_ni)
+#endif
+
+! QRIM3D
+      call fname_nc(itp1, EXPHDR, 'qrim3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_open(mpi_comm_world, filnam_nc, nf_write, mpi_info_null, ncid_qrim)
+#else
+      nc_err = nf90_open(filnam_nc, NF90_WRITE, ncid_qrim)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_qrim)
+#endif
+
+! BRIM3D
+      call fname_nc(itp1, EXPHDR, 'brim3d', filnam_nc)
+#if defined (PARALLELIO)
+      nc_err = nfmpi_open(mpi_comm_world, filnam_nc, nf_write, mpi_info_null, ncid_brim)
+#else
+      nc_err = nf90_open(filnam_nc, NF90_WRITE, ncid_brim)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_brim)
+#endif
+
+#else
 ! QS3D
       call fname_nc(itp1, EXPHDR, 'qs3d', filnam_nc)
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_open(mpi_comm_world, filnam_nc, nf_write, mpi_info_null, ncid_qs)
 #else
       nc_err = nf90_open(filnam_nc, NF90_WRITE, ncid_qs)
@@ -4242,11 +4754,14 @@ CONTAINS
 
 ! QG3D
       call fname_nc(itp1, EXPHDR, 'qg3d', filnam_nc)
-#if defined (PARALLELIO) 
+#if defined (PARALLELIO)
       nc_err = nfmpi_open(mpi_comm_world, filnam_nc, nf_write, mpi_info_null, ncid_qg)
 #else
       nc_err = nf90_open(filnam_nc, NF90_WRITE, ncid_qg)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_qg)
+#endif
+
+
 #endif
 #endif
 
@@ -4336,14 +4851,25 @@ CONTAINS
         nc_err = nf90_open(filnam_nc, NF90_WRITE, ncid_tc)
 #endif
       endif
-      
+
+#if defined (MICROP3)
+        write(6,*) 'ncid_th, ncid_qv, ncid_qc, ncid_qr, ncid_qi, &
+                   &ncid_nc, ncid_nr, ncid_ni, ncid_qrim, ncid_brim, &
+                   &ncid_z3dx, ncid_z3dy, ncid_z3dz, ncid_u, &
+                   &ncid_v, ncid_w, ncid_rad, ncid_tc'
+        write(6,*) ncid_th, ncid_qv, ncid_qc, ncid_qr, ncid_qi, &
+                   ncid_nc, ncid_nr, ncid_ni, ncid_qrim, ncid_brim, &
+                   ncid_z3dx, ncid_z3dy, ncid_z3dz, ncid_u, &
+                   ncid_v, ncid_w, ncid_rad, ncid_tc
+#else
         write(6,*) 'ncid_th, ncid_qv, ncid_qc, ncid_qr, ncid_qi, ncid_qs, &
                    &ncid_qg, ncid_z3dx, ncid_z3dy, ncid_z3dz, ncid_u, &
                    &ncid_v, ncid_w, ncid_rad, ncid_tc'
         write(6,*) ncid_th, ncid_qv, ncid_qc, ncid_qr, ncid_qi, ncid_qs, &
                    ncid_qg, ncid_z3dx, ncid_z3dy, ncid_z3dz, ncid_u, &
                    ncid_v, ncid_w, ncid_rad, ncid_tc
-   
+#endif
+
 !==============================================================================
       END SUBROUTINE cdf_open_diag
 !==============================================================================
@@ -6223,44 +6749,144 @@ CONTAINS
       nc_err = nfmpi_put_att_double(ncid, qi3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
+#if defined (MICROP3)
+
+! nc3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'nc3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), nc3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, nc3d_id_rst, 'long_name', 20_mpi_offset_kind, 'cloud water number mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, nc3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'cloud_water_number_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, nc3d_id_rst, 'units', 7_mpi_offset_kind, 'kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, nc3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, nc3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! nr3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'nr3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), nr3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, nr3d_id_rst, 'long_name', 20_mpi_offset_kind, 'rain number mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, nr3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'rain_number_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, nr3d_id_rst, 'units', 7_mpi_offset_kind, 'kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, nr3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, nr3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! ni3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'ni3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), ni3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, ni3d_id_rst, 'long_name', 20_mpi_offset_kind, 'cloud ice number mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, ni3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'cloud_ice_number_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, ni3d_id_rst, 'units', 7_mpi_offset_kind, 'kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, ni3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, ni3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! qrim3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'qrim3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), qrim3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, qrim3d_id_rst, 'long_name', 20_mpi_offset_kind, 'riming cloud ice mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, qrim3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'riming_cloud_ice_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, qrim3d_id_rst, 'units', 7_mpi_offset_kind, 'kg kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, qrim3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, qrim3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! brim3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'brim3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), brim3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, brim3d_id_rst, 'long_name', 20_mpi_offset_kind, 'riming cloud ice volume mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, brim3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'riming_cloud_ice_volume_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, brim3d_id_rst, 'units', 7_mpi_offset_kind, 'm^3 kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, brim3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, brim3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+#else
 ! qs3d ------------------------------------------------------------------------
       nc_err = nfmpi_def_var(ncid, 'qs3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), qs3d_id_rst)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, qs3d_id_rst, 'long_name', 17_mpi_offset_kind, 'snow mixing ratio')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_text(ncid, qs3d_id_rst, 'standard_name', 17_mpi_offset_kind, 'snow_mixing_ratio')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, qs3d_id_rst, 'units', 7_mpi_offset_kind, 'kg kg-1')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_double(ncid, qs3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_double(ncid, qs3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
 ! qg3d ------------------------------------------------------------------------
       nc_err = nfmpi_def_var(ncid, 'qg3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), qg3d_id_rst)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, qg3d_id_rst, 'long_name', 20_mpi_offset_kind, 'graupel mixing ratio')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_text(ncid, qg3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'graupel_mixing_ratio')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, qg3d_id_rst, 'units', 7_mpi_offset_kind, 'kg kg-1')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_double(ncid, qg3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_double(ncid, qg3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
+
+#endif
 #endif
 
 ! tracers ------------------------------------------------------------------------
@@ -7311,6 +7937,109 @@ CONTAINS
       nc_err = nfmpi_put_att_double(ncid, fqi3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
+#if defined (MICROP3)
+
+! fnc3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'fnc3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, time_dim /), fnc3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fnc3d_id_rst, 'long_name', 71_mpi_offset_kind, 'tendency of cloud water number due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fnc3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'nc_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fnc3d_id_rst, 'units', 11_mpi_offset_kind, 'kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fnc3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fnc3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! fnr3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'fnr3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, time_dim /), fnr3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fnr3d_id_rst, 'long_name', 71_mpi_offset_kind, 'tendency of rain number due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fnr3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'nr_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fnr3d_id_rst, 'units', 11_mpi_offset_kind, 'kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fnr3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fnr3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! fni3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'fni3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, time_dim /), fni3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fni3d_id_rst, 'long_name', 71_mpi_offset_kind, 'tendency of cloud ice number due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fni3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'ni_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fni3d_id_rst, 'units', 11_mpi_offset_kind, 'kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fni3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fni3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! fqrim3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'fqrim3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, time_dim /), fqrim3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fqrim3d_id_rst, 'long_name', 71_mpi_offset_kind, 'tendency of riming cloud ice due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fqrim3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'qrim_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fqrim3d_id_rst, 'units', 11_mpi_offset_kind, 'kg kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fqrim3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fqrim3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! fbrim3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'fbrim3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, time_dim /), fbrim3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fbrim3d_id_rst, 'long_name', 71_mpi_offset_kind, 'tendency of riming cloud ice volum due &
+              &to advection and falling with terminal velocity')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fbrim3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'brim_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fbrim3d_id_rst, 'units', 11_mpi_offset_kind, 'm^3 kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fbrim3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_double(ncid, fbrim3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+#else
 ! fqs3d ------------------------------------------------------------------------
       nc_err = nfmpi_def_var(ncid, 'fqs3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, time_dim /), fqs3d_id_rst)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
@@ -7318,19 +8047,19 @@ CONTAINS
       nc_err = nfmpi_put_att_text(ncid, fqs3d_id_rst, 'long_name', 68_mpi_offset_kind, 'tendency of snow due &
               &to advection and falling with terminal velocity')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_text(ncid, fqs3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'qs_tendency_dynamics')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, fqs3d_id_rst, 'units', 11_mpi_offset_kind, 'kg kg-1 s-1')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_double(ncid, fqs3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_double(ncid, fqs3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
 ! fqg3d ------------------------------------------------------------------------
       nc_err = nfmpi_def_var(ncid, 'fqg3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, time_dim /), fqg3d_id_rst)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
@@ -7338,19 +8067,20 @@ CONTAINS
       nc_err = nfmpi_put_att_text(ncid, fqg3d_id_rst, 'long_name', 71_mpi_offset_kind, 'tendency of graupel due &
               &to advection and falling with terminal velocity')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_text(ncid, fqg3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'qg_tendency_dynamics')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, fqg3d_id_rst, 'units', 11_mpi_offset_kind, 'kg kg-1 s-1')
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_double(ncid, fqg3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       nc_err = nfmpi_put_att_double(ncid, fqg3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
+#endif
 #endif
 
 ! ftc3d -----------------------------------------------------------------------

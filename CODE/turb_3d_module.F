@@ -791,6 +791,274 @@ CONTAINS
       QIAD3(I,J,K)=DDX(I,J,K)
   950 CONTINUE
 
+#if defined (MICROP3)
+
+! QR
+      DO 970 K=2,NK2
+      DO 970 J=1,MJ1
+      DO 970 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(QR3D(I+1,J,K)-QR3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(QR3D(I,J,K)-QR3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  970 CONTINUE
+
+      DO 990 K=2,NK2
+      DO 990 J=1,MJ1
+      DO 990 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(QR3D(I,J+1,K)-QR3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(QR3D(I,J,K)-QR3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  990 CONTINUE
+
+      DO 1010 K=2,NK1
+      DO 1010 J=1,MJ1
+      DO 1010 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(QR3D(I,J,K+1)-QR3D(I,J,K))*DHWW1(I,J,K)                  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(QR3D(I,J,K)-QR3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+  1010 CONTINUE
+
+      DO 1030 J=1,MJ1
+      DO 1030 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(QR3D(I,J,NK2)-QR3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1030 CONTINUE
+
+      DO 1050 K=2,NK2
+      DO 1050 J=1,MJ1
+      DO 1050 I=1,MI1
+      QRAD3(I,J,K)=DDX(I,J,K)
+  1050 CONTINUE
+
+! NC
+      DO 1070 K=2,NK2
+      DO 1070 J=1,MJ1
+      DO 1070 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(NC3D(I+1,J,K)-NC3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(NC3D(I,J,K)-NC3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1070 CONTINUE
+
+      DO 1090 K=2,NK2
+      DO 1090 J=1,MJ1
+      DO 1090 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(NC3D(I,J+1,K)-NC3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(NC3D(I,J,K)-NC3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1090 CONTINUE
+
+      DO 1110 K=2,NK1
+      DO 1110 J=1,MJ1
+      DO 1110 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(NC3D(I,J,K+1)-NC3D(I,J,K))*DHWW1(I,J,K)                  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(NC3D(I,J,K)-NC3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+  1110 CONTINUE
+
+      DO 1130 J=1,MJ1
+      DO 1130 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(NC3D(I,J,NK2)-NC3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1130 CONTINUE
+
+      DO 1150 K=2,NK2
+      DO 1150 J=1,MJ1
+      DO 1150 I=1,MI1
+      NCAD3(I,J,K)=DDX(I,J,K)
+  1150 CONTINUE
+
+! NR
+      DO 1170 K=2,NK2
+      DO 1170 J=1,MJ1
+      DO 1170 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(NR3D(I+1,J,K)-NR3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(NR3D(I,J,K)-NR3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1170 CONTINUE
+
+      DO 1190 K=2,NK2
+      DO 1190 J=1,MJ1
+      DO 1190 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(NR3D(I,J+1,K)-NR3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(NR3D(I,J,K)-NR3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1190 CONTINUE
+
+      DO 1210 K=2,NK1
+      DO 1210 J=1,MJ1
+      DO 1210 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(NR3D(I,J,K+1)-NR3D(I,J,K))*DHWW1(I,J,K)                  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(NR3D(I,J,K)-NR3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+  1210 CONTINUE
+
+      DO 1230 J=1,MJ1
+      DO 1230 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(NR3D(I,J,NK2)-NR3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1230 CONTINUE
+
+      DO 1250 K=2,NK2
+      DO 1250 J=1,MJ1
+      DO 1250 I=1,MI1
+      NRAD3(I,J,K)=DDX(I,J,K)
+  1250 CONTINUE
+
+! NI
+      DO 1270 K=2,NK2
+      DO 1270 J=1,MJ1
+      DO 1270 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(NI3D(I+1,J,K)-NI3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(NI3D(I,J,K)-NI3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1270 CONTINUE
+
+      DO 1290 K=2,NK2
+      DO 1290 J=1,MJ1
+      DO 1290 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(NI3D(I,J+1,K)-NI3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(NI3D(I,J,K)-NI3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1290 CONTINUE
+
+      DO 1310 K=2,NK1
+      DO 1310 J=1,MJ1
+      DO 1310 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(NI3D(I,J,K+1)-NI3D(I,J,K))*DHWW1(I,J,K)                  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(NI3D(I,J,K)-NI3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+  1310 CONTINUE
+
+      DO 1330 J=1,MJ1
+      DO 1330 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(NI3D(I,J,NK2)-NI3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1330 CONTINUE
+
+      DO 1350 K=2,NK2
+      DO 1350 J=1,MJ1
+      DO 1350 I=1,MI1
+      NIAD3(I,J,K)=DDX(I,J,K)
+  1350 CONTINUE
+
+! QRIM
+      DO 1370 K=2,NK2
+      DO 1370 J=1,MJ1
+      DO 1370 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(QRIM3D(I+1,J,K)-QRIM3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(QRIM3D(I,J,K)-QRIM3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1370 CONTINUE
+
+      DO 1390 K=2,NK2
+      DO 1390 J=1,MJ1
+      DO 1390 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(QRIM3D(I,J+1,K)-QRIM3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(QRIM3D(I,J,K)-QRIM3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1390 CONTINUE
+
+      DO 1410 K=2,NK1
+      DO 1410 J=1,MJ1
+      DO 1410 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(QRIM3D(I,J,K+1)-QRIM3D(I,J,K))*DHWW1(I,J,K) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(QRIM3D(I,J,K)-QRIM3D(I,J,K-1))*DHWW2(I,J,K))/(RHOU(K)*DZSQ)
+  1410 CONTINUE
+
+      DO 1430 J=1,MJ1
+      DO 1430 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(QRIM3D(I,J,NK2)-QRIM3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1430 CONTINUE
+
+      DO 1450 K=2,NK2
+      DO 1450 J=1,MJ1
+      DO 1450 I=1,MI1
+      QRIMAD3(I,J,K)=DDX(I,J,K)
+  1450 CONTINUE
+
+! BRIM
+      DO 1470 K=2,NK2
+      DO 1470 J=1,MJ1
+      DO 1470 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(BRIM3D(I+1,J,K)-BRIM3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(BRIM3D(I,J,K)-BRIM3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1470 CONTINUE
+
+      DO 1490 K=2,NK2
+      DO 1490 J=1,MJ1
+      DO 1490 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(BRIM3D(I,J+1,K)-BRIM3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(BRIM3D(I,J,K)-BRIM3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1490 CONTINUE
+
+      DO 1510 K=2,NK1
+      DO 1510 J=1,MJ1
+      DO 1510 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(BRIM3D(I,J,K+1)-BRIM3D(I,J,K))*DHWW1(I,J,K) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(BRIM3D(I,J,K)-BRIM3D(I,J,K-1))*DHWW2(I,J,K))/(RHOU(K)*DZSQ)
+  1510 CONTINUE
+
+      DO 1530 J=1,MJ1
+      DO 1530 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(BRIM3D(I,J,NK2)-BRIM3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1530 CONTINUE
+
+      DO 1550 K=2,NK2
+      DO 1550 J=1,MJ1
+      DO 1550 I=1,MI1
+      BRIMAD3(I,J,K)=DDX(I,J,K)
+  1550 CONTINUE
+
+#endif
+
 #endif
 #endif
 

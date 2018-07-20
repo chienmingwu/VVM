@@ -1,4 +1,7 @@
 #include "definesld.com"
+
+#if defined (MICROP3)
+#else
 MODULE q_chk_module
 
 USE kinds
@@ -725,3 +728,5 @@ CONTAINS
    END SUBROUTINE fill_glo_3d
 
 END MODULE q_chk_module
+
+#endif

@@ -56,34 +56,31 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
-      CHARACTER (60) FILENAME
 
-      integer nu1, nt1, nq1, k1, k2, it
+      integer nu1, nt1, k1, k2, it
+! add to debug
+      real albdo
+!*************
       logical lf
-      DATA NU1/6/,NT1/29/,NQ1/20/
+      DATA NU1/33/,NT1/21/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(29),PI1(29),TV1(29),PILOG1(29)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(29),T1(29),QV1(29),QC1(29)
+      REAL (KIND=dbl_kind) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
+      REAL (KIND=dbl_kind) :: PQ1(20),P1(21),T1(21),QV1(21),QC1(21)
       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
               ,111.3,92.6/
-      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0,775.0 &
-             ,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0,350.0 &
-             ,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0,70.0 &
-             ,50./
-      DATA T1/301.246,299.169,297.515,296.35,295.014,293.752,292.521,291.309,290.106 &
-             ,288.867,287.545,284.466,280.821,276.82,272.996,268.835,263.996,258.415&
-             ,251.848,243.709,233.844,228.075,221.699,214.639,206.84,198.676,191.745&
-             ,194.587,206.771/
-      DATA QV1/0.0179026,0.0174521,0.0164586,0.0150866,0.013841,0.0124337,0.0110566 &
-              ,0.00974031,0.00858361,0.00759569,0.00676534,0.00555704,0.00457475,0.00363432 &
-              ,0.00280347,0.00208696,0.00147428,0.000984061,0.000624419,0.000359956,0.000167552 &
-              ,0.000100977,5.50747e-05,2.7595e-05,1.2715e-05,5.39508e-06,2.6389e-06,2.24212e-06&
-              ,2.29645e-06/
-      DATA QC1/29*0./
+      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
+             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
+             ,133.6,111.3,92.6/
+      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
+             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
+             ,-726.4,-755.8,-749.0/
+      DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
+              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
+      DATA QC1/21*0./
 
       REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
       DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
@@ -94,11 +91,19 @@ CONTAINS
 !     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
 !     PU1 (MB) , U1(M/S)
 
-      REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
-      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
+      REAL (KIND=dbl_kind) ::  PU1(33),U1(33)
+      DATA PU1/1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
+                858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
+                618.6, 581.3, 543.9, 506.8, 470.2, 434.1, 398.9,   &
+                364.6, 331.4, 299.4, 268.7, 239.5, 211.8, 185.8,   &
+                161.6, 139.4, 119.2, 101.4,  85.8 /
+      DATA U1/ -1.0,  -1.0,  -1.4,  -1.7,  -1.8,  -2.1,  -2.6,  -3.6,   &
+               -4.9,  -6.7,  -8.7, -10.6, -12.2, -13.2, -13.1, -12.0,   &
+               -9.7,  -6.6,  -3.2,  -0.3,   1.3,   1.3,   0.4,  -1.0,   &
+               -2.9,  -4.3,  -4.5,  -2.8,  -0.6,  -0.5,  -2.2,  -2.5,   &
+               -3.0 / 
 
-      casename= 'GATE_PHASE_III'
+!      casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
@@ -109,9 +114,8 @@ CONTAINS
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
 !SST=299.88K
-
-      SST = 302.8+0.5
-      
+      SST = 302.
+!      SST = T1(1) * 0.1 + 273.16 + DSST
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
@@ -120,8 +124,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) 
-      QV1(K)= QV1(K)
+      T1(K) =  T1(K) * 1.E-01 + 273.16
+      QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -131,7 +135,7 @@ CONTAINS
 
 !     *** MIXED LAYER PROFILE ***
 
-!      T1(3) = PI1(3) * T1(2) / PI1(2)
+      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
@@ -278,7 +282,7 @@ CONTAINS
 
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
+      K1 = INDEXR(PBAR(K)*0.01,20,PQ1,LF)
       K2 = K1 + 1
       Q1LS (K) =  &
         FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
@@ -311,12 +315,10 @@ CONTAINS
       K1 = INDEXR(PBARMB,NU1,PU1,LF)
       K2 = K1 + 1
       UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
   220 CONTINUE 
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
-      VG(1)   = VG(2)
-      VG(NK3) = VG(NK2)
+      vG(:)   = 0.
 
 !     OCEAN POINTS
 
@@ -375,49 +377,61 @@ CONTAINS
 !*********************************************************
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
-
-!ccwu turn on the if for restarting
-      IF (.true.) then
-      WRITE(FILENAME,'(A30,I3.3,A1,I3.3,A4)') &
-      '../scs_restart/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
-      CLOSE(99)
-
-!ccwu retain homogeneous wind fields
-      DO 6101 K = 1, NK3
-      DO 6101 J = mjm,mjp
-      DO 6101 I = mim,mip
-      Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=UG(K)
-      U3DY(I,J,K)=0.
-  6101 CONTINUE
-
-      DO 6601 K = 2, NK1
-      DO 6601 J = 1, MJ1
-      DO 6601 I = 1, MI1
-      Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
-                 -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
-      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
-                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
-  6601 CONTINUE
-
-      ELSE
-
       DO 500 K = 1, NK3
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
-      TH3D(I,J,K) = THBAR(K)
-      QV3D(I,J,K) = QVBAR(K)
+
+!      TH3D(I,J,K) = THBAR(K)
+      IF (K<=25)THEN
+        TH3D(I,J,K) = 300.+43.*(((real(K-2)*500.+250))/12000.)**(1.25)
+        IF (K==1)THEN
+          TH3D(I,J,K) = 300.+43.*(((real(K-2)*500.+250))/12000.)**(1.25)
+        ENDIF
+      ELSE
+        TH3D(I,J,K) = 343.*exp((((real(K-2)*500.+250))-12000)/1004/213*9.8)
+      ENDIF
+!      TH3D(I,J,K) = 300.
+      
+      IF (MY_TASK .EQ. 0)THEN
+        IF (sqrt(((real(I)-112)/16.)**2+((real(J)-112)/16.)**2 &
+                   +((real(K)-6)/4.)**2)<=1)THEN
+          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
+                        sqrt(((real(I)-112)/16.)**2+ &
+                             ((real(J)-112)/16.)**2+ &
+                             ((real(K)-6)/4.)**2)))**2
+        ENDIF
+      ENDIF
+ 
+
+      IF (K<=9)THEN
+        QV3D(I,J,K) = 0.0161-0.000003375*(real(K-2)*500.+250)
+        IF (K==1)THEN
+          QV3D(I,J,K) = 0.0161-0.000003375*(250)
+        ENDIF
+      ELSEIF (K<=17 .AND. K>9)THEN
+        QV3D(I,J,K) = 0.0026-0.00000065*(((real(K-2)*500.+250))-4000)
+      ELSE
+        QV3D(I,J,K) = 0.
+      ENDIF
+	  
+!      QV3D(I,J,K) = QVBAR(K)
+!      QV3D(I,J,K) = 0.
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
+#if defined (MICROP3)
+      NC3D(I,J,K) = 0.
+      NR3D(I,J,K) = 0.
+      NI3D(I,J,K) = 0.
+      QRIM3D(I,J,K) = 0.
+      BRIM3D(I,J,K) = 0.
+#else
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.
+#endif
   500 CONTINUE
 
-      ENDIF
-!ccwu 
+
       DO 515 K = 1, NK2
       DO 515 J = 1, MJ1
       DO 515 I = 1, MI1
@@ -427,8 +441,16 @@ CONTAINS
       FQC3D(I,J,K,N)=0.
       FQI3D(I,J,K,N)=0.
       FQR3D(I,J,K,N)=0.
+#if defined (MICROP3)
+      FNC3D(I,J,K,N) = 0.
+      FNR3D(I,J,K,N) = 0.
+      FNI3D(I,J,K,N) = 0.
+      FQRIM3D(I,J,K,N) = 0.
+      FBRIM3D(I,J,K,N) = 0.
+#else
       FQS3D(I,J,K,N)=0.
       FQG3D(I,J,K,N)=0.
+#endif
       FZX(I,J,K,N)=0.
       FZY(I,J,K,N)=0.
   515 CONTINUE
@@ -447,12 +469,6 @@ CONTAINS
 !*******************************************
 !     3. SET UP CIRCULATION
 !*******************************************
-!ccwu if true, then restart
-      if (.true.) then
-
-      Call bound_3d_xy
-
-      ELSE
 
       DO 600 K = 1, NK2
       DO 600 J = mjm,mjp
@@ -466,8 +482,12 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-!ccwu_ini_wind 
-      U3DX(I,J,K)=UG(K)
+      
+      IF (K<7)THEN
+        U3DX(I,J,K)=12.-12*(K)/6
+      ELSE
+        U3DX(I,J,K)=0.
+      ENDIF
       U3DY(I,J,K)=0.
   610 CONTINUE
 
@@ -483,8 +503,6 @@ CONTAINS
 
       CALL BOUND_3D_XY
 
-      endif
-!ccwu end restart
 
 #if defined (AREAMN)
 !-------------------

@@ -145,9 +145,13 @@ CONTAINS
 !
 
 ! Fill negative values
+#if defined (MICROP3)
+  ! fill in P3 scheme
+#else
       call timer_start('Q_CHK_3D')
       CALL Q_CHK_3D ( ITT )
       call timer_stop('Q_CHK_3D')
+#endif
 
       ENDIF  
       call timer_start('BUOYF_3D')
