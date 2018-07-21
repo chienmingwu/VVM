@@ -57,12 +57,9 @@ CONTAINS
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
 
-      integer nu1, nt1, k1, k2, it
-! add to debug
-      real albdo
-!*************
+      integer nu1, nt1, nq1, k1, k2, it
       logical lf
-      DATA NU1/33/,NT1/21/
+      DATA NU1/6/,NT1/21/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
@@ -91,19 +88,12 @@ CONTAINS
 !     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
 !     PU1 (MB) , U1(M/S)
 
-      REAL (KIND=dbl_kind) ::  PU1(33),U1(33)
-      DATA PU1/1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
-                858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
-                618.6, 581.3, 543.9, 506.8, 470.2, 434.1, 398.9,   &
-                364.6, 331.4, 299.4, 268.7, 239.5, 211.8, 185.8,   &
-                161.6, 139.4, 119.2, 101.4,  85.8 /
-      DATA U1/ -1.0,  -1.0,  -1.4,  -1.7,  -1.8,  -2.1,  -2.6,  -3.6,   &
-               -4.9,  -6.7,  -8.7, -10.6, -12.2, -13.2, -13.1, -12.0,   &
-               -9.7,  -6.6,  -3.2,  -0.3,   1.3,   1.3,   0.4,  -1.0,   &
-               -2.9,  -4.3,  -4.5,  -2.8,  -0.6,  -0.5,  -2.2,  -2.5,   &
-               -3.0 / 
+      REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
+      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
+      DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
+      DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
 
-!      casename= 'GATE_PHASE_III'
+      casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
@@ -114,8 +104,9 @@ CONTAINS
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
 !SST=299.88K
-      SST = 302.
-!      SST = T1(1) * 0.1 + 273.16 + DSST
+
+      SST = T1(1) * 0.1 + 273.16 + DSST
+      
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
@@ -282,7 +273,7 @@ CONTAINS
 
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,20,PQ1,LF)
+      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
       K2 = K1 + 1
       Q1LS (K) =  &
         FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
@@ -315,10 +306,12 @@ CONTAINS
       K1 = INDEXR(PBARMB,NU1,PU1,LF)
       K2 = K1 + 1
       UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
+      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
   220 CONTINUE 
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
-      vG(:)   = 0.
+      VG(1)   = VG(2)
+      VG(NK3) = VG(NK2)
 
 !     OCEAN POINTS
 
@@ -380,42 +373,8 @@ CONTAINS
       DO 500 K = 1, NK3
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
-
-!      TH3D(I,J,K) = THBAR(K)
-      IF (K<=25)THEN
-        TH3D(I,J,K) = 300.+43.*(((real(K-2)*500.+250))/12000.)**(1.25)
-        IF (K==1)THEN
-          TH3D(I,J,K) = 300.+43.*(((real(K-2)*500.+250))/12000.)**(1.25)
-        ENDIF
-      ELSE
-        TH3D(I,J,K) = 343.*exp((((real(K-2)*500.+250))-12000)/1004/213*9.8)
-      ENDIF
-!      TH3D(I,J,K) = 300.
-      
-      IF (MY_TASK .EQ. 0)THEN
-        IF (sqrt(((real(I)-112)/16.)**2+((real(J)-112)/16.)**2 &
-                   +((real(K)-6)/4.)**2)<=1)THEN
-          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
-                        sqrt(((real(I)-112)/16.)**2+ &
-                             ((real(J)-112)/16.)**2+ &
-                             ((real(K)-6)/4.)**2)))**2
-        ENDIF
-      ENDIF
- 
-
-      IF (K<=9)THEN
-        QV3D(I,J,K) = 0.0161-0.000003375*(real(K-2)*500.+250)
-        IF (K==1)THEN
-          QV3D(I,J,K) = 0.0161-0.000003375*(250)
-        ENDIF
-      ELSEIF (K<=17 .AND. K>9)THEN
-        QV3D(I,J,K) = 0.0026-0.00000065*(((real(K-2)*500.+250))-4000)
-      ELSE
-        QV3D(I,J,K) = 0.
-      ENDIF
-	  
-!      QV3D(I,J,K) = QVBAR(K)
-!      QV3D(I,J,K) = 0.
+      TH3D(I,J,K) = THBAR(K)
+      QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
@@ -482,13 +441,9 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-      
-      IF (K<7)THEN
-        U3DX(I,J,K)=12.-12*(K)/6
-      ELSE
-        U3DX(I,J,K)=0.
-      ENDIF
-      U3DY(I,J,K)=0.
+!ccwu_ini_wind 
+      U3DX(I,J,K)=UG(K)
+      U3DY(I,J,K)=VG(K)
   610 CONTINUE
 
       DO 660 K = 2, NK1
