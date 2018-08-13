@@ -38,12 +38,13 @@ PRIVATE
 
 
       INTEGER (KIND=int_kind), PARAMETER ::             &
-         ZVAR1=6,IVAR2=6,IVAR3=1,IVAR4=ntracer,IVAR5=7, & ! number of fields in
-         IVAR6=6,IVAR7=3,IVAR8=2,IVAR9=15,IVAR10=62       !  each output variable class
+         IVAR1=6,IVAR2=6,IVAR3=1,IVAR4=ntracer,IVAR5=7, & ! number of fields in
+         IVAR6=6,IVAR7=3,IVAR8=2,IVAR9=15,IVAR10=62        !  each output variable class
 
 ! *** FOR DATA STORAGE FILE MANAGEMENT
       CHARACTER*50 F_HEADER
       CHARACTER*8 FILNAM
+      CHARACTER*50 FILENAME
 
       REAL (KIND=real_kind) :: C_s(80)
 !      INTEGER (KIND=int_kind), public :: IC_s(60)
@@ -421,7 +422,7 @@ CONTAINS
 
 #else
 !QS and QG
-#if defined (PARALLELIO)
+#if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qs3d_id_rst,       &
                   start(1:3), count(1:3), qs3d(1:mi1,1:mj1,1:nk2) )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
@@ -433,7 +434,7 @@ CONTAINS
       endif
 #endif
 
-#if defined (PARALLELIO)
+#if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qg3d_id_rst,       &
                   start(1:3), count(1:3), qg3d(1:mi1,1:mj1,1:nk2) )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
@@ -446,6 +447,7 @@ CONTAINS
 #endif
 
 #endif
+
 #endif
 
 !------------------------------------------------------------------------------
@@ -770,7 +772,7 @@ CONTAINS
 
 #else
 ! QS and QG
-#if defined (PARALLELIO)
+#if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqs3d_id_rst,       &
                   start(1:4), count(1:4), fqs3d )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
@@ -783,7 +785,7 @@ CONTAINS
       endif
 #endif
 
-#if defined (PARALLELIO)
+#if defined (PARALLELIO) 
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqg3d_id_rst,       &
                   start(1:4), count(1:4), fqg3d )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
@@ -797,6 +799,7 @@ CONTAINS
 #endif
 
 #endif
+
 #endif
 
 ! Tracer tendency
@@ -966,6 +969,18 @@ CONTAINS
 
       ENDIF      
 !sync L files when restart is done
+!ccwu out put restart file
+      IF (ITT .EQ. ITTADD) THEN
+
+      WRITE(FILENAME,'(A16,I3.3,A1,I3.3,A4)') &
+      'RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='UNKNOWN')
+      WRITE(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
+      CLOSE(99)
+
+      ENDIF
+
+
 #if defined (PARALLELIO) 
       call output_nc_sync
 #else
@@ -1467,7 +1482,7 @@ CONTAINS
 #else
 ! QS and QG
       OUT_tm1(:,:,1:nk2) = qs3d(1:mi1,1:mj1,1:nk2)
-#if defined (PARALLELIO)
+#if defined (PARALLELIO) 
         call pCDF_WRITE_4D(ncid_qs, 'qs', TIME_L, time_start, out_tm1, nk2 )
 #else
       CALL gather(nk2,out_tm1(:,:,:), out_glob(:,:,:))
@@ -1476,7 +1491,7 @@ CONTAINS
 #endif
 
       OUT_tm1(:,:,1:nk2) = qg3d(1:mi1,1:mj1,1:nk2)
-#if defined (PARALLELIO)
+#if defined (PARALLELIO) 
         call pCDF_WRITE_4D(ncid_qg, 'qg', TIME_L, time_start, out_tm1, nk2 )
 #else
       CALL gather(nk2,out_tm1(:,:,:), out_glob(:,:,:))
@@ -1485,6 +1500,7 @@ CONTAINS
 #endif
 
 #endif
+
 #endif
 
       if(ntracer > 0) then

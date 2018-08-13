@@ -49,17 +49,21 @@ CONTAINS
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
          buff_c(nhalo, nhalo,nk1,10+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
          buff_ns(1:mi1,nhalo,nk1,10+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
-                                          !                  3 send to n, 4 send to south
+                                          !                  3 send to n, 4 send
+                                          !                  to south
          buff_ew(nhalo,1:mj1,nk1,10+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
-                                         !                  3 send to e, 4 send to w
+                                          !                  3 send to e, 4 send
+                                          !                  to w
 
 #else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
          buff_c(nhalo, nhalo,nk1,7+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
          buff_ns(1:mi1,nhalo,nk1,7+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
-                                          !                  3 send to n, 4 send to south
+                                          !                  3 send to n, 4 send
+                                          !                  to south
          buff_ew(nhalo,1:mj1,nk1,7+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
-                                         !                  3 send to e, 4 send to w
+                                          !                  3 send to e, 4 send
+                                          !                  to w
 #endif
 
 #else
@@ -165,7 +169,7 @@ CONTAINS
           DO nt = 1,ntracer
             buff_ns(1:mi1,j,k-1,7+nt,3) = tc3d(1:mi1,mj1-nhalo+j,k,nt)
             buff_ns(1:mi1,j,k-1,7+nt,4) = tc3d(1:mi1,j,k,nt)
-          enddo 
+          enddo
 #endif
 
 #endif
@@ -207,7 +211,7 @@ CONTAINS
           DO nt = 1,ntracer
             buff_ew(i,1:mj1,k-1,7+nt,3) = tc3d(mi1-nhalo+i,1:mj1,k,nt)
             buff_ew(i,1:mj1,k-1,7+nt,4) = tc3d(i,1:mj1,k,nt)
-          enddo  
+          enddo
 #endif
 
 #endif
@@ -290,16 +294,16 @@ CONTAINS
       DO K=2,nk2
         DO j=1,nhalo
           th3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,1,1)
-          th3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,1,2)
+          th3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,1,2)
 #if defined (PHYSICS)
           qv3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,2,1)
-          qv3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,2,2)
+          qv3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,2,2)
           qc3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,3,1)
-          qc3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,3,2)
+          qc3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,3,2)
           qi3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,4,1)
-          qi3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,4,2)
+          qi3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,4,2)
           qr3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,5,1)
-          qr3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,5,2)
+          qr3d(1:mi1,mj1+j,k) = buff_ns(1:mi1,j,k-1,5,2)
 #if defined (MICROP3)
           nc3d(1:mi1,j-nhalo,k)   = buff_ns(1:mi1,j,k-1,6,1)
           nc3d(1:mi1,mj1+j,k)     = buff_ns(1:mi1,j,k-1,6,2)
@@ -335,16 +339,16 @@ CONTAINS
 ! unpack the e-w recv buffer
         DO i=1,nhalo
           th3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,1,1)
-          th3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,1,2)
+          th3d(mi1+i,1:mj1,k) = buff_ew(i,1:mj1,k-1,1,2)
 #if defined (PHYSICS)
           qv3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,2,1)
-          qv3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,2,2)
+          qv3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,2,2)
           qc3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,3,1)
-          qc3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,3,2)
+          qc3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,3,2)
           qi3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,4,1)
-          qi3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,4,2)
+          qi3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,4,2)
           qr3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,5,1)
-          qr3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,5,2)
+          qr3d(mi1+i,1:mj1,k) =   buff_ew(i,1:mj1,k-1,5,2)
 #if defined (MICROP3)
           nc3d(i-nhalo,1:mj1,k)   = buff_ew(i,1:mj1,k-1,6,1)
           nc3d(mi1+i,1:mj1,k)     = buff_ew(i,1:mj1,k-1,6,2)
@@ -370,7 +374,7 @@ CONTAINS
           DO nt = 1,ntracer
             tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,7+nt,1)
             tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,7+nt,2)
-          enddo  
+          enddo
 #endif
 
 #endif

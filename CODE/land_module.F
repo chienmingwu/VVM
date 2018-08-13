@@ -123,9 +123,14 @@ CONTAINS
 #if defined (SLAB)
 ! 2. Ocean temperature
 ! calculate net fluxes
+        tempim=dble(mi1*ni_sbdm+i)
+
         zfluxw=swD(I,J)-swU(I,J) +lwD(I,J)-lwU(I,J)   &
-              -CP*WT(I,J)-HLF*WQ(I,J)  !&                
-              !-100. ! ocean cooling 100 w/m2 from Romps 2012
+              -CP*WT(I,J)-HLF*WQ(I,J)  &                
+              -50.
+!              +1.*(-25.-50.*abs(2*tempim/512.-1.)) ! 512 points  bretherton 2006 1.* is the
+!              +1.*(-25.-75.*abs(2*tempim/512.-1.)) ! 512 points  bretherton 2006 1.* is the
+                                                    ! turning parameter
 !       Ocean temperature (tg)
         TG(I,J)=TG(i,j)+zmcapdt*zfluxw
 #endif
@@ -155,11 +160,11 @@ CONTAINS
       Q2i(I,J) = Q2(I,J)/(1+Q2(I,J))
   100 CONTINUE
 
-      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
-      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
-      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
-      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
-      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
+!      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
+!      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
+!      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
+!      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
+!      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
 
             
       SPRECi = real(SPREC)
@@ -202,11 +207,11 @@ CONTAINS
 
   200 CONTINUE
 
-      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
-      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
-      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
-      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
-      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
+!      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
+!      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
+!      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
+!      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
+!      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
 
 #endif
 
@@ -387,7 +392,8 @@ CONTAINS
    INTEGER (KIND=int_kind):: i,j,itmp,jtmp
    CHARACTER(50):: FILENAME
    INTEGER (KIND=int_kind) :: hxp, hx1
-   REAL (KIND=dbl_kind) :: CP
+   REAL (KIND=dbl_kind) :: CP,tempim,tempjm
+   REAL (KIND=dbl_kind) :: TGPERT(MI1,MJ1) !SST perturbation shape
 
    CP = 1004.5
 
@@ -515,7 +521,24 @@ CONTAINS
 ! determine surface temp of water body
    IF (LU(I,J) .eq. 16) THEN
    IF (hx1 .eq. 1) THEN
-   TG(I,J) = SST
+! ccwu following Bretherton 2006
+
+      tempim=dble(mi1*ni_sbdm+i)
+      tempjm=dble(mj1*nj_sbdm+j)
+ 
+      pi = 4._8 * atan(1._8)
+      TG(i,j)=295.-5*cos(2*pi*tempjm/512.)   !512 points in y direction,sst gradient in y is 10K 
+!      TGPERT (I,J) = exp(-0.25*(((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5))/16)**2)
+!      TGPERT (I,J) = 3.*TGPERT (I,J)*exp(-0.25*(((nj_sbdm-nsbdm_y/2)*mj1+ &
+!                          (J-0.5))/10)**2) !3K expotential decay
+      TGPERT(I,J) = exp(-0.25*(((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5))* &
+                          DX/1000000)**2) !1000km in X-direction
+      TGPERT(I,J) = TGPERT(I,J)*exp(-0.25*(((nj_sbdm-nsbdm_y/2)*mj1+ &
+                            (J-0.5))*DYNEW/500000)**2) !500km in Y-direction
+
+      TG(I,J)=TG(I,J)+3.*TGPERT(I,J)  ! 3 degree magnitude
+
+
    ELSE
    TG(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
@@ -542,7 +565,7 @@ CONTAINS
 ! 1. Set up constants
 
         rhoh2o = 1024.75         !density of water [kg/m**3]
-        zdmix=10._dbl_kind       ! constant depth of mixed layer
+        zdmix=100._dbl_kind       ! constant depth of mixed layer
         zcpwater=4218._dbl_kind  ! watar heat capacity
         zmixcap=rhoh2o*zcpwater*zdmix  !Cw ocean heat capacity
         zmcapdt=nsflux*dt/zmixcap       !1/cw*dt

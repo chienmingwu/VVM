@@ -22,21 +22,16 @@ PRIVATE
       QV3D,    &  ! water vapor mixing ratio (kg/kg)
       QC3D,    &  ! cloud water mixing ratio (kg/kg)
       QI3D,    &  ! cloud ice mixing ratio (kg/kg)
-      QR3D        ! rain mixing ratio (kg/kg)
-
+      QR3D,    &  ! rain mixing ratio (kg/kg)
 #if defined (MICROP3)
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3), PUBLIC ::       &
       NC3D,    &  ! cloud water number mixing ratio (1/kg)
       NR3D,    &  ! rain number mixing ratio (1/kg)
       NI3D,    &  ! cloud ice number mixing ratio (1/kg)
       QRIM3D,  &  ! riming cloud ice mass mixing ratio (kg/kg)
-      BRIM3D      ! riming cloud ice volume mixing ratio (m^3/kg)
-#else
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3), PUBLIC ::       &
+      BRIM3D,  &  ! riming cloud ice volume mixing ratio (m^3/kg)
+#endif
       QS3D,    &  ! snow mixing ratio (kg/kg)
       QG3D        ! graupel mixing ratio (kg/kg)
-#endif
-
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3,ntracer), PUBLIC ::       &
       TC3D        ! passive tracer mixing ratio (kg/kg)
 
@@ -82,24 +77,19 @@ PRIVATE
                    ! large-scale forcing (kg/kg/s)
       fqc3d,    &  ! tendency of cloud water due to advection (kg/kg/s)
       fqi3d,    &  ! tendency of cloud ice due to advection (kg/kg/s)
-      fqr3d        ! tendency of rain due to advection and
+      fqr3d,    &  ! tendency of rain due to advection and
                    ! falling with terminal velocity (kg/kg/s)
-
 #if defined (MICROP3)
-   REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,nk2,2), PUBLIC ::       &
       fnc3d,    &  ! tendency of cloud water number  due to advection (1/kg/s)
       fnr3d,    &  ! tendency of rain number due to advection (1/kg/s)
       fni3d,    &  ! tendency of cloud ice number due to advection (1/kg/s)
       fqrim3d,  &  ! tendency of riming cloud ice due to advection (kg/kg/s)
-      fbrim3d      ! tendency of riming cloud ice volume due to advection (m^3/kg/s)
-#else
-   REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,nk2,2), PUBLIC ::       &
+      fbrim3d,  &  ! tendency of riming cloud ice volume due to advection (m^3/kg/s)
+#endif
       fqs3d,    &  ! tendency of snow due to advection
                    ! falling with terminal velocity (kg/kg/s)
       fqg3d        ! tendency of graupel due to advection
                    ! falling with terminal velocity (kg/kg/s)
-#endif
-
    REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,nk2,2,ntracer), PUBLIC ::     &
       ftc3d      ! tendency of passive tracer due to advection (kg/kg/s)
 
@@ -139,25 +129,20 @@ PRIVATE
 !  formerly common/d3adv/
 
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK2), PUBLIC ::       &
-      thad3,   &  ! tendency of potential temperature due to turbulence (K/s)
-      qvad3,   &  ! tendency of water vapor due to turbulence (kg/kg/s)
-      qrad3,   &  ! not used
-      qcad3,   &  ! tendency of cloud water due to turbulence (kg/kg/s)
-      qiad3       ! tendency of cloud ice due to turbulence (kg/kg/s)
-
+      thad3,     &  ! tendency of potential temperature due to turbulence (K/s)
+      qvad3,     &  ! tendency of water vapor due to turbulence (kg/kg/s)
+      qrad3,     &  ! not used
+      qcad3,     &  ! tendency of cloud water due to turbulence (kg/kg/s)
+      qiad3,     &  ! tendency of cloud ice due to turbulence (kg/kg/s)
 #if defined (MICROP3)
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK2), PUBLIC ::       &
       ncad3,     &  ! tendency of cloud water number due to turbulence (1/kg/s)
       nrad3,     &  ! tendency of rain number due to turbulence (1/kg/s)
       niad3,     &  ! tendency of cloud ice number due to turbulence (1/kg/s)
       qrimad3,   &  ! tendency of riming cloud ice due to turbulence (kg/kg/s)
-      brimad3       ! tendency of riming cloud ice volume due to turbulence (m^3/kg/s)
-#else
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK2), PUBLIC ::       &
-      qsad3,   &  ! not used
-      qgad3       ! not used
+      brimad3,   &  ! tendency of riming cloud ice volume due to turbulence (m^3/kg/s)
 #endif
-
+      qsad3,     &  ! not used
+      qgad3         ! not used
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk2,ntracer), PUBLIC ::       &
       tcad3       ! tendency of passive tracer due to turbulence (kg/kg/s)  
 
@@ -170,22 +155,16 @@ PRIVATE
       qvad_micro,   &  ! tendency of water vapor due to microphysics (kg/kg/s)
       qrad_micro,   &  ! tendency of rain due to microphysics (kg/kg/s)
       qcad_micro,   &  ! tendency of cloud water due to microphysics (kg/kg/s)
-      qiad_micro       ! tendency of cloud ice due to microphysics (kg/kg/s)
-
+      qiad_micro,   &  ! tendency of cloud ice due to microphysics (kg/kg/s)
 #if defined (MICROP3)
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK2), PUBLIC ::       &
       ncad_micro,   &  ! not used
       nrad_micro,   &  ! not udsd
       niad_micro,   &  ! not udsd
       qrimad_micro, &  ! not udsd
-      brimad_micro     ! not udsd
-
-#else
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK2), PUBLIC ::       &
+      brimad_micro, &  ! not udsd
+#endif
       qsad_micro,   &  ! tendency of snow due to microphysics (kg/kg/s)
       qgad_micro       ! tendency of graupel due to microphysics(kg/kg/s)
-
-#endif
 
 !*****************************
 ! Mainly used in UVTOP_3D.
@@ -225,7 +204,12 @@ PRIVATE
 
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk2), PUBLIC ::       &
       rkm,   &  ! eddy viscosity coefficient (m**2/s)
-      rkh       ! eddy diffusivity (m**2/s)
+      rkz,   &  ! easy, vertical eddy viscosity coefficient  (m**2/s)
+                ! bypass min(critmn,rkm)
+      rkh,   &  ! eddy diffusivity (m**2/s)
+      rkq       ! easy, vertical eddy diffusivity coefficient  (m**2/s)
+                ! bypass min(critmn,rkm)
+
 
 !*****************************
 ! Vorticity tendencies due to turbulence

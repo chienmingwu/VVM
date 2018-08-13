@@ -1,3 +1,4 @@
+#include "definesld.com"
 MODULE time_manager_module
 
 USE kinds
@@ -232,6 +233,7 @@ CONTAINS
       
       stps = stps_tem
 
+#if !defined (GILL)
       if(my_task == 0) WRITE(6,*) 'Incrementing Observations... STPS=',STPS
       DO 100 K=1,NK3
       THBAR(K)=THBAR(K)+THINC(K)
@@ -240,7 +242,7 @@ CONTAINS
       Q1LS(K)=Q1LS(K)+Q1INC(K)
       Q2LS(K)=Q2LS(K)+Q2INC(K)
   100 CONTINUE  
-      
+#endif      
       DO 101 K=1,NK2
       Z3DX0(K)=Z3DX0(K)+DX0INC(K)
       Z3DY0(K)=Z3DY0(K)+DY0INC(K)

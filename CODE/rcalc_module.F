@@ -109,12 +109,27 @@ CONTAINS
 !   FORCING BY THE LARGE SCALE VERTICAL WIND.
 !   (Modified June 2009, TRJ)
       IF (Q1Q2) THEN
+#if defined (GILL)
+
+      IF (ITT .gt. 8640) then
+      Q1LS=0.
+      Q2LS=0.
+      ENDIF
+
+      DO 300 K = 2, NK2
+      DO 309 J = 1, MJ1
+      DO 309 I = 1, MI1
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (I,J,K)
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (I,J,K)
+  309 CONTINUE
+#else
       DO 300 K = 2, NK2
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
       FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)
       FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
   309 CONTINUE
+#endif
   SELECT CASE (TRIM(casename))
   CASE ('TWP-ICE','BOMEX')
       fntddz = FNT(K)/DZ
@@ -242,7 +257,7 @@ CONTAINS
 
 ! Update thermodynamic variables -- Replaces call to CLOUD_3D
 #if defined (MICROP3)
-! Update thermodynamic variables -- call before P3 microphysics scheme
+! Update thermodynamic variables -- call before P3 microphysics
 #else
       CALL update_thermodynamics (N1,N2)
 #endif

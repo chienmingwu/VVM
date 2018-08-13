@@ -494,6 +494,16 @@ CONTAINS
       write(98,'(i3,4F12.3,E12.3)') i,RHO_s(i),THBAR_s(i),    &
                        PBAR_s(i),PIBAR_s(i),QVBAR_s(i)
       enddo
+#if defined (GILL)
+write(98,*) '============================================'
+      write(98,*) 'K,UG(K),Q1LS(K),Q2LS(K)'
+      write(98,*) '============================================'
+      do i=1, NK3
+      UG_s(i)=UG(i)
+      vG_s(i)=vG(i)
+      write(98,'(i3,2F12.3,3E12.3)') i,UG_s(i), vg_s(i)
+      enddo
+#else
       write(98,*) '============================================'
       write(98,*) 'K,UG(K),Q1LS(K),Q2LS(K)'
       write(98,*) '============================================'
@@ -505,6 +515,7 @@ CONTAINS
       write(98,'(i3,2F12.3,3E12.3)') i,UG_s(i), vg_s(i),              &
                                  Q1LS_s(i),Q2LS_s(i)
       enddo
+#endif
       write(98,*) '============================================'
       write(98,*) 'K, RHOZ(K)'
       write(98,*) '============================================'
@@ -580,7 +591,9 @@ CONTAINS
         c_8(40) = crad
         c_8(41) = scale
         c_8(42) = crad1
+#if defined (CORIOLIS)       
         c_8(54) = f
+#endif
         c_8(61) = dthmax
         c_8(62) = dtpert
         c_8(63) = z1pert

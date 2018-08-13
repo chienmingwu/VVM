@@ -1,3 +1,4 @@
+#include "definesld.com"
 MODULE time_interp_module
 
 USE kinds
@@ -37,6 +38,7 @@ CONTAINS
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
       
       NSTPS=3.*60.*60./DT
+#if !defined (GILL)     
       if(my_task == 0) WRITE (6,*) 'Enter TIME_INTERP NSTPS=',nstps
       DO 210 K = 1, NK3
       Q1LS1 (K) = Q1LS(K)
@@ -45,7 +47,7 @@ CONTAINS
       Q2LS2 (K) = 1 * ZDATA2(6,K) / (1000. * 3600.)  
       
   210 CONTINUE
-  
+#endif
       DO 600 K = 1, NK2
       DO 600 J = mjm,mjp
       DO 600 I = mim,mip

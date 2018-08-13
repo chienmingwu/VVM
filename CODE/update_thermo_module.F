@@ -56,7 +56,6 @@ CONTAINS
 
 #if defined (PHYSICS)
 ! Update theta from microphysics tendency
-
 #if defined (MICROP3)
   ! Update theta in P3 microphysics scheme
 #else
@@ -130,7 +129,7 @@ CONTAINS
       QG3D(I,J,K) = QG3D(I,J,K)            &
                   + DT * QGAD_MICRO(I,J,K) &
                   + A*FQG3D(I,J,K,N2)+B*FQG3D(I,J,K,N1)
-
+     
       QVTD3D(I,J,K) = DT * QVAD_MICRO(I,J,K) &
                   + A*FQV3D(I,J,K,N2)+B*FQV3D(I,J,K,N1)
 

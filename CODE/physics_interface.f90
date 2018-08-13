@@ -21,7 +21,7 @@
       USE general_parameters, only: dt, im, jm, km
       USE physics_parameters
       USE basic_state_parameters
-      USE main_variables
+      USE main_variables, only: theta, qv, qc, qi, qr, qs, qg, w
       USE physics_tendencies
       USE turb_surflx_variables, only: dz_mean, thetaS
 !      USE rad_variables_tendencies
@@ -36,8 +36,10 @@
       USE cloud_module
       USE timer
       USE domain_decomposition
+#if defined (MICROP3)
       USE MODULE_MP_P3
       USE update_thermo_module
+#endif
                
       IMPLICIT NONE
       
@@ -72,6 +74,7 @@
 
       LOGICAL (KIND=log_kind), INTENT(IN) :: &
           NOTHERM
+          
 
 !------------------------------------------------------------------
 ! Local variables
@@ -85,13 +88,16 @@
           
       LOGICAL (KIND=log_kind), SAVE :: &
           first_physics, first_rad
+      DATA first_physics/.TRUE./
+      DATA first_rad/.TRUE./
+!-----------------------------------------------------------------
 #if defined (MICROP3)
       REAL :: theta_p3(im,km),qv_p3(im,km),qc_p3(im,km),qi_p3(im,km),qr_p3(im,km)
-      REAL :: nc(im,km), nr(im,km), ni(im,km), qrim(im,km), brim(im,km),          &
-              theta_old(im,jm,km), qv_old(im,jm,km), dz_p3(im,km), p_p3(im,km),   &
-              ssat(im,km), pcprt_liq(im), pcprt_sol(im), w_p3(im,km),             &
-              diag_ze(im,km),diag_effc(im,km),diag_effi(im,km),                   &
-              diag_vmi(im,km),diag_di(im,km),diag_rhoi(im,km), dt_p3,            &
+      REAL :: nc(im,km), nr(im,km), ni(im,km), qrim(im,km), brim(im,km), &
+              theta_old(im,jm,km), qv_old(im,jm,km), dz_p3(im,km), p_p3(im,km), &
+              ssat(im,km), pcprt_liq(im), pcprt_sol(im), w_p3(im,km), &
+              diag_ze(im,km),diag_effc(im,km),diag_effi(im,km), &
+              diag_vmi(im,km),diag_di(im,km),diag_rhoi(im,km), dt_p3, &
               th_old_p3(im,km), qv_old_p3(im,km), diag_3d(im,km,3), diag_2d(im,1)
 
       INTEGER (KIND=int_kind) :: itt_p3
@@ -100,8 +106,7 @@
           log_predictNc, typeDiags_ON
       CHARACTER(LEN=16), PARAMETER :: model = 'VVM'
 #endif
-      DATA first_physics/.TRUE./
-      DATA first_rad/.TRUE./
+!-----------------------------------------------------------------
 
 ! TWP-ICE tracers
 !      REAL (KIND=dbl_kind), DIMENSION(im,jm,km) :: &
@@ -136,7 +141,14 @@
 
 !----------------------------------------------------------
 ! Initialize physics related constants and parameters
+#if defined (MICROP3)
+      ! initialize for p3 microphysics scheme
+      call p3_init('.',1)
+      log_predictNc = .False.
+      typeDiags_ON = .False.
+#else
       CALL initialize_physics
+#endif
 !----------------------------------------------------------
 
       z(0) = ZZ(1)
@@ -210,14 +222,6 @@
 
       dz_mean = (z(km)-z(0)) / FLOAT(km)
 
-
-#if defined (MICROP3)
-      ! initialize for p3 microphysics scheme
-      call p3_init('.',1)
-      log_predictNc = .False.
-      typeDiags_ON = .False.
-#endif
-
 !----------------------------------------------------------------------
 
  if(my_task == 0) then
@@ -272,7 +276,7 @@
 !======================================================================
 
 #if defined (MICROP3)
-      THAD_MICRO   = 0.0_dbl_kind 
+      THAD_MICRO   = 0.0_dbl_kind
       QVAD_MICRO   = 0.0_dbl_kind
       QCAD_MICRO   = 0.0_dbl_kind
       QIAD_MICRO   = 0.0_dbl_kind
@@ -302,6 +306,9 @@
       CALL BOUND_3D
 #endif
 
+!======================================================================
+
+
       do j = 1,jm
 
 !======================================================================
@@ -329,15 +336,14 @@
       tendency_microphysics_qs    = 0.0_dbl_kind
       tendency_microphysics_qg    = 0.0_dbl_kind
       latent_heating_rate         = 0.0_dbl_kind
-#endif
-      
+#endif     
+ 
 !-----------------------------------------------------------------------
 ! Assign input arrays from model fields
       
 ! Thermodynamic fields
       DO 100 k = 1, km
       DO 100 i = 1, im
-
 #if defined (MICROP3)
         th_old_p3(i,k)  = theta_old(i,j,k)
         qv_old_p3(i,k)  = qv_old(i,j,k)
@@ -353,7 +359,7 @@
         ni(i,k)          = NI3D(i,j,k+1)
         qrim(i,k)        = QRIM3D(i,j,k+1)
         brim(i,k)        = BRIM3D(i,j,k+1)
-   
+
         w_p3(i,k)        = 0.5*(W3D(i,j,k) + W3D(i,j,k+1))
 #else
         theta(i,k) = TH3D(i,j,k+1)
@@ -395,9 +401,9 @@
 #if defined (MICROCODE)      
 
 #if defined (MICROP3)
-      call timer_start('microphysics_p3')
+      call timer_start('microphysics')
 
-      dt_p3=DT  
+      dt_p3=DT
       itt_p3=ITT
 
       call p3_main(qc_p3,nc,qr_p3,nr,th_old_p3,theta_p3,qv_old_p3,qv_p3, &
@@ -407,13 +413,12 @@
                    1,diag_2d,3,diag_3d,log_predictNc,typeDiags_ON,model)
 
       DO 200 I=1,im
-        hxp=INT(hx(I,J))
-        SPREC(I,J)  = diag_3d(I,hxp,1) + diag_3d(I,hxp,2) + diag_3d(I,hxp,3)
-        PREC25(I,J) = diag_3d(I,1,1) + diag_3d(I,1,2) + diag_3d(I,1,3)
+        SPREC(I,J)  =  pcprt_liq(I) + pcprt_sol(I)
+        PREC25(I,J) =  pcprt_sol(I)
   200 CONTINUE
 
 
-      call timer_stop('microphysics_p3')
+      call timer_stop('microphysics')
 #else
       call timer_start('microphysics')
       CALL Microphysics
@@ -441,6 +446,7 @@
 
       call timer_stop('microphysics')
 #endif
+
 #endif
 
       ENDIF ! (IF (.NOT. NOTHERM)
@@ -448,7 +454,6 @@
 #endif
 ! (END #if defined PHYSICS)
 
-!-----------------------------------------------------------------------
 ! Assign adjusted values back into model arrays
 
 #if defined (MICROP3)
@@ -465,7 +470,6 @@
         QRIM3D(i,j,k) = qrim(i,k-1)
         BRIM3D(i,j,k) = brim(i,k-1)
   500 CONTINUE
-
 #else
 ! Thermodynamic variables
       DO 500 k = 2, NK2
@@ -501,7 +505,6 @@
 #endif
 
 
-
 #if defined (MICROCODE)
 
 #if defined (MICROP3)
@@ -529,7 +532,6 @@
         FQG3D(i,j,k,L) = FQG3D(i,j,k,L) + tendency_graupel(i,k-1)
         FSED3D(i,j,k)  = tendency_sedimentation(i,k-1)
   520 CONTINUE
-
 #endif
 
 #endif
@@ -539,6 +541,7 @@
 #if defined (MICROCODE)
       CALL BOUND_ARB (1,SPREC)
       CALL BOUND_ARB (1,PREC25)
+
 #endif
 
 ! TWP-ICE tracers

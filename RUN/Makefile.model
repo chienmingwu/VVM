@@ -206,8 +206,8 @@ SRC_FREE_CODE = \
 	make_profiles_module.F \
 	nudge_module.F \
 	physics_interface.f90 \
-        module_mp_p3.F \
 	physics_v10d.f90 \
+        module_mp_p3.F \
 	q_chk_module.F \
 	radiation_rrtmg.f90 \
 	rcalc_module.F \
@@ -560,7 +560,7 @@ wind_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o bound.o elliptic.o 
 
 radiation_rrtmg.o: kinds.o rrtm_params.o rrtm_grid.o rrtm_vars.o rad.o trace_gases.o RADOUTLD.o TIMEINFO.o CONST3D.o bound.o rad_full.o
 
-physics_interface.o: kinds.o timer.o rrtm_params.o rrtm_grid.o rrtm_vars.o physics_v10d.o PROFOUTLD.o RADOUTLD.o CONST3D.o TIMEINFO.o bound.o cloud_module.o radiation_rrtmg.o domain_decomposition.o module_mp_p3.o update_thermo_module.o
+physics_interface.o: kinds.o timer.o rrtm_params.o rrtm_grid.o rrtm_vars.o physics_v10d.o module_mp_p3.o update_thermo_module.o PROFOUTLD.o RADOUTLD.o CONST3D.o TIMEINFO.o bound.o cloud_module.o radiation_rrtmg.o domain_decomposition.o
 
 physics_v10d.o: kinds.o PARMSLD.o
 

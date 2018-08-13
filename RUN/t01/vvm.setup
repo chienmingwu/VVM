@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = gate_p3
+set expname = p3_strenghtening_grid
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -44,9 +44,9 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define MICROP3
 #define PARALLELIO
-#define PETSCMG
 #define RADCODE
-#define AREAMN
+#define LSM
+#define TOPOGRAPHY
 'END1'
 cat definesld.com
 
@@ -71,19 +71,23 @@ sed -e '1,$s/zonal_dimension/256/' \
 # input data
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=8640 /
- &INPUT2 RLAT=0.,RLON=120./
- &INPUT3 DX=1000.,DYNEW=1000.,DZ=500.,DZ1=100.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
- &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
- &INPUT5 IX=3182073,ITINIT=10,ITSTOP=1200,SCALE=6.,Q1Q2=T,DTRAD=120.,petsc_cr = 0/
+ &INPUT2 RLAT=0./
+ &INPUT3 DX=1000.,DYNEW=1000.,DZ=500.,DZ1=100.,DT=2.5,NOTURB=F,NOSFX=T,NSFLUX=86400,ALADV=1. /
+#           (m)          (m)     (m)     (m)    (s)                (time step)
+ &INPUT4 NXS=1,NXSAVG=24,NWR11=1,NFLPRT=1,NRESTART=24. /
+#         ( case output frequency)   ( result could be seen in ncfile)
+ &INPUT5 IX=3182073,ITINIT=86400,ITSTOP=86400,SCALE=6.,Q1Q2=T,DTRAD=120./
+#                                                              (s)
 'END6'
 cat INPUT
-
+      
 #-------------------------------------------------------------------
 
 if( ! -d RUNDATA ) then
   mkdir RUNDATA
 endif
 
+cp ${subdir}/CODE/make_ctl.pl .
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
@@ -93,10 +97,10 @@ cp ${subdir}/CODE/p3_lookup_table_*.dat-v2.8.2 .
 #cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
 #cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
-cd ${subdir}"/RUN/t01"
-make topography CASENAME=${expname} -f ../makefile
-cd ${subdir}"/DATA/"${expname}
-./nc2fortranBinary > tmp.out
+#cd ${subdir}"/RUN/t01"
+#make topography CASENAME=${expname} -f ../makefile
+#cd ${subdir}"/DATA/"${expname}
+#./nc2fortranBinary > tmp.out
 
 
 # GLDAS
@@ -119,9 +123,9 @@ cd ${subdir}"/DATA/"${expname}
 
 # for LSM
 #cd ../${subdir}
-cp ${subdir}/CODE/LSM/GENPARM.TBL .
-cp ${subdir}/CODE/LSM/SOILPARM.TBL .
-cp ${subdir}/CODE/LSM/VEGPARM.TBL .
+#cp ${subdir}/CODE/LSM/GENPARM.TBL .
+#cp ${subdir}/CODE/LSM/SOILPARM.TBL .
+#cp ${subdir}/CODE/LSM/VEGPARM.TBL .
 exit
 
 

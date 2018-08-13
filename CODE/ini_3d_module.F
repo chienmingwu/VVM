@@ -51,33 +51,39 @@ CONTAINS
          gamfac, a0, z00, xr, yr, zr, dist,tmp,ESW,ESI
       REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
-      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
+      REAL (KIND=dbl_kind), PARAMETER :: rad1 = 0.    
       REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
+      CHARACTER (60) FILENAME
 
       integer nu1, nt1, nq1, k1, k2, it
       logical lf
-      DATA NU1/6/,NT1/21/,NQ1/20/
+      DATA NU1/6/,NT1/29/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(21),T1(21),QV1(21),QC1(21)
+      REAL (KIND=dbl_kind) :: ZT1(29),PI1(29),TV1(29),PILOG1(29)
+      REAL (KIND=dbl_kind) :: PQ1(20),P1(29),T1(29),QV1(29),QC1(29)
       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
               ,111.3,92.6/
-      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
-             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
-             ,133.6,111.3,92.6/
-      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
-             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
-             ,-726.4,-755.8,-749.0/
-      DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
-              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
-      DATA QC1/21*0./
+      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0,775.0 &
+             ,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0,350.0 &
+             ,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0,70.0 &
+             ,50./
+      DATA T1/301.246,299.169,297.515,296.35,295.014,293.752,292.521,291.309,290.106 &
+             ,288.867,287.545,284.466,280.821,276.82,272.996,268.835,263.996,258.415&
+             ,251.848,243.709,233.844,228.075,221.699,214.639,206.84,198.676,191.745&
+             ,194.587,206.771/
+      DATA QV1/0.0179026,0.0174521,0.0164586,0.0150866,0.013841,0.0124337,0.0110566 &
+              ,0.00974031,0.00858361,0.00759569,0.00676534,0.00555704,0.00457475,0.00363432 &
+              ,0.00280347,0.00208696,0.00147428,0.000984061,0.000624419,0.000359956,0.000167552 &
+              ,0.000100977,5.50747e-05,2.7595e-05,1.2715e-05,5.39508e-06,2.6389e-06,2.24212e-06&
+              ,2.29645e-06/
+      DATA QC1/29*0./
 
       REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
       DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
@@ -90,8 +96,7 @@ CONTAINS
 
       REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
       DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
-      DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
+!      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
 
       casename= 'GATE_PHASE_III'
 
@@ -105,7 +110,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T1(1) * 0.1 + 273.16 + DSST
+      SST = 302.8
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -115,8 +120,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04
+      T1(K) =  T1(K) 
+      QV1(K)= QV1(K)
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -126,7 +131,7 @@ CONTAINS
 
 !     *** MIXED LAYER PROFILE ***
 
-      T1(3) = PI1(3) * T1(2) / PI1(2)
+!      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
@@ -270,7 +275,8 @@ CONTAINS
       DO 102 K=1,NK2
       RHOW(K)=RHOZ(K)  ! This line added with removal of equivalence in constld
   102 CONTINUE
-
+#if defined (GILL)
+#else
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 15000. ) THEN
       K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
@@ -284,18 +290,41 @@ CONTAINS
       Q2LS (K) = 0.0
       END IF
   200 CONTINUE
-
+#endif
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
 !     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
 
       IF ( Q1Q2 ) SCALEQ = SCALE
-
+#if defined (GILL)
+      DO 210 K = 1, NK2
+      DO 210 J = 1, mj1
+      DO 210 I = 1, mi1
+      !if (abs((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5)) .LE. 64 &
+      !   .AND. ZT(K) .LT. 10000. ) then
+      if (ZT(K) .LT. 10000. ) then
+      !Q1LS (I,J,K) = cos(2.*pi*((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5))/128.)
+      Q1LS (I,J,K) = exp(-0.25*(((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5))/16)**2)
+      Q1LS (I,J,K) = Q1LS (I,J,K)*exp(-0.25*(((nj_sbdm-nsbdm_y/2)*mj1+ &
+                          (J-0.5))/10)**2)
+      Q1LS (I,J,K) = 5.*Q1LS (I,J,K)*sin(pi*ZT(K)/10000)
+      Q1LS (I,J,K) = Q1LS (I,J,K) / PIBAR(K) / SECDAY
+      end if
+  210 CONTINUE
+#else
       DO 210 K = 1, NK3
       Q1LS (K) = -1.* SCALEQ * Q1LS (K) / PIBAR(K) / SECDAY
       Q2LS (K) = SCALEQ * Q2LS (K) / (GAMFAC * SECDAY)
   210 CONTINUE
+#endif
 
-#if !defined (RADCODE)
+#if !defined (RADCODE) && defined (GILL)
+      DO 212 K = 1, NK2
+      DO 212 J = 1, mj1
+      DO 212 I = 1, mi1
+      Q1LS (I,J,K) = Q1LS (I,J,K) + RAD1 / PIBAR(K) / SECDAY
+  212 CONTINUE
+#endif
+#if !defined (RADCODE) && !defined (GILL)
       DO 212 K = 1, NK3
       Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
   212 CONTINUE
@@ -331,20 +360,31 @@ CONTAINS
       WRITE(95,402) (ZT(K),PBAR(K),T(K),THBAR(K),QVBAR(K),UG(K),  &
                      K=2,NK2)
       WRITE(95,*) 
-      WRITE(95,*) 
+      WRITE(95,*)
+#if defined (GILL)
+      WRITE(95,*) '************* LS FORCING **********************'
+      WRITE(95,403)
+      WRITE(95,404) (ZT(K),K=2,NK2)
+#else 
       WRITE(95,*) '************* LS FORCING **********************'
       WRITE(95,403)
       WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),K=2,NK2)
-
+#endif
 
   401 FORMAT (7X,'Z(m)',2X,'PBAR(mb)',4X,'T(K)',4X,'THBAR(K)',2X,  &
        'QVBAR(g/kg)',2X,'U(m/s)'//)
 
   402 FORMAT ( 0PF10.0,-2PF10.1,0PF10.2,0PF10.2,3PF10.1,0PF10.1)
 
-  403 FORMAT (7X,'Z(m)',3X,'Q1LS(K/day)',1X,'Q2LS(K/day)'//)
-  404 FORMAT (0PF10.0,0PE12.3,0PE12.3)
+#if defined (GILL)
+  403 FORMAT (7X,'Z(m)'//)
 
+  404 FORMAT (0PF10.0)
+#else
+  403 FORMAT (7X,'Z(m)',3X,'Q1LS(K/day)',1X,'Q2LS(K/day)'//)
+
+  404 FORMAT (0PF10.0,0PE12.3,0PE12.3)
+#endif
       if(my_task == 0) then
       OPEN(UNIT=99,FILE='bar.dat',FORM='unformatted',STATUS='unknown', &
       access='direct',recl=nk3)
@@ -366,14 +406,60 @@ CONTAINS
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
 
+      DO K=1,NK3
+        IF (ZT(K)<=12000.)THEN
+          THBAR(K) = 300.+43.*(ZT(K)/12000.)**(1.25)
+        ELSE
+          THBAR(K) = 343.*exp((ZT(K)-12000)/1004/213*9.8)
+        ENDIF
+
+        IF (ZT(K)<=4000)THEN
+          QVBAR(K) = 0.0161-0.000003375*ZT(K)
+        ELSEIF (K<=8000 .AND. K>4000)THEN
+          QVBAR(K) = 0.0026-0.00000065*(ZT(K)-4000)
+        ELSE
+          QVBAR(K) = 0.
+        ENDIF
+      ENDDO
+
+      PBAR(2)=96500
+      PBAR(1)=PBAR(2)
+      PIBAR(2)=(PBAR(2)/100000)**(287.047/1004)
+      PIBAR(1)=PIBAR(2)
+      RHO(2)=100000*PIBAR(2)**(717.617/287.047)/(287.047*THBAR(2))
+      RHO(2)=RHO(1)
+      DO K=3,NK3
+        PIBAR(K)=PIBAR(K-1)-9.81*(ZT(K)-ZT(K-1))/(1004*0.5*(THBAR(K)+THBAR(K-1)))
+        PBAR(K)=100000*PIBAR(K)**(1004/287.047)
+        RHO(K)=100000*PIBAR(K)**(717.617/287.047)/(287.047*THBAR(K))
+      ENDDO
 
 !*********************************************************
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
+
       DO 500 K = 1, NK3
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
+
+      IF (MY_TASK .EQ. 3)THEN
+        IF (sqrt(((real(I)-48)/16.)**2 &
+                   +((real(K)-10)/8.)**2)<=1)THEN
+          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
+                        sqrt(((real(I)-48)/16.)**2+ &
+                             ((real(K)-10)/8.)**2)))**2
+        ENDIF
+      ENDIF
+      IF (MY_TASK .EQ. 11)THEN
+        IF (sqrt(((real(I)-48)/16.)**2 &
+                   +((real(K)-10)/8.)**2)<=1)THEN
+          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
+                        sqrt(((real(I)-48)/16.)**2+ &
+                             ((real(K)-10)/8.)**2)))**2
+        ENDIF
+      ENDIF
+
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -389,7 +475,6 @@ CONTAINS
       QG3D(I,J,K) = 0.
 #endif
   500 CONTINUE
-
 
       DO 515 K = 1, NK2
       DO 515 J = 1, MJ1
@@ -441,9 +526,16 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-!ccwu_ini_wind 
-      U3DX(I,J,K)=UG(K)
-      U3DY(I,J,K)=VG(K)
+
+!     squall line
+      IF (ZT(K)<2500)THEN
+        U3DX(I,J,K)=12.-12*ZT(K)/2500
+      ELSE
+        U3DX(I,J,K)=0.
+      ENDIF      
+
+!      U3DX(I,J,K)=0.
+      U3DY(I,J,K)=0.
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -457,7 +549,6 @@ CONTAINS
 
 
       CALL BOUND_3D_XY
-
 
 #if defined (AREAMN)
 !-------------------

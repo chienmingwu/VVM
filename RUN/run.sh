@@ -18,5 +18,4 @@ date > runtime
 
 date >> runtime
 
-cp ../../RUN/make_ctl.pl .
-./make_ctl.pl
+
