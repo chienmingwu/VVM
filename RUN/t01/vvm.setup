@@ -60,7 +60,7 @@ sed -e '1,$s/zonal_dimension/1024/' \
     -e '1,$s/merid_dimension/1024/' \
     -e '1,$s/zonal_decomposition/8/' \
     -e '1,$s/merid_decomposition/8/' \
-    -e '1,$s/vert_dimension/70/' \
+    -e '1,$s/vert_dimension/34/' \
     -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
@@ -75,7 +75,7 @@ cat > INPUT << 'END6'
  &INPUT2 RLAT=0./
  &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10,NOTURB=F,NOSFX=T,NSFLUX=12,ALADV=1. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60. /
+ &INPUT4 NXS=1,NXSAVG=24,NWR11=1,NFLPRT=1,NRESTART=24. /
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=86400,ITSTOP=86400,SCALE=6.,Q1Q2=F,DTRAD=120./
 #                                                              (s)
