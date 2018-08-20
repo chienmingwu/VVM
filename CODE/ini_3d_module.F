@@ -342,6 +342,43 @@ CONTAINS
       VG(1)   = VG(2)
       VG(NK3) = VG(NK2)
 
+
+
+      DO 250 K = 1, NK3
+      IF (ZT(K) .LT. 3000.) THEN
+        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
+      ELSEIF (ZT(K) .LT. 8000.) THEN
+        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
+      ELSEIF (ZT(K) .LT. 13000.) THEN
+        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
+      ELSE
+        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
+      ENDIF
+
+      T(K) = THBAR(K) * PIBAR(K)
+      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
+      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
+      IF (T(K) .LE. 233.15) THEN
+        ES1 = ESI
+      ELSE IF (T(K) .LT. 273.15) THEN
+        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
+      ELSE
+        ES1 = ESW
+      ENDIF
+      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
+!CCCCCCCCCCCCCCCCCC
+      IF (ZT(K) .LE. 1500) THEN
+        H(K) = 0.82
+      ELSE IF (ZT(K) .LE. 12000) THEN
+        H(K) = (ZT(K)-8000)**2/132031250.+0.5
+      ELSE
+        H(K) = 0.50
+      END IF
+!CCCCCCCCCCCCCCCCCC
+      QVBAR(K) = H(K) * QVSBAR(K)
+  250 CONTINUE
+
+
 !     OCEAN POINTS
 
       DO 300 J = mjm,mjp
@@ -459,16 +496,16 @@ CONTAINS
 !                             ((real(K)-10)/8.)**2)))**2
 !        ENDIF
 !      ENDIF
-
-      IF (MY_TASK .EQ. 5)THEN
-        IF (sqrt(((real(I)-48)/16.)**2+((real(J)-48)/16.)**2 &
-                   +((real(K)-10)/8.)**2)<=1)THEN
-          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
-                        sqrt(((real(I)-48)/16.)**2+ &
-                             ((real(J)-48)/16.)**2+ &
-                             ((real(K)-10)/8.)**2)))**2
-        ENDIF
-      ENDIF
+!
+!      IF (MY_TASK .EQ. 5)THEN
+!        IF (sqrt(((real(I)-48)/16.)**2+((real(J)-48)/16.)**2 &
+!                   +((real(K)-10)/8.)**2)<=1)THEN
+!          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
+!                        sqrt(((real(I)-48)/16.)**2+ &
+!                             ((real(J)-48)/16.)**2+ &
+!                             ((real(K)-10)/8.)**2)))**2
+!        ENDIF
+!      ENDIF
 
 
       QV3D(I,J,K) = QVBAR(K)
@@ -539,14 +576,14 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 
 !     squall line
-      IF (ZT(K)<2500)THEN
-        U3DX(I,J,K)=12.-12*ZT(K)/2500
-      ELSE
-        U3DX(I,J,K)=0.
-      ENDIF      
-
-!      U3DX(I,J,K)=0.
-      U3DY(I,J,K)=0.
+!      IF (ZT(K)<2500)THEN
+!        U3DX(I,J,K)=12.-12*ZT(K)/2500
+!      ELSE
+!        U3DX(I,J,K)=0.
+!      ENDIF      
+!
+      U3DX(I,J,K)=2.12
+      U3DY(I,J,K)=2.12
   610 CONTINUE
 
       DO 660 K = 2, NK1
