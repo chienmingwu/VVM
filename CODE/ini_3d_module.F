@@ -443,22 +443,33 @@ CONTAINS
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
 
-      IF (MY_TASK .EQ. 3)THEN
-        IF (sqrt(((real(I)-48)/16.)**2 &
+!      IF (MY_TASK .EQ. 3)THEN
+!        IF (sqrt(((real(I)-48)/16.)**2 &
+!                   +((real(K)-10)/8.)**2)<=1)THEN
+!          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
+!                        sqrt(((real(I)-48)/16.)**2+ &
+!                             ((real(K)-10)/8.)**2)))**2
+!        ENDIF
+!      ENDIF
+!      IF (MY_TASK .EQ. 11)THEN
+!        IF (sqrt(((real(I)-48)/16.)**2 &
+!                   +((real(K)-10)/8.)**2)<=1)THEN
+!          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
+!                        sqrt(((real(I)-48)/16.)**2+ &
+!                             ((real(K)-10)/8.)**2)))**2
+!        ENDIF
+!      ENDIF
+
+      IF (MY_TASK .EQ. 5)THEN
+        IF (sqrt(((real(I)-48)/16.)**2+((real(J)-48)/16.)**2 &
                    +((real(K)-10)/8.)**2)<=1)THEN
           TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
                         sqrt(((real(I)-48)/16.)**2+ &
+                             ((real(J)-48)/16.)**2+ &
                              ((real(K)-10)/8.)**2)))**2
         ENDIF
       ENDIF
-      IF (MY_TASK .EQ. 11)THEN
-        IF (sqrt(((real(I)-48)/16.)**2 &
-                   +((real(K)-10)/8.)**2)<=1)THEN
-          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
-                        sqrt(((real(I)-48)/16.)**2+ &
-                             ((real(K)-10)/8.)**2)))**2
-        ENDIF
-      ENDIF
+
 
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.

@@ -276,7 +276,7 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       DO 110 K = 2, NK2
       DO 110 J = 1, MJ1
       DO 110 I = 1, MI1
-        tabs    (I,J,K-1) = TMP3D(I,J,K)
+       tabs    (I,J,K-1) = TMP3D(I,J,K)
        qv      (I,J,K-1) = MAX(QV3D(I,J,K), qvmin)
        qcl     (I,J,K-1) = MAX(QC3D(I,J,K), qcmin)
        qci     (I,J,K-1) = MAX(QI3D(I,J,K), qimin)

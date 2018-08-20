@@ -144,7 +144,7 @@
 #if defined (MICROP3)
       ! initialize for p3 microphysics scheme
       call p3_init('.',1)
-      log_predictNc = .False.
+      log_predictNc = .True.
       typeDiags_ON = .False.
 #else
       CALL initialize_physics
@@ -409,12 +409,13 @@
       call p3_main(qc_p3,nc,qr_p3,nr,th_old_p3,theta_p3,qv_old_p3,qv_p3, &
                    dt_p3,qi_p3,qrim,ni,brim,ssat,w_p3, &
                    p_p3,dz_p3,itt_p3,pcprt_liq,pcprt_sol, &
-                   1,im,1,km,1,diag_ze,diag_effc,diag_effi,diag_vmi,diag_di,diag_rhoi, &
+                   1,im,1,km,1,diag_ze,diag_effc,&
+                   diag_effi,diag_vmi,diag_di,diag_rhoi, &
                    1,diag_2d,3,diag_3d,log_predictNc,typeDiags_ON,model)
 
       DO 200 I=1,im
-        SPREC(I,J)  =  pcprt_liq(I) + pcprt_sol(I)
-        PREC25(I,J) =  pcprt_sol(I)
+        hxp=INT(hx(I,J))
+        SPREC(I,J)  = diag_3d(I,hxp,1) + diag_3d(I,hxp,2) + diag_3d(I,hxp,3)
   200 CONTINUE
 
 
@@ -422,26 +423,11 @@
 #else
       call timer_start('microphysics')
       CALL Microphysics
-      
-! Surface precipitation
-!      DO 201 K=1,NK3
-!        IF (ZT(K) .LT. 2500.) THEN
-!          Z25B=ZT(K)
-!          Z25BK=K
-!          Z25T=ZT(K+1)
-!          Z25TK=K+1
-!        END IF
-!  201 CONTINUE
-
-!ccwu calculate using the location of mountain
 
       DO 200 I=1,im
 !ccwu for total prec(rain+snow+graupel)
-!        SPREC(I,J)  = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
-         hxp=INT(hx(I,J))
+        hxp=INT(hx(I,J))
         SPREC(I,J) =  VTR_int(I,hxp)+VTS_int(I,hxp)+VTG_int(I,hxp)
-!
-        PREC25(I,J) = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
   200 CONTINUE
 
       call timer_stop('microphysics')
