@@ -527,16 +527,16 @@ CONTAINS
       tempjm=dble(mj1*nj_sbdm+j)
  
       pi = 4._8 * atan(1._8)
-      TG(i,j)=295.-5*cos(2*pi*tempjm/512.)   !512 points in y direction,sst gradient in y is 10K 
+!      TG(i,j)=295.-5*cos(2*pi*tempjm/512.)   !512 points in y direction,sst gradient in y is 10K 
 !      TGPERT (I,J) = exp(-0.25*(((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5))/16)**2)
 !      TGPERT (I,J) = 3.*TGPERT (I,J)*exp(-0.25*(((nj_sbdm-nsbdm_y/2)*mj1+ &
 !                          (J-0.5))/10)**2) !3K expotential decay
-      TGPERT(I,J) = exp(-0.25*(((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5))* &
-                          DX/1000000)**2) !1000km in X-direction
-      TGPERT(I,J) = TGPERT(I,J)*exp(-0.25*(((nj_sbdm-nsbdm_y/2)*mj1+ &
-                            (J-0.5))*DYNEW/500000)**2) !500km in Y-direction
-
-      TG(I,J)=TG(I,J)+3.*TGPERT(I,J)  ! 3 degree magnitude
+!      TGPERT(I,J) = exp(-0.25*(((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5))* &
+!                          DX/1000000)**2) !1000km in X-direction
+!      TGPERT(I,J) = TGPERT(I,J)*exp(-0.25*(((nj_sbdm-nsbdm_y/2)*mj1+ &
+!                            (J-0.5))*DYNEW/500000)**2) !500km in Y-direction
+!
+!      TG(I,J)=TG(I,J)+3.*TGPERT(I,J)  ! 3 degree magnitude
 
 
    ELSE

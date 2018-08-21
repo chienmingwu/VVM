@@ -51,7 +51,7 @@ CONTAINS
          gamfac, a0, z00, xr, yr, zr, dist,tmp,ESW,ESI
       REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
-      REAL (KIND=dbl_kind), PARAMETER :: rad1 = 0.    
+      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
       REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
@@ -96,7 +96,7 @@ CONTAINS
 
       REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
       DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-!      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
+      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
 
       casename= 'GATE_PHASE_III'
 
@@ -437,39 +437,6 @@ CONTAINS
       write(99,rec=5) temp
       CLOSE(99)
       endif
-
-
-
-!      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
-!      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
-
-      DO K=1,NK3
-        IF (ZT(K)<=12000.)THEN
-          THBAR(K) = 300.+43.*(ZT(K)/12000.)**(1.25)
-        ELSE
-          THBAR(K) = 343.*exp((ZT(K)-12000)/1004/213*9.8)
-        ENDIF
-
-        IF (ZT(K)<=4000)THEN
-          QVBAR(K) = 0.0161-0.000003375*ZT(K)
-        ELSEIF (K<=8000 .AND. K>4000)THEN
-          QVBAR(K) = 0.0026-0.00000065*(ZT(K)-4000)
-        ELSE
-          QVBAR(K) = 0.
-        ENDIF
-      ENDDO
-
-      PBAR(2)=96500
-      PBAR(1)=PBAR(2)
-      PIBAR(2)=(PBAR(2)/100000)**(287.047/1004)
-      PIBAR(1)=PIBAR(2)
-      RHO(2)=100000*PIBAR(2)**(717.617/287.047)/(287.047*THBAR(2))
-      RHO(2)=RHO(1)
-      DO K=3,NK3
-        PIBAR(K)=PIBAR(K-1)-9.81*(ZT(K)-ZT(K-1))/(1004*0.5*(THBAR(K)+THBAR(K-1)))
-        PBAR(K)=100000*PIBAR(K)**(1004/287.047)
-        RHO(K)=100000*PIBAR(K)**(717.617/287.047)/(287.047*THBAR(K))
-      ENDDO
 
 !*********************************************************
 !     2. SET UP the thermodynamic variables for 3D-frame
