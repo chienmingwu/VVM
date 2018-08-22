@@ -71,10 +71,10 @@ sed -e '1,$s/zonal_dimension/1024/' \
 # input data
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=4320 /
- &INPUT2 RLAT=0./
+ &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60. /
+ &INPUT4 NXS=1,NXSAVG=30,NWR11=1,NFLPRT=1,NRESTART=30. /
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=30,SCALE=6.,Q1Q2=F,DTRAD=120./
 #                                                              (s)
