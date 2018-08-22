@@ -344,39 +344,39 @@ CONTAINS
 
 
 
-!      DO 250 K = 1, NK3
-!      IF (ZT(K) .LT. 3000.) THEN
-!        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
-!      ELSEIF (ZT(K) .LT. 8000.) THEN
-!        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
-!      ELSEIF (ZT(K) .LT. 13000.) THEN
-!        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
-!      ELSE
-!        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
-!      ENDIF
-!
-!      T(K) = THBAR(K) * PIBAR(K)
-!      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
-!      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
-!      IF (T(K) .LE. 233.15) THEN
-!        ES1 = ESI
-!      ELSE IF (T(K) .LT. 273.15) THEN
-!        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
-!      ELSE
-!        ES1 = ESW
-!      ENDIF
-!      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
+      DO 250 K = 1, NK3
+      IF (ZT(K) .LT. 3000.) THEN
+        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
+      ELSEIF (ZT(K) .LT. 8000.) THEN
+        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
+      ELSEIF (ZT(K) .LT. 13000.) THEN
+        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
+      ELSE
+        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
+      ENDIF
+
+      T(K) = THBAR(K) * PIBAR(K)
+      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
+      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
+      IF (T(K) .LE. 233.15) THEN
+        ES1 = ESI
+      ELSE IF (T(K) .LT. 273.15) THEN
+        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
+      ELSE
+        ES1 = ESW
+      ENDIF
+      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
 !CCCCCCCCCCCCCCCCCC
-!      IF (ZT(K) .LE. 1500) THEN
-!        H(K) = 0.82
-!      ELSE IF (ZT(K) .LE. 12000) THEN
-!        H(K) = (ZT(K)-8000)**2/132031250.+0.5
-!      ELSE
-!        H(K) = 0.50
-!      END IF
+      IF (ZT(K) .LE. 1500) THEN
+        H(K) = 0.82
+      ELSE IF (ZT(K) .LE. 12000) THEN
+        H(K) = (ZT(K)-8000)**2/132031250.+0.5
+      ELSE
+        H(K) = 0.50
+      END IF
 !CCCCCCCCCCCCCCCCCC
-!      QVBAR(K) = H(K) * QVSBAR(K)
-!  250 CONTINUE
+      QVBAR(K) = H(K) * QVSBAR(K)
+  250 CONTINUE
 
 
 !     OCEAN POINTS
