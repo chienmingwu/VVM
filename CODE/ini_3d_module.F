@@ -549,8 +549,8 @@ CONTAINS
 !        U3DX(I,J,K)=0.
 !      ENDIF      
 !
-      U3DX(I,J,K)=5.66
-      U3DY(I,J,K)=5.66
+      U3DX(I,J,K)=11.32
+      U3DY(I,J,K)=11.32
   610 CONTINUE
 
       DO 660 K = 2, NK1
