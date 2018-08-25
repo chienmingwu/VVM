@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = twn_p3_sw16
+set expname = twn_lin
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -43,7 +43,6 @@ cat > definesld.com << 'END1'
 #define DIFFUSION
 #define PHYSICS
 #define MICROCODE
-#define MICROP3
 #define RADCODE
 #define LSM
 #define TOPOGRAPHY
