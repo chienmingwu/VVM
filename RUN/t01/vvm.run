@@ -18,7 +18,7 @@ set subdir = ../../DATA/${expname}
 set datadir = ../../RUNDATA
 set codedir = CODE
 
-make INTEL_COMP=true CASENAME=${expname} CODEDIR=${codedir} -f ../makefile
+make INTEL_COMP=true CASENAME=${expname} CODEDIR=${codedir} -f ../makefile -j8
 
 #for restart ----------------------------------------
 # setenv EXPHDR_INI1 ${subdir}"/GPTB02"
@@ -51,8 +51,8 @@ set outname = `echo $expname | awk '{print substr($0,1,3)}'`
 sed -e 's/expname.out/'${outname}'.out/g' \
     -e 's/expname.err/'${outname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/np_nodes/4/g' \
-    -e 's/np_threads/16/g' \
+    -e 's/np_nodes/8/g' \
+    -e 's/np_threads/8/g' \
     -e 's/total_cores/64/g' ../../RUN/run.sh > run.sh
 
 qsub run.sh

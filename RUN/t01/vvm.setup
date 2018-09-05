@@ -87,6 +87,8 @@ cat INPUT
 if( ! -d RUNDATA ) then
   mkdir RUNDATA
 endif
+  rm -rf archive
+  mkdir archive
 
 cp ${subdir}/CODE/make_ctl.pl .
 cp ${subdir}/RUNDATA/fort.91 fort.91
