@@ -143,16 +143,18 @@ CONTAINS
            qntem(:,:) = min(0.0_dbl_kind, qg3d(:,:,k))
            qgneg = qgneg +  sum(qntem(1:mi1,1:mj1)) * invfnt
         endif
-        
-        do nt = 1,ntracer
-          tctot(nt) = tctot(nt) + sum(tc3d(1:mi1,1:mj1,k,nt)) * invfnt
-          if (minval(TC3D(1:mi1,1:mj1,k,nt)) < 0._dbl_kind ) then
-             nnegt(nt) = 1
-             qntem(:,:) = min(0.0_dbl_kind, TC3D(:,:,k,nt))
-             qtottem = sum(qntem(1:mi1,1:mj1))
-             tcneg(nt) = tcneg(nt) + qtottem * invfnt
-          endif
-        enddo
+       
+        if (ntracer > 0)then
+          do nt = 1,ntracer
+            tctot(nt) = tctot(nt) + sum(tc3d(1:mi1,1:mj1,k,nt)) * invfnt
+            if (minval(TC3D(1:mi1,1:mj1,k,nt)) < 0._dbl_kind ) then
+               nnegt(nt) = 1
+               qntem(:,:) = min(0.0_dbl_kind, TC3D(:,:,k,nt))
+               qtottem = sum(qntem(1:mi1,1:mj1))
+               tcneg(nt) = tcneg(nt) + qtottem * invfnt
+            endif
+          enddo
+        endif
    5  CONTINUE
 
       qsendbuf(1) = qctot
@@ -172,11 +174,13 @@ CONTAINS
       isendbuf(4) = nnegqs
       isendbuf(5) = nnegqg
 
-      do nt = 1,ntracer
-      qsendbuf(10+nt*2-1) = tctot(nt)
-      qsendbuf(10+nt*2) = tcneg(nt)
-      isendbuf(5+nt) = nnegt(nt)
-      enddo
+      if (ntracer > 0)then
+        do nt = 1,ntracer
+          qsendbuf(10+nt*2-1) = tctot(nt)
+          qsendbuf(10+nt*2) = tcneg(nt)
+          isendbuf(5+nt) = nnegt(nt)
+        enddo
+      endif
 
       CALL MPI_ALLREDUCE(qsendbuf,qrecvbuf,2*nb,MPI_dbl_kind, MPI_SUM, MPI_COMM_WORLD, mpierr)
       CALL MPI_ALLREDUCE(isendbuf,irecvbuf,nb,MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, mpierr)
@@ -198,11 +202,13 @@ CONTAINS
       nnegqs = irecvbuf(4)
       nnegqg = irecvbuf(5)
 
-      do nt = 1,ntracer
-      tctot(nt) = qrecvbuf(10+2*nt-1)
-      tcneg(nt) = qrecvbuf(10+2*nt)
-      nnegt(nt) = irecvbuf(5+nt)
-      enddo
+      if (ntracer > 0)then
+        do nt = 1,ntracer
+          tctot(nt) = qrecvbuf(10+2*nt-1)
+          tcneg(nt) = qrecvbuf(10+2*nt)
+          nnegt(nt) = irecvbuf(5+nt)
+        enddo
+      endif 
 
 !      DO 201 K=2,NK2
 !      invfnt = RHOU(K)/fnt(k)
@@ -250,10 +256,12 @@ CONTAINS
       IF ( NNEGQS .GT. 0 ) CALL FILL_GLO_3D(QS3D,'      QS' )
       IF ( NNEGQG .GT. 0 ) CALL FILL_GLO_3D(QG3D,'      QG' )
       IF ( NNEGQR .GT. 0 ) CALL FILL_GLO_3D(QR3D,'      QR' )
-      
-      do nt = 1,ntracer
-       IF ( NNEGT(nt) .GT. 0 ) CALL FILL_GLO_3D(TC3D(:,:,:,nt),'     TC1' )
-      enddo
+
+      if (ntracer > 0)then      
+        do nt = 1,ntracer
+          IF ( NNEGT(nt) .GT. 0 ) CALL FILL_GLO_3D(TC3D(:,:,:,nt),'     TC1' )
+        enddo
+      endif
 
 !     DO K=2,NK2
 !      invfnt = fnt(k)/RHOU(K)
@@ -307,14 +315,16 @@ CONTAINS
         QINEG = 999.
       ENDIF
    
-      do nt = 1,ntracer
-        TCPOS(nt) = TCTOT(nt) + TCNEG(nt)
-        IF ( TCPOS(nt) .GT. 0. ) THEN
-          TCNEG(nt) = TCNEG(nt) / TCPOS(nt)
-        ELSE
-          TCNEG(nt) = 999.
-        ENDIF
-      enddo  
+      if (ntracer > 0)then
+        do nt = 1,ntracer
+          TCPOS(nt) = TCTOT(nt) + TCNEG(nt)
+          IF ( TCPOS(nt) .GT. 0. ) THEN
+            TCNEG(nt) = TCNEG(nt) / TCPOS(nt)
+          ELSE
+            TCNEG(nt) = 999.
+          ENDIF
+        enddo  
+      endif
 
 !-----------------------------------------------------------------------
 !tac -- Saturation adjustment now done in the subroutine 
@@ -359,12 +369,14 @@ CONTAINS
     if(my_task == 0) then
       IF ( MOD ( ITT, nflprt ) .EQ. 0 ) then
      
-      WRITE (21,101) ITT,NNEGQC,QCNEG,NNEGQI,QINEG,             &
-                     NNEGQR,QRNEG,NNEGQS,QSNEG,NNEGQG,QGNEG  
-      do nt = 1,ntracer
-      WRITE (21,102) ITT,nt,NNEGT(nt),nt,nt,TCNEG(nt)
-      enddo
-                     
+        WRITE (21,101) ITT,NNEGQC,QCNEG,NNEGQI,QINEG,             &
+                       NNEGQR,QRNEG,NNEGQS,QSNEG,NNEGQG,QGNEG  
+        if (ntracer > 0)then
+          do nt = 1,ntracer
+            WRITE (21,102) ITT,nt,NNEGT(nt),nt,nt,TCNEG(nt)
+          enddo
+        endif
+ 
       ENDIF
     endif
 

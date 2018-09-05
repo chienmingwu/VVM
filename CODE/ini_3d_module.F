@@ -110,7 +110,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 302.8
+      SST = 302.8+0.5
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -275,8 +275,7 @@ CONTAINS
       DO 102 K=1,NK2
       RHOW(K)=RHOZ(K)  ! This line added with removal of equivalence in constld
   102 CONTINUE
-#if defined (GILL)
-#else
+
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 15000. ) THEN
       K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
@@ -290,41 +289,18 @@ CONTAINS
       Q2LS (K) = 0.0
       END IF
   200 CONTINUE
-#endif
+
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
 !     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
 
       IF ( Q1Q2 ) SCALEQ = SCALE
-#if defined (GILL)
-      DO 210 K = 1, NK2
-      DO 210 J = 1, mj1
-      DO 210 I = 1, mi1
-      !if (abs((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5)) .LE. 64 &
-      !   .AND. ZT(K) .LT. 10000. ) then
-      if (ZT(K) .LT. 10000. ) then
-      !Q1LS (I,J,K) = cos(2.*pi*((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5))/128.)
-      Q1LS (I,J,K) = exp(-0.25*(((mi1*ni_sbdm+I)-(mi1*nsbdm_x/2+0.5))/16)**2)
-      Q1LS (I,J,K) = Q1LS (I,J,K)*exp(-0.25*(((nj_sbdm-nsbdm_y/2)*mj1+ &
-                          (J-0.5))/10)**2)
-      Q1LS (I,J,K) = 5.*Q1LS (I,J,K)*sin(pi*ZT(K)/10000)
-      Q1LS (I,J,K) = Q1LS (I,J,K) / PIBAR(K) / SECDAY
-      end if
-  210 CONTINUE
-#else
+
       DO 210 K = 1, NK3
       Q1LS (K) = -1.* SCALEQ * Q1LS (K) / PIBAR(K) / SECDAY
       Q2LS (K) = SCALEQ * Q2LS (K) / (GAMFAC * SECDAY)
   210 CONTINUE
-#endif
 
-#if !defined (RADCODE) && defined (GILL)
-      DO 212 K = 1, NK2
-      DO 212 J = 1, mj1
-      DO 212 I = 1, mi1
-      Q1LS (I,J,K) = Q1LS (I,J,K) + RAD1 / PIBAR(K) / SECDAY
-  212 CONTINUE
-#endif
-#if !defined (RADCODE) && !defined (GILL)
+#if !defined (RADCODE)
       DO 212 K = 1, NK3
       Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
   212 CONTINUE
@@ -341,43 +317,6 @@ CONTAINS
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)
       VG(NK3) = VG(NK2)
-
-
-
-      DO 250 K = 1, NK3
-      IF (ZT(K) .LT. 3000.) THEN
-        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
-      ELSEIF (ZT(K) .LT. 8000.) THEN
-        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
-      ELSEIF (ZT(K) .LT. 13000.) THEN
-        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
-      ELSE
-        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
-      ENDIF
-
-      T(K) = THBAR(K) * PIBAR(K)
-      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
-      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
-      IF (T(K) .LE. 233.15) THEN
-        ES1 = ESI
-      ELSE IF (T(K) .LT. 273.15) THEN
-        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
-      ELSE
-        ES1 = ESW
-      ENDIF
-      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
-!CCCCCCCCCCCCCCCCCC
-      IF (ZT(K) .LE. 1500) THEN
-        H(K) = 0.82
-      ELSE IF (ZT(K) .LE. 12000) THEN
-        H(K) = (ZT(K)-8000)**2/132031250.+0.5
-      ELSE
-        H(K) = 0.50
-      END IF
-!CCCCCCCCCCCCCCCCCC
-      QVBAR(K) = H(K) * QVSBAR(K)
-  250 CONTINUE
-
 
 !     OCEAN POINTS
 
@@ -397,31 +336,20 @@ CONTAINS
       WRITE(95,402) (ZT(K),PBAR(K),T(K),THBAR(K),QVBAR(K),UG(K),  &
                      K=2,NK2)
       WRITE(95,*) 
-      WRITE(95,*)
-#if defined (GILL)
-      WRITE(95,*) '************* LS FORCING **********************'
-      WRITE(95,403)
-      WRITE(95,404) (ZT(K),K=2,NK2)
-#else 
+      WRITE(95,*) 
       WRITE(95,*) '************* LS FORCING **********************'
       WRITE(95,403)
       WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),K=2,NK2)
-#endif
+
 
   401 FORMAT (7X,'Z(m)',2X,'PBAR(mb)',4X,'T(K)',4X,'THBAR(K)',2X,  &
        'QVBAR(g/kg)',2X,'U(m/s)'//)
 
   402 FORMAT ( 0PF10.0,-2PF10.1,0PF10.2,0PF10.2,3PF10.1,0PF10.1)
 
-#if defined (GILL)
-  403 FORMAT (7X,'Z(m)'//)
-
-  404 FORMAT (0PF10.0)
-#else
   403 FORMAT (7X,'Z(m)',3X,'Q1LS(K/day)',1X,'Q2LS(K/day)'//)
-
   404 FORMAT (0PF10.0,0PE12.3,0PE12.3)
-#endif
+
       if(my_task == 0) then
       OPEN(UNIT=99,FILE='bar.dat',FORM='unformatted',STATUS='unknown', &
       access='direct',recl=nk3)
@@ -438,43 +366,48 @@ CONTAINS
       CLOSE(99)
       endif
 
+
+
+!      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
+!      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
+
+
 !*********************************************************
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
+
+!ccwu turn on the if for restarting
+      IF (.false.) then
+      WRITE(FILENAME,'(A30,I3.3,A1,I3.3,A4)') &
+      '../scs_restart/RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+      READ(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
+      CLOSE(99)
+
+!ccwu retain homogeneous wind fields
+      DO 6101 K = 1, NK3
+      DO 6101 J = mjm,mjp
+      DO 6101 I = mim,mip
+      Z3DZ(I,J,K)=0.
+      U3DX(I,J,K)=UG(K)
+      U3DY(I,J,K)=0.
+  6101 CONTINUE
+
+      DO 6601 K = 2, NK1
+      DO 6601 J = 1, MJ1
+      DO 6601 I = 1, MI1
+      Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
+                 -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
+      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
+                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
+  6601 CONTINUE
+
+      ELSE
 
       DO 500 K = 1, NK3
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-
-!      IF (MY_TASK .EQ. 3)THEN
-!        IF (sqrt(((real(I)-48)/16.)**2 &
-!                   +((real(K)-10)/8.)**2)<=1)THEN
-!          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
-!                        sqrt(((real(I)-48)/16.)**2+ &
-!                             ((real(K)-10)/8.)**2)))**2
-!        ENDIF
-!      ENDIF
-!      IF (MY_TASK .EQ. 11)THEN
-!        IF (sqrt(((real(I)-48)/16.)**2 &
-!                   +((real(K)-10)/8.)**2)<=1)THEN
-!          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
-!                        sqrt(((real(I)-48)/16.)**2+ &
-!                             ((real(K)-10)/8.)**2)))**2
-!        ENDIF
-!      ENDIF
-!
-!      IF (MY_TASK .EQ. 5)THEN
-!        IF (sqrt(((real(I)-48)/16.)**2+((real(J)-48)/16.)**2 &
-!                   +((real(K)-10)/8.)**2)<=1)THEN
-!          TH3D(I,J,K) = TH3D(I,J,K) + 3*(cos(3.14159265*0.5* &
-!                        sqrt(((real(I)-48)/16.)**2+ &
-!                             ((real(J)-48)/16.)**2+ &
-!                             ((real(K)-10)/8.)**2)))**2
-!        ENDIF
-!      ENDIF
-
-
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -491,6 +424,8 @@ CONTAINS
 #endif
   500 CONTINUE
 
+      ENDIF
+!ccwu 
       DO 515 K = 1, NK2
       DO 515 J = 1, MJ1
       DO 515 I = 1, MI1
@@ -509,8 +444,8 @@ CONTAINS
 #else
       FQS3D(I,J,K,N)=0.
       FQG3D(I,J,K,N)=0.
-#endif
       FZX(I,J,K,N)=0.
+#endif
       FZY(I,J,K,N)=0.
   515 CONTINUE
 
@@ -528,6 +463,12 @@ CONTAINS
 !*******************************************
 !     3. SET UP CIRCULATION
 !*******************************************
+!ccwu if true, then restart
+      if (.false.) then
+
+      Call bound_3d_xy
+
+      ELSE
 
       DO 600 K = 1, NK2
       DO 600 J = mjm,mjp
@@ -541,16 +482,9 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-
-!     squall line
-!      IF (ZT(K)<2500)THEN
-!        U3DX(I,J,K)=12.-12*ZT(K)/2500
-!      ELSE
-!        U3DX(I,J,K)=0.
-!      ENDIF      
-!
-      U3DX(I,J,K)=5.66
-      U3DY(I,J,K)=5.66
+!ccwu_ini_wind 
+      U3DX(I,J,K)=UG(K)
+      U3DY(I,J,K)=0.
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -564,6 +498,9 @@ CONTAINS
 
 
       CALL BOUND_3D_XY
+
+      endif
+!ccwu end restart
 
 #if defined (AREAMN)
 !-------------------
@@ -603,7 +540,7 @@ CONTAINS
       UTMN0 = UTMN
       VTMN0 = VTMN
       
-      IF(itt == 0) CALL UPDATE_TRACER_init
+      IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
       albdo = 0.30

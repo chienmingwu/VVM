@@ -224,19 +224,6 @@ CONTAINS
       FVTMN(L)=FVTMN(L)+F*UG(NK2)
 #endif
 #endif
-
-#if defined (BETA)
-      DO 200 J=1,MJ1
-      DO 200 I=1,MI1
-      temu(i,j) = F(J)*U3DY(I,J,NK2)
-      temv(i,j) = F(J)*U3DX(I,J,NK2)
-  200 CONTINUE
-      CALL xyavg1(temu,0,mi1,mj1,sumu1)
-      CALL xyavg1(temv,0,mi1,mj1,sumv1)
-
-      FUTMN(L)=FUTMN(L)+SUMU1
-      FVTMN(L)=FVTMN(L)-SUMV1
-#endif
  
       UTMN = UTMN + A*FUTMN(N2) + B*FUTMN(N1)
       VTMN = VTMN + A*FVTMN(N2) + B*FVTMN(N1)

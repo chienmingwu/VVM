@@ -531,8 +531,6 @@
 
 #if defined (MICROCODE)
       CALL BOUND_ARB (1,SPREC)
-      CALL BOUND_ARB (1,PREC25)
-
 #endif
 
 ! TWP-ICE tracers

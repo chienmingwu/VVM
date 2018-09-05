@@ -49,21 +49,17 @@ CONTAINS
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
          buff_c(nhalo, nhalo,nk1,10+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
          buff_ns(1:mi1,nhalo,nk1,10+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
-                                          !                  3 send to n, 4 send
-                                          !                  to south
+                                          !                  3 send to n, 4 send to south
          buff_ew(nhalo,1:mj1,nk1,10+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
-                                          !                  3 send to e, 4 send
-                                          !                  to w
+                                          !                  3 send to e, 4 send to w
 
 #else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
          buff_c(nhalo, nhalo,nk1,7+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
          buff_ns(1:mi1,nhalo,nk1,7+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
-                                          !                  3 send to n, 4 send
-                                          !                  to south
+                                          !                  3 send to n, 4 send to south
          buff_ew(nhalo,1:mj1,nk1,7+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
-                                          !                  3 send to e, 4 send
-                                          !                  to w
+                                          !                  3 send to e, 4 send to w
 #endif
 
 #else
@@ -156,20 +152,24 @@ CONTAINS
           buff_ns(1:mi1,j,k-1,10,3) = brim3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,10,4) = brim3d(1:mi1,j,k)
 
-          DO nt = 1,ntracer
-            buff_ns(1:mi1,j,k-1,10+nt,3) = tc3d(1:mi1,mj1-nhalo+j,k,nt)
-            buff_ns(1:mi1,j,k-1,10+nt,4) = tc3d(1:mi1,j,k,nt)
-          enddo
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              buff_ns(1:mi1,j,k-1,10+nt,3) = tc3d(1:mi1,mj1-nhalo+j,k,nt)
+              buff_ns(1:mi1,j,k-1,10+nt,4) = tc3d(1:mi1,j,k,nt)
+            enddo
+          endif
 #else
           buff_ns(1:mi1,j,k-1,6,3) = qs3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,6,4) = qs3d(1:mi1,j,k)
           buff_ns(1:mi1,j,k-1,7,3) = qg3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,7,4) = qg3d(1:mi1,j,k)
 
-          DO nt = 1,ntracer
-            buff_ns(1:mi1,j,k-1,7+nt,3) = tc3d(1:mi1,mj1-nhalo+j,k,nt)
-            buff_ns(1:mi1,j,k-1,7+nt,4) = tc3d(1:mi1,j,k,nt)
-          enddo
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              buff_ns(1:mi1,j,k-1,7+nt,3) = tc3d(1:mi1,mj1-nhalo+j,k,nt)
+              buff_ns(1:mi1,j,k-1,7+nt,4) = tc3d(1:mi1,j,k,nt)
+            enddo
+          endif
 #endif
 
 #endif
@@ -198,20 +198,24 @@ CONTAINS
           buff_ew(i,1:mj1,k-1,10,3) = brim3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,10,4) = brim3d(i,1:mj1,k)
 
-          DO nt = 1,ntracer
-            buff_ew(i,1:mj1,k-1,10+nt,3) = tc3d(mi1-nhalo+i,1:mj1,k,nt)
-            buff_ew(i,1:mj1,k-1,10+nt,4) = tc3d(i,1:mj1,k,nt)
-          enddo
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              buff_ew(i,1:mj1,k-1,10+nt,3) = tc3d(mi1-nhalo+i,1:mj1,k,nt)
+              buff_ew(i,1:mj1,k-1,10+nt,4) = tc3d(i,1:mj1,k,nt)
+            enddo
+          endif
 #else
           buff_ew(i,1:mj1,k-1,6,3) = qs3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,6,4) = qs3d(i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,7,3) = qg3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,7,4) = qg3d(i,1:mj1,k)
 
-          DO nt = 1,ntracer
-            buff_ew(i,1:mj1,k-1,7+nt,3) = tc3d(mi1-nhalo+i,1:mj1,k,nt)
-            buff_ew(i,1:mj1,k-1,7+nt,4) = tc3d(i,1:mj1,k,nt)
-          enddo
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              buff_ew(i,1:mj1,k-1,7+nt,3) = tc3d(mi1-nhalo+i,1:mj1,k,nt)
+              buff_ew(i,1:mj1,k-1,7+nt,4) = tc3d(i,1:mj1,k,nt)
+            enddo
+          endif
 #endif
 
 #endif
@@ -316,20 +320,24 @@ CONTAINS
           brim3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,10,1)
           brim3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,10,2)
 
-          DO nt = 1,ntracer
-            tc3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,10+nt,1)
-            tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,10+nt,2)
-          enddo
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              tc3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,10+nt,1)
+              tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,10+nt,2)
+            enddo
+          endif
 #else
           qs3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,6,1)
           qs3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,6,2)
           qg3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,7,1)
           qg3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,7,2)
 
-          DO nt = 1,ntracer
-            tc3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,7+nt,1)
-            tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,7+nt,2)
-          enddo
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              tc3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,7+nt,1)
+              tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,7+nt,2)
+            enddo
+          endif
 #endif
 
 #endif
@@ -361,20 +369,24 @@ CONTAINS
           brim3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,10,1)
           brim3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,10,2)
 
-          DO nt = 1,ntracer
-            tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,10+nt,1)
-            tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,10+nt,2)
-          enddo
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,10+nt,1)
+              tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,10+nt,2)
+            enddo
+          endif
 #else
           qs3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,6,1)
           qs3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,6,2)
           qg3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,7,1)
           qg3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,7,2)
 
-          DO nt = 1,ntracer
-            tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,7+nt,1)
-            tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,7+nt,2)
-          enddo
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,7+nt,1)
+              tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,7+nt,2)
+            enddo
+          endif
 #endif
 
 #endif
@@ -468,6 +480,8 @@ CONTAINS
 #endif
  1100 CONTINUE
 
+      if (ntracer > 0)then      
+
       DO 1101 nt = 1,ntracer
       DO 1101 K=2,NK2
       DO 1101 J=1,MJ1
@@ -475,6 +489,8 @@ CONTAINS
       TC3D(1-i,J,K,nt)=TC3D(MI1+1-i,J,K,nt)
       TC3D(MI1+i,J,K,nt)=TC3D(i,J,K,nt)
  1101 CONTINUE
+ 
+      endif
 
       DO 1200 K=2,NK2
       DO 1200 j=1,nhalo
@@ -518,6 +534,8 @@ CONTAINS
 #endif
  1200 CONTINUE
 
+      if (ntracer > 0)then
+
       DO 1201 nt = 1,ntracer
       DO 1201 K=2,NK2
       DO 1201 j=1,nhalo
@@ -525,6 +543,8 @@ CONTAINS
       TC3D(I,1-j,K,nt)=TC3D(I,mj1+1-j,K,nt)
       TC3D(I,mj1+j,K,nt)=TC3D(I,j,K,nt)
  1201 CONTINUE
+
+      endif
 
 #endif
 
@@ -568,6 +588,8 @@ CONTAINS
 #endif
  1300 CONTINUE
 
+      if (ntracer > 0)then
+
       DO 1301 nt = 1,ntracer
       DO 1301 J=mjm,mjp
       DO 1301 I=mim,mip
@@ -575,6 +597,7 @@ CONTAINS
       TC3D(I,J,NK3,nt)= 0.
  1301 CONTINUE
 
+      endif
 
       END SUBROUTINE bound_3d
 

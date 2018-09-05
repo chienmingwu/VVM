@@ -70,12 +70,16 @@ CONTAINS
       THTD3D(I,J,K) = THTD3D(I,J,K)+ DT*THAD3(I,J,K)
   500 CONTINUE
 
+      if (ntracer > 0)then
+
       DO 501 nt = 1, ntracer
       DO 501 K = 2, NK2
       DO 501 J = 1, MJ1
       DO 501 I = 1, MI1
       TC3D(I,J,K,nt) = TC3D(I,J,K,nt) + DT*TCAD3(I,J,K,nt)
   501 CONTINUE
+
+      endif
 
 #if defined (PHYSICS)
       DO 510 K = 2, NK2

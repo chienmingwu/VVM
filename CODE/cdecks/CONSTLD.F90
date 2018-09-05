@@ -1,4 +1,3 @@
-#include "definesld.com"
 MODULE constld
 
 ! This file contains profiles that do not vary across the domain and
@@ -97,6 +96,7 @@ PRIVATE
       crad,      &  ! formerly c(40) coefficient for gravity wave damping
       scale,     &  ! formerly c(41) scale factor for Q1 and Q2
       crad1,     &  ! formerly c(42) coefficient for Newtonian cooling
+      f,         &  ! formerly c(54) coefficient for Coriolis force
       dthmax,    &  ! formerly c(61) coefficient for random perturbation
       dtpert,    &  ! formerly c(62) coefficient for random perturbation
       z1pert,    &  ! formerly c(63) z_low for random perturbation
@@ -104,15 +104,7 @@ PRIVATE
       aladv,     &  ! formerly c(70) alpha in advection
       WRXMU,     &  ! formerly c(71) mu/dt in relaxed method
       uvtau         ! formerly c(72) timescale for mean-wind nudging (???)
-
-#if defined (BETA)
-   REAL (KIND=dbl_kind), DIMENSION(MJ1), PUBLIC ::       &
-      f             ! Coriolis force with beta effect
-#else                            
-   REAL (KIND=dbl_kind), PUBLIC ::           & 
-      f             ! formerly c(54) coefficient for Coriolis force 
-#endif
-
+   
    INTEGER (KIND=int_kind), PUBLIC ::           &
       ittmax,    &  ! formerly ic(1)  maximum # of integration (timestep #???)
       nrestart,  &  ! formerly ic(7)  restart writing interval

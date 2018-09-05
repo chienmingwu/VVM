@@ -82,14 +82,15 @@ PROGRAM ldmain
     USE constld
     USE const3d
     USE ldoutput
-    USE ldoutput_nc
-    USE output_nc
+!   USE output_nc
+!   USE ldoutput_nc
+    USE new_ldoutput_nc
+    USE new_output_nc
     USE ldinput
     USE ab_3d_module
     USE time_manager_module
     USE timer
     USE domain_decomposition
-    USE output_nc
     USE petscsys
     USE petsc_vvm_solver, only: petsc_solver_finalize
     USE vertical_adaptive
@@ -250,12 +251,6 @@ PROGRAM ldmain
 
     ! Mars (20141221) add output iteration
     if(my_task == 0) close(12345)
-
-#if defined (PARALLELIO)
-    call output_nc_close
-#else
-    if (my_task == 0) call output_nc_close
-#endif
 
     call timer_stop('total vvm')
     if(my_task == 0) call timer_write('vvm')

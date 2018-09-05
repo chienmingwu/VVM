@@ -122,6 +122,7 @@ CONTAINS
                     + DT * BRIMAD_MICRO(I,J,K) &
                     + A*FBRIM3D(I,J,K,N2)+B*FBRIM3D(I,J,K,N1)
 #else
+
       QS3D(I,J,K) = QS3D(I,J,K)            &
                   + DT * QSAD_MICRO(I,J,K) &
                   + A*FQS3D(I,J,K,N2)+B*FQS3D(I,J,K,N1)
@@ -144,6 +145,8 @@ CONTAINS
 #endif
    70 CONTINUE
 
+      if (ntracer > 0)then
+
       DO 71 nt = 1,ntracer
       DO 71 K = 2, NK2
       DO 71 J = 1, MJ1
@@ -153,6 +156,8 @@ CONTAINS
                   + A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt)
      
    71 CONTINUE
+
+      endif
 
 
 !ccwut set physics variables on topo to zero

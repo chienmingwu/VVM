@@ -56,8 +56,8 @@ CONTAINS
          dtrad      !
       INTEGER (KIND=int_kind) :: &
          maxitt,  & !
-         i,       & ! do loop index
-         j          ! do loop index 
+         i          ! do loop index
+
       NAMELIST /INPUT1/ NEWRUN,ITTGET,ITTADD
       NAMELIST /INPUT2/ GRAV,HLF,HLM,CP,DELTA,VK,PI,RLAT,RHOSFC,RLON
       NAMELIST /INPUT3/ DT,DX,DYNEW,DZ,DZ1,DOMAIN,ZB,NOTURB,NOSFX &
@@ -304,20 +304,7 @@ CONTAINS
       
 ! SET DEFAULT VALUES FOR FORCING PARAMTERS (INPUT6)
 
-#if defined (CORIOLIS)
       F = 2. * OMEGA * SIN ( RLAT * PI / 180._dbl_kind )
-#endif
-
-#if defined (BETA)
-      DO 519 J = 1,mj1
-      F(J) = 2. * OMEGA * ((nj_sbdm-nsbdm_y/2)*mj1+J-0.5) * DYNEW / 6.37E6
-  519 CONTINUE 
-      if (ni_sbdm .EQ. 0 .or. ni_sbdm .EQ. 5) then
-      write(*,*) 'Subdomain index ',ni_sbdm,nj_sbdm
-      write(*,*) 'Coriolis parameter ',F
-      end if
-#endif
-
       NRAD = NINT ( DTRAD / DT ) !Time steps between CEMRAD calls
       DT8  = DT
 
@@ -523,9 +510,7 @@ CONTAINS
         crad     = c(40)
         scale    = c(41)
         crad1    = c(42)
-#if defined (CORIOLIS)      
         f        = c(54)
-#endif
         dthmax   = c(61)
         dtpert   = c(62)
         z1pert   = c(63)

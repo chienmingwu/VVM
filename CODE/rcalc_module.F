@@ -84,11 +84,13 @@ CONTAINS
                                *(HLF/CP)*86400.
   170 CONTINUE
 #endif
-  
-      do nt = 1,ntracer
-         CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(1,1,1,L,nt), term4 )
-      enddo
-  
+    
+      if (ntracer > 0)then
+         do nt = 1,ntracer
+            CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(1,1,1,L,nt), term4 )
+         enddo
+      endif
+
 #endif
       call timer_stop('advection')
 
@@ -109,27 +111,12 @@ CONTAINS
 !   FORCING BY THE LARGE SCALE VERTICAL WIND.
 !   (Modified June 2009, TRJ)
       IF (Q1Q2) THEN
-#if defined (GILL)
-
-      IF (ITT .gt. 8640) then
-      Q1LS=0.
-      Q2LS=0.
-      ENDIF
-
-      DO 300 K = 2, NK2
-      DO 309 J = 1, MJ1
-      DO 309 I = 1, MI1
-      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (I,J,K)
-      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (I,J,K)
-  309 CONTINUE
-#else
       DO 300 K = 2, NK2
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
       FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)
       FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
   309 CONTINUE
-#endif
   SELECT CASE (TRIM(casename))
   CASE ('TWP-ICE','BOMEX')
       fntddz = FNT(K)/DZ
@@ -166,12 +153,18 @@ CONTAINS
        *(HLF/CP)*86400.
 #endif
   301 CONTINUE
+
+      if (ntracer > 0)then
+
       DO 303 nt = 1,ntracer
       DO 303 J = 1, MJ1
       DO 303 I = 1, MI1
       FTC3D(I,J,K,L,nt)=FTC3D(I,J,K,L,nt) - WLS(K)*         &
                 (TC3D(I,J,K+1,nt)-TC3D(I,J,K,nt))*fntddz
   303 CONTINUE
+
+      endif
+
       ELSE
       DO 302 J = 1, MJ1
       DO 302 I = 1, MI1
@@ -204,12 +197,18 @@ CONTAINS
         *(HLF/CP)*86400.
 #endif
   302 CONTINUE
+
+      if (ntracer > 0)then
+
       DO 304 nt = 1,ntracer
       DO 304 J = 1, MJ1
       DO 304 I = 1, MI1
       FTC3D(I,J,K,L,nt)=FTC3D(I,J,K,L,nt) - WLS(K)*         &
                 (TC3D(I,J,K,nt)-TC3D(I,J,K-1,nt))*fntddz
   304 CONTINUE
+
+      endif
+
       END IF
   END SELECT 
   300 CONTINUE
