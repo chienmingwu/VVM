@@ -90,7 +90,7 @@ endif
   rm -rf archive
   mkdir archive
 
-cp ${subdir}/CODE/make_ctl.pl .
+cp ${subdir}/CODE/make_ctl.sh .
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
