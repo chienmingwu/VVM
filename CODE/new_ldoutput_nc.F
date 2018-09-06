@@ -848,6 +848,8 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = z3dx(1:mi1,1:mj1,1:nk2)
 #endif
       call pCDF_WRITE_4D(ncid_z3dx, 'xi', TIME_L, time_start, out_tm1, nk2 )
 
@@ -864,6 +866,8 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = z3dy(1:mi1,1:mj1,1:nk2)
 #endif
       call pCDF_WRITE_4D(ncid_z3dx, 'eta', TIME_L, time_start, out_tm1, nk2 )
 
@@ -876,6 +880,8 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = z3dz(1:mi1,1:mj1,1:nk2)
 #endif
       call pCDF_WRITE_4D(ncid_z3dx, 'zeta', TIME_L, time_start, out_tm1, nk2 )
 
@@ -890,6 +896,8 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = u3dx(1:mi1,1:mj1,1:nk2)
 #endif
       call pCDF_WRITE_4D(ncid_z3dx, 'u', TIME_L, time_start, out_tm1, nk2  )
 
@@ -902,6 +910,8 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = u3dy(1:mi1,1:mj1,1:nk2)
 #endif
       call pCDF_WRITE_4D(ncid_z3dx, 'v', TIME_L, time_start, out_tm1, nk2  )
 
@@ -916,6 +926,8 @@ CONTAINS
             ENDDO
          ENDDO
       ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = w3d(1:mi1,1:mj1,1:nk2)
 #endif
       call pCDF_WRITE_4D(ncid_z3dx, 'w', TIME_L, time_start, out_tm1, nk2  )
 
