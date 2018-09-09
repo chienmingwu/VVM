@@ -5,6 +5,7 @@
 # ================================================
 
 # Set plot false if you want to calculate(mass flux, qv flux etc.).
+set nonomatch
 set plot = true
 set dir = archive
 set outdir = gs_ctl_files
@@ -105,8 +106,24 @@ set dum1    =  ` ncdump -v zc ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 3 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set nz      =  ` echo ${dum2} | cut -d" " -f 1 `
-set zc      =  ` echo ${dum3} | cut -d";" -f 1 `
+set prezc   =  ` echo ${dum3} | cut -d";" -f 1 `
 
+set n = 1
+set condition = true
+set dum3    =  ` echo ${prezc} | cut -d"," -f 1`
+set pzc     =  ${dum3}
+
+while ( ${condition} == "true" )
+@ n++
+set dum3    =  ` echo ${prezc} | cut -d"," -f ${n}`
+if( ${dum3} == "" )then
+  set condition = false
+else
+  set pzc   = ` echo ${pzc} ${dum3} `
+endif
+end
+
+set zc      = ( `echo ${pzc}` )
 
 # get information of variables
 # =================thermo=========================
@@ -170,8 +187,13 @@ end
 
 set surfacevarname = ( `echo ${prevar}` )
 # =================land===========================
-if( ${land} != "nan" )then
-set dum1    =  ` ncdump -h ${land} | grep float `
+if( ${land} == "nan" )then
+  set landn = ${surface}
+else
+  set landn = ${land}
+endif
+
+set dum1    =  ` ncdump -h ${landn} | grep float `
 set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
@@ -190,10 +212,14 @@ endif
 end
 
 set landvarname = ( `echo ${prevar}` )
-endif
 # =================radiation======================
-if( ${rad} != "nan" )then
-set dum1    =  ` ncdump -h ${rad} | grep float `
+if( ${rad} == "nan" )then
+  set radn  = ${surface}
+else
+  set radn  = ${rad}
+endif
+
+set dum1    =  ` ncdump -h ${radn} | grep float `
 set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
@@ -212,10 +238,14 @@ endif
 end
 
 set radvarname = ( `echo ${prevar}` )
-endif
 # =================tracer=========================
-if( ${tracer} != "nan" )then
-set dum1    =  ` ncdump -h ${tracer} | grep float `
+if( ${tracer} == "nan" )then
+  set tra  = ${surface}
+else
+  set tra  = ${tracer}
+endif
+
+set dum1    =  ` ncdump -h ${tra} | grep float `
 set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
@@ -234,7 +264,6 @@ endif
 end
 
 set tracervarname = ( `echo ${prevar}` )
-endif
 
 
 
@@ -251,9 +280,16 @@ UNDEF 99999. \
 CACHESIZE 10000000 \
 XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
 YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
-ZDEF '${nz}' LEVELS '${zc}' \
-TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
-VARS '$#thermovarname > thermodynamic.ctl
+ZDEF '${nz}' LEVELS ' > thermodynamic.ctl
+
+set n = 0
+while ( ${n} < $#zc )
+@ n++
+echo ${zc[${n}]} >> thermodynamic.ctl
+end
+
+echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
+VARS '$#thermovarname >> thermodynamic.ctl
 
 set n = 0
 while ( ${n} < $#thermovarname )
@@ -272,9 +308,16 @@ UNDEF 99999. \
 CACHESIZE 10000000 \
 XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
 YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
-ZDEF '${nz}' LEVELS '${zc}' \
-TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
-VARS '$#dynamicvarname > dynamic.ctl
+ZDEF '${nz}' LEVELS ' > dynamic.ctl
+
+set n = 0
+while ( ${n} < $#zc )
+@ n++
+echo ${zc[${n}]} >> dynamic.ctl
+end
+
+echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
+VARS '$#dynamicvarname >> dynamic.ctl
 
 set n = 0
 while ( ${n} < $#dynamicvarname )
@@ -448,9 +491,16 @@ UNDEF 9.96921e+36 \
 CACHESIZE 10000000 \
 XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
 YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
-ZDEF '${nz}' LEVELS '${zc}' \
-TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
-VARS '$#radvarname > radiation.ctl
+ZDEF '${nz}' LEVELS ' > radiation.ctl
+
+set n = 0
+while ( ${n} < $#zc )
+@ n++
+echo ${zc[${n}]} >> radiation.ctl
+end
+
+echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
+VARS '$#radvarname >> radiation.ctl
 
 set n = 0
 while ( ${n} < $#radvarname )
@@ -469,9 +519,16 @@ UNDEF 9.96921e+36 \
 CACHESIZE 10000000 \
 XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
 YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
-ZDEF '${nz}' LEVELS '${zc}' \
-TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
-VARS '$#tracervarname > tracer.ctl
+ZDEF '${nz}' LEVELS ' > tracer.ctl
+
+set n = 0
+while ( ${n} < $#zc )
+@ n++
+echo ${zc[${n}]} >> tracer.ctl
+end
+
+echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
+VARS '$#tracervarname >> tracer.ctl
 
 set n = 0
 while ( ${n} < $#tracervarname )

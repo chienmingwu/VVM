@@ -81,12 +81,12 @@ CONTAINS
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 0.0
   CASE DEFAULT
-! TWP-ICE comparison study (0Z 18 Jan 2006)      
-      iyear0 = 1995
-      imonth0 = 5
-      iday0 = 15
+! TWP-ICE comparison study (0Z 18 Jan 2006)
+      iyear0 = 2014
+      imonth0 = 8
+      iday0 = 6
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 16.0
+      hour0 = 22.0
   END SELECT 
 
 !  Get Julian day
