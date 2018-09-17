@@ -68,20 +68,20 @@
 
       DZTMP = MIN(DZ,DZ1)
 ! for stretching DZ
-      Zz(1) = ZB
-      DO 50 K = 2, NK3
-      Zz(K) = Zz(K-1) + DZ
-   50 CONTINUE
-
-      DO 51 K = 1, NK3
-      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
-   51 CONTINUE
-
-!for constant DZ1
 !      Zz(1) = ZB
 !      DO 50 K = 2, NK3
-!      Zz(K) = Zz(K-1) + DZ1
+!      Zz(K) = Zz(K-1) + DZ
 !   50 CONTINUE
+!
+!      DO 51 K = 1, NK3
+!      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
+!   51 CONTINUE
+
+!for constant DZ1
+      Zz(1) = ZB
+      DO 50 K = 2, NK3
+      Zz(K) = Zz(K-1) + DZ1
+   50 CONTINUE
 
 
 ! import INPUT FILE 
