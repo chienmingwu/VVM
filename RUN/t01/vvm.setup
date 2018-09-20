@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = twn_p3_sw3_clean
+set expname = twn_p3_sw3_dirty
 
 # hardscrabble configuration
 set subdir = '../..'
