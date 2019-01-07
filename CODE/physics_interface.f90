@@ -92,18 +92,20 @@
       DATA first_rad/.TRUE./
 !-----------------------------------------------------------------
 #if defined (MICROP3)
+      REAL :: scpf_pfrac, scpf_resfact
       REAL :: theta_p3(im,km),qv_p3(im,km),qc_p3(im,km),qi_p3(im,km),qr_p3(im,km)
       REAL :: nc(im,km), nr(im,km), ni(im,km), qrim(im,km), brim(im,km), &
               theta_old(im,jm,km), qv_old(im,jm,km), dz_p3(im,km), p_p3(im,km), &
               ssat(im,km), pcprt_liq(im), pcprt_sol(im), w_p3(im,km), &
               diag_ze(im,km),diag_effc(im,km),diag_effi(im,km), &
               diag_vmi(im,km),diag_di(im,km),diag_rhoi(im,km), dt_p3, &
-              th_old_p3(im,km), qv_old_p3(im,km), diag_3d(im,km,3), diag_2d(im,1)
+              th_old_p3(im,km), qv_old_p3(im,km), diag_3d(im,km,3), diag_2d(im,1), &
+              cldfrac(im,km)
 
-      INTEGER (KIND=int_kind) :: itt_p3
+      INTEGER (KIND=int_kind) :: itt_p3, stat
 
       LOGICAL (KIND=log_kind), SAVE :: &
-          log_predictNc, typeDiags_ON
+          log_predictNc, typeDiags_ON, debug_on, scpf_on
       CHARACTER(LEN=16), PARAMETER :: model = 'VVM'
 #endif
 !-----------------------------------------------------------------
@@ -148,10 +150,19 @@
 ! Initialize physics related constants and parameters
 #if defined (MICROP3)
       ! initialize for p3 microphysics scheme
-      call p3_init('.',1)
+      call p3_init('.',1,trim(model),stat)
+      IF (stat/=0)THEN
+      WRITE(*,*) "Fail in P3 initialization"
+      STOP
+      ENDIF
       log_predictNc = .True.
-      typeDiags_ON = .False.
+      typeDiags_ON  = .False.
+      debug_on      = .False.
+      scpf_on       = .False. ! cloud fraction version not used
+      scpf_pfrac    = 0.      ! dummy variable (not used), set to 0
+      scpf_resfact  = 0.      ! dummy variable (not used), set to 0
 #else
+      ! initialize for Lin microphysics scheme
       CALL initialize_physics
 #endif
 !----------------------------------------------------------
@@ -412,17 +423,22 @@
       itt_p3=ITT
  
       call p3_main(qc_p3,nc,qr_p3,nr,th_old_p3,theta_p3,qv_old_p3,qv_p3, &
-                   dt_p3,qi_p3,qrim,ni,brim,ssat,w_p3, &
-                   p_p3,dz_p3,itt_p3,pcprt_liq,pcprt_sol, &
-                   1,im,1,km,1,diag_ze,diag_effc,&
-                   diag_effi,diag_vmi,diag_di,diag_rhoi, &
-                   1,diag_2d,3,diag_3d,log_predictNc,typeDiags_ON,model)
+                   dt_p3,qi_p3,qrim,ni,brim,ssat,w_p3,                   &
+                   p_p3,dz_p3,itt_p3,pcprt_liq,pcprt_sol,                &
+                   1,im,1,km,1,diag_ze,diag_effc,                        &
+                   diag_effi,diag_vmi,diag_di,diag_rhoi,                 &
+                   1,diag_2d,3,diag_3d,log_predictNc,typeDiags_ON,model, &
+                   1.0,1.0,debug_on,scpf_on,scpf_pfrac,scpf_resfact,cldfrac)
+
+      IF (global_status == -1 )THEN
+      WRITE(*,*) "microphysics stop"
+      STOP
+      ENDIF   
 
       DO 200 I=1,im
         hxp=INT(hx(I,J))
         SPREC(I,J)  = diag_3d(I,hxp,1) + diag_3d(I,hxp,2) + diag_3d(I,hxp,3)
   200 CONTINUE
-
 
       call timer_stop('microphysics')
 #else
@@ -461,6 +477,27 @@
         QRIM3D(i,j,k) = qrim(i,k-1)
         BRIM3D(i,j,k) = brim(i,k-1)
   500 CONTINUE
+
+!ccwut set physics variables on topo to zero
+      DO K = 2, maxtopo
+      DO I = 1, MI1
+      IF(ITYPEW(I,J,K) .NE. 1) THEN
+      TH3D(I,J,K) = THBAR(K)
+      QV3D(I,J,K) = 0.
+      QC3D(I,J,K) = 0.
+      QR3D(I,J,K) = 0.
+      QI3D(I,J,K) = 0.
+      NC3D(I,J,K) = 0.
+      NR3D(I,J,K) = 0.
+      NI3D(I,J,K) = 0.
+      QRIM3D(I,J,K) = 0.
+      BRIM3D(I,J,K) = 0.
+      ENDIF
+      ENDDO
+      ENDDO
+!ccwut
+
+
 #else
 ! Thermodynamic variables
       DO 500 k = 2, NK2

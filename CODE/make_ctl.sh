@@ -10,10 +10,16 @@ set plot = true
 set dir = archive
 set outdir = gs_ctl_files
 
-if( -d ${outdir} ) then
-  rm -r ${outdir}
+if( ! -d ${outdir} ) then
+  mkdir ${outdir}
 endif
-mkdir ${outdir}
+
+if( -f TOPO.nc ) then
+  set topo =  true
+else
+  set topo =  false
+endif
+
 cd ${dir}
 
 set   thermo   =  ` ls *.L.Thermodynamic-000000* `
@@ -36,6 +42,18 @@ if( -f *.L.Tracer-000000* ) then
   set tracer   =  ` ls *.L.Tracer-000000* `
 else
   set tracer   =  nan
+endif
+
+if( -f p3_diagnostic-000000* ) then
+  set p3   =  true
+else
+  set p3   =  false
+endif
+
+if( -f surface_diagnostic.dat ) then
+  set surdiag   =  true
+else
+  set surdiag   =  false
 endif
 
 set tail       =  ` echo ${thermo} | rev | cut -d"0" -f 1 | rev `
@@ -64,43 +82,11 @@ set dum1    =  ` ncdump -v xc ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 5 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set nx      =  ` echo ${dum2} | cut -d" " -f 1 `
-set dum4    =  ` echo ${dum3} | cut -d";" -f 1 `
-set dum5    =  ` echo ${dum4} | cut -d"," -f 1 `
-set dum6    =  ` echo ${dum5} | rev | cut -c 1-3 | rev `
-set dum7    =  ` echo ${dum5} | rev | cut -c 4-10 | rev `
-if ( ${dum7} < 1 )then
-set dum7    = 0
-endif
-@   dum8    = ${dum5} * 2
-set dum9    =  ` echo ${dum8} | rev | cut -c 1-3 | rev `
-set dum10   =  ` echo ${dum8} | rev | cut -c 4-10 | rev `
-if ( ${dum10} < 1 )then
-set dum10   = 0
-endif
-
-set xst     =  ${dum7}'.'${dum6} 
-set xlen    =  ${dum10}'.'${dum9}
 
 set dum1    =  ` ncdump -v yc ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 4 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set ny      =  ` echo ${dum2} | cut -d" " -f 1 `
-set dum4    =  ` echo ${dum3} | cut -d";" -f 1 `
-set dum5    =  ` echo ${dum4} | cut -d"," -f 1 `
-set dum6    =  ` echo ${dum5} | rev | cut -c 1-3 | rev `
-set dum7    =  ` echo ${dum5} | rev | cut -c 4-10 | rev `
-if ( ${dum7} < 1 )then
-set dum7    = 0
-endif
-@   dum8    = ${dum5} * 2
-set dum9    =  ` echo ${dum8} | rev | cut -c 1-3 | rev `
-set dum10   =  ` echo ${dum8} | rev | cut -c 4-10 | rev `
-if ( ${dum10} < 1 )then
-set dum10   = 0
-endif
-
-set yst     =  ${dum7}'.'${dum6}
-set ylen    =  ${dum10}'.'${dum9}
 
 set dum1    =  ` ncdump -v zc ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 3 `
@@ -124,6 +110,66 @@ endif
 end
 
 set zc      = ( `echo ${pzc}` )
+
+cd ../${outdir}
+
+cat ../INPUT > input.txt
+echo 'PROGRAM xydef \
+IMPLICIT NONE \
+  \
+REAL, PARAMETER :: pi=4*atan(1.) \
+REAL :: dx, dy, dz, dz1, lon, lat, cir \
+INTEGER :: i, j ,k \
+CHARACTER(100) :: var, var2 \
+  \
+OPEN(10,FILE="input.txt") \
+READ(10,*) \
+READ(10,999) var2 \
+READ(10,999) var \
+999 FORMAT(10x,100A) \
+CLOSE(10) \
+  \
+i=index(var,",") \
+READ(var(3:i-1),*) dx \
+var=var(i+1:100) \
+i=index(var,",") \
+READ(var(7:i-1),*) dy \
+var=var(i+1:100) \
+i=index(var,",") \
+READ(var(4:i-1),*) dz \
+var=var(i+1:100) \
+i=index(var,",") \
+READ(var(5:i-1),*) dz1 \
+  \
+i=index(var2,",") \
+READ(var2(5:i-1),*) lat \
+var2=var2(i+1:100) \
+i=index(var2,"/") \
+READ(var2(7:i-2),*) lon \
+  \
+cir=40075.018*cos(lat/180*pi) \
+  \
+OPEN(10,FILE="xydef.txt") \
+WRITE(10,777) lon, ",", dx/1000/cir*360 \
+777 FORMAT(f8.4,a1,f12.8) \
+WRITE(10,777) lat, ",", dy/1000/40007.86*360 \
+CLOSE(10) \
+  \
+ENDPROGRAM xydef' > xydef.f95 
+f95 xydef.f95
+./a.out
+
+set prexx   =  ` head -n 1 xydef.txt `
+set preyy   =  ` head -n 2 xydef.txt | tail -n 1 `
+
+set xst     =  ` echo ${prexx} | cut -d"," -f 1 `
+set xlen    =  ` echo ${prexx} | cut -d"," -f 2 `
+
+set yst     =  ` echo ${preyy} | cut -d"," -f 1 `
+set ylen    =  ` echo ${preyy} | cut -d"," -f 2 `
+
+rm a.out input.txt xydef.f95 xydef.txt
+cd ../${dir}
 
 # get information of variables
 # =================thermo=========================
@@ -297,6 +343,31 @@ while ( ${n} < $#thermovarname )
 echo ${thermovarname[${n}]}'=>'${thermovarname[${n}]}' '${nz}' t,z,y,x '${expname} >> thermodynamic.ctl
 end
 echo 'ENDVARS' >> thermodynamic.ctl
+# =================p3_diagnostic==================================
+if( ${p3} == "true" )then
+echo 'DSET ^../archive/p3_diagnostic-%tm6.dat \
+OPTIONS template \
+TITLE thermodynamic variables \
+UNDEF -99999. \
+XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
+YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
+ZDEF '${nz}' LEVELS ' > p3_diagnostic.ctl
+
+set n = 0
+while ( ${n} < $#zc )
+@ n++
+echo ${zc[${n}]} >> p3_diagnostic.ctl
+end
+
+echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
+VARS 5 \
+vmi  '${nz}' 99 mass-weighted fall speed (ice) ms-1 \
+effi '${nz}' 99 effective radius (ice) m \
+di   '${nz}' 99 mean diameter (ice) m \
+rhoi '${nz}' 99 bulk density (ice) kgm-1 \
+ze   '${nz}' 99 equivalent reflectivity dBz \
+ENDVARS' >> p3_diagnostic.ctl
+endif
 # =================Dynamic==================================
 if( ${gridtype} == "agrid" )then
 # A-grid====================================================
@@ -460,6 +531,22 @@ while ( ${n} < $#surfacevarname )
 echo ${surfacevarname[${n}]}'=>'${surfacevarname[${n}]}' 1 t,y,x '${expname} >> surface.ctl
 end
 echo 'ENDVARS' >> surface.ctl
+# =================Surface==================================
+if( ${surdiag} == "true" )then
+echo 'DSET ^../archive/surface_diagnostic.dat \
+TITLE surface variables \
+UNDEF -99999 \
+XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
+YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
+ZDEF 1 LEVELS 0 \
+TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
+VARS 4 \
+th  1  99 surface potential temperature (K) \
+u   1  99 surface zonal wind (m/s) \
+v   1  99 surface meridional wind (m/s) \
+w   1  99 surface vertical wind (m/s)\
+ENDVARS' > sur_diag.ctl
+endif
 # =================Land=====================================
 if( ${land} != "nan" )then
 echo 'DSET ^../archive/'${expname}'.C.LandSurface-%tm6'${tail}' \
@@ -536,6 +623,29 @@ while ( ${n} < $#tracervarname )
 echo ${tracervarname[${n}]}'=>'${tracervarname[${n}]}' '${nz}' t,z,y,x '${expname} >> tracer.ctl
 end
 echo 'ENDVARS' >> tracer.ctl
+endif
+# =================topography===============================
+if( ${topo} == "true" )then
+echo 'DSET ^../TOPO.nc \
+DTYPE netcdf \
+TITLE TOPOGRAPHY \
+UNDEF -99999. \
+CACHESIZE 10000000 \
+XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
+YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
+ZDEF 1 LEVELS 0 \
+TDEF 1 LINEAR 00:00Z01JAN2000 1mn \
+VARS 9 \
+TOPO=>topo 1 y,x topo \
+albedo=>albedo 1 y,x topo \
+GRF=>grf 1 y,x topo \
+LAI=>lai 1 y,x topo \
+LU=>lu 1 y,x topo \
+SHDMAX=>shdmax 1 y,x topo \
+SHDMIN=>shdmin 1 y,x topo \
+SLOPE=>slope 1 y,x topo\
+SOIL=>soil 1 y,x topo \
+ENDVARS' > topo.ctl
 endif
 # ==========================================================
 
