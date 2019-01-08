@@ -3950,6 +3950,11 @@ END subroutine p3_init
        if (global_status /= STATUS_OK) return
     endif
 
+   ! prevent unrealistic temperature
+   tmparr1(i,:) = th(i,:)*(pres(i,:)*1.e-5)**(rd*inv_cp)
+   call check_temp(tmparr1(i,:),i,it,debug_ABORT,900)
+   if (global_status /= STATUS_OK) return
+
    !..............................................
    !Diagnostics -- visibility:
 
@@ -5992,5 +5997,60 @@ SUBROUTINE access_lookup_table_coll(dumjj,dumii,dumj,dumi,index,dum1,dum3,      
 
  end subroutine check_values
 !===========================================================================================
+
+ subroutine check_temp(T,i,timestepcount,force_abort,source_ind)
+
+!------------------------------------------------------------------------------------
+! Checks current values of prognotic variables for reasonable values and
+! stops and prints values if they are out of specified allowable ranges.
+!
+! 'check_consistency' means include trap for inconsistency in moments;
+! otherwise, only trap for Q, T, and negative Qx, etc.  This option is here
+! to allow for Q<qsmall.and.N>nsmall or Q>qsmall.and.N<small which can be
+! produced
+! at the leading edges due to sedimentation and whose values are accpetable
+! since lambda limiters are later imposed after SEDI (so one does not
+! necessarily
+! want to trap for inconsistency after sedimentation has been called).
+!
+! The value 'source_ind' indicates the approximate location in 'p3_main'
+! from where 'check_values' was called before it resulted in a trap.
+!
+!------------------------------------------------------------------------------------
+
+  implicit none
+
+ !Calling parameters:
+  real, dimension(:),   intent(in) :: T
+  integer,              intent(in) :: source_ind,i,timestepcount
+  logical,              intent(in) :: force_abort         !.TRUE. = forces abort if value violation is detected
+
+ !Local variables:
+  real, parameter :: T_low  = 173.
+  real, parameter :: T_high = 323.
+  integer         :: k,iice,ni,nk,ncat
+  logical         :: badvalue_found
+
+  badvalue_found = .false.
+
+  k_loop: do k = 1,nk
+
+   ! check unrealistic values T and Qv
+     if (.not.(T(k)>T_low .and. T(k)<T_high)) then
+        badvalue_found = .true.
+     endif
+
+
+  enddo k_loop
+
+
+  if (badvalue_found .and. force_abort) then
+     global_status = STATUS_ERROR
+     return
+  endif
+
+ end subroutine check_temp
+
+
 
  END MODULE MODULE_MP_P3
