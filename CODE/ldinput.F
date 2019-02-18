@@ -56,7 +56,8 @@ CONTAINS
          dtrad      !
       INTEGER (KIND=int_kind) :: &
          maxitt,  & !
-         i          ! do loop index
+         i,       & ! do loop index
+         j          ! do loop index
 
       NAMELIST /INPUT1/ NEWRUN,ITTGET,ITTADD
       NAMELIST /INPUT2/ GRAV,HLF,HLM,CP,DELTA,VK,PI,RLAT,RHOSFC,RLON
@@ -303,8 +304,17 @@ CONTAINS
       ifile(15) = ifl15
       
 ! SET DEFAULT VALUES FOR FORCING PARAMTERS (INPUT6)
-
+#if defined (CORIOLIS)
       F = 2. * OMEGA * SIN ( RLAT * PI / 180._dbl_kind )
+#endif
+
+#if defined (BETA)
+      DO 519 J = 1,mj1
+      F(J) = 2.*OMEGA*SIN(((nj_sbdm-nsbdm_y/2)*mj1+J-0.5)*DYNEW/6.37E6)
+      FCOS(J) = 2.*OMEGA*COS(((nj_sbdm-nsbdm_y/2)*mj1+J-0.5)*DYNEW/6.37E6)
+  519 CONTINUE
+#endif
+
       NRAD = NINT ( DTRAD / DT ) !Time steps between CEMRAD calls
       DT8  = DT
 
@@ -333,12 +343,12 @@ CONTAINS
 
    ELSE  ! if newrun
       if(my_task == 0) write(6,*) 'ITTGET=',ITTGET,' MAXITT=',MAXITT,'ITT=',ITT
+
+      CALL petsc_solver_initialize(petsc_cr)
    endif
 
       ITTMAX = MAXITT
       NOUT = (ITTMAX/NXS) + 1
-
-   CALL petsc_solver_initialize(petsc_cr)
 
    END SUBROUTINE input_3d 
 

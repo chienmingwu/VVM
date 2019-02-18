@@ -19,6 +19,8 @@ USE rrtm_vars, only: sstxy,albdo
 #endif 
 USE petscsys
 USE pnetcdf
+USE wind_module
+USE petsc_vvm_solver, only: petsc_solver_initialize
 
 IMPLICIT NONE
 PRIVATE
@@ -444,10 +446,10 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-!      U3DX(I,J,K)=UG(K)
-!      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=-8.
-      U3DY(I,J,K)=2.
+      U3DX(I,J,K)=UG(K)
+      U3DY(I,J,K)=VG(K)
+!      U3DX(I,J,K)=-8.
+!      U3DY(I,J,K)=2.
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -459,6 +461,7 @@ CONTAINS
                  -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
 
+      CALL petsc_solver_initialize(petsc_cr)
 
       restart_read: IF (.true.)THEN
 
@@ -480,11 +483,10 @@ CONTAINS
                gate_restart.L.Dynamic-000036.nc" 
 
       CALL restart(trim(thermodynamic_file),.true.,.true.,trim(dynamic_file))
- 
+
+      ELSE
+      CALL BOUND_3D_XY 
       ENDIF restart_read
-
-
-      CALL BOUND_3D_XY
 
 
 #if defined (AREAMN)
@@ -771,6 +773,9 @@ CONTAINS
       STOP
       ENDIF
 #endif
+      call bound_3d
+      ELSE
+      call bound_3d
       ENDIF
 
       nc_err = nfmpi_close(ncid)
@@ -843,6 +848,9 @@ CONTAINS
     
       nc_err = nfmpi_close(ncid)
 
+      call bound_3d_xy
+      call bound_3d_z
+      call wind_3d(1,2,.true.)
       ENDIF
  
       WRITE(*,*) "RESTART is successfully completed"

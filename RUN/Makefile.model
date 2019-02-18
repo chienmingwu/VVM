@@ -509,7 +509,7 @@ z_coord.o: kinds.o PARMSLD.o CONSTLD.o
 
 ldinput.o: kinds.o PARMSLD.o RADOUTLD.o CONSTLD.o CONST3D.o workcom.o ldoutput.o ini_3d_module.o gather_scatter.o domain_decomposition.o bound.o TIMEINTERP.o output_nc.o wind_module.o
 
-ini_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o TIMEINTERP.o bound.o time_interp_module.o update_tracer_module.o ldoutput.o z_coord.o domain_decomposition.o turb_1d_module.o turb_3d_module.o
+ini_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o TIMEINTERP.o bound.o time_interp_module.o update_tracer_module.o ldoutput.o z_coord.o domain_decomposition.o turb_1d_module.o turb_3d_module.o wind_module.o
 
 ldoutput.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o gather_scatter.o domain_decomposition.o TIMEINTERP.o 
 
@@ -570,7 +570,7 @@ physics_interface.o: kinds.o timer.o rrtm_params.o rrtm_grid.o rrtm_vars.o physi
 
 physics_v10d.o: kinds.o PARMSLD.o
 
-module_mp_p3.o: module_mp_p3.F
+module_mp_p3.o: module_mp_p3.F kinds.o PARMSLD.o
 
 vertical_adaptive.o: CONST3D.o CONSTLD.o PARMSLD.o kinds.o domain_decomposition.o
 #-----------------------------------------------------------------------------
