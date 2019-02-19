@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = gate_s01
+set expname = gate_n01
 
 # hardscrabble configuration
 set subdir = '../..'

@@ -298,7 +298,7 @@ CONTAINS
 
       DO 210 K = 1, NK3
       Q1LS (K) = -1.* 3. * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = 6. * Q2LS (K) / (GAMFAC * SECDAY)
+      Q2LS (K) = 6.0 * Q2LS (K) / (GAMFAC * SECDAY)
   210 CONTINUE
 
 #if !defined (RADCODE)
@@ -446,10 +446,10 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=UG(K)
-      U3DY(I,J,K)=VG(K)
-!      U3DX(I,J,K)=-8.
-!      U3DY(I,J,K)=2.
+!      U3DX(I,J,K)=UG(K)
+!      U3DY(I,J,K)=VG(K)
+      U3DX(I,J,K)=-8.
+      U3DY(I,J,K)=2.
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -476,11 +476,11 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/data2/mog/VVM/DATA/gate_restart/archive/&
-               gate_restart.L.Thermodynamic-000036.nc"
+      thermodynamic_file = "/data2/mog/VVM/DATA/gate_restart_n/archive/&
+               gate_restart_n.L.Thermodynamic-000036.nc"
 
-      dynamic_file = "/data2/mog/VVM/DATA/gate_restart/archive/&
-               gate_restart.L.Dynamic-000036.nc" 
+      dynamic_file = "/data2/mog/VVM/DATA/gate_restart_n/archive/&
+               gate_restart_n.L.Dynamic-000036.nc" 
 
       CALL restart(trim(thermodynamic_file),.true.,.true.,trim(dynamic_file))
 
@@ -536,10 +536,10 @@ CONTAINS
       call turb_3d_ini
 #endif
 
-      TG_restart: IF (.false.)THEN
+      TG_restart: IF (.true.)THEN
 
-      tg_file = "/data2/mog/VVM/DATA/gate_restart/archive/&
-                 gate_restart.C.Surface-000036.nc"
+      tg_file = "/data2/mog/VVM/DATA/gate_restart_n/archive/&
+                 gate_restart_n.C.Surface-000036.nc"
       topo_file = "TOPO.nc"
 
       call SST_RESTART(tg_file,topo_file)
