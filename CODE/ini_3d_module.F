@@ -536,7 +536,7 @@ CONTAINS
       call turb_3d_ini
 #endif
 
-      TG_restart: IF (.true.)THEN
+      TG_restart: IF (.false.)THEN
 
       tg_file = "/data2/mog/VVM/DATA/gate_restart_n/archive/&
                  gate_restart_n.C.Surface-000036.nc"
