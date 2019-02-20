@@ -298,7 +298,7 @@ CONTAINS
 
       DO 210 K = 1, NK3
       Q1LS (K) = -1.* 3. * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = 6.0 * Q2LS (K) / (GAMFAC * SECDAY)
+      Q2LS (K) = -6.0 * Q2LS (K) / (GAMFAC * SECDAY)
   210 CONTINUE
 
 #if !defined (RADCODE)
