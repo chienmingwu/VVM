@@ -66,6 +66,12 @@ PRIVATE
       REAL (KIND=tm_kind) ::            &
          STD_TM5(mi1,mj1,IVAR5),        &
          STD_RAD(mi1,mj1,nk2,8)
+#if defined (RAS)
+      REAL (KIND=tm_kind) ::            &
+         STD_TM92(mi1,mj1),             &
+         STD_TM91(mi1,mj1,nk2,2)
+#endif
+
 #if defined (DIFFUSION) 
 #if defined (LSM)
       REAL (KIND=tm_kind) :: STD_LSM(mi1,mj1,IVAR10)
@@ -564,6 +570,10 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
+#if defined (RAS)
+      std_tm91= 0.0
+      std_tm92= 0.0
+#endif
 #if defined (LSM)
       std_lsm = 0.
 #endif
@@ -657,6 +667,20 @@ CONTAINS
       STD_TM5(I,J,6)=STD_TM5(I,J,6)+TG(I,J)        *  dtfac
       STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       *  dtfac
  1226 CONTINUE
+
+#if defined (RAS)
+      DO 1231 J=1,mj1
+      DO 1231 I=1,mi1
+      STD_TM92(I,J)=STD_TM92(I,J)+PREC_CUMULUS(I,J)         *  dtfac
+ 1231 CONTINUE
+
+      DO 1233 k=1,nk2
+      DO 1233 J=1,mj1
+      DO 1233 I=1,mi1
+      STD_TM91(I,J,K,1)=STD_TM91(I,J,K,1)+THAD_CUMULUS(I,J,K) *  dtfac
+      STD_TM91(I,J,K,2)=STD_TM91(I,J,K,2)+QVAD_CUMULUS(I,J,K) *  dtfac
+ 1233 CONTINUE
+#endif
 
 
 #if defined (DIFFUSION)
@@ -794,6 +818,10 @@ CONTAINS
       std_rad = std_rad * fac
       std_tm5 = std_tm5 * fac
       out_tm9 = out_tm9 * fac
+#if defined (RAS)
+      std_tm91= std_tm91* fac
+      std_tm92= std_tm92* fac
+#endif
 #if defined (LSM)
       std_lsm = std_lsm * fac
 ! easy, mask out the water points
@@ -974,6 +1002,15 @@ CONTAINS
 
 #endif
 
+
+#if defined (RAS)
+      call pCDF_WRITE_4D(ncid_ras, 'dth', TIME_C, time_start, std_tm91(:,:,1:nk2,1), nk2 )
+
+      call pCDF_WRITE_4D(ncid_ras, 'dqv', TIME_C, time_start, std_tm91(:,:,1:nk2,2), nk2 )
+
+      call pCDF_WRITE_xy(ncid_ras, 'prec', TIME_C, time_start, std_tm92(:,:) )
+#endif
+
 #endif
 
       if(ntracer > 0) then
@@ -1143,6 +1180,10 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
+#if defined (RAS)
+      std_tm91= 0.0
+      std_tm92= 0.0
+#endif
 #if defined (LSM)     
       std_lsm = 0.0
 #endif

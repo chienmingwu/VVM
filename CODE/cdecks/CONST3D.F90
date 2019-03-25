@@ -166,6 +166,15 @@ PRIVATE
       qsad_micro,   &  ! tendency of snow due to microphysics (kg/kg/s)
       qgad_micro       ! tendency of graupel due to microphysics(kg/kg/s)
 
+#if defined (RAS)
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK2), PUBLIC ::       &
+      thad_cumulus, &  ! tendency of potential temp. due to cumulus parameterization
+      qvad_cumulus     ! tendency of water vapor due to cumulus parameterization
+
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::       &
+      prec_cumulus     ! precipitation due to cumulus parameterization
+#endif
+
 !*****************************
 ! Mainly used in UVTOP_3D.
 !  formerly common/d3comp1/

@@ -36,11 +36,15 @@
       USE cloud_module
       USE timer
       USE domain_decomposition
+!     P3 and RAS are install by Der
 #if defined (MICROP3)
       USE MODULE_MP_P3
       USE update_thermo_module
 #endif
-               
+#if defined (RAS)
+      USE ras
+#endif
+
       IMPLICIT NONE
       
 !------------------------------------------------------------------
@@ -289,7 +293,21 @@
       endif  ! if(.not.notherm)
 #endif
 
-!======================================================================
+
+
+! Cumulus Parameterization ================================================
+
+#if defined (RAS)
+! RAS is installed by Der (2018/12/13) 
+      call timer_start('cumulus')
+
+      CALL ras_interface(ITT,PBAR,PIBAR,ZZ,ZT,RHO,CP,DT)
+     
+      call timer_stop('cumulus')
+#endif
+
+
+! Microphysics ============================================================
 
 #if defined (MICROP3)
       THAD_MICRO   = 0.0_dbl_kind
@@ -323,7 +341,6 @@
 #endif
 
 !======================================================================
-
 
       do j = 1,jm
 
@@ -433,7 +450,7 @@
       IF (global_status == -1 )THEN
       WRITE(*,*) "microphysics stop"
       STOP
-      ENDIF   
+      ENDIF
 
       DO 200 I=1,im
         hxp=INT(hx(I,J))
@@ -496,7 +513,6 @@
       ENDDO
       ENDDO
 !ccwut
-
 
 #else
 ! Thermodynamic variables
@@ -589,7 +605,7 @@
 
 ! Periodic continuation for serial code
       CALL BOUND_3D
-  
+ 
 !======================================================================
 
       RETURN

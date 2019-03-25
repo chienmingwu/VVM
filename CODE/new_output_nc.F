@@ -33,6 +33,7 @@ PRIVATE
 ! NetCDF ids
       integer (KIND=int_kind), public :: &
           ncid_th, &                         ! thermodynamic variables output ID
+          ncid_ras, &                        ! RAS output ID
           ncid_z3dx, &                       ! dynamic variables output ID
           ncid_tc, &                         ! tracers output ID
           ncid_rad, ncid_phys                ! radiation and surface variables output ID
@@ -319,6 +320,28 @@ CONTAINS
                           'graupel_mixing_ratio', 'kg kg-1', &
                           'zt', 'yt', 'xt')
 
+#endif
+
+! RAS cumulus parameterization
+#if defined (RAS)
+      call fname_nc(itp1, EXPHDR, 'RAS', ITT_OUTPUT, filnam_nc)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_ras)
+      CALL pCDF_INI_THERMO (ncid_ras, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL pCDF_INI_4DVAR (ncid_ras, 'dth', 'potential temperature tendency', &
+                          'potential_temperature_tendency', 'K/s', &
+                          'zt', 'yt', 'xt')
+
+      CALL pCDF_INI_4DVAR (ncid_ras, 'dqv', 'water vapor tendency', &
+                          'water_vapor_tendency', '1/s', &
+                          'zt', 'yt', 'xt')
+
+      CALL pCDF_INI_XY_VAR (ncid_ras, 'prec', 'precipitation', &
+                          'precipitation', 'm/s', &
+                          'yt', 'xt')
 #endif
 
 #endif
@@ -686,6 +709,9 @@ CONTAINS
 ! surface variables
       nc_err = nfmpi_sync(ncid_phys)
 
+! cumulus parameterization
+      nc_err = nfmpi_sync(ncid_ras)
+
 #endif
 
 #if defined (DIFFUSION)
@@ -725,6 +751,10 @@ CONTAINS
 
 ! surface variables
       nc_err = nfmpi_close(ncid_phys)
+#if defined (RAS)
+! cumulus parameterization
+      nc_err = nfmpi_close(ncid_ras)
+#endif
 #endif
 
 #if defined (DIFFUSION)

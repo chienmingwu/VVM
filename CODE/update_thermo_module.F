@@ -78,6 +78,16 @@ CONTAINS
    65 CONTINUE
 #endif
 
+#if defined (RAS)
+! Update th and qv from cumulus parameterization tendency
+      DO 66 K = 2, NK2
+      DO 66 J = 1, MJ1
+      DO 66 I = 1, MI1
+      TH3D(I,J,K) = TH3D(I,J,K) + DT * THAD_CUMULUS(I,J,K)
+      QV3D(I,J,K) = QV3D(I,J,K) + DT * QVAD_CUMULUS(I,J,K) 
+   66 CONTINUE
+#endif
+
 ! Update moisture variables and tracers from dynamics 
 ! and microphysics tendencies
 
