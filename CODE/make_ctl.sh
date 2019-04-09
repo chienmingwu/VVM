@@ -44,6 +44,12 @@ else
   set tracer   =  nan
 endif
 
+if( -f *.L.RAS-000000* ) then
+  set ras      =  ` ls *.L.RAS-000000* `
+else
+  set ras      =  nan
+endif
+
 if( -f p3_diagnostic-000000* ) then
   set p3   =  true
 else
@@ -310,7 +316,33 @@ endif
 end
 
 set tracervarname = ( `echo ${prevar}` )
+# =================RAS============================
+if( ${ras} == "nan" )then
+  set tra  = ${surface}
+else
+  set tra  = ${ras}
+endif
 
+set dum1    =  ` ncdump -h ${tra} | grep float `
+set n = 2
+set condition = true
+set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
+set dum3    =  ` echo ${dum2} | cut -d" " -f 4 `
+set prevar  =  ${dum3}
+
+while ( ${condition} == "true" )
+@ n++
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | cut -d" " -f 7 `
+if( ${dum3} == "" )then
+  set condition = false
+else
+  set prevar = ` echo ${prevar} ${dum3} `
+endif
+end
+
+set rasvarname = ( `echo ${prevar}` )
+# ================================================
 
 
 cd ../${outdir}
@@ -623,6 +655,39 @@ while ( ${n} < $#tracervarname )
 echo ${tracervarname[${n}]}'=>'${tracervarname[${n}]}' '${nz}' t,z,y,x '${expname} >> tracer.ctl
 end
 echo 'ENDVARS' >> tracer.ctl
+endif
+# =================RAS======================================
+if( ${ras} != "nan" )then
+echo 'DSET ^../archive/'${expname}'.L.RAS-%tm6'${tail}' \
+DTYPE netcdf \
+OPTIONS template \
+TITLE tracers \
+UNDEF 9.96921e+36 \
+CACHESIZE 10000000 \
+XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
+YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
+ZDEF '${nz}' LEVELS ' > ras.ctl
+
+set n = 0
+while ( ${n} < $#zc )
+@ n++
+echo ${zc[${n}]} >> ras.ctl
+end
+
+echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
+VARS '$#rasvarname >> ras.ctl
+
+set n = 0
+while ( ${n} < $#rasvarname )
+@ n++
+if (${rasvarname[${n}]} != "prec")then
+echo ${rasvarname[${n}]}'=>'${rasvarname[${n}]}' '${nz}' t,z,y,x '${expname} >> ras.ctl
+endif
+if (${rasvarname[${n}]} == "prec")then 
+echo ${rasvarname[${n}]}'=>'${rasvarname[${n}]}' 1 t,y,x '${expname} >> ras.ctl
+endif
+end
+echo 'ENDVARS' >> ras.ctl
 endif
 # =================topography===============================
 if( ${topo} == "true" )then

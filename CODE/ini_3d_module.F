@@ -111,7 +111,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 299.88
+      SST = 303.
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -297,8 +297,8 @@ CONTAINS
       IF ( Q1Q2 ) SCALEQ = SCALE
 
       DO 210 K = 1, NK3
-      Q1LS (K) = -1.* 3. * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = -6.0 * Q2LS (K) / (GAMFAC * SECDAY)
+      Q1LS (K) = -1.* SCALE * Q1LS (K) / PIBAR(K) / SECDAY
+      Q2LS (K) = SCALE * Q2LS (K) / (GAMFAC * SECDAY)
   210 CONTINUE
 
 #if !defined (RADCODE)
@@ -448,8 +448,8 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 !      U3DX(I,J,K)=UG(K)
 !      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=-8.
-      U3DY(I,J,K)=2.
+      U3DX(I,J,K)=10.
+      U3DY(I,J,K)=0.
   610 CONTINUE
 
       DO 660 K = 2, NK1
