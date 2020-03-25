@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rce_ras_3
+set expname = ras_channel
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -44,9 +44,11 @@ cat > definesld.com << 'END1'
 #define PARALLELIO
 #define DIFFUSION
 #define PHYSICS
-#define PETSCMG
+#define MICROCODE
+#define MICROP3
 #define RAS
 #define RADCODE
+
 'END1'
 cat definesld.com
 
