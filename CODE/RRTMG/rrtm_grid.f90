@@ -40,15 +40,15 @@
           doshortwave = .TRUE., &       ! true = do shortwave calculation
           dolongwave = .TRUE., &        ! true = do longwave calculation
           doseasons = .FALSE., &        ! true = seasonal cycle in solar radiation
-          doperpetual = .FALSE., &      ! true = perpetual sun
-          dosolarconstant = .FALSE., &  ! true = fix solar constant and zenith angle
+          doperpetual = .TRUE., &      ! true = perpetual sun
+          dosolarconstant = .TRUE., &  ! true = fix solar constant and zenith angle
           restart_sep = .FALSE., &      ! true = write separate restart files for subdomains
           initialized = .FALSE., &      ! true = radiation has been initialized
           masterproc = .TRUE.           ! true = MPI rank equals 0
 
       REAL (KIND=kind_rm), PARAMETER :: &
-          solar_constant = 1367., &  ! Solar constant
-          zenith_angle = 60.         ! Solar zenith angle (degrees)
+          solar_constant = 551.58, &  ! Solar constant
+          zenith_angle = 42.05         ! Solar zenith angle (degrees)
 
 ! case and caseid, used for identifying restart files
       CHARACTER (LEN=40) :: &
