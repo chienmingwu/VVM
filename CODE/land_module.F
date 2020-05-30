@@ -518,8 +518,8 @@ CONTAINS
       tempim=dble(mi1*ni_sbdm+i)
       pi = 4._8 * atan(1._8)
 !      TG(i,j)=300.-1.5*cos(2*pi*tempim/512.)   !512 points in x direction
-!      TG(i,j)=297.-6.0*cos(2*pi*tempim/512.)   !512 points in x direction
-       TG(i,j)=305.
+      TG(i,j)=297.-6.0*cos(2*pi*tempim/512.)   !512 points in x direction
+!       TG(i,j)=305.
    ELSE
    TG(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
