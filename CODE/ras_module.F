@@ -195,7 +195,7 @@ CONTAINS
                   , hc(nn,1:ktopo),qc(nn,1:ktopo),cu(nn,1:ktopo)        &
                   , dtcup(nn,1:ktopo),dqcup(nn,1:ktopo),wl2(nn,1:ktopo) &
                   , dtcup1(nn,1:ktopo),dqcup1(nn,1:ktopo)               &
-                  , hbase(nn),qbase(nn),cubase(nn),kcbase(nn),          &
+                  , hbase(nn),qbase(nn),cubase(nn),kcbase(nn)           &
                   , rcup(nn),sigmao(nn),xmb(nn),muc(nn),wbarc(nn)       &
                   , wc(nn),rhoc(nn),xmb1(nn))
 

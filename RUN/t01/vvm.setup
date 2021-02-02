@@ -47,9 +47,9 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define MICROP3
 #define RAS
+#define URAS
 #define RADCODE
 #define LSM
-
 'END1'
 cat definesld.com
 
