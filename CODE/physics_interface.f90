@@ -301,7 +301,7 @@
 ! RAS is installed by Der (2018/12/13) 
       call timer_start('cumulus')
 
-      CALL ras_interface(ITT,PBAR,PIBAR,ZZ,ZT,RHO,CP,DT)
+      CALL ras_interface(ITT,PBAR,PIBAR,ZZ,ZT,RHO,DT)
      
       call timer_stop('cumulus')
 #endif
