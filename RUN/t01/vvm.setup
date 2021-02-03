@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = ras_landsea_3600
+set expname = uras_landsea_1800_2
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -63,7 +63,7 @@ sed -e '1,$s/zonal_dimension/256/' \
     -e '1,$s/zonal_decomposition/8/' \
     -e '1,$s/merid_decomposition/8/' \
     -e '1,$s/vert_dimension/34/' \
-    -e '1,$s/tracer_dimension/0/' \
+    -e '1,$s/tracer_dimension/1/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
 # For restart --------------------

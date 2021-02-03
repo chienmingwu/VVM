@@ -463,7 +463,7 @@ CONTAINS
 
       CALL petsc_solver_initialize(petsc_cr)
 
-      restart_read: IF (.false.)THEN
+      restart_read: IF (.true.)THEN
 
 !   restart( thermodynamic_file (absolute path) , hydrometer , 
 !            dynamic_variables , {optional} dynamic_file (absolute path) )
@@ -476,11 +476,11 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/data2/mog/VVM/DATA/gate_restart_n/archive/&
-               gate_restart_n.L.Thermodynamic-000036.nc"
+      thermodynamic_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
+               uras_landsea_1800.L.Thermodynamic-000192.nc"
 
-      dynamic_file = "/data2/mog/VVM/DATA/gate_restart_n/archive/&
-               gate_restart_n.L.Dynamic-000036.nc" 
+      dynamic_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
+               uras_landsea_1800.L.Dynamic-000192.nc" 
 
       CALL restart(trim(thermodynamic_file),.true.,.true.,trim(dynamic_file))
 
@@ -536,10 +536,10 @@ CONTAINS
       call turb_3d_ini
 #endif
 
-      TG_restart: IF (.false.)THEN
+      TG_restart: IF (.true.)THEN
 
-      tg_file = "/data2/mog/VVM/DATA/gate_restart_n/archive/&
-                 gate_restart_n.C.Surface-000036.nc"
+      tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
+                 uras_landsea_1800.C.Surface-000192.nc"
       topo_file = "TOPO.nc"
 
       call SST_RESTART(tg_file,topo_file)
@@ -850,7 +850,9 @@ CONTAINS
 
       call bound_3d_xy
       call bound_3d_z
-      call wind_3d(1,2,.true.)
+      call bound_arb(nk3,u3dx)
+      call bound_arb(nk3,u3dy)
+      call bound_arb(nk2,w3d)
       ENDIF
  
       WRITE(*,*) "RESTART is successfully completed"
@@ -916,7 +918,8 @@ CONTAINS
 
       DO j=1,MI1
       DO i=1,MJ1
-      IF (ocean_temp(i,j)==16)TG(i,j) = read_temp(i,j)
+      !IF (ocean_temp(i,j)==16) TG(i,j) = read_temp(i,j)
+      TG(i,j) = read_temp(i,j)
       ENDDO
       ENDDO
 

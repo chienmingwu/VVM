@@ -5,6 +5,9 @@ MODULE ras
 ! This module is written by Der (2018/12/13).
 ! Subroutine dcbase and cup92 are adopted 
 ! from CWBGFS.
+!
+!
+! Modified by peter50504 (2021/02/03)
 ! ===========================================
 
 USE kinds
@@ -22,7 +25,7 @@ PRIVATE :: qsatq,dcbase,linearpolation,ilsum,sigma_tab &
 ! local constant
 INTEGER, PARAMETER, PRIVATE :: nn=1, im=MI1, jm=MJ1, km=NK2-1 
 INTEGER, PRIVATE :: cthmax
-REAL, DIMENSION(nn,km), PRIVATE :: zl, zl2, pl, pl2, pk, pk2, pmassl, &
+REAL, DIMENSION(nn,km), PRIVATE :: zl, zl2, pl, pl2, pk, pk2,  &
                                    rhol
 
 CONTAINS
@@ -55,7 +58,7 @@ CONTAINS
       INTEGER :: i, j, k, n, lk, lkp, kctop, ktopo, cblimit
       INTEGER, DIMENSION(nn) :: kcbase
       REAL, DIMENSION(nn)    :: hbase, qbase, cubase
-      REAL, DIMENSION(nn,km) :: tl, sl, ql, qls, hl, hls
+      REAL, DIMENSION(nn,km) :: tl, sl, ql, qls, hl, hls, pmassl
       REAL, DIMENSION(nn,km) :: tl2, sl2, ql2, qls2, hl2, hls2, wl2
       REAL, DIMENSION(nn,km) :: gamwe, e, qc, hc, cu
       REAL, DIMENSION(nn,km) :: dtcup, dqcup, dtcup1,dqcup1
@@ -64,14 +67,14 @@ CONTAINS
       LOGICAL (KIND=log_kind), SAVE :: first_ras
       DATA first_ras/.TRUE./
 
-      dt4=dt
-      ocp=1.0/cp
+      dt4=PASS_SMALL_DT
       prevap=0.2
       etop=1.0
       qmin=1E-10
       r=287.047
       grav=9.806
       cp=1004.
+      ocp=1.0/cp
       hltm=2.52e+6
       gamfac=hltm*5417.9827/cp      
 
@@ -92,13 +95,14 @@ CONTAINS
        DO k = 1, km
         pk(nn,k)=(pl(nn,k)/1000)**(2./7.)!pk
         pk2(nn,k)=(pl2(nn,k)/1000)**(2./7.)!pk2
-        pmassl(nn,k)=RHO(NK3-k)*dz_ras/FNT(NK3-k)
         rhol(nn,k)=RHO(NK3-k)
         ! limitation of cloud (highest cloud top height is under 16000)
         IF (zl(nn,k)>=16000) cthmax=max(cthmax,k)
        ENDDO
       ENDIF
 
+! Have to make sure these variables are fixed through the integration:
+! : zl, zl2, pl, pl2, pk, pk2, rhol, cthmax
 
     !Main loop of cumulus parameterization
 
@@ -110,6 +114,7 @@ CONTAINS
          CALL qsatq(1,tl(nn,k),pl(nn,k),qls(nn,k))
          ql(nn,k)=max(qmin,min(QV3D(i,j,NK3-k),qls(nn,k)*0.999))
          wl2(nn,k)=w3d(i,j,NK3-k)
+         pmassl(nn,k)=RHO(NK3-k)*dz_ras/FNT(NK3-k)
         ENDDO !k
       
         CALL linearpolation(km,zl(nn,:),tl(nn,:),zl2(nn,:),tl2(nn,:))
@@ -182,7 +187,6 @@ CONTAINS
 
 
       if (cexist(nn)) then 
-      
       call ucup92 ( nn,ktopo,kctop,cblimit,dt4,grav,r,cp,hltm           &
                   , etop,prevap                                         &
                   , rhol(nn,1:ktopo),pl(nn,1:ktopo),pk(nn,1:ktopo)      &
@@ -218,52 +222,20 @@ CONTAINS
       QVAD_CUMULUS(i,j,:)=0.
       PREC_CUMULUS(i,j)=0.
       endif
-     
-!      DO k=ktmin,km
-!      DO j=1,jm
-!      DO i=1,im
-!      IF (cexist(i,j))THEN
-!      ! Nan Check
-!      IF (dtcup(i,j,k)/=dtcup(i,j,k) .OR. &
-!          dqcup(i,j,k)/=dqcup(i,j,k) .OR. &
-!         (k==km .AND. prec(i,j)/=prec(i,j))) THEN
-!         WRITE(*,*) "Nan in RAS", dtcup(i,j,k), dqcup(i,j,k), prec(i,j)
-!         STOP
-!      ENDIF
-!      ! clip water vapor and energy conservation
-!      IF ((qv_zt_rev(i,j,k)+dqcup(i,j,k))<0.) dqcup(i,j,k)=-qv_zt_rev(i,j,k) 
-!      dtcup(i,j,k)=(dtcup(i,j,k)-hlf*dqcup(i,j,k))/cp
-!      ENDIF
-!      ENDDO
-!      ENDDO
-!      ENDDO
-!
-!      ! update potential temperature and water vapor tendencies
-!      THAD_CUMULUS=0.
-!      QVAD_CUMULUS=0.
-!      PREC_CUMULUS=0.
-!      
-!      DO k=ktmin,km
-!      DO j=1,jm
-!      DO i=1,im
-!      IF (cexist(i,j))THEN
-!      THAD_CUMULUS(i,j,NK3-k)=dtcup(i,j,k)/PASS_SMALL_DT/PIBAR(k)
-!      QVAD_CUMULUS(i,j,NK3-k)=dqcup(i,j,k)/PASS_SMALL_DT
-!      IF (k==km) PREC_CUMULUS(i,j)=prec(i,j)/PASS_SMALL_DT
-!      !write(*,135) real(k),dtcup(i,j,k)/PASS_SMALL_DT/PIBAR(k)*86400,&
-!      !             dqcup(i,j,k)/PASS_SMALL_DT*2.5E+6/1004*86400,&
-!      !             prec(i,j)/PASS_SMALL_DT*86400
-!      !135 format(4F10.4)
-!      ENDIF
-!      ENDDO
-!      ENDDO
-!      ENDDO
+    
+      !write(*,*) my_task,i,j,prec_cumulus(i,j),thad_cumulus(i,j,:),qvad_cumulus(i,j,:)
+      !print *,sigmao(nn),xmb(nn),muc(nn),wbarc(nn),wc(nn),rhoc(nn)
 
+      TC3D(i,j,1+1,1)=sigmao(nn) 
+      TC3D(i,j,2+1,1)=xmb(nn) 
+      TC3D(i,j,3+1,1)=muc(nn) 
+      TC3D(i,j,4+1,1)=wbarc(nn) 
+      TC3D(i,j,5+1,1)=wc(nn) 
+      TC3D(i,j,6+1,1)=rhoc(nn) 
 
 
  ENDDO!i
 ENDDO!j
-
       END SUBROUTINE ras_interface
 
       SUBROUTINE linearpolation(nk,x1,y1,x,y)
@@ -556,6 +528,8 @@ ENDDO!j
       integer   i,l
       real      tx
 
+      nxj=nx
+
       do 10 i = 1, nxj
       kcbase(i)= 1
       hbase(i) = 0.0
@@ -574,6 +548,7 @@ ENDDO!j
       cu(i,l) = qcl(i,l)-(qls2(i,l)+game(i,l)/((1.+game(i,l))*hltm) &
                                    *(hcl(i,l)-hls2(i,l)))
 !
+      !if (my_task==0) write(*,*) tx, qcl(i,l), hcl(i,l), cu(i,l), game(i,l)
       if ( cu(i,l).gt.0.0 ) then
       kcbase(i) = l
       hbase(i)  = hcl(i,l)
@@ -584,6 +559,7 @@ ENDDO!j
   40  continue
   30  continue
 !
+      !stop 
       do 60 l = lev-1, lev/2, -1
       do 60 i = 1, nxj
       if (l.ge.kcbase(i))  then
@@ -704,7 +680,7 @@ ENDDO!j
               , hc(nx,lev),qc(nx,lev),cu(nx,lev),flxmas(nx,lev)        &
               , dhcup(nx,lev),dqcup(nx,lev),wl2(nx,lev),rhol(nx,lev)
 
-      integer   kcbase(nx),kctop(nx)
+      integer   kcbase(nx)
 
       integer   i,k,ik,l
       integer   ltop,lt,ilsum,num1,num2,num3,num4,itype,itop,ibot
@@ -748,7 +724,7 @@ ENDDO!j
       real,dimension(lev,lev)::wkint
       real,dimension(lev) ::work,buoc2
       integer,dimension(lev) ::ipiv
-      integer ::info,ktop(nx),kk
+      integer ::info,ktop(nx),kk,cloud_count
       integer ::jcup,ii !for diagnose
       logical doup(nx)
       integer :: fcloud(nx)
@@ -770,7 +746,7 @@ ENDDO!j
       rkmin = -0.02
       upa=1./3.
       upb=1.95
-      upt=7200.
+      upt=1800.
       relaxas = dt/upt
       sigmao=1.
 
@@ -841,20 +817,15 @@ ENDDO!j
       enddo
       enddo
 
-      do k = 1, lev*lev
-      wkint(k,1) = 0.
-      enddo
-!
-      do 5 i=1,nx*lev
-        dhcup(i,1)  = 0.
-        dqcup(i,1)  = 0.
-        dhcup1(i,1)  = 0.
-        dqcup1(i,1)  = 0.
-        flxmas(i,1) = 0.
-        exist(i,1)= .true.
-        grain(i,1)= 0.0
-        buoc(i,1)=0.
-    5 continue
+      wkint = 0.
+      dhcup = 0.
+      dqcup = 0.
+      dhcup1 = 0.
+      dqcup1 = 0.
+      flxmas = 0.
+      exist = .true.
+      grain = 0.0
+      buoc = 0.
 !
 !     no cloud exist above the deepest cloud
       do 4 k = 1, ktmin-1
@@ -882,14 +853,12 @@ ENDDO!j
       ztop(i)    = 0.
    6  continue
 !
-      do ik=1,nx*lev*lev
-       rain(ik,1,1)=0.
-       chct(ik,1,1)=0.
-       cqct(ik,1,1)=0.
-       enc(ik,1,1)=0.
-       calwc(ik,1,1)=0.
-       calwc2(ik,1,1)=0.
-      enddo
+     rain = 0.
+     chct = 0.
+     cqct = 0.
+     enc = 0.
+     calwc = 0.
+     calwc2 = 0.
 !
 !    define the local large-scale environment
 !
@@ -912,6 +881,7 @@ ENDDO!j
       he(i,k)   = hhl2(i,k)
       te(i,k)   = tl2(i,k)
    7  continue
+      !write(*,*) my_task, "after initialization" 
 !
 !***********************************************************************
 !
@@ -941,7 +911,7 @@ ENDDO!j
 ! if ratio is very close to 1.0, no interpolation is needed.
 !
       do 2402 i = 1,nn
-       ltop = kctop(i)
+       ltop = ktmin
        tmp1= hbase(i)-hswe(i,ltop)
        tmp2= hswe(i,ltop-1)-hswe(i,ltop)
        if( tmp1 .gt. 0.9*tmp2 ) then
@@ -949,7 +919,7 @@ ENDDO!j
        else
          if( tmp1 .lt. 0.1*tmp2 ) then
            ratio(i) = 1.
-           kctop(i) = ltop+1
+           ktmin = ltop+1
          else
            ratio(i)=tmp1/tmp2
          endif
@@ -957,7 +927,7 @@ ENDDO!j
  2402 continue
 !
       do 2401 i = 1,nn
-       ltop = kctop(i)
+       ltop = ktmin
        po(i,ltop)   = pe(i,ltop) - (pe(i,ltop) - po(i,ltop))*ratio(i)
 !cc    pk(i,ltop)   = (0.001*po(i,ltop))**xkapa
        pk(i,ltop)   = exp(xkapa*log(0.001*po(i,ltop)))
@@ -975,7 +945,7 @@ ENDDO!j
  2407 continue
 !
       do 2409 i = 1,nn
-        ltop = kctop(i)
+        ltop = ktmin
         qswo(i,ltop) = work1(i,ltop)
         hswo(i,ltop) = so(i,ltop) + hltm*work1(i,ltop)
         gamwo(i,ltop)= gamfac*work1(i,ltop)/(to(i,ltop)*to(i,ltop))
@@ -1019,6 +989,8 @@ ENDDO!j
 !     Test parcel calculation
 !
 !     lt=cloud top level of the sub-ensemble
+      !print *,"before 500"
+      cloud_count=0
       do 500 lt = ktmin, lev-1
 !
       if (.not. exist(nn,lt)) go to 500
@@ -1027,7 +999,7 @@ ENDDO!j
 !
       call ucem1 ( nn,nx,lev,lt,cp,r,g,pcon,ccritl,etop,kcbase,.false. &
                  , hswo,hbase,hswo,ho,qo,qswo,hswe,qswe,gamqo,gamqe    &
-                 , dzlc,dzl2c,e,exist(1,lt),hc,qc,cu,rain(1,1,lt)      &
+                 , dzlc,dzl2c,e,exist(1,lt),hc,qc,cu,rain(1,:,lt)      &
                  , zl,zl2,alamdax )
 !
       if (.not. exist(nn,lt)) go to 500
@@ -1070,6 +1042,7 @@ ENDDO!j
   125 continue
 !
       if (.not. exist(nn,lt)) go to 500
+      cloud_count=cloud_count+1
 !
 !  calculate the tendency (q,t) of the test parcel 
 !  (which has normalized mass flux)
@@ -1098,6 +1071,9 @@ ENDDO!j
   220 continue
 !
   500 continue
+  
+  if (cloud_count .eq. 0) return
+   
 !
 !
 ! *****************************
@@ -1109,7 +1085,6 @@ ENDDO!j
 !         qo, qswo, ho, hswo,  qswe, hswe, te, se
 !       changes of the following parameters are neglected:
 !         gamqo, gamqe, buof1, buof2, dzl, dzl2
-!
       do 510 itype = ktmin, lev-1
 !
       if (.not. exist(nn,lt)) go to 510
@@ -1201,11 +1176,11 @@ ENDDO!j
         edeep(i,kk)=e(i,kk)
         enddo
 
-         call DGETRF(lev,lev,wkint,lev,ipiv,info)
+         call SGETRF(lev,lev,wkint,lev,ipiv,info)
             if (info /= 0) then
               print *, 'matrix is singular'
             endif
-         call DGETRI(lev,wkint,lev,ipiv,work,lev,info)
+         call SGETRI(lev,wkint,lev,ipiv,work,lev,info)
             if (info /= 0) then
               print *, 'inverse fail'
             endif
@@ -1244,6 +1219,7 @@ ENDDO!j
       endif
 !
       flxmas(i,itype) = -relaxas*aforce(i,itype)/akernl(i,itype)
+      if (flxmas(i,itype)/=flxmas(i,itype)) write(*,*) 'MASS NAN'
 !
       if (flxmas(i,itype) .gt. rmfmax)  then
         flxmas(i,itype)= rmfmax
@@ -1257,7 +1233,7 @@ ENDDO!j
 !  evaporation of cumulus precipitation
 !
       if (prevap.gt.0.0)  then
-!
+     !
       call uevpcup (nn,nx,lev,ktmin,prevap,ql,qls,pmassl,rain,cqct)
 !
       endif
@@ -1266,13 +1242,16 @@ ENDDO!j
 !
       do 525 itype = ktmin, lev-1
       do 535 i = 1, nn
+      
       grain(i,itype)= -cqct(i,lev,itype)*pmassl(i,lev)
+      !print *,grain(i,itype),pmassl(i,lev),cqct(i,lev,itype)
   535 continue
 !
       do 525 k = itype, lev-1
       do 525 i = 1, nn
       grain(i,itype)= grain(i,itype)-cqct(i,k,itype)*pmassl(i,k)
   525 continue
+      
 !
 ! *****************************
 ! **  begin of procedure 8)  **
@@ -1315,6 +1294,7 @@ ENDDO!j
           wc2(i)=(zzz(i)*(wcc(i,k-1)-wcc(i,k)))+wcc(i,k)
           rhoc(i)=(zzz(i)*(rhol(i,k-1)-rhol(i,k)))+rhol(i,k)
           zlc(i)=(zzz(i)*(zl(i,k-1)-zl(i,k)))+zl(i,k)
+
           if (wc2(i) .gt. 0.) then
           wc(i)=sqrt(wc2(i))
           lambda(i)=muc(i)/(rhoc(i)*(wc(i)-wbarc(i)))
@@ -1361,10 +1341,9 @@ ENDDO!j
              zbase(i)=zl(i,kcbase(i))
              ztop(i)=zl(i,ktop(i))
       enddo
-
 !
 ! --- total cumulus contributions to temperature and moisture changes
-!
+
       do 840 itype = ktmin, lev-1
       do 840 l = itype, lev
       do 840 i = 1,nn
@@ -1375,8 +1354,8 @@ ENDDO!j
 !  adjust changes for deepest clouds due to ratio being .lt. 1.0
 !
       do 850 i = 1, nn
-      dhcup(i,kctop(i))= dhcup(i,kctop(i))*ratio(i)
-      dqcup(i,kctop(i))= dqcup(i,kctop(i))*ratio(i)
+      dhcup(i,ktmin)= dhcup(i,ktmin)*ratio(i)
+      dqcup(i,ktmin)= dqcup(i,ktmin)*ratio(i)
   850 continue
 
 !     dq & dh cup1 is the tendency influenced by the first invoked cloud
@@ -1408,8 +1387,8 @@ ENDDO!j
   860   continue
 
       do 870 i = 1, nn
-      dhcup1(i,kctop(i))= dhcup1(i,kctop(i))*ratio(i)
-      dqcup1(i,kctop(i))= dqcup1(i,kctop(i))*ratio(i)
+      dhcup1(i,ktmin)= dhcup1(i,ktmin)*ratio(i)
+      dqcup1(i,ktmin)= dqcup1(i,ktmin)*ratio(i)
   870 continue
 
 !     UP

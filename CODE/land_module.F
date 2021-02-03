@@ -155,11 +155,11 @@ CONTAINS
       Q2i(I,J) = Q2(I,J)/(1+Q2(I,J))
   100 CONTINUE
 
-      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
-      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
-      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
-      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
-      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
+!      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
+!      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
+!      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
+!      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
+!      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
 
             
       SPRECi = real(SPREC)
@@ -202,11 +202,11 @@ CONTAINS
 
   200 CONTINUE
 
-      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
-      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
-      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
-      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
-      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
+!      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
+!      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
+!      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
+!      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
+!      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
 
 #endif
 
