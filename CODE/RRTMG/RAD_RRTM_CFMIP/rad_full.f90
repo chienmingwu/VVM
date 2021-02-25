@@ -1,3 +1,4 @@
+#include "definesld.com"
       SUBROUTINE rad_full ()
  
       use rad ! note qrad, pres_input, tabs_slice, insolation_TOA, lwUp, etc from this module
@@ -467,6 +468,9 @@
            lwHeatingRate, &
            lwHeatingRateClearSky, &
            coszrs, &
+#if defined (MICROP3)
+           i,j, & ! i and j index for puuting ReC and ReI
+#endif
            LWP, IWP, liquidRe, iceRe )
 
 !------------------------------------------------------------------------------

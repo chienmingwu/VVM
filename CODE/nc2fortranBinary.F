@@ -49,7 +49,6 @@
       REAL*8 ZZ(NK3)      
 
       REAL (KIND=int_kind) HX(MI_GLOB,MJ_GLOB)
-
  
       R = 6378137.0
       ZB = 0. 
@@ -170,58 +169,135 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   100 CONTINUE
 
       ELSE
+
+      OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
+      READ(15,*) xt
+      CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
+      READ(15,*) yt
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
+      READ(15,*) alb
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
+      READ(15,*) grf
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
+      READ(15,*) hgt
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
+      READ(15,*) lai
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
+      READ(15,*) lu
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
+      READ(15,*) shdmax
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
+      READ(15,*) shdmin
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
+      READ(15,*) slope
+      CLOSE(15)
+
+      OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
+      READ(15,*) soil
+      CLOSE(15)
       
-      DO J=1,MJ_GLOB
-      DO I=1,MI_GLOB
-      YM(J)=J
-      XM(I)=I
-      ENDDO
-      ENDDO
+!      DO J=1,MJ_GLOB
+!      DO I=1,MI_GLOB
+!      YM(J)=J
+!      XM(I)=I
+!      ENDDO
+!      ENDDO
 
 
 !      HX = 1
-      DO 500 J = 1,MJ_GLOB
-      DO 500 I = 1,MI_GLOB
+!      DO 500 J = 1,MJ_GLOB
+!      DO 500 I = 1,MI_GLOB
 
 !      xt(I) = I * DX
 !      yt(I) = J * DYNEW
 
-      hx(I,J) = 1
-      LU(I,J) = 16
-      alb(I,J) = 15.
-      grf(I,J) = 10.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 1
-     
-  500 CONTINUE
+!      hx(I,J) = 1
+!      LU(I,J) = 16
+!      alb(I,J) = 15.
+!      grf(I,J) = 10.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 1
+!     
+!  500 CONTINUE
 
-!ccwu half land
+! 5 large island in Maritime Continent
 
-      DO J = 1,MJ_GLOB
-      DO I = MI_GLOB/2+1,MI_GLOB
+!      OPEN(157,FILE="/home/der0318/global_topo/maritime_0.144.dat"
+!     1 ,ACCESS="direct",RECL=451*200*4)
+!      READ(157,REC=1) topo_mar
+!      CLOSE(157)
+!
+!      DO 501 j = 1,MJ_GLOB
+!      DO 501 i = 1,MI_GLOB
+!      IF (j>=157 .AND. j<=356 .AND. i<=451)THEN
+!      IF (topo_mar(i,j-156)/=-999)THEN
+!      IT=2
+!      DO 502 k=1,NK3
+!  502 IF (topo_mar(i,j-156) >= ZZ(k)) TOP=max(k,IT)
+!      hx(i,j)=TOP
+!      LU(I,J) = 13
+!      alb(I,J) = 11.
+!      grf(I,J) = 95.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 95.
+!      SHDMIN(I,J) = 95.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 1
+!      ENDIF
+!      ENDIF
+!  501 CONTINUE 
+!
+!      DO 503 j = 1,MJ_GLOB
+!      DO 503 i = 1,MI_GLOB
+!      topo_sur(1)=hx(i,j)
+!      topo_sur(2)=hx(i+1,j)
+!      topo_sur(3)=hx(i,j+1)
+!      topo_sur(4)=hx(i-1,j)
+!      topo_sur(5)=hx(i,j-1)
+!      IF (minloc(topo_sur,1)==1) hx(i,j)=minval(topo_sur(2:5))
+!  503 CONTINUE
 
-      LU(I,J) = 13
-      alb(I,J) = 11.
-      grf(I,J) = 95.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 95.
-      SHDMIN(I,J) = 95.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 1
 
-      enddo
-      enddo
+!      DO 600 I = 1, MI_GLOB
+!  600 XT (I) = I*DX
 
-      DO 600 I = 1, MI_GLOB
-  600 XT (I) = I*DX/100000.
-
-      DO 700 J = 1,MJ_GLOB
-  700 YT (J) = J*DYNEW/100000.
+!      DO 700 J = 1,MJ_GLOB
+!  700 YT (J) = J*DYNEW
 
 
+      DO I=1,mi_glob
+      DO J=1,mj_glob
+      TMP=DBLE(hgt(I,J))
+
+      IF (TMP .GT. 0.) HX(I,J) = 2.
+      DO K=2,NK1
+      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+
+      ENDDO
+      IF(HX(I,J).LT.0)HX(I,J)=0
+
+      ENDDO
+      ENDDO
 
 
       ENDIF

@@ -1,3 +1,4 @@
+#include "definesld.com"
       MODULE rad_driver
 
 ! -------------------------------------------------------------------------- 
@@ -24,9 +25,17 @@
 
       use shr_orb_mod, only: shr_orb_params
       use cam_rad_parameterizations, only : &
-                                     computeRe_Liquid, computeRe_Ice, albedo
+           computeRe_Liquid, computeRe_Ice &
+#if defined (MICROP3)
+           , ReC_p3, ReI_p3 &
+#endif
+           , albedo
       use parkind, only : kind_rb   ! RRTM expects reals with this kind parameter 
                                     ! (8 byte reals) 
+
+#if defined (MICROP3)
+      use domain_decomposition, only: my_task
+#endif
       
       implicit none
       private
@@ -136,6 +145,9 @@
                                  lwHeatingRate, &
                                  lwHeatingRateClearSky, &
                                  coszrs, &
+#if defined (MICROP3)
+                                 x_p3,y_p3, &
+#endif
                                  LWP, IWP, liquidRe, iceRe)
 
 ! Astronomy module, for computing solar zenith angle
@@ -158,6 +170,10 @@
       integer, intent(in) :: &
           nx, &    ! number of columns for which radiation will be computed
           nzm, &   ! number of model levels in each column.
+#if defined (MICROP3)
+          x_p3, &
+          y_p3, &
+#endif
           lat      ! index of coordinate in y-direction (from 1 to ny).
       
       logical, intent(in) :: &
@@ -377,6 +393,24 @@
     liquidRe(:, :) = 0.
     iceRe(:, :) = 0.
 
+#if defined (MICROP3)
+    where(LWP(1, 1:nzm) > 0.)
+      liquidRe(1, 1:nzm) = MAX(2.5, MIN(60., ReC_p3(x_p3,y_p3,1:nzm)*1e+6))
+      cloudFrac(1, 1:nzm) = 1.
+    end where
+
+    where(IWP(1, 1:nzm) > 0.)
+      iceRe(1, 1:nzm) = MAX(5., MIN(140., ReI_p3(x_p3,y_p3,1:nzm)*1e+6))
+      cloudFrac(1, 1:nzm) = 1.
+    end where
+   
+    if (my_task == 0. .and. x_p3==10 .and. y_p3==10) then
+      write(*,*) "in rad"
+      do k=1,nzm
+        write(*,*) k, IWP(1,k), iceRe(1,k), ReI_p3(10,10,k)
+      enddo
+    endif
+#else
     where(LWP(:, :) > 0.)
       liquidRe(:, :) = computeRe_Liquid(real(layerT), merge(0., 1., ocean))
       cloudFrac(:, :) = 1. 
@@ -387,6 +421,7 @@
       iceRe(:, :) = MAX(5., MIN(140., computeRe_Ice(real(layerT)) ) ) 
       cloudFrac(:, :) = 1. 
     end where
+#endif
 
 !------------------------------------------------------------------------------
 ! Volume mixing fractions for gases.
