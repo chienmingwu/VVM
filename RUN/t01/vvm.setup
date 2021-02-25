@@ -105,6 +105,7 @@ cp ${subdir}/CODE/p3_lookup_table_* .
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
+cp ${subdir}/RUN/t01/nc2fortranBinary.f .
 ./nc2fortranBinary > tmp.out
 
 # GLDAS

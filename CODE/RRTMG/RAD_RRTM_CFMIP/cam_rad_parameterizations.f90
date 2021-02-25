@@ -1,3 +1,4 @@
+#include "definesld.com"
 module cam_rad_parameterizations
   use shr_orb_mod
   !
@@ -5,7 +6,11 @@ module cam_rad_parameterizations
   !
   implicit none
   private
-  
+
+#if defined (MICROP3)
+  real, dimension(:,:,:), pointer, public :: ReI_p3, ReC_p3
+#endif  
+
   real, parameter :: tmelt = 273.16  ! specify melting temperature
   !       Tabulated values of re(T) in the temperature interval
   !       180 K -- 274 K; hexagonal columns assumed
