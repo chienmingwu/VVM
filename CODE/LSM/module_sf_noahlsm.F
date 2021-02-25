@@ -673,6 +673,7 @@ CONTAINS
                           RCS,RCT,RCQ,RCSOIL,EMISSI)
          ELSE
             RC = 0.0
+            PC = 0.0
          END IF
 ! ----------------------------------------------------------------------
 ! NOW DECIDE MAJOR PATHWAY BRANCH TO TAKE DEPENDING ON WHETHER SNOWPACK

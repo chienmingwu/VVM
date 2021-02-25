@@ -5,10 +5,12 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = gate
+set expname = uras_landsea_1800_2
 
 # hardscrabble configuration
 set subdir = '../..'
+
+rm -f *.o *.mod
 
 setenv EXPHDR_tmp  ${expname}" "${subdir}
 if( ! -d ${subdir} ) then      # if ${subdir} is not found, create it!
@@ -39,12 +41,15 @@ cat COMMENTS
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
+#define PARALLELIO
 #define DIFFUSION
 #define PHYSICS
 #define MICROCODE
-#define PARALLELIO
+#define MICROP3
+#define RAS
+#define URAS
 #define RADCODE
-#define AREAMN
+#define LSM
 'END1'
 cat definesld.com
 
@@ -53,12 +58,12 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/128/' \
+sed -e '1,$s/zonal_dimension/256/' \
     -e '1,$s/merid_dimension/128/' \
-    -e '1,$s/zonal_decomposition/4/' \
-    -e '1,$s/merid_decomposition/4/' \
+    -e '1,$s/zonal_decomposition/8/' \
+    -e '1,$s/merid_decomposition/8/' \
     -e '1,$s/vert_dimension/34/' \
-    -e '1,$s/tracer_dimension/0/' \
+    -e '1,$s/tracer_dimension/1/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
 # For restart --------------------
@@ -68,11 +73,14 @@ sed -e '1,$s/zonal_dimension/128/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=8640 /
- &INPUT2 RLAT=15. /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1. /
- &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
- &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=6.,Q1Q2=T,DTRAD=1200.,SOLVAR=F,petsc_cr = 0 /
+ &INPUT1 NEWRUN=T, ITTADD=864000 /
+ &INPUT2 RLAT=45, RLON=120 /
+ &INPUT3 DX=16000.,DYNEW=16000.,DZ=500.,DZ1=100.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=86400. /
+#           (m)          (m)     (m)     (m)    (s)                (time step)
+ &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360. /
+#         ( case output frequency)   ( result could be seen in ncfile)
+ &INPUT5 IX=3182073,ITINIT=10,ITSTOP=360,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr = 0 /
+#                                                              (s)
 'END6'
 cat INPUT
 
@@ -81,7 +89,10 @@ cat INPUT
 if( ! -d RUNDATA ) then
   mkdir RUNDATA
 endif
+rm -rf archive
+mkdir archive
 
+cp ${subdir}/CODE/make_ctl.sh .
 cp ${subdir}/RUNDATA/fort.91 fort.91
 cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
@@ -89,6 +100,7 @@ exit
 
 
 cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
+cp ${subdir}/CODE/p3_lookup_table_* .
 
 #cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
 #cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
@@ -96,8 +108,8 @@ cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
 cd ${subdir}"/RUN/t01"
 make topography CASENAME=${expname} -f ../makefile
 cd ${subdir}"/DATA/"${expname}
+cp ${subdir}/RUN/t01/nc2fortranBinary.f .
 ./nc2fortranBinary > tmp.out
-
 
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)

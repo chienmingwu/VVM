@@ -207,6 +207,8 @@ SRC_FREE_CODE = \
 	nudge_module.F \
 	physics_interface.f90 \
 	physics_v10d.f90 \
+        module_mp_p3.F \
+        ras_module.F \
 	q_chk_module.F \
 	radiation_rrtmg.f90 \
 	rcalc_module.F \
@@ -226,6 +228,8 @@ SRC_FREE_CODE = \
 	timer.F \
 	output_nc.F \
 	ldoutput_nc.F \
+        new_output_nc.F \
+        new_ldoutput_nc.F \
 	ldmain.F \
 	vertical_adaptive.F
 
@@ -518,7 +522,11 @@ ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOU
 
 output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
 
-ldmain.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o ldoutput.o ldinput.o ab_3d_module.o time_manager_module.o domain_decomposition.o ldoutput_nc.o output_nc.o vertical_adaptive.o
+new_ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o new_output_nc.o ldoutput.o CLDINFO.o land_module.o
+
+new_output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
+
+ldmain.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o ldoutput.o ldinput.o ab_3d_module.o time_manager_module.o domain_decomposition.o new_ldoutput_nc.o new_output_nc.o vertical_adaptive.o
 
 hwscrt.o: hwscrt.F
 
@@ -559,9 +567,13 @@ wind_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o bound.o elliptic.o 
 
 radiation_rrtmg.o: kinds.o rrtm_params.o rrtm_grid.o rrtm_vars.o rad.o trace_gases.o RADOUTLD.o TIMEINFO.o CONST3D.o bound.o rad_full.o
 
-physics_interface.o: kinds.o timer.o rrtm_params.o rrtm_grid.o rrtm_vars.o physics_v10d.o PROFOUTLD.o RADOUTLD.o CONST3D.o TIMEINFO.o bound.o cloud_module.o radiation_rrtmg.o domain_decomposition.o
+physics_interface.o: kinds.o timer.o rrtm_params.o rrtm_grid.o rrtm_vars.o physics_v10d.o module_mp_p3.o update_thermo_module.o PROFOUTLD.o RADOUTLD.o CONST3D.o TIMEINFO.o bound.o cloud_module.o radiation_rrtmg.o domain_decomposition.o cam_rad_parameterizations.o
 
 physics_v10d.o: kinds.o PARMSLD.o
+
+module_mp_p3.o: module_mp_p3.F kinds.o PARMSLD.o
+
+ras_module.o: ras_module.F kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o
 
 vertical_adaptive.o: CONST3D.o CONSTLD.o PARMSLD.o kinds.o domain_decomposition.o
 #-----------------------------------------------------------------------------

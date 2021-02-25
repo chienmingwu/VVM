@@ -111,6 +111,7 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
       REAL (KIND=dbl_kind) ::  USTAR,VENTFC(2),MOLEN,zzz,ttt,ES1,QSFC,TS
+      REAL (KIND=dbl_kind) :: tempim,tempjm !global index
 
 #if defined (LSM)
       
@@ -123,11 +124,21 @@ CONTAINS
 ! 2. Ocean temperature
 ! calculate net fluxes
         zfluxw=swD(I,J)-swU(I,J) +lwD(I,J)-lwU(I,J)   &
-              -CP*WT(I,J)-HLF*WQ(I,J)  &                
-              -100. ! ocean cooling 100 w/m2 from Romps 2012
+              -CP*WT(I,J)-HLF*WQ(I,J)  !&                
+              !-100. ! ocean cooling 100 w/m2 from Romps 2012
 !       Ocean temperature (tg)
         TG(I,J)=TG(i,j)+zmcapdt*zfluxw
 #endif
+
+!ccwu add TG gradient
+!
+!      tempim=dble(mi1*ni_sbdm+i)
+!      if(tempim .le.256) then
+!      TG(I,J)=300.+(512.-384.)/383.*3.+(tempim)/383.*3.
+!      else
+!      TG(I,J)=300.+(tempim-384.)/383.*3.
+!      endif
+!ccwu
  
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( P1(I,J) - ES1 )
@@ -144,11 +155,11 @@ CONTAINS
       Q2i(I,J) = Q2(I,J)/(1+Q2(I,J))
   100 CONTINUE
 
-      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
-      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
-      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
-      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
-      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
+!      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
+!      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
+!      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
+!      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
+!      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
 
             
       SPRECi = real(SPREC)
@@ -191,11 +202,11 @@ CONTAINS
 
   200 CONTINUE
 
-      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
-      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
-      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
-      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
-      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
+!      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
+!      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
+!      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
+!      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
+!      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
 
 #endif
 
@@ -376,7 +387,7 @@ CONTAINS
    INTEGER (KIND=int_kind):: i,j,itmp,jtmp
    CHARACTER(50):: FILENAME
    INTEGER (KIND=int_kind) :: hxp, hx1
-   REAL (KIND=dbl_kind) :: CP
+   REAL (KIND=dbl_kind) :: CP,tempim
 
    CP = 1004.5
 
@@ -413,10 +424,10 @@ CONTAINS
          PI1MAP(I,J)      = 1./PIBAR(hxp-1)
 !        TG1              = thbar(hxp-1)*pibar(hxp-1)
          lT1(I,J)         = thbar(hx(I,J))*pibar(INT(hx(I,J)))
-         lST(I,J,1)       = 297.0995
-         lST(I,J,2)       = 298.0445
-         lST(I,J,3)       = 297.8954
-         lST(I,J,4)       = 295.9152
+         lST(I,J,1)       = lT1(I,J)
+         lST(I,J,2)       = lT1(I,J)
+         lST(I,J,3)       = lT1(I,J)
+         lST(I,J,4)       = lT1(I,J)
          lSM(I,J,1)       = 0.3281597
          lSM(I,J,2)       = 0.3240254
          lSM(I,J,3)       = 0.3013114
@@ -440,50 +451,50 @@ CONTAINS
 !         WTT              = -9.9999996E+35!SHEAT in NOAHLSM
 !         WQQ              = -9.9999996E+35!ETAKIN in NOAHLSM
   100 CONTINUE
-         lCM         = -9.9999996E+35
-         lEMISSI     = -9.9999996E+35
-         lCMC        = -9.9999996E+35
-!         lT1         = -9.9999996E+35
-         lSNOWH      = -9.9999996E+35
-         lSNEQV      = -9.9999996E+35
-         lALBEDO     = -9.9999996E+35
-         lCH         = -9.9999996E+35
-         lETA        = -9.9999996E+35
-         lFDOWN      = -9.9999996E+35
-         lEC         = -9.9999996E+35
-         lEDIR       = -9.9999996E+35
-         lET         = -9.9999996E+35
-         lETT        = -9.9999996E+35
-         lESNOW      = -9.9999996E+35
-         lDRIP       = -9.9999996E+35
-         lDEW        = -9.9999996E+35
-         lBETA       = -9.9999996E+35
-         lETP        = -9.9999996E+35
-         lSSOIL      = -9.9999996E+35
-         lFLX1       = -9.9999996E+35
-         lFLX2       = -9.9999996E+35
-         lFLX3       = -9.9999996E+35
-         lSNOMLT     = -9.9999996E+35
-         lSNCOVR     = -9.9999996E+35
-         lRUNOFF1    = -9.9999996E+35
-         lRUNOFF2    = -9.9999996E+35
-         lRUNOFF3    = -9.9999996E+35
-         lRC         = -9.9999996E+35
-         lPC         = -9.9999996E+35
-         lRSMIN      = -9.9999996E+35
-         lXLAI       = -9.9999996E+35
-         lRCS        = -9.9999996E+35
-         lRCT        = -9.9999996E+35
-         lRCQ        = -9.9999996E+35
-         lRCSOIL     = -9.9999996E+35
-         lSOILW      = -9.9999996E+35
-         lSOILM      = -9.9999996E+35
-         lQ1         = -9.9999996E+35
-         lSMAV       = -9.9999996E+35
-         lSMCWLT     = -9.9999996E+35
-         lSMCDRY     = -9.9999996E+35
-         lSMCREF     = -9.9999996E+35
-         lSMCMAX     = -9.9999996E+35
+         lCM         = -9.9999996E+35 
+         lEMISSI     = -9.9999996E+35 
+         lCMC        = -9.9999996E+35 
+!        lT1         = -9.9999996E+35 
+         lSNOWH      = -9.9999996E+35 
+         lSNEQV      = -9.9999996E+35 
+         lALBEDO     = -9.9999996E+35 
+         lCH         = -9.9999996E+35 
+         lETA        = -9.9999996E+35 
+         lFDOWN      = -9.9999996E+35 
+         lEC         = -9.9999996E+35 
+         lEDIR       = -9.9999996E+35 
+         lET         = -9.9999996E+35 
+         lETT        = -9.9999996E+35 
+         lESNOW      = -9.9999996E+35 
+         lDRIP       = -9.9999996E+35 
+         lDEW        = -9.9999996E+35 
+         lBETA       = -9.9999996E+35 
+         lETP        = -9.9999996E+35 
+         lSSOIL      = -9.9999996E+35 
+         lFLX1       = -9.9999996E+35 
+         lFLX2       = -9.9999996E+35 
+         lFLX3       = -9.9999996E+35 
+         lSNOMLT     = -9.9999996E+35 
+         lSNCOVR     = -9.9999996E+35 
+         lRUNOFF1    = -9.9999996E+35 
+         lRUNOFF2    = -9.9999996E+35 
+         lRUNOFF3    = -9.9999996E+35 
+         lRC         = -9.9999996E+35 
+         lPC         = -9.9999996E+35 
+         lRSMIN      = -9.9999996E+35 
+         lXLAI       = -9.9999996E+35 
+         lRCS        = -9.9999996E+35 
+         lRCT        = -9.9999996E+35 
+         lRCQ        = -9.9999996E+35 
+         lRCSOIL     = -9.9999996E+35 
+         lSOILW      = -9.9999996E+35 
+         lSOILM      = -9.9999996E+35 
+         lQ1         = -9.9999996E+35 
+         lSMAV       = -9.9999996E+35 
+         lSMCWLT     = -9.9999996E+35 
+         lSMCDRY     = -9.9999996E+35 
+         lSMCREF     = -9.9999996E+35 
+         lSMCMAX     = -9.9999996E+35 
          lNROOT      = -999999
                
       call LSM_DRV_ini(DT*NSFLUX,LU,SOIL,SLOPE, &
@@ -503,7 +514,11 @@ CONTAINS
 ! determine surface temp of water body
    IF (LU(I,J) .eq. 16) THEN
    IF (hx1 .eq. 1) THEN
-   TG(I,J) = SST
+      tempim=dble(mi1*ni_sbdm+i)
+      pi = 4._8 * atan(1._8)
+!      TG(i,j)=300.-1.5*cos(2*pi*tempim/512.)   !512 points in x direction
+!      TG(i,j)=297.-6.0*cos(2*pi*tempim/512.)   !512 points in x direction
+       TG(i,j)=300.
    ELSE
    TG(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
@@ -530,7 +545,7 @@ CONTAINS
 ! 1. Set up constants
 
         rhoh2o = 1024.75         !density of water [kg/m**3]
-        zdmix=2._dbl_kind       ! constant depth of mixed layer
+        zdmix=100._dbl_kind       ! constant depth of mixed layer
         zcpwater=4218._dbl_kind  ! watar heat capacity
         zmixcap=rhoh2o*zcpwater*zdmix  !Cw ocean heat capacity
         zmcapdt=nsflux*dt/zmixcap       !1/cw*dt

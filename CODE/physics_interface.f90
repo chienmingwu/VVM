@@ -36,7 +36,16 @@
       USE cloud_module
       USE timer
       USE domain_decomposition
-               
+!     P3 and RAS are install by Der
+#if defined (MICROP3)
+      USE MODULE_MP_P3
+      USE update_thermo_module
+      USE cam_rad_parameterizations, only: ReI_p3, ReC_p3
+#endif
+#if defined (RAS)
+      USE ras
+#endif
+
       IMPLICIT NONE
       
 !------------------------------------------------------------------
@@ -86,6 +95,26 @@
           first_physics, first_rad
       DATA first_physics/.TRUE./
       DATA first_rad/.TRUE./
+!-----------------------------------------------------------------
+#if defined (MICROP3)
+      REAL :: scpf_pfrac, scpf_resfact
+      REAL :: theta_p3(im,km),qv_p3(im,km),qc_p3(im,km),qi_p3(im,km),qr_p3(im,km)
+      REAL :: nc(im,km), nr(im,km), ni(im,km), qrim(im,km), brim(im,km), &
+              theta_old(im,jm,km), qv_old(im,jm,km), dz_p3(im,km), p_p3(im,km), &
+              ssat(im,km), pcprt_liq(im), pcprt_sol(im), w_p3(im,km), &
+              diag_ze(im,km),diag_effc(im,km),diag_effi(im,km), &
+              diag_vmi(im,km),diag_di(im,km),diag_rhoi(im,km), dt_p3, &
+              th_old_p3(im,km), qv_old_p3(im,km), diag_3d(im,km,3), diag_2d(im,1), &
+              cldfrac(im,km)
+      REAL, TARGET :: effc(im,jm,km), effi(im,jm,km)
+
+      INTEGER (KIND=int_kind) :: itt_p3, stat
+
+      LOGICAL (KIND=log_kind), SAVE :: &
+          log_predictNc, typeDiags_ON, debug_on, scpf_on
+      CHARACTER(LEN=16), PARAMETER :: model = 'VVM'
+#endif
+!-----------------------------------------------------------------
 
 ! TWP-ICE tracers
 !      REAL (KIND=dbl_kind), DIMENSION(im,jm,km) :: &
@@ -109,6 +138,13 @@
           Z25TK,Z25BK
       INTEGER (KIND=int_kind) :: &
           hxp,tempim,tempjm    ! topography index
+
+!======================================================================
+! The most important line must be needed for varying time step 
+      dt=DTM
+! The most important line must be needed for varying time step
+!======================================================================
+
 !======================================================================
 ! Define constants and initialize
 
@@ -116,11 +152,31 @@
       
       first_physics = .FALSE.
 
-      dt = DTM
-
 !----------------------------------------------------------
 ! Initialize physics related constants and parameters
+#if defined (MICROP3)
+      ! initialize for p3 microphysics scheme
+      call p3_init('.',1,trim(model),stat)
+      IF (stat/=0)THEN
+      WRITE(*,*) "Fail in P3 initialization"
+      STOP
+      ENDIF
+      log_predictNc = .True.
+      typeDiags_ON  = .False.
+      debug_on      = .False.
+      scpf_on       = .False. ! cloud fraction version not used
+      scpf_pfrac    = 0.      ! dummy variable (not used), set to 0
+      scpf_resfact  = 0.      ! dummy variable (not used), set to 0
+
+      effc=0.
+      effi=0.   
+
+      ReC_p3 => effc
+      ReI_p3 => effi
+#else
+      ! initialize for Lin microphysics scheme
       CALL initialize_physics
+#endif
 !----------------------------------------------------------
 
       z(0) = ZZ(1)
@@ -245,10 +301,73 @@
       endif  ! if(.not.notherm)
 #endif
 
+
+
+! Cumulus Parameterization ================================================
+
+#if defined (RAS)
+! RAS is installed by Der (2018/12/13) 
+      call timer_start('cumulus')
+
+      CALL ras_interface(ITT,PBAR,PIBAR,ZZ,ZT,RHO,DT)
+     
+      call timer_stop('cumulus')
+#endif
+
+
+! Microphysics ============================================================
+
+#if defined (MICROP3)
+      THAD_MICRO   = 0.0_dbl_kind
+      QVAD_MICRO   = 0.0_dbl_kind
+      QCAD_MICRO   = 0.0_dbl_kind
+      QIAD_MICRO   = 0.0_dbl_kind
+      QRAD_MICRO   = 0.0_dbl_kind
+      NCAD_MICRO   = 0.0_dbl_kind
+      NRAD_MICRO   = 0.0_dbl_kind
+      NIAD_MICRO   = 0.0_dbl_kind
+      QRIMAD_MICRO = 0.0_dbl_kind
+      BRIMAD_MICRO = 0.0_dbl_kind
+
+      DO k=1,km
+        dz_p3(:,k)  = dzl(k)
+        p_p3(:,k)   = PBAR(k+1)
+      ENDDO
+
+      DO k=1,km
+        DO j=1,jm
+          DO i=1,im
+            theta_old(i,j,k) = TH3D(i,j,k+1)
+            qv_old(i,j,k)    = QV3D(i,j,k+1)
+          ENDDO
+        ENDDO
+      ENDDO
+
+      ! for theta_old and qv_old
+      call update_thermodynamics (N1,N2)
+      CALL BOUND_3D
+#endif
+
+!======================================================================
+
       do j = 1,jm
 
 !======================================================================
 
+#if defined (MICROP3)
+! Initialize tendency terms
+        ssat        = 0.
+        pcprt_liq   = 0.
+        pcprt_sol   = 0.
+        diag_ze     = 0.
+        diag_effc   = 0.
+        diag_effi   = 0.
+        diag_vmi    = 0.
+        diag_di     = 0.
+        diag_rhoi   = 0.
+        diag_2d     = 0.
+        diag_3d     = 0.
+#else
 ! Initialize tendency terms
       tendency_microphysics_theta = 0.0_dbl_kind
       tendency_microphysics_qv    = 0.0_dbl_kind
@@ -258,13 +377,32 @@
       tendency_microphysics_qs    = 0.0_dbl_kind
       tendency_microphysics_qg    = 0.0_dbl_kind
       latent_heating_rate         = 0.0_dbl_kind
-      
+#endif     
+ 
 !-----------------------------------------------------------------------
 ! Assign input arrays from model fields
       
 ! Thermodynamic fields
       DO 100 k = 1, km
       DO 100 i = 1, im
+#if defined (MICROP3)
+        th_old_p3(i,k)  = theta_old(i,j,k)
+        qv_old_p3(i,k)  = qv_old(i,j,k)
+
+        theta_p3(i,k) = TH3D(i,j,k+1)
+        qv_p3(i,k)    = QV3D(i,j,k+1)
+        qc_p3(i,k)    = QC3D(i,j,k+1)
+        qi_p3(i,k)    = QI3D(i,j,k+1)
+        qr_p3(i,k)    = QR3D(i,j,k+1)
+
+        nc(i,k)          = NC3D(i,j,k+1)
+        nr(i,k)          = NR3D(i,j,k+1)
+        ni(i,k)          = NI3D(i,j,k+1)
+        qrim(i,k)        = QRIM3D(i,j,k+1)
+        brim(i,k)        = BRIM3D(i,j,k+1)
+
+        w_p3(i,k)        = 0.5*(W3D(i,j,k) + W3D(i,j,k+1))
+#else
         theta(i,k) = TH3D(i,j,k+1)
         qv(i,k)    = QV3D(i,j,k+1)
         qc(i,k)    = QC3D(i,j,k+1)
@@ -272,6 +410,7 @@
         qr(i,k)    = QR3D(i,j,k+1)
         qs(i,k)    = QS3D(i,j,k+1)
         qg(i,k)    = QG3D(i,j,k+1)
+#endif
         thetaS(i)  = tg(i,j)
   100 CONTINUE
 
@@ -301,31 +440,48 @@
       IF (.NOT.NOTHERM) THEN
 
 #if defined (MICROCODE)      
-      call timer_start('microphysics')
-      CALL Microphysics
-      
-! Surface precipitation
-!      DO 201 K=1,NK3
-!        IF (ZT(K) .LT. 2500.) THEN
-!          Z25B=ZT(K)
-!          Z25BK=K
-!          Z25T=ZT(K+1)
-!          Z25TK=K+1
-!        END IF
-!  201 CONTINUE
 
-!ccwu calculate using the location of mountain
+#if defined (MICROP3)
+      call timer_start('microphysics')
+
+      dt_p3=DT
+      itt_p3=ITT
+ 
+      call p3_main(qc_p3,nc,qr_p3,nr,th_old_p3,theta_p3,qv_old_p3,qv_p3, &
+                   dt_p3,qi_p3,qrim,ni,brim,ssat,w_p3,                   &
+                   p_p3,dz_p3,itt_p3,pcprt_liq,pcprt_sol,                &
+                   1,im,1,km,1,diag_ze,diag_effc,                        &
+                   diag_effi,diag_vmi,diag_di,diag_rhoi,                 &
+                   1,diag_2d,3,diag_3d,log_predictNc,typeDiags_ON,model, &
+                   1.0,1.0,debug_on,scpf_on,scpf_pfrac,scpf_resfact,cldfrac)
+
+      IF (global_status == -1 )THEN
+      WRITE(*,*) "microphysics stop"
+      STOP
+      ENDIF
+
+      effc(:,j,:) = diag_effc
+      effi(:,j,:) = diag_effi
 
       DO 200 I=1,im
-!ccwu for total prec(rain+snow+graupel)
-!        SPREC(I,J)  = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
-         hxp=INT(hx(I,J))
-        SPREC(I,J) =  VTR_int(I,hxp)+VTS_int(I,hxp)+VTG_int(I,hxp)
-!
-        PREC25(I,J) = Surface_rain(I)+Surface_snow(I)+Surface_graupel(I)
+        hxp=INT(hx(I,J))
+        SPREC(I,J)  = diag_3d(I,hxp,1) + diag_3d(I,hxp,2) + diag_3d(I,hxp,3)
   200 CONTINUE
 
       call timer_stop('microphysics')
+#else
+      call timer_start('microphysics')
+      CALL Microphysics
+
+      DO 200 I=1,im
+!ccwu for total prec(rain+snow+graupel)
+        hxp=INT(hx(I,J))
+        SPREC(I,J) =  VTR_int(I,hxp)+VTS_int(I,hxp)+VTG_int(I,hxp)
+  200 CONTINUE
+
+      call timer_stop('microphysics')
+#endif
+
 #endif
 
       ENDIF ! (IF (.NOT. NOTHERM)
@@ -333,35 +489,43 @@
 #endif
 ! (END #if defined PHYSICS)
 
-!-----------------------------------------------------------------------
-! Check for negative value in moisture fields
-
-#if defined (MICROCODE)
-!      Call fill_negative (qv,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qc,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qi,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qs,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qg,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (qr,0.0_dbl_kind,rhol,dzl)
-
-!tac -- Fill negative values in TWP-ICE tracers
-!      Call fill_negative (tracer1,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (tracer2,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (tracer3,0.0_dbl_kind,rhol,dzl)
-!      Call fill_negative (tracer4,0.0_dbl_kind,rhol,dzl)
-
-!-----------------------------------------------------------------------
-! Adjust theta, qv, qc and qi for condensation, sublimation, 
-! freezing and melting      
-
-!      call timer_start('sat_adj')
-!      Call Saturation_adjustment
-!      call timer_stop('sat_adj')
-#endif
-
-!-----------------------------------------------------------------------
 ! Assign adjusted values back into model arrays
 
+#if defined (MICROP3)
+      DO 500 k = 2, NK2
+      DO 500 i = 1, MI1
+        TH3D(i,j,k)   = theta_p3(i,k-1)
+        QV3D(i,j,k)   = qv_p3(i,k-1)
+        QC3D(i,j,k)   = qc_p3(i,k-1)
+        QI3D(i,j,k)   = qi_p3(i,k-1)
+        QR3D(i,j,k)   = qr_p3(i,k-1)
+        NC3D(i,j,k)   = nc(i,k-1)
+        NR3D(i,j,k)   = nr(i,k-1)
+        NI3D(i,j,k)   = ni(i,k-1)
+        QRIM3D(i,j,k) = qrim(i,k-1)
+        BRIM3D(i,j,k) = brim(i,k-1)
+  500 CONTINUE
+
+!ccwut set physics variables on topo to zero
+      DO K = 2, maxtopo
+      DO I = 1, MI1
+      IF(ITYPEW(I,J,K) .NE. 1) THEN
+      TH3D(I,J,K) = THBAR(K)
+      QV3D(I,J,K) = 0.
+      QC3D(I,J,K) = 0.
+      QR3D(I,J,K) = 0.
+      QI3D(I,J,K) = 0.
+      NC3D(I,J,K) = 0.
+      NR3D(I,J,K) = 0.
+      NI3D(I,J,K) = 0.
+      QRIM3D(I,J,K) = 0.
+      BRIM3D(I,J,K) = 0.
+      ENDIF
+      ENDDO
+      ENDDO
+!ccwut
+
+#else
 ! Thermodynamic variables
       DO 500 k = 2, NK2
       DO 500 i = 1, MI1
@@ -393,8 +557,14 @@
         QG3D(i,j,k) = qg(i,k-1)
         QR3D(i,j,k) = qr(i,k-1)
   500 CONTINUE
+#endif
+
 
 #if defined (MICROCODE)
+
+#if defined (MICROP3)
+! Update in P3 microphysics scheme
+#else
 ! Microphysics tendency terms & latent heating rate
       DO 510 k = 2, NK2
       DO 510 i = 1, MI1
@@ -417,15 +587,26 @@
         FQG3D(i,j,k,L) = FQG3D(i,j,k,L) + tendency_graupel(i,k-1)
         FSED3D(i,j,k)  = tendency_sedimentation(i,k-1)
   520 CONTINUE
+#endif
 
 #endif
 
       enddo  ! j loop
 
+#if defined (MICROP3)
+      ReC_p3 => effc
+      ReI_p3 => effi
+   
+      if (my_task == 0 .and. (mod(itt,nradd)==1)) then
+        write(*,*) "in phys"
+        do k=1,km
+          write(*,*) k, effi(10,10,k),ReI_p3(10,10,k)
+        enddo
+      endif
+#endif
+
 #if defined (MICROCODE)
       CALL BOUND_ARB (1,SPREC)
-      CALL BOUND_ARB (1,PREC25)
-
 #endif
 
 ! TWP-ICE tracers
@@ -447,7 +628,7 @@
 
 ! Periodic continuation for serial code
       CALL BOUND_3D
-  
+ 
 !======================================================================
 
       RETURN

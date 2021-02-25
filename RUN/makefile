@@ -169,7 +169,7 @@ topography :
 	ifort -c ../../CODE/RRTMG/kinds.F -free 
 	${CPP} -p $(BINDIR)/PARMSLD.f90 > PARMSLD.f	
 	ifort -c PARMSLD.f -free
-	${CPP} -p nc2fortranBinary.F > nc2fortranBinary.f
+	${CPP} -p ../../CODE/nc2fortranBinary.F > nc2fortranBinary.f
 	ifort -c nc2fortranBinary.f  -I/opt/netcdf4-intel/include
 	ifort -o $(BINDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o -L/opt/netcdf4-intel/lib -lnetcdf -lnetcdff 
 #	$(CPP) -p nc2fortranBinary.F > nc2fortranBinary.f

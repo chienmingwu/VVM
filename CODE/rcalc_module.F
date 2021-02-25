@@ -12,6 +12,7 @@ USE update_thermo_module
 USE force_3d_module
 USE advec_3d_module
 USE timer
+USE domain_decomposition
 
 IMPLICIT NONE
 PRIVATE
@@ -38,7 +39,10 @@ CONTAINS
       INTEGER (KIND=int_kind) ::  &
          i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
          l, nt      ! time level index, tracer index
-      REAL (KIND=dbl_kind) :: fntddz
+      REAL (KIND=dbl_kind) :: fntddz, pi
+
+      INTEGER (KIND=int_kind) ::  &
+         tempim  ! global index 
 
 !-----------------------------------------------------------------------
       L = N2
@@ -57,6 +61,18 @@ CONTAINS
 
       CALL ADVEC_3D ( QI3D, FQI3D(1,1,1,L), term4 )
 
+#if defined (MICROP3)
+      CALL ADVEC_3D ( NC3D, FNC3D(1,1,1,L), term4 )
+
+      CALL ADVEC_3D ( NR3D, FNR3D(1,1,1,L), term4 )
+
+      CALL ADVEC_3D ( NI3D, FNI3D(1,1,1,L), term4 )
+
+      CALL ADVEC_3D ( QRIM3D, FQRIM3D(1,1,1,L), term4 )
+
+      CALL ADVEC_3D ( BRIM3D, FBRIM3D(1,1,1,L), term4 )
+#else
+
       CALL ADVEC_3D ( QS3D, FQS3D(1,1,1,L), term4 )
       DO 160 K = 2, NK2
       DO 160 J = 1, MJ1
@@ -71,11 +87,14 @@ CONTAINS
       HYSG3D(I,J,K)=(HYSG3D(I,J,K) + TERM4(I,J,K)) &
                                *(HLF/CP)*86400.
   170 CONTINUE
-  
-      do nt = 1,ntracer
-         CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(1,1,1,L,nt), term4 )
-      enddo
-  
+#endif
+    
+      if (ntracer > 0)then
+         do nt = 1,ntracer
+            CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(1,1,1,L,nt), term4 )
+         enddo
+      endif
+
 #endif
       call timer_stop('advection')
 
@@ -99,8 +118,10 @@ CONTAINS
       DO 300 K = 2, NK2
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
-      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)
-      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
+      tempim=dble(mi1*ni_sbdm+i)
+      pi = 4._8 * atan(1._8)
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)*cos(2*pi*tempim/256.)
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)*cos(2*pi*tempim/256.)
   309 CONTINUE
   SELECT CASE (TRIM(casename))
   CASE ('TWP-ICE','BOMEX')
@@ -111,12 +132,24 @@ CONTAINS
       DO 301 I = 1, MI1
       FQC3D(I,J,K,L)=FQC3D(I,J,K,L) - WLS(K)*         &
                 (QC3D(I,J,K+1)-QC3D(I,J,K))*fntddz
-      FQG3D(I,J,K,L)=FQG3D(I,J,K,L) - WLS(K)*         &
-                (QG3D(I,J,K+1)-QG3D(I,J,K))*fntddz
       FQI3D(I,J,K,L)=FQI3D(I,J,K,L) - WLS(K)*         &
                 (QI3D(I,J,K+1)-QI3D(I,J,K))*fntddz
       FQR3D(I,J,K,L)=FQR3D(I,J,K,L) - WLS(K)*         &
                 (QR3D(I,J,K+1)-QR3D(I,J,K))*fntddz
+#if defined (MICROP3)
+      FNC3D(I,J,K,L)=FNC3D(I,J,K,L) - WLS(K)*         &
+                (NC3D(I,J,K+1)-NC3D(I,J,K))*fntddz
+      FNR3D(I,J,K,L)=FNR3D(I,J,K,L) - WLS(K)*         &
+                (NR3D(I,J,K+1)-NR3D(I,J,K))*fntddz
+      FNI3D(I,J,K,L)=FNI3D(I,J,K,L) - WLS(K)*         &
+                (NI3D(I,J,K+1)-NI3D(I,J,K))*fntddz
+      FQRIM3D(I,J,K,L)=FQRIM3D(I,J,K,L) - WLS(K)*         &
+                (QRIM3D(I,J,K+1)-QRIM3D(I,J,K))*fntddz
+      FBRIM3D(I,J,K,L)=FBRIM3D(I,J,K,L) - WLS(K)*         &
+                (BRIM3D(I,J,K+1)-BRIM3D(I,J,K))*fntddz
+#else
+      FQG3D(I,J,K,L)=FQG3D(I,J,K,L) - WLS(K)*         &
+                (QG3D(I,J,K+1)-QG3D(I,J,K))*fntddz
       FQS3D(I,J,K,L)=FQS3D(I,J,K,L) - WLS(K)*         &
                 (QS3D(I,J,K+1)-QS3D(I,J,K))*fntddz
       HYLSTD(I,J,K)=(                                  &
@@ -124,24 +157,43 @@ CONTAINS
        - WLS(K)*(QS3D(I,J,K+1)-QS3D(I,J,K))  &
        - WLS(K)*(QG3D(I,J,K+1)-QG3D(I,J,K)))*fntddz) &
        *(HLF/CP)*86400.
+#endif
   301 CONTINUE
+
+      if (ntracer > 0)then
+
       DO 303 nt = 1,ntracer
       DO 303 J = 1, MJ1
       DO 303 I = 1, MI1
       FTC3D(I,J,K,L,nt)=FTC3D(I,J,K,L,nt) - WLS(K)*         &
                 (TC3D(I,J,K+1,nt)-TC3D(I,J,K,nt))*fntddz
   303 CONTINUE
+
+      endif
+
       ELSE
       DO 302 J = 1, MJ1
       DO 302 I = 1, MI1
       FQC3D(I,J,K,L)=FQC3D(I,J,K,L) - WLS(K)*         &
                 (QC3D(I,J,K)-QC3D(I,J,K-1))*fntddz
-      FQG3D(I,J,K,L)=FQG3D(I,J,K,L) - WLS(K)*         &
-                (QG3D(I,J,K)-QG3D(I,J,K-1))*fntddz
       FQI3D(I,J,K,L)=FQI3D(I,J,K,L) - WLS(K)*         &
                 (QI3D(I,J,K)-QI3D(I,J,K-1))*fntddz
       FQR3D(I,J,K,L)=FQR3D(I,J,K,L) - WLS(K)*         &
                 (QR3D(I,J,K)-QR3D(I,J,K-1))*fntddz
+#if defined (MICROP3)
+      FNC3D(I,J,K,L)=FNC3D(I,J,K,L) - WLS(K)*         &
+                (NC3D(I,J,K)-NC3D(I,J,K-1))*fntddz
+      FNR3D(I,J,K,L)=FNR3D(I,J,K,L) - WLS(K)*         &
+                (NR3D(I,J,K)-NR3D(I,J,K-1))*fntddz
+      FNI3D(I,J,K,L)=FNI3D(I,J,K,L) - WLS(K)*         &
+                (NI3D(I,J,K)-NI3D(I,J,K-1))*fntddz
+      FQRIM3D(I,J,K,L)=FQRIM3D(I,J,K,L) - WLS(K)*         &
+                (QRIM3D(I,J,K)-QRIM3D(I,J,K-1))*fntddz
+      FBRIM3D(I,J,K,L)=FBRIM3D(I,J,K,L) - WLS(K)*         &
+                (BRIM3D(I,J,K)-BRIM3D(I,J,K-1))*fntddz
+#else
+      FQG3D(I,J,K,L)=FQG3D(I,J,K,L) - WLS(K)*         &
+                (QG3D(I,J,K)-QG3D(I,J,K-1))*fntddz
       FQS3D(I,J,K,L)=FQS3D(I,J,K,L) - WLS(K)*         &
                 (QS3D(I,J,K)-QS3D(I,J,K-1))*fntddz
       HYLSTD(I,J,K)=(                                  &
@@ -149,13 +201,20 @@ CONTAINS
         - WLS(K)*(QS3D(I,J,K)-QS3D(I,J,K-1))  &
         - WLS(K)*(QG3D(I,J,K)-QG3D(I,J,K-1)))*fntddz) &
         *(HLF/CP)*86400.
+#endif
   302 CONTINUE
+
+      if (ntracer > 0)then
+
       DO 304 nt = 1,ntracer
       DO 304 J = 1, MJ1
       DO 304 I = 1, MI1
       FTC3D(I,J,K,L,nt)=FTC3D(I,J,K,L,nt) - WLS(K)*         &
                 (TC3D(I,J,K,nt)-TC3D(I,J,K-1,nt))*fntddz
   304 CONTINUE
+
+      endif
+
       END IF
   END SELECT 
   300 CONTINUE
@@ -181,8 +240,16 @@ CONTAINS
         QCAD3(I,J,K) = 0.
         QIAD3(I,J,K) = 0.
         QRAD3(I,J,K) = 0.
+#if defined (MICROP3)
+        NCAD3(I,J,K)   = 0.
+        NRAD3(I,J,K)   = 0.
+        NIAD3(I,J,K)   = 0.
+        QRIMAD3(I,J,K) = 0.
+        BRIMAD3(I,J,K) = 0.
+#else
         QSAD3(I,J,K) = 0.
         QGAD3(I,J,K) = 0.
+#endif
   510 CONTINUE
 
 ! Physics calculations
@@ -194,7 +261,11 @@ CONTAINS
 
 
 ! Update thermodynamic variables -- Replaces call to CLOUD_3D
+#if defined (MICROP3)
+! Update thermodynamic variables -- call before P3 microphysics
+#else
       CALL update_thermodynamics (N1,N2)
+#endif
 
 ! Nudge mean water vapor and mean potential temperature to mean (if so defined in nudge)
       CALL NUDGE

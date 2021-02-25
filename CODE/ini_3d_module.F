@@ -18,6 +18,9 @@ USE TURB_3D_module
 USE rrtm_vars, only: sstxy,albdo
 #endif 
 USE petscsys
+USE pnetcdf
+USE wind_module
+USE petsc_vvm_solver, only: petsc_solver_initialize
 
 IMPLICIT NONE
 PRIVATE
@@ -56,10 +59,11 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
+      CHARACTER (60) FILENAME
 
       integer nu1, nt1, nq1, k1, k2, it
       logical lf
-      DATA NU1/6/,NT1/21/,NQ1/20/
+      DATA NU1/6/,NT1/20/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
@@ -93,6 +97,8 @@ CONTAINS
       DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
       DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
 
+      CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
+
       casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
@@ -105,7 +111,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T1(1) * 0.1 + 273.16 + DSST
+      SST = 300.
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -291,8 +297,8 @@ CONTAINS
       IF ( Q1Q2 ) SCALEQ = SCALE
 
       DO 210 K = 1, NK3
-      Q1LS (K) = -1.* SCALEQ * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = SCALEQ * Q2LS (K) / (GAMFAC * SECDAY)
+      Q1LS (K) = -1.* SCALE * Q1LS (K) / PIBAR(K) / SECDAY
+      Q2LS (K) = SCALE * Q2LS (K) / (GAMFAC * SECDAY)
   210 CONTINUE
 
 #if !defined (RADCODE)
@@ -307,7 +313,7 @@ CONTAINS
       K2 = K1 + 1
       UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
       VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-  220 CONTINUE 
+  220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)
@@ -370,6 +376,7 @@ CONTAINS
 !*********************************************************
 !     2. SET UP the thermodynamic variables for 3D-frame
 !*********************************************************
+
       DO 500 K = 1, NK3
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
@@ -378,10 +385,17 @@ CONTAINS
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
+#if defined (MICROP3)
+      NC3D(I,J,K) = 0.
+      NR3D(I,J,K) = 0.
+      NI3D(I,J,K) = 0.
+      QRIM3D(I,J,K) = 0.
+      BRIM3D(I,J,K) = 0.
+#else
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.
+#endif
   500 CONTINUE
-
 
       DO 515 K = 1, NK2
       DO 515 J = 1, MJ1
@@ -392,8 +406,16 @@ CONTAINS
       FQC3D(I,J,K,N)=0.
       FQI3D(I,J,K,N)=0.
       FQR3D(I,J,K,N)=0.
+#if defined (MICROP3)
+      FNC3D(I,J,K,N) = 0.
+      FNR3D(I,J,K,N) = 0.
+      FNI3D(I,J,K,N) = 0.
+      FQRIM3D(I,J,K,N) = 0.
+      FBRIM3D(I,J,K,N) = 0.
+#else
       FQS3D(I,J,K,N)=0.
       FQG3D(I,J,K,N)=0.
+#endif
       FZX(I,J,K,N)=0.
       FZY(I,J,K,N)=0.
   515 CONTINUE
@@ -412,7 +434,6 @@ CONTAINS
 !*******************************************
 !     3. SET UP CIRCULATION
 !*******************************************
-
       DO 600 K = 1, NK2
       DO 600 J = mjm,mjp
       DO 600 I = mim,mip
@@ -425,9 +446,10 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-!ccwu_ini_wind 
-      U3DX(I,J,K)=UG(K)
-      U3DY(I,J,K)=VG(K)
+!      U3DX(I,J,K)=UG(K)
+!      U3DY(I,J,K)=VG(K)
+      U3DX(I,J,K)=3.
+      U3DY(I,J,K)=0.
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -439,8 +461,32 @@ CONTAINS
                  -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
 
+      CALL petsc_solver_initialize(petsc_cr)
 
-      CALL BOUND_3D_XY
+      restart_read: IF (.true.)THEN
+
+!   restart( thermodynamic_file (absolute path) , hydrometer , 
+!            dynamic_variables , {optional} dynamic_file (absolute path) )
+!
+!   1) hydrometer = false and dynamic variables = false
+!        >>>> only read th and qv
+!   2) hydrometer = true
+!        >>>> read th and all hydrometer
+!   3) dynamic variables = true
+!        >>>> read all dynamic variables
+!   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
+
+      thermodynamic_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
+               uras_landsea_1800.L.Thermodynamic-000192.nc"
+
+      dynamic_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
+               uras_landsea_1800.L.Dynamic-000192.nc" 
+
+      CALL restart(trim(thermodynamic_file),.true.,.true.,trim(dynamic_file))
+
+      ELSE
+      CALL BOUND_3D_XY 
+      ENDIF restart_read
 
 
 #if defined (AREAMN)
@@ -481,7 +527,7 @@ CONTAINS
       UTMN0 = UTMN
       VTMN0 = VTMN
       
-      IF(itt == 0) CALL UPDATE_TRACER_init
+      IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
       albdo = 0.30
@@ -490,7 +536,16 @@ CONTAINS
       call turb_3d_ini
 #endif
 
+      TG_restart: IF (.true.)THEN
+
+      tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
+                 uras_landsea_1800.C.Surface-000192.nc"
+      topo_file = "TOPO.nc"
+
+      call SST_RESTART(tg_file,topo_file)
  
+      ENDIF TG_restart
+
    END SUBROUTINE ini_3d
 
 
@@ -575,6 +630,301 @@ CONTAINS
 
       ENDSUBROUTINE PTSPEC
 
+
+!     restart subroutine (der 20190128)
+
+      SUBROUTINE RESTART(restart_filename,hydrometer,dynamic,restart_filename_dyn)
+  
+      ! input variables
+      CHARACTER(LEN=*), INTENT(IN) :: restart_filename ! absolute path
+      LOGICAL(KIND=log_kind), INTENT(IN) :: hydrometer ! hydrometer read/not
+      LOGICAL(KIND=log_kind), INTENT(IN) :: dynamic    ! dynamic variables read/not
+      CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: restart_filename_dyn
+
+      ! local variables
+      INTEGER :: nc_err
+      INTEGER :: ncid,varid          
+      INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart,readlen
+
+
+      nc_err = nfmpi_open(mpi_comm_world,restart_filename,nf_nowrite,mpi_info_null,ncid)
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart file don't exist"
+      STOP
+      ENDIF
+
+      arraystart(1) = (NI_SBDM)*MI1 + 1
+      arraystart(2) = (NJ_SBDM)*MJ1 + 1
+      arraystart(3) = 1
+      arraystart(4) = 1
+
+      readlen(1)    = MI1
+      readlen(2)    = MJ1
+      readlen(3)    = NK2
+      readlen(4)    = 1
+
+      ! th and qv (must read)
+      nc_err = nfmpi_inq_varid(ncid,'th',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,TH3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart th read fail", nc_err
+      STOP
+      ENDIF
+
+      nc_err = nfmpi_inq_varid(ncid,'qv',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,QV3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart qv read fail", nc_err
+      STOP
+      ENDIF
+
+      IF (hydrometer)THEN
+
+      ! qc
+      nc_err = nfmpi_inq_varid(ncid,'qc',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,QC3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart qc read fail", nc_err
+      STOP
+      ENDIF
+
+      ! qi
+      nc_err = nfmpi_inq_varid(ncid,'qi',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,QI3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart qi read fail", nc_err
+      STOP
+      ENDIF
+
+      ! qr
+      nc_err = nfmpi_inq_varid(ncid,'qr',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,QR3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart qr read fail", nc_err
+      STOP
+      ENDIF
+
+#if defined (MICROP3)
+      ! nc
+      nc_err = nfmpi_inq_varid(ncid,'nc',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,NC3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart nc read fail", nc_err
+      STOP
+      ENDIF
+
+      ! nr
+      nc_err = nfmpi_inq_varid(ncid,'nr',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,NR3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart nr read fail", nc_err
+      STOP
+      ENDIF
+
+      ! ni
+      nc_err = nfmpi_inq_varid(ncid,'ni',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,NI3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart ni read fail", nc_err
+      STOP
+      ENDIF
+
+      ! qrim
+      nc_err = nfmpi_inq_varid(ncid,'qrim',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,QRIM3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart qrim read fail", nc_err
+      STOP
+      ENDIF
+
+      ! brim
+      nc_err = nfmpi_inq_varid(ncid,'brim',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,BRIM3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart brim read fail", nc_err
+      STOP
+      ENDIF
+#else
+      ! qs
+      nc_err = nfmpi_inq_varid(ncid,'qs',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,QS3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart qs read fail", nc_err
+      STOP
+      ENDIF
+
+      ! qg
+      nc_err = nfmpi_inq_varid(ncid,'qg',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,QG3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart qg read fail", nc_err
+      STOP
+      ENDIF
+#endif
+      call bound_3d
+      ELSE
+      call bound_3d
+      ENDIF
+
+      nc_err = nfmpi_close(ncid)
+ 
+      IF (dynamic)THEN
+      IF (.NOT.(PRESENT(restart_filename_dyn)))THEN
+      WRITE(*,*) "restart dynamic file isn't defined"
+      STOP
+      ENDIF
+      
+      nc_err = nfmpi_open(mpi_comm_world,restart_filename_dyn,nf_nowrite,mpi_info_null,ncid)
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart dynamic file don't exist"
+      STOP
+      ENDIF
+     
+      ! xi
+      nc_err = nfmpi_inq_varid(ncid,'xi',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,Z3DX(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart xi read fail", nc_err
+      STOP
+      ENDIF
+   
+      ! eta
+      nc_err = nfmpi_inq_varid(ncid,'eta',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,Z3DY(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart eta read fail", nc_err
+      STOP
+      ENDIF
+
+      ! zeta
+      nc_err = nfmpi_inq_varid(ncid,'zeta',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,Z3DZ(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart zeta read fail", nc_err
+      STOP
+      ENDIF
+
+      ! u
+      nc_err = nfmpi_inq_varid(ncid,'u',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,U3DX(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart u read fail", nc_err
+      STOP
+      ENDIF
+
+      ! v
+      nc_err = nfmpi_inq_varid(ncid,'v',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,U3DY(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart v read fail", nc_err
+      STOP
+      ENDIF
+
+      ! w
+      nc_err = nfmpi_inq_varid(ncid,'w',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,W3D(1:MI1,1:MJ1,1:NK2))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart w read fail", nc_err
+      STOP
+      ENDIF
+    
+      nc_err = nfmpi_close(ncid)
+
+      call bound_3d_xy
+      call bound_3d_z
+      call bound_arb(nk3,u3dx)
+      call bound_arb(nk3,u3dy)
+      call bound_arb(nk2,w3d)
+      ENDIF
+ 
+      WRITE(*,*) "RESTART is successfully completed"
+
+      ENDSUBROUTINE RESTART
+
+      SUBROUTINE SST_RESTART(sst_filename,topo_filename)
+
+      ! input variables
+      CHARACTER(LEN=*) :: sst_filename,topo_filename
+
+      ! local variables
+      INTEGER :: i, j
+      INTEGER :: nc_err
+      INTEGER :: ncid,varid
+      INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart,readlen
+      REAL(KIND=dbl_kind),DIMENSION(MI1,MI1) :: read_temp      
+      INTEGER(KIND=int_kind),DIMENSION(MI1,MI1) :: ocean_temp
+
+      nc_err = nfmpi_open(mpi_comm_world,sst_filename,nf_nowrite,mpi_info_null,ncid)
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart SST file don't exist"
+      STOP
+      ENDIF
+
+      arraystart(1) = (NI_SBDM)*MI1 + 1
+      arraystart(2) = (NJ_SBDM)*MJ1 + 1
+      arraystart(3) = 1
+      arraystart(4) = 1
+
+      readlen(1)    = MI1
+      readlen(2)    = MJ1
+      readlen(3)    = 1
+      readlen(4)    = 1
+
+      ! sst
+      nc_err = nfmpi_inq_varid(ncid,'tg',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+               readlen,read_temp(1:MI1,1:MJ1))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart tg read fail", nc_err
+      STOP
+      ENDIF
+
+      nc_err = nfmpi_close(ncid)
+
+      nc_err = nfmpi_open(mpi_comm_world,topo_filename,nf_nowrite,mpi_info_null,ncid)
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart topo file don't exist"
+      STOP
+      ENDIF
+
+      ! lu
+      nc_err = nfmpi_inq_varid(ncid,'LU',varid)
+      nc_err = nfmpi_get_vara_int_all(ncid,varid,arraystart, &
+               readlen,ocean_temp(1:MI1,1:MJ1))
+      IF (nc_err/=0)THEN
+      WRITE(*,*) "restart lu read fail", nc_err
+      STOP
+      ENDIF
+
+      nc_err = nfmpi_close(ncid)
+
+      DO j=1,MI1
+      DO i=1,MJ1
+      !IF (ocean_temp(i,j)==16) TG(i,j) = read_temp(i,j)
+      TG(i,j) = read_temp(i,j)
+      ENDDO
+      ENDDO
+
+
+      ENDSUBROUTINE SST_RESTART
 
 !^^^^^endif for #if !defined (RESTART)
 

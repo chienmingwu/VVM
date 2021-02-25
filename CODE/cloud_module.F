@@ -70,12 +70,16 @@ CONTAINS
       THTD3D(I,J,K) = THTD3D(I,J,K)+ DT*THAD3(I,J,K)
   500 CONTINUE
 
-      DO 501 nt = 1, ntracer
-      DO 501 K = 2, NK2
-      DO 501 J = 1, MJ1
-      DO 501 I = 1, MI1
-      TC3D(I,J,K,nt) = TC3D(I,J,K,nt) + DT*TCAD3(I,J,K,nt)
-  501 CONTINUE
+!      if (ntracer > 0)then
+!
+!      DO 501 nt = 1, ntracer
+!      DO 501 K = 2, NK2
+!      DO 501 J = 1, MJ1
+!      DO 501 I = 1, MI1
+!      TC3D(I,J,K,nt) = TC3D(I,J,K,nt) + DT*TCAD3(I,J,K,nt)
+!  501 CONTINUE
+!
+!      endif
 
 #if defined (PHYSICS)
       DO 510 K = 2, NK2
@@ -85,6 +89,14 @@ CONTAINS
       QI3D(I,J,K) = QI3D(I,J,K) + DT*QIAD3(I,J,K)
       QC3D(I,J,K) = QC3D(I,J,K) + DT*QCAD3(I,J,K)
       QVTD3D(I,J,K) = QVTD3D(I,J,K)+ DT*QVAD3(I,J,K)
+#if defined (MICROP3)
+      QR3D(I,J,K) = QR3D(I,J,K) + DT*QRAD3(I,J,K)
+      NC3D(I,J,K) = NC3D(I,J,K) + DT*NCAD3(I,J,K)
+      NR3D(I,J,K) = NR3D(I,J,K) + DT*NRAD3(I,J,K)
+      NI3D(I,J,K) = NI3D(I,J,K) + DT*NIAD3(I,J,K)
+      QRIM3D(I,J,K) = QRIM3D(I,J,K) + DT*QRIMAD3(I,J,K)
+      BRIM3D(I,J,K) = BRIM3D(I,J,K) + DT*BRIMAD3(I,J,K)
+#endif
   510 CONTINUE
 #endif
 

@@ -93,9 +93,9 @@ CONTAINS
       DELD=(DX*DYNEW*DZ)**POWE
 
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
-!      CRITMN=10. for complex topography and short run
+!      CRITMN=100.
 !      New Value for TWP-ICE
-      CRITMN=1._dbl_kind !ccwu for LES run
+      CRITMN=100._dbl_kind !ccwu for LES run
 
       RAMD0S=(0.23_dbl_kind*DELD)**2
 
@@ -283,6 +283,8 @@ CONTAINS
       DO 260 K=2,NK2
       DO 260 J=1,MJ1
       DO 260 I=1,MI1
+      RKZ(I,J,K)=max(RKM(I,J,K),1.)
+      RKQ(I,J,K)=max(RKH(I,J,K),1.) !ccwu use 1 form vertical
       RKM(I,J,K)=max(RKM(I,J,K),CRITMN)
       RKH(I,J,K)=max(RKH(I,J,K),CRITMN)
   260 CONTINUE
@@ -295,6 +297,7 @@ CONTAINS
   270 CONTINUE
 
  5000 CONTINUE
+
 
 !ccwut rkh
       DO K=2,maxtopo
@@ -311,7 +314,8 @@ CONTAINS
 !ccwut
 
 
-
+      CALL BOUND_ARB (NK2,RKZ)
+      CALL BOUND_ARB (NK2,RKQ)
       CALL BOUND_ARB (NK2,RKM)
       CALL BOUND_ARB (NK2,RKH)
 
@@ -330,11 +334,10 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-
          IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
-!      CALL SFLUX_3D ! call sflux every time step 
+      CALL SFLUX_3D ! call sflux every time step 
       END IF
 
 #endif
@@ -385,16 +388,18 @@ CONTAINS
 
 
 !ccwu
+!easy RKM=> RKZ
       DO 334 K=2,NK1
       DO 334 J=1,MJ1
       DO 334 I=1,MI1
       FZXTB(I,J,K)=FZXTB(I,J,K) +                        &
-       (FNU(K+1)*RHOU(K+1)*(RKM(I,J,K+1)+RKM(I,J+1,K+1)) &
+       (FNU(K+1)*RHOU(K+1)*(RKZ(I,J,K+1)+RKZ(I,J+1,K+1)) &
                 *(Z3DX(I,J,K+1)-Z3DX(I,J,K))*DHVW1(I,J,K)             &
-        - FNU(K)*RHOU(K)*(RKM(I,J,K)+RKM(I,J+1,K))       &
+        - FNU(K)*RHOU(K)*(RKZ(I,J,K)+RKZ(I,J+1,K))       &
                 *(Z3DX(I,J,K)-Z3DX(I,J,K-1))*DHVW2(I,J,K))            &
        /(2.*DZSQ*RHOZ(K))*FNZ(K)
   334 CONTINUE
+
 !ccwu calculate surface above surface points
 
       DO 336 J=1,MJ1
@@ -422,6 +427,7 @@ CONTAINS
 
 !      IF (.FALSE.) THEN
 !ccwu
+
       DO 342 K=2,NK1
       DO 342 J=1,MJ1
       DO 342 I=1,MI1
@@ -434,15 +440,16 @@ CONTAINS
                     *(Z3DY(I,J,K)-Z3DY(I,J-1,K))*DHUV2(I,J,K))                    &
          /(8.*DYSQ)
   342 CONTINUE
-!ccwu
 
+!ccwu
+!easy rkm->rkz
       DO 344 K=2,NK1
       DO 344 J=1,MJ1
       DO 344 I=1,MI1
       FZYTB(I,J,K)=FZYTB(I,J,K) +                        &
-       (FNU(K+1)*RHOU(K+1)*(RKM(I,J,K+1)+RKM(I+1,J,K+1)) &
+       (FNU(K+1)*RHOU(K+1)*(RKZ(I,J,K+1)+RKZ(I+1,J,K+1)) &
                 *(Z3DY(I,J,K+1)-Z3DY(I,J,K))*DHUW1(I,J,K)             &
-         -FNU(K)*RHOU(K)*(RKM(I,J,K)+RKM(I+1,J,K))       &
+         -FNU(K)*RHOU(K)*(RKZ(I,J,K)+RKZ(I+1,J,K))       &
                 *(Z3DY(I,J,K)-Z3DY(I,J,K-1))*DHUW2(I,J,K))            &
        /(2.*DZSQ*RHOZ(K))*FNZ(K)
   344 CONTINUE
@@ -476,11 +483,13 @@ CONTAINS
       /(2.*DYSQ) 
   352 CONTINUE
 
+!easy RKM=>RKZ
+
       DO 354 J=1,MJ1
       DO 354 I=1,MI1
       FZTOPB(I,J)=FZTOPB(I,J) - (FNZ(NK1)*RHOZ(NK1)*                  &
-        (RKM(I,J,NK2)+RKM(I+1,J,NK2)+RKM(I,J+1,NK2)+RKM(I+1,J+1,NK2)  &
-        +RKM(I,J,NK1)+RKM(I+1,J,NK1)+RKM(I,J+1,NK1)+RKM(I+1,J+1,NK1)) &
+        (RKZ(I,J,NK2)+RKZ(I+1,J,NK2)+RKZ(I,J+1,NK2)+RKZ(I+1,J+1,NK2)  &
+        +RKZ(I,J,NK1)+RKZ(I+1,J,NK1)+RKZ(I,J+1,NK1)+RKZ(I+1,J+1,NK1)) &
        *(Z3DZ(I,J,NK2)-Z3DZ(I,J,NK1)))/(8.*DZSQ*RHOU(NK2))*FNU(NK2)
   354 CONTINUE
 
@@ -530,19 +539,20 @@ CONTAINS
   610 CONTINUE
 
 !ccwu
+!easy RKH-> RKQ
       DO 620 K=2,NK1
       DO 620 J=1,MJ1
       DO 620 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                      &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(TH3D(I,J,K+1)-TH3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(TH3D(I,J,K)-TH3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
      
       THSTD1(I,J,K)=(THSTD1(I,J,K)                               &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(TH3D(I,J,K+1)-TH3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(TH3D(I,J,K)-TH3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ))
   620 CONTINUE
 
@@ -554,14 +564,14 @@ CONTAINS
        +FNU(hxp)*WTH(I,J)/(RHOU(hxp)*DZ)
      
       DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(TH3D(I,J,NK2)-TH3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
      
       THSTD1(I,J,hxp)=THSTD1(I,J,hxp)                           &
         +FNU(hxp)*WTH(I,J)/(RHOU(hxp)*DZ)
      
       THSTD1(I,J,NK2)=THSTD1(I,J,NK2)                                 &
-        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(TH3D(I,J,NK2)-TH3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
   630 CONTINUE
 
@@ -600,13 +610,14 @@ CONTAINS
   611 CONTINUE
 
 !ccwu
+!easy RKH -> RKQ
       DO 621 K=2,NK1
       DO 621 J=1,MJ1
       DO 621 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                       &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))      &
                    *(TC3D(I,J,K+1,nt)-TC3D(I,J,K,nt))*DHWW1(I,J,K)                 &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1))  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1))  &
                    *(TC3D(I,J,K,nt)-TC3D(I,J,K-1,nt))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
   621 CONTINUE
 
@@ -614,7 +625,7 @@ CONTAINS
       DO 631 I=1,MI1
 
       DDX(I,J,NK2)=DDX(I,J,NK2)                                       &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1))  &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1))  &
                    *(TC3D(I,J,NK2,nt)-TC3D(I,J,NK1,nt)))/(RHOU(NK2)*DZSQ)
   631 CONTINUE
 
@@ -657,19 +668,21 @@ CONTAINS
   
 
 !ccwu
+!easy RKH -> RKQ
+
       DO 720 K=2,NK1
       DO 720 J=1,MJ1
       DO 720 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                      &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(QV3D(I,J,K+1)-QV3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(QV3D(I,J,K)-QV3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
      
       QVSTD(I,J,K)=(QVSTD(I,J,K)                                 &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(QV3D(I,J,K+1)-QV3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(QV3D(I,J,K)-QV3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ))
   720 CONTINUE
   
@@ -681,14 +694,14 @@ CONTAINS
        +FNU(hxp)*WQV(I,J)/(RHOU(hxp)*DZ)
      
       DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(QV3D(I,J,NK2)-QV3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
      
       QVSTD(I,J,hxp)=QVSTD(I,J,hxp)                                &
         +FNU(hxp)*WQV(I,J)/(RHOU(hxp)*DZ)
 
       QVSTD(I,J,NK2)=QVSTD(I,J,NK2)                                   &
-        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(QV3D(I,J,NK2)-QV3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
   730 CONTINUE
   
@@ -722,13 +735,14 @@ CONTAINS
   810 CONTINUE
 
 !ccwu
+!easy RKH -> RKQ
       DO 820 K=2,NK1
       DO 820 J=1,MJ1
       DO 820 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                      &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(QC3D(I,J,K+1)-QC3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(QC3D(I,J,K)-QC3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
   820 CONTINUE
 
@@ -736,7 +750,7 @@ CONTAINS
       DO 830 I=1,MI1
 
       DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(QC3D(I,J,NK2)-QC3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
   830 CONTINUE
 
@@ -767,13 +781,14 @@ CONTAINS
                       *(QI3D(I,J,K)-QI3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
   910 CONTINUE
 !ccwu
+!easy RKH -> RKQ
       DO 920 K=2,NK1
       DO 920 J=1,MJ1
       DO 920 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                      &
-       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
                    *(QI3D(I,J,K+1)-QI3D(I,J,K))*DHWW1(I,J,K)                  &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
                    *(QI3D(I,J,K)-QI3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
   920 CONTINUE
 
@@ -781,7 +796,7 @@ CONTAINS
       DO 930 I=1,MI1
 
       DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
-       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
                    *(QI3D(I,J,NK2)-QI3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
   930 CONTINUE
 
@@ -791,9 +806,277 @@ CONTAINS
       QIAD3(I,J,K)=DDX(I,J,K)
   950 CONTINUE
 
-#endif
+#if defined (MICROP3)
+
+! QR
+      DO 970 K=2,NK2
+      DO 970 J=1,MJ1
+      DO 970 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(QR3D(I+1,J,K)-QR3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(QR3D(I,J,K)-QR3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  970 CONTINUE
+
+      DO 990 K=2,NK2
+      DO 990 J=1,MJ1
+      DO 990 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(QR3D(I,J+1,K)-QR3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(QR3D(I,J,K)-QR3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  990 CONTINUE
+
+      DO 1010 K=2,NK1
+      DO 1010 J=1,MJ1
+      DO 1010 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(QR3D(I,J,K+1)-QR3D(I,J,K))*DHWW1(I,J,K)                  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(QR3D(I,J,K)-QR3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+  1010 CONTINUE
+
+      DO 1030 J=1,MJ1
+      DO 1030 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(QR3D(I,J,NK2)-QR3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1030 CONTINUE
+
+      DO 1050 K=2,NK2
+      DO 1050 J=1,MJ1
+      DO 1050 I=1,MI1
+      QRAD3(I,J,K)=DDX(I,J,K)
+  1050 CONTINUE
+
+! NC
+      DO 1070 K=2,NK2
+      DO 1070 J=1,MJ1
+      DO 1070 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(NC3D(I+1,J,K)-NC3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(NC3D(I,J,K)-NC3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1070 CONTINUE
+
+      DO 1090 K=2,NK2
+      DO 1090 J=1,MJ1
+      DO 1090 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(NC3D(I,J+1,K)-NC3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(NC3D(I,J,K)-NC3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1090 CONTINUE
+
+      DO 1110 K=2,NK1
+      DO 1110 J=1,MJ1
+      DO 1110 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(NC3D(I,J,K+1)-NC3D(I,J,K))*DHWW1(I,J,K)                  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(NC3D(I,J,K)-NC3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+  1110 CONTINUE
+
+      DO 1130 J=1,MJ1
+      DO 1130 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(NC3D(I,J,NK2)-NC3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1130 CONTINUE
+
+      DO 1150 K=2,NK2
+      DO 1150 J=1,MJ1
+      DO 1150 I=1,MI1
+      NCAD3(I,J,K)=DDX(I,J,K)
+  1150 CONTINUE
+
+! NR
+      DO 1170 K=2,NK2
+      DO 1170 J=1,MJ1
+      DO 1170 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(NR3D(I+1,J,K)-NR3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(NR3D(I,J,K)-NR3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1170 CONTINUE
+
+      DO 1190 K=2,NK2
+      DO 1190 J=1,MJ1
+      DO 1190 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(NR3D(I,J+1,K)-NR3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(NR3D(I,J,K)-NR3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1190 CONTINUE
+
+      DO 1210 K=2,NK1
+      DO 1210 J=1,MJ1
+      DO 1210 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(NR3D(I,J,K+1)-NR3D(I,J,K))*DHWW1(I,J,K)                  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(NR3D(I,J,K)-NR3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+  1210 CONTINUE
+
+      DO 1230 J=1,MJ1
+      DO 1230 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(NR3D(I,J,NK2)-NR3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1230 CONTINUE
+
+      DO 1250 K=2,NK2
+      DO 1250 J=1,MJ1
+      DO 1250 I=1,MI1
+      NRAD3(I,J,K)=DDX(I,J,K)
+  1250 CONTINUE
+
+! NI
+      DO 1270 K=2,NK2
+      DO 1270 J=1,MJ1
+      DO 1270 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(NI3D(I+1,J,K)-NI3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(NI3D(I,J,K)-NI3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1270 CONTINUE
+
+      DO 1290 K=2,NK2
+      DO 1290 J=1,MJ1
+      DO 1290 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(NI3D(I,J+1,K)-NI3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(NI3D(I,J,K)-NI3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1290 CONTINUE
+
+      DO 1310 K=2,NK1
+      DO 1310 J=1,MJ1
+      DO 1310 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(NI3D(I,J,K+1)-NI3D(I,J,K))*DHWW1(I,J,K)                  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(NI3D(I,J,K)-NI3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+  1310 CONTINUE
+
+      DO 1330 J=1,MJ1
+      DO 1330 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(NI3D(I,J,NK2)-NI3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1330 CONTINUE
+
+      DO 1350 K=2,NK2
+      DO 1350 J=1,MJ1
+      DO 1350 I=1,MI1
+      NIAD3(I,J,K)=DDX(I,J,K)
+  1350 CONTINUE
+
+! QRIM
+      DO 1370 K=2,NK2
+      DO 1370 J=1,MJ1
+      DO 1370 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(QRIM3D(I+1,J,K)-QRIM3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(QRIM3D(I,J,K)-QRIM3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1370 CONTINUE
+
+      DO 1390 K=2,NK2
+      DO 1390 J=1,MJ1
+      DO 1390 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(QRIM3D(I,J+1,K)-QRIM3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(QRIM3D(I,J,K)-QRIM3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1390 CONTINUE
+
+      DO 1410 K=2,NK1
+      DO 1410 J=1,MJ1
+      DO 1410 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(QRIM3D(I,J,K+1)-QRIM3D(I,J,K))*DHWW1(I,J,K) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(QRIM3D(I,J,K)-QRIM3D(I,J,K-1))*DHWW2(I,J,K))/(RHOU(K)*DZSQ)
+  1410 CONTINUE
+
+      DO 1430 J=1,MJ1
+      DO 1430 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(QRIM3D(I,J,NK2)-QRIM3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1430 CONTINUE
+
+      DO 1450 K=2,NK2
+      DO 1450 J=1,MJ1
+      DO 1450 I=1,MI1
+      QRIMAD3(I,J,K)=DDX(I,J,K)
+  1450 CONTINUE
+
+! BRIM
+      DO 1470 K=2,NK2
+      DO 1470 J=1,MJ1
+      DO 1470 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(BRIM3D(I+1,J,K)-BRIM3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(BRIM3D(I,J,K)-BRIM3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+  1470 CONTINUE
+
+      DO 1490 K=2,NK2
+      DO 1490 J=1,MJ1
+      DO 1490 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            &
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(BRIM3D(I,J+1,K)-BRIM3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(BRIM3D(I,J,K)-BRIM3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+  1490 CONTINUE
+
+      DO 1510 K=2,NK1
+      DO 1510 J=1,MJ1
+      DO 1510 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKH(I,J,K+1)+RKH(I,J,K))     &
+                   *(BRIM3D(I,J,K+1)-BRIM3D(I,J,K))*DHWW1(I,J,K) &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKH(I,J,K)+RKH(I,J,K-1)) &
+                   *(BRIM3D(I,J,K)-BRIM3D(I,J,K-1))*DHWW2(I,J,K))/(RHOU(K)*DZSQ)
+  1510 CONTINUE
+
+      DO 1530 J=1,MJ1
+      DO 1530 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKH(I,J,NK2)+RKH(I,J,NK1)) &
+                   *(BRIM3D(I,J,NK2)-BRIM3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+  1530 CONTINUE
+
+      DO 1550 K=2,NK2
+      DO 1550 J=1,MJ1
+      DO 1550 I=1,MI1
+      BRIMAD3(I,J,K)=DDX(I,J,K)
+  1550 CONTINUE
+
 #endif
 
+#endif
+
+#endif
    END SUBROUTINE turb_3d_therm
 
 
@@ -830,7 +1113,6 @@ CONTAINS
          lwD(MI1,MJ1),           & ! surface long wave flux input fof LSM
          swU(MI1,MJ1),           & ! surface short wave flux output for LSM
          lwU(MI1,MJ1)              ! surface long wave flux output fof LSM
-
       REAL (KIND=dbl_kind) ::    &
          es1,     & !
          q,       & !
@@ -842,6 +1124,10 @@ CONTAINS
          ustar,   & !
          zrough1, & !
          ztmp
+
+      REAL (KIND=dbl_kind) ::    &
+         pi
+
       INTEGER (KIND=int_kind) ::   &
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 !ccwu
@@ -854,6 +1140,8 @@ CONTAINS
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
       tempim=dble(mim_glob(my_task+1)+i-1)
+
+
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
 
@@ -864,10 +1152,10 @@ CONTAINS
 !      gwet(i,j)=0.8
 !      endif
 
-!ccwu for sst gradient test
   100 CONTINUE
 
 #if defined (LSM)
+
       DO 105 J = 1,MJ1
       DO 105 I = 1,MI1
 
@@ -916,21 +1204,21 @@ CONTAINS
       THVSM   = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
 
+
       CALL SFLUX_2D (0._dbl_kind,THBAR(hxp),THVSM,SPEEDM,ztmp,ZROUGH1,   &
                      USTAR,VENTFC,MOLEN)
 
 
-      if (my_task .eq. 0 ) THEN
+!      if (my_task .eq. 0 ) THEN
 
-      if (i .eq. 10 .and. j .eq. 10 ) THEN 
-      print*,'TB = ', THBAR(hxp)
-      print*,'THVSMD = ', THVSM
-      print*,'speed = ', SPEEDM
-      print*,'zd = ', ztmp
-      print*,'zrough = ',ZROUGH1
-      endif
-      endif
-
+!      if (i .eq. 10 .and. j .eq. 10 ) THEN
+!      print*,'TB = ', THBAR(hxp)
+!      print*,'THVSMD = ', THVSM
+!      print*,'speed = ', SPEEDM
+!      print*,'zd = ', ztmp
+!      print*,'zrough = ',ZROUGH1
+!      endif
+!      endif
       if(psfx) THEN
         WT(I,J) = fss(i,j) 
         WQ(I,J) = fws(i,j) / hlf
@@ -941,7 +1229,6 @@ CONTAINS
 
       VEN2D(I,J) = VENTFC(1)
 
-!PRINT*,TS,T,WQ(I,J),VEN2D(I,J)
 
   110 CONTINUE
 
@@ -982,12 +1269,11 @@ CONTAINS
       hx1 =INT( hx(I,J))
       hxu1=INT(hxu(I,J))
       hxv1=INT(hxv(I,J))
-
 #if defined (LSM)
 !easy WQ/ETAKIN and WT/SHEAT already time rho in LSM and maskout in
 !land_interface.F
       WQV(I,J) = WQ(I,J)
-      WTH(I,J) = WT(I,J)     
+      WTH(I,J) = WT(I,J)
 #else
       WQV(I,J) = WQ(I,J)*RHOZ(hx1)
       WTH(I,J) = WT(I,J)*RHOZ(hx1)/(CP*PIBAR(hx1))
@@ -1004,10 +1290,9 @@ CONTAINS
       WV(I,J)  = WV(I,J)*RHOZ(hx1)
       endif
   130 CONTINUE
-      if (my_task .eq. 0 ) print*,'sensible heat = ', WTH(10,10)
-      if (my_task .eq. 0 ) print*,'latent heat = ',WQV(10,10)
 
    END SUBROUTINE sflux_3d
+
 !-----7---------------------------------------------------------------72
    SUBROUTINE SFLUX_2D (SIGMAU,THVM,THVSM,SPEED1,ZR,ZROUGH,USTAR,   &
        VENTFC,MOLEN )
@@ -1335,12 +1620,10 @@ SUBROUTINE TURB_3D_INI
       ENDDO
       ENDDO
 
-
 #if defined (LSM)
       call land_ini(hx,tg)
 #endif
 #endif
-
 
    END SUBROUTINE TURB_3D_INI
 

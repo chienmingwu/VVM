@@ -75,7 +75,14 @@ CONTAINS
       QC3D(I,J,K)=QC3D(I,J,K)-DT*CGR*QC3D(I,J,K) 
       QI3D(I,J,K)=QI3D(I,J,K)-DT*CGR*QI3D(I,J,K)
       QVTD3D(I,J,K)=QVTD3D(I,J,K)-DT*CGR*(QV3D(I,J,K)-QVBAR(K)) 
-      
+#if defined (MICROP3)
+      QR3D(I,J,K)  =QR3D(I,J,K)-DT*CGR*QR3D(I,J,K)
+      NC3D(I,J,K)  =NC3D(I,J,K)-DT*CGR*NC3D(I,J,K)
+      NR3D(I,J,K)  =NR3D(I,J,K)-DT*CGR*NR3D(I,J,K)
+      NI3D(I,J,K)  =NI3D(I,J,K)-DT*CGR*NI3D(I,J,K)
+      QRIM3D(I,J,K)=QRIM3D(I,J,K)-DT*CGR*QRIM3D(I,J,K)
+      BRIM3D(I,J,K)=BRIM3D(I,J,K)-DT*CGR*BRIM3D(I,J,K)
+#endif      
   704 CONTINUE
 #endif
 

@@ -1,3 +1,4 @@
+#include "definesld.com"
 MODULE buoyf_module
 
 USE kinds
@@ -38,8 +39,13 @@ CONTAINS
       DO 50 K=1,NK3
       DO 50 J=mjm,mjp
       DO 50 I=mim,mip
+#if defined (MICROP3)
+      QP(I,J,K)= &
+       QC3D(I,J,K)+QR3D(I,J,K)+QI3D(I,J,K)
+#else
       QP(I,J,K)= &
        QC3D(I,J,K)+QR3D(I,J,K)+QI3D(I,J,K)+QS3D(I,J,K)+QG3D(I,J,K)
+#endif
    50 CONTINUE
 
       DO 100 K=2,NK1
