@@ -6032,7 +6032,8 @@ SUBROUTINE access_lookup_table_coll(dumjj,dumii,dumj,dumi,index,dum1,dum3,      
   logical         :: badvalue_found
 
   badvalue_found = .false.
-
+  nk = size(T,1)
+  
   k_loop: do k = 1,nk
 
    ! check unrealistic values T and Qv

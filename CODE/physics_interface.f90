@@ -40,6 +40,7 @@
 #if defined (MICROP3)
       USE MODULE_MP_P3
       USE update_thermo_module
+      USE cam_rad_parameterizations, only: ReI_p3, ReC_p3
 #endif
 #if defined (RAS)
       USE ras
@@ -105,6 +106,7 @@
               diag_vmi(im,km),diag_di(im,km),diag_rhoi(im,km), dt_p3, &
               th_old_p3(im,km), qv_old_p3(im,km), diag_3d(im,km,3), diag_2d(im,1), &
               cldfrac(im,km)
+      REAL, TARGET :: effc(im,jm,km), effi(im,jm,km)
 
       INTEGER (KIND=int_kind) :: itt_p3, stat
 
@@ -165,6 +167,12 @@
       scpf_on       = .False. ! cloud fraction version not used
       scpf_pfrac    = 0.      ! dummy variable (not used), set to 0
       scpf_resfact  = 0.      ! dummy variable (not used), set to 0
+
+      effc=0.
+      effi=0.   
+
+      ReC_p3 => effc
+      ReI_p3 => effi
 #else
       ! initialize for Lin microphysics scheme
       CALL initialize_physics
@@ -452,6 +460,9 @@
       STOP
       ENDIF
 
+      effc(:,j,:) = diag_effc
+      effi(:,j,:) = diag_effi
+
       DO 200 I=1,im
         hxp=INT(hx(I,J))
         SPREC(I,J)  = diag_3d(I,hxp,1) + diag_3d(I,hxp,2) + diag_3d(I,hxp,3)
@@ -581,6 +592,18 @@
 #endif
 
       enddo  ! j loop
+
+#if defined (MICROP3)
+      ReC_p3 => effc
+      ReI_p3 => effi
+   
+      if (my_task == 0 .and. (mod(itt,nradd)==1)) then
+        write(*,*) "in phys"
+        do k=1,km
+          write(*,*) k, effi(10,10,k),ReI_p3(10,10,k)
+        enddo
+      endif
+#endif
 
 #if defined (MICROCODE)
       CALL BOUND_ARB (1,SPREC)
