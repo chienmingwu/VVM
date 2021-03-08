@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = uras_landsea_1800_2
+set expname = wall_periodic
 
 # hardscrabble configuration
 set subdir = '../..'
@@ -42,14 +42,7 @@ cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
 #define PARALLELIO
-#define DIFFUSION
 #define PHYSICS
-#define MICROCODE
-#define MICROP3
-#define RAS
-#define URAS
-#define RADCODE
-#define LSM
 'END1'
 cat definesld.com
 
@@ -58,12 +51,12 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/256/' \
-    -e '1,$s/merid_dimension/128/' \
+sed -e '1,$s/zonal_dimension/128/' \
+    -e '1,$s/merid_dimension/32/' \
     -e '1,$s/zonal_decomposition/8/' \
-    -e '1,$s/merid_decomposition/8/' \
-    -e '1,$s/vert_dimension/34/' \
-    -e '1,$s/tracer_dimension/1/' \
+    -e '1,$s/merid_decomposition/2/' \
+    -e '1,$s/vert_dimension/40/' \
+    -e '1,$s/tracer_dimension/0/' \
   ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
 
 # For restart --------------------
@@ -73,13 +66,13 @@ sed -e '1,$s/zonal_dimension/256/' \
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=864000 /
- &INPUT2 RLAT=45, RLON=120 /
- &INPUT3 DX=16000.,DYNEW=16000.,DZ=500.,DZ1=100.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=86400. /
+ &INPUT1 NEWRUN=T, ITTADD=86400 /
+ &INPUT2 RLAT=0, RLON=0 /
+ &INPUT3 DX=250.,DYNEW=250.,DZ=250.,DZ1=250.,DT=0.1,NOTURB=T,NOSFX=T,NSFLUX=12,ALADV=1.,UVTAU=86400. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360. /
+ &INPUT4 NXS=1,NXSAVG=50,NWR11=1,NFLPRT=1,NRESTART=50. /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=10,ITSTOP=360,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr = 0 /
+ &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=6.,Q1Q2=F,DTRAD=120. /
 #                                                              (s)
 'END6'
 cat INPUT
@@ -102,11 +95,11 @@ cp ${subdir}/CODE/p3_lookup_table_* .
 #cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
 #cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
 
-cd ${subdir}"/RUN/t01"
-make topography CASENAME=${expname} -f ../makefile
-cd ${subdir}"/DATA/"${expname}
-cp ${subdir}/RUN/t01/nc2fortranBinary.f .
-./nc2fortranBinary > tmp.out
+#cd ${subdir}"/RUN/t01"
+#make topography CASENAME=${expname} -f ../makefile
+#cd ${subdir}"/DATA/"${expname}
+#cp ${subdir}/RUN/t01/nc2fortranBinary.f .
+#./nc2fortranBinary > tmp.out
 
 # GLDAS
 #set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
@@ -128,9 +121,9 @@ cp ${subdir}/RUN/t01/nc2fortranBinary.f .
 
 # for LSM
 #cd ../${subdir}
-cp ${subdir}/CODE/LSM/GENPARM.TBL .
-cp ${subdir}/CODE/LSM/SOILPARM.TBL .
-cp ${subdir}/CODE/LSM/VEGPARM.TBL .
+#cp ${subdir}/CODE/LSM/GENPARM.TBL .
+#cp ${subdir}/CODE/LSM/SOILPARM.TBL .
+#cp ${subdir}/CODE/LSM/VEGPARM.TBL .
 exit
 
 
