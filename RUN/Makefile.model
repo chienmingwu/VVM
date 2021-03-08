@@ -34,7 +34,7 @@ CPP_OPTS        =
 NAME = vvm
 BINDIR	= ../../DATA/${CASENAME}
 
-MAIN = $(BINDIR)/$(NAME)
+MAIN = $(EXPDIR)/$(NAME)
 .PHONY: all
 all : $(MAIN)
 
@@ -54,14 +54,13 @@ all : $(MAIN)
 #-----------------------------------------------------------------------------
 # Set the paths to the various source directories
 #-----------------------------------------------------------------------------
-VVM		= ../..
-CODE		= $(VVM)/${CODEDIR}
-CDECKS		= $(VVM)/${CODEDIR}/cdecks
-RRTMG		= $(VVM)/${CODEDIR}/RRTMG
-RAD_RRTM	= $(VVM)/${CODEDIR}/RRTMG/RAD_RRTM_CFMIP
+CODE		= ${CODEDIR}
+CDECKS		= ${CODEDIR}/cdecks
+RRTMG		= ${CODEDIR}/RRTMG
+RAD_RRTM	= ${CODEDIR}/RRTMG/RAD_RRTM_CFMIP
 
 #==hchun===========================
-LSM             = $(VVM)/CODE/LSM
+LSM             = $(CODEDIR)/LSM
 #==================================
 
 #-----------------------------------------------------------------------------
@@ -179,7 +178,7 @@ SRC_FREE_RRTMG = \
 	trace_gases.f90
 
 SRC_FREE_CDECKS = \
-	PARMSLD.f90 \
+	PARMSLD.F90 \
 	CONST3D.F90 \
 	CONSTLD.F90 \
 	CLDINFO.F90 \
@@ -488,13 +487,13 @@ workcom.o: kinds.o PARMSLD.o
 
 ab_3d_module.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o vort_3d_module.o wind_module.o turb_3d_module.o update_tracer_module.o make_profiles_module.o buoyf_module.o q_chk_module.o cloud_module.o rcalc_module.o turb_1d_module.o CLDINFO.o
 
-advec_3d_module.o: kinds.o PARMSLD.o CONSTLD.o CONST3D.o PROFOUTLD.o
+advec_3d_module.o: kinds.o PARMSLD.o CONSTLD.o CONST3D.o PROFOUTLD.o bound.o
 
 bound.o: kinds.o PARMSLD.o CONST3D.o domain_decomposition.o
 
-buoyf_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o
+buoyf_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o bound.o
 
-damping.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o PROFOUTLD.o
+damping.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o PROFOUTLD.o utils.o
 
 cloud_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o PROFOUTLD.o bound.o damping.o
 

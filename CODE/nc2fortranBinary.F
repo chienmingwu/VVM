@@ -213,21 +213,21 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       READ(15,*) soil
       CLOSE(15)
       
-!      DO J=1,MJ_GLOB
-!      DO I=1,MI_GLOB
-!      YM(J)=J
-!      XM(I)=I
-!      ENDDO
-!      ENDDO
+      DO J=1,MJ_GLOB
+      DO I=1,MI_GLOB
+      YM(J)=J
+      XM(I)=I
+      ENDDO
+      ENDDO
 
 
 !      HX = 1
 !      DO 500 J = 1,MJ_GLOB
 !      DO 500 I = 1,MI_GLOB
-
+!
 !      xt(I) = I * DX
 !      yt(I) = J * DYNEW
-
+!
 !      hx(I,J) = 1
 !      LU(I,J) = 16
 !      alb(I,J) = 15.
@@ -280,7 +280,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
 !      DO 600 I = 1, MI_GLOB
 !  600 XT (I) = I*DX
-
+!
 !      DO 700 J = 1,MJ_GLOB
 !  700 YT (J) = J*DYNEW
 
@@ -295,9 +295,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ENDDO
       IF(HX(I,J).LT.0)HX(I,J)=0
-
-      ENDDO
-      ENDDO
 
       ENDDO
       ENDDO

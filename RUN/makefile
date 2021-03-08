@@ -70,12 +70,10 @@
 # specify the shell to avoid surprises in weird environments
 SHELL	= /bin/csh
 
-PETSC_DIR        = /opt/petsc-intel
-include ${PETSC_DIR}/conf/variables
 #-----------------------------------------------------------------------------
 # Read the universal makefile to define the processor-dependent information
 #-----------------------------------------------------------------------------
-MAKEFILE_HOST = ../Makefile.host
+MAKEFILE_HOST = ${RUNDIR}/Makefile.host.${COMPILER}
 include $(MAKEFILE_HOST)
 
 #-----------------------------------------------------------------------------
@@ -85,7 +83,7 @@ include $(MAKEFILE_HOST)
 # Also must define the default target "all" depending on $(MAIN),
 # and should list all nontrivial dependencies (e.g., on modules).
 #-----------------------------------------------------------------------------
-MAKEFILE_MODEL	= ../Makefile.model
+MAKEFILE_MODEL	= ${RUNDIR}/Makefile.model
 include $(MAKEFILE_MODEL)
 
 #-----------------------------------------------------------------------------
@@ -132,17 +130,17 @@ $(OBJS_FIXED)	: FORM = $(FIXED)
 #	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > $@
 
 $(OBJS_FIXED) : %.o: %.F 
-	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > $(BINDIR)/$*.$(SUF)
-	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) $(BINDIR)/$*.$(SUF)
+	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
+	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF)
 $(OBJS_FREE_F) : %.o: %.F 
-	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > $(BINDIR)/$*.$(SUF)
-	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) $(BINDIR)/$*.$(SUF) 
+	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
+	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 $(OBJS_FREE_F90) : %.o: %.F90 
-	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > $(BINDIR)/$*.$(SUF)
-	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) $(BINDIR)/$*.$(SUF) 
+	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
+	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 $(OBJS_FREE_f90) : %.o: %.f90
-	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > $(BINDIR)/$*.$(SUF)
-	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) $(BINDIR)/$*.$(SUF) 
+	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
+	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 
 #-----------------------------------------------------------------------------
 # Define the rule(s) for building the executable code
@@ -160,19 +158,11 @@ $(MAIN): $(OBJS_FREE_F90) $(OBJS_FREE_f90) $(OBJS_FREE_F) $(OBJS_FIXED)
 #-----------------------------------------------------------------------------
 
 clean :
-	rm -f *.o $(BINDIR)/*.$(SUF) *.h *.mod
-
-clobber :
-	rm -f *.o $(BINDIR)/*.$(SUF) *.h *.mod $(MAIN)
-#	echo $(OBJS)
+	rm -f *.o *.h *.mod *.f  
 topography :
-	ifort -c ../../CODE/RRTMG/kinds.F -free 
-	${CPP} -p $(BINDIR)/PARMSLD.f90 > PARMSLD.f	
-	ifort -c PARMSLD.f -free
-	${CPP} -p ../../CODE/nc2fortranBinary.F > nc2fortranBinary.f
-	ifort -c nc2fortranBinary.f  -I/opt/netcdf4-intel/include
-	ifort -o $(BINDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o -L/opt/netcdf4-intel/lib -lnetcdf -lnetcdff 
-#	$(CPP) -p nc2fortranBinary.F > nc2fortranBinary.f
-#	ifort -c nc2fortranBinary.f -L/opt/netcdf4-intel/lib -lnetcdf -lnetcdff
-
-
+	${FC} -c $(FFLAGS) $(FREE) ${CODEDIR}/RRTMG/kinds.F
+	${CPP} -p -I$(EXPDIR) ${CODEDIR}/cdecks/PARMSLD.F90 > PARMSLD.f	
+	${FC} -c $(FFLAGS) $(FREE) PARMSLD.f -free
+	${CPP} -p ${CODEDIR}/nc2fortranBinary.F > nc2fortranBinary.f $(FFLAGS)
+	${FC} -c $(FFLAGS) nc2fortranBinary.f 
+	${FC} -o $(EXPDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o $(LDLIBS) 

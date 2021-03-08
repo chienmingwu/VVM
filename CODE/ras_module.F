@@ -67,6 +67,8 @@ CONTAINS
       LOGICAL (KIND=log_kind), SAVE :: first_ras
       DATA first_ras/.TRUE./
 
+#if defined (RAS)
+
       dt4=PASS_SMALL_DT
       prevap=0.2
       etop=1.0
@@ -233,9 +235,11 @@ CONTAINS
       TC3D(i,j,5+1,1)=wc(nn) 
       TC3D(i,j,6+1,1)=rhoc(nn) 
 
-
  ENDDO!i
 ENDDO!j
+
+#endif
+
       END SUBROUTINE ras_interface
 
       SUBROUTINE linearpolation(nk,x1,y1,x,y)

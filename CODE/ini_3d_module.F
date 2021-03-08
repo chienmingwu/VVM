@@ -368,6 +368,8 @@ CONTAINS
       endif
 
 
+      ! isentropic environment
+      THBAR=THBAR(2)
 
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
@@ -381,6 +383,14 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
+      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/16.)**2&
+              !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
+              +((real(K)-10.)/8.)**2)<=1)THEN
+        TH3D(I,J,K) = TH3D(I,J,K) - 3.*(cos(3.14159265*0.5* &
+                      sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/16.)**2+ &
+               !            ((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
+                           ((real(K)-10.)/8.)**2)))**2
+      ENDIF
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -448,7 +458,7 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 !      U3DX(I,J,K)=UG(K)
 !      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=3.
+      U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
 
@@ -463,7 +473,7 @@ CONTAINS
 
       CALL petsc_solver_initialize(petsc_cr)
 
-      restart_read: IF (.true.)THEN
+      restart_read: IF (.false.)THEN
 
 !   restart( thermodynamic_file (absolute path) , hydrometer , 
 !            dynamic_variables , {optional} dynamic_file (absolute path) )
@@ -536,7 +546,7 @@ CONTAINS
       call turb_3d_ini
 #endif
 
-      TG_restart: IF (.true.)THEN
+      TG_restart: IF (.false.)THEN
 
       tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
                  uras_landsea_1800.C.Surface-000192.nc"
