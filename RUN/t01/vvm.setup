@@ -7,37 +7,61 @@
 set echo  # echoes the commands
 set expname = wall_periodic
 
-# hardscrabble configuration
-set subdir = '../..'
+# set paths
+set vvmdir = ` pwd | rev | cut -c 9- | rev `
+set datadir = ${vvmdir}'/DATA'
+set rundir = ${vvmdir}'/RUN'
+set expdir = ${datadir}'/'${expname}
+set codedir = ${datadir}'/'${expname}'/CODE'
 
-rm -f *.o *.mod
-
-setenv EXPHDR_tmp  ${expname}" "${subdir}
-if( ! -d ${subdir} ) then      # if ${subdir} is not found, create it!
-  mkdir ${subdir}                
+if( ! -d ${datadir} ) then      # if ${datadir} is not found, create it!
+  mkdir ${datadir}                
 endif
 
-make clobber
-#cp ${subdir}/CODE6/z_coord-100.F  ${subdir}/CODE6/z_coord.F
-#cp ${subdir}/CODE6/ini_3d_module-tb3.F  ${subdir}/CODE6/ini_3d_module.F
-#cp ${subdir}/CODE6/turb_3d_module-tb0.F  ${subdir}/CODE6/turb_3d_module.F
-
-setenv EXPHDR_tmp  ${expname}" "${subdir}"/DATA/"${expname}
-if( ! -d ${subdir}"/DATA/"${expname} ) then      # if ${subdir} is not found, create it!
-  mkdir ${subdir}"/DATA/"${expname}                
+if( ! -d ${expdir} ) then      # if ${subdir} is not found, create it!
+  mkdir ${expdir} 
+  cd ${expdir}
+else
+  cd ${expdir}
+  alias rm rm
+  rm -rf *
 endif
 
-cd ${subdir}"/DATA/"${expname}    
+mkdir RUNDATA
+mkdir archive
 
-alias rm rm
-rm *
-#rm -rf RUNDATA
+# prepare for compiling code
+cd ${expdir}
+if( ! -d ${codedir} ) then
+  cp -r ${vvmdir}'/CODE' ${codedir}
+else
+  rm -rf ${codedir}
+  cp -r ${vvmdir}'/CODE' ${codedir}
+endif
 
-cat > COMMENTS << 'END'
-gate shear
-'END'
-cat COMMENTS
+if( ! -d ${expdir}'/compile_code' ) then
+  mkdir ${expdir}'/compile_code'
+endif
 
+# prepare tables for model
+cp ${rundir}/t01/vvm.setup .
+cp ${vvmdir}/CODE/make_ctl.sh .
+
+# for RRTMG
+cp ${vvmdir}/RUNDATA/fort.91 fort.91
+cp ${vvmdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
+cp ${vvmdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+
+# for NOAH LSM
+cp -r ${vvmdir}/RUNDATA/LSM RUNDATA/LSM
+cp ${vvmdir}/CODE/LSM/GENPARM.TBL .
+cp ${vvmdir}/CODE/LSM/SOILPARM.TBL .
+cp ${vvmdir}/CODE/LSM/VEGPARM.TBL .
+
+# for P3 scheme
+cp ${vvmdir}/CODE/p3_lookup_table_* .
+
+# create CPP list
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
@@ -51,18 +75,12 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -e '1,$s/zonal_dimension/128/' \
-    -e '1,$s/merid_dimension/32/' \
-    -e '1,$s/zonal_decomposition/8/' \
-    -e '1,$s/merid_decomposition/2/' \
-    -e '1,$s/vert_dimension/40/' \
-    -e '1,$s/tracer_dimension/0/' \
-  ../../CODE/cdecks/PARMSLD.F90 > PARMSLD.f90
-
-# For restart --------------------
-# INPUT1 NEWRUN=F, ITTGET= 3600
-# INPUT4 IFL11=10,IFL12=10 
-# For restart --------------------
+sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/32/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/40/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
@@ -76,54 +94,17 @@ cat > INPUT << 'END6'
 #                                                              (s)
 'END6'
 cat INPUT
-
 #-------------------------------------------------------------------
 
-if( ! -d RUNDATA ) then
-  mkdir RUNDATA
-endif
-rm -rf archive
-mkdir archive
+# clean previous compilation
+cd ${expdir}'/compile_code'
+make RUNDIR=${rundir} CASENAME=${expname} -f ${rundir}/makefile clean
 
-cp ${subdir}/CODE/make_ctl.sh .
-cp ${subdir}/RUNDATA/fort.91 fort.91
-cp ${subdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
-cp ${subdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
-cp -r ${subdir}/RUNDATA/LSM RUNDATA/LSM
-cp ${subdir}/CODE/p3_lookup_table_* .
+# make for topography
+make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} -f ${rundir}/makefile topography
+cd ${expdir}
+./nc2fortranBinary > topo.log
 
-#cp -rf ${subdir}/RUNDATA/ASTER_GDEM_TWTOPO RUNDATA/ASTER_GDEM_TWTOPO
-#cd RUNDATA/ASTER_GDEM_TWTOPO/FORTRAN
-
-#cd ${subdir}"/RUN/t01"
-#make topography CASENAME=${expname} -f ../makefile
-#cd ${subdir}"/DATA/"${expname}
-#cp ${subdir}/RUN/t01/nc2fortranBinary.f .
-#./nc2fortranBinary > tmp.out
-
-# GLDAS
-#set soil = (SM1 SM2 SM3 SM4 ST1 ST2 ST3 ST4)
-#set soil2 = (SOILM0_1lev SOILM0_2lev SOILM0_3lev SOILM0_4lev \
-#             SOILT0_1lev SOILT0_2lev SOILT0_3lev SOILT0_4lev)
-#@ num = 1
-#while($num <= 8)
-#sed -e 's/SM1/'$soil[$num]'/g' \
-#    -e 's/SOILM0_1lev/'$soil2[$num]'/g' GLDAS_tmp.F > GLDAS.F
-#make
-#./GLDAS
-#@ num = $num + 1
-#end
-#mv makefile makefile_gldas
-#mv makefile_topo makefile
-
-#make
-#./nc2fortranBinary
-
-# for LSM
-#cd ../${subdir}
-#cp ${subdir}/CODE/LSM/GENPARM.TBL .
-#cp ${subdir}/CODE/LSM/SOILPARM.TBL .
-#cp ${subdir}/CODE/LSM/VEGPARM.TBL .
 exit
 
 

@@ -50,14 +50,14 @@ OS := $(shell uname)
 #-----------------------------------------------------------------------------
 
 CPP 	 = /usr/bin/cpp
-CPPFLAGS = -P -traditional -I$(BINDIR) -I/opt/petsc360/include
+CPPFLAGS = -P -traditional -I$(EXPDIR) -I/opt/petsc360/include
 #CPPFLAGS = -P -traditional -I$(BINDIR) -I/opt/petsc-intel/include 
 
 SUF      = f
 
 #INC = -I/opt/netcdf4-intel/include -I$(CDECKS) -I/opt/hdf5-intel/include -I/opt/pnetcdf-intel/include -I/opt/petsc-intel/include
 
-INC = -I/opt/netcdf4-intel/include -I$(CDECKS) -I/opt/hdf5-intel/include -I/opt/pnetcdf-intel/include -I/opt/petsc360/include
+INC = -I/opt/netcdf4-intel/include -I$(CDECKS) -I/opt/hdf5-intel/include -I/opt/pnetcdf-intel/include -I/opt/petsc360/include -I$(EXPDIR)
 
 
 FC = /opt/openmpi-intel/bin/mpif90 -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large
