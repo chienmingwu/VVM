@@ -108,6 +108,8 @@ CONTAINS
 
     !Main loop of cumulus parameterization
 
+    TC3D=0.
+
     DO j = 1, jm     
      DO i = 1, im
       
