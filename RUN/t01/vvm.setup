@@ -7,6 +7,10 @@
 set echo  # echoes the commands
 set expname = wall_periodic
 
+# set job system and compiler
+set compiler = 'intel'
+set jobsys = 'pbs'
+
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
 set datadir = ${vvmdir}'/DATA'
@@ -101,7 +105,7 @@ cd ${expdir}'/compile_code'
 make RUNDIR=${rundir} CASENAME=${expname} -f ${rundir}/makefile clean
 
 # make for topography
-make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} -f ${rundir}/makefile topography
+make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
 cd ${expdir}
 ./nc2fortranBinary > topo.log
 
