@@ -8,8 +8,8 @@ set echo  # echoes the commands
 set expname = wall_periodic
 
 # set job system and compiler
-set compiler = 'intel'
-set jobsys = 'pbs'
+set compiler = 'intel_mog39'
+set jobsys = 'pbs_mog39'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `

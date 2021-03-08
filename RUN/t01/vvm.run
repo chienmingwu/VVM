@@ -16,8 +16,8 @@ set echo  # echoes the commands
 set expname = wall_periodic
 
 # set job system and compiler
-set compiler = 'intel'
-set jobsys = 'pbs'
+set compiler = 'intel_mog39'
+set jobsys = 'pbs_mog39'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -34,7 +34,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname/'${expname}'/g' \
     -e 's/np_nodes/4/g' \
     -e 's/np_threads/4/g' \
-    -e 's/total_cores/16/g' ${rundir}/run.sh.${jobsys} > run.sh
+    -e 's/total_cores/16/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 exit
 
