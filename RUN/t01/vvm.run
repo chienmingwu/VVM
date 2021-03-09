@@ -16,7 +16,7 @@ set echo  # echoes the commands
 set expname = wall_periodic
 
 # set job system and compiler
-set compiler = 'intel_mog39'
+set compiler = 'pgi_mog39'
 set jobsys = 'pbs_mog39'
 
 # set paths

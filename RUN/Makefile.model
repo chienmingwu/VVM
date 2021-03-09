@@ -236,11 +236,6 @@ SRC_FREE_CODE = \
 SRC_FREE = $(SRC_FREE_RAD_RRTM) $(SRC_FREE_RRTMG) $(SRC_FREE_CDECKS)  $(SRC_FREE_CODE) $(SRC_FREE_LSM)
 ############
 
-
-SRC_FIXED_CODE = \
-	ldpois3d.F \
-	hwscrt.F
-
 SRC_FIXED = $(SRC_FIXED_CODE)
 
 #-----------------------------------------------------------------------------
@@ -499,7 +494,7 @@ cloud_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o PROFOUTLD.o bound.
 
 petsc_vvm_solver.o: kinds.o timer.o PARMSLD.o domain_decomposition.o bound.o
 
-elliptic.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o bound.o workcom.o ldpois3d.o hwscrt.o utils.o petsc_vvm_solver.o gather_scatter.o domain_decomposition.o gather_scatter.o
+elliptic.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o bound.o workcom.o utils.o petsc_vvm_solver.o gather_scatter.o domain_decomposition.o gather_scatter.o
 
 force_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o domain_decomposition.o
 
@@ -526,10 +521,6 @@ new_ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o R
 new_output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
 
 ldmain.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o ldoutput.o ldinput.o ab_3d_module.o time_manager_module.o domain_decomposition.o new_ldoutput_nc.o new_output_nc.o vertical_adaptive.o
-
-hwscrt.o: hwscrt.F
-
-ldpois3d.o: ldpois3d.F
 
 make_profiles_module.o: kinds.o PARMSLD.o CONSTLD.o PROFOUTLD.o utils.o
 

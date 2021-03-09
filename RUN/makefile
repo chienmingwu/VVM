@@ -162,7 +162,7 @@ clean :
 topography :
 	${FC} -c $(FFLAGS) $(FREE) ${CODEDIR}/RRTMG/kinds.F
 	${CPP} -p -I$(EXPDIR) ${CODEDIR}/cdecks/PARMSLD.F90 > PARMSLD.f	
-	${FC} -c $(FFLAGS) $(FREE) PARMSLD.f -free
+	${FC} -c $(FFLAGS) $(FREE) PARMSLD.f 
 	${CPP} -p ${CODEDIR}/nc2fortranBinary.F > nc2fortranBinary.f $(FFLAGS)
 	${FC} -c $(FFLAGS) nc2fortranBinary.f 
 	${FC} -o $(EXPDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o $(LDLIBS) 

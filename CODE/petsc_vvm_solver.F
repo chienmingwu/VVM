@@ -1,11 +1,5 @@
 #include "definesld.com"
-#include "petsc/finclude/petscsysdef.h"
-#include "petsc/finclude/petscvecdef.h"
-#include "petsc/finclude/petscmatdef.h"
-#include "petsc/finclude/petsckspdef.h"
-#include "petsc/finclude/petscpcdef.h"
-#include "petsc/finclude/petscdmdef.h"
-#include "petsc/finclude/petscdmdadef.h"
+#include "petsc/finclude/petscksp.h"
 
 MODULE petsc_vvm_solver
 ! Apply PETsc to solve 3D and 2D Poisson equation in vvm.
@@ -162,20 +156,20 @@ PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-8,dtol_TopChi = 1.d2
 
 PUBLIC :: petsc_solver_initialize,petsc_solver_finalize,petsc_solve_3d, &
           petsc_solve_psi,petsc_solve_chi
-INTERFACE
-subroutine ComputeConti(ksp,JJ,jac,ctx,ierr)
-      Mat          jac,JJ
-      PetscErrorCode    ierr
-      KSP          ksp
-      PetscInt     ctx
-END Subroutine
-subroutine ComputeTOPBC(ksp,JJ,jac,ctx,ierr)
-      Mat          jac,JJ
-      PetscErrorCode    ierr
-      KSP          ksp
-      PetscInt     ctx
-END SUBROUTINE
-END INTERFACE
+!INTERFACE
+!subroutine ComputeConti(ksp,JJ,jac,ctx,ierr)
+!      Mat          jac,JJ
+!      PetscErrorCode    ierr
+!      KSP          ksp
+!      PetscInt     ctx
+!END Subroutine
+!subroutine ComputeTOPBC(ksp,JJ,jac,ctx,ierr)
+!      Mat          jac,JJ
+!      PetscErrorCode    ierr
+!      KSP          ksp
+!      PetscInt     ctx
+!END SUBROUTINE
+!END INTERFACE
 CONTAINS
 SUBROUTINE petsc_solver_initialize(petsc_cr)
 
@@ -779,209 +773,209 @@ SUBROUTINE OperatorTopbc(jac)
 END SUBROUTINE
 
 END MODULE petsc_vvm_solver
-subroutine ComputeConti(ksp,JJ,jac,ctx,ierr)
-USE parmsld
-USE constld
-
-      Mat          jac,JJ
-      PetscErrorCode    ierr
-      PetscInt  i6,i7,i1
-      KSP          ksp
-      DM           da
-      PetscScalar  v(7)
-      MatStencil   row(4),col(4,7)
-      PetscInt     ctx
-      PetscInt ixx,iy,iz,mx,my,mz
-      PetscScalar AN(NK2-1),BN(NK2-1),CN(NK2-1),B_loc(NK2),BU(NK2)
-      PetscScalar DZSQ,TEM
-      PetscScalar  ctmp,c1,c2
-
-
-      call KSPGetDM(ksp,da,ierr)
-
-      call DMDAGetCorners(da,ixx,iy,iz,mx,my,mz,ierr)
-
-
-      i1 = 1
-      i7 = 7
-      i6 = 6
-      c1 = -1.d0/(DX*DX)
-      c2 = -1.d0/(DYNEW*DYNEW)
-      ctmp = -2.d0*(c1+c2)
-      
-      do K = 1, Nk2-1
-      B_loc(K) = 1. / ( RHOZ(K) * FNZ(K) )
-      BU(K) = FNU(K) / RHOU(K)
-      enddo
-      BU(Nk2) = FNU(Nk2) / RHOU(Nk2)
-
-      DZSQ = DZ*DZ
-      do K = 1, Nk2-1
-      TEM = 1. / ( B_loc(K) * DZSQ )
-      AN(K) = - BU(K) * TEM
-      CN(K) = - BU(K+1) * TEM
-      BN(K) = -( AN(K) + CN(K) )
-      enddo
-      AN(1) = 0.
-      CN(Nk2-1) = 0.
-      k = 0 
-      do j=iy,iy+my-1
-        do i=ixx,ixx+mx-1
-          row(MatStencil_i) = i
-          row(MatStencil_j) = j
-          row(MatStencil_k) = k
-          v(1) = c2
-           col(MatStencil_i,1) = i
-           col(MatStencil_j,1) = j-1
-           col(MatStencil_k,1) = k
-          v(2) = c1
-           col(MatStencil_i,2) = i-1
-           col(MatStencil_j,2) = j
-           col(MatStencil_k,2) = k
-          v(3) = BN(K+1)+ctmp
-           col(MatStencil_i,3) = i
-           col(MatStencil_j,3) = j
-           col(MatStencil_k,3) = k
-          v(4) = c1
-           col(MatStencil_i,4) = i+1
-           col(MatStencil_j,4) = j
-           col(MatStencil_k,4) = k
-          v(5) = c2
-           col(MatStencil_i,5) = i
-           col(MatStencil_j,5) = j+1
-           col(MatStencil_k,5) = k
-          v(6) = cn(k+1)
-           col(MatStencil_i,6) = i
-           col(MatStencil_j,6) = j
-           col(MatStencil_k,6) = k+1
-      call MatSetValuesStencil(jac,i1,row,i6,col,v,INSERT_VALUES,ierr)
-        enddo
-      enddo
-
-      do k=iz+1,iz+mz-2
-        do j=iy,iy+my-1
-          do i=ixx,ixx+mx-1
-          row(MatStencil_i) = i
-          row(MatStencil_j) = j
-          row(MatStencil_k) = k
-          v(1) = an(k+1)
-           col(MatStencil_i,1) = i
-           col(MatStencil_j,1) = j
-           col(MatStencil_k,1) = k-1
-          v(2) = c2
-           col(MatStencil_i,2) = i
-           col(MatStencil_j,2) = j-1
-           col(MatStencil_k,2) = k
-          v(3) = c1
-           col(MatStencil_i,3) = i-1
-           col(MatStencil_j,3) = j
-           col(MatStencil_k,3) = k
-          v(4) = BN(K+1)+ctmp
-           col(MatStencil_i,4) = i
-           col(MatStencil_j,4) = j
-           col(MatStencil_k,4) = k
-          v(5) = c1
-           col(MatStencil_i,5) = i+1
-           col(MatStencil_j,5) = j
-           col(MatStencil_k,5) = k
-          v(6) = c2
-           col(MatStencil_i,6) = i
-           col(MatStencil_j,6) = j+1
-           col(MatStencil_k,6) = k
-          v(7) = cn(k+1)
-           col(MatStencil_i,7) = i
-           col(MatStencil_j,7) = j
-           col(MatStencil_k,7) = k+1
-      call MatSetValuesStencil(jac,i1,row,i7,col,v,INSERT_VALUES,ierr)
-          enddo
-        enddo
-      enddo
-
-      k = mz -1
-      do j=iy,iy+my-1
-        do i=ixx,ixx+mx-1
-          row(MatStencil_i) = i
-          row(MatStencil_j) = j
-          row(MatStencil_k) = k
-          v(1) = an(k+1)
-           col(MatStencil_i,1) = i
-           col(MatStencil_j,1) = j
-           col(MatStencil_k,1) = k-1
-          v(2) = c2
-           col(MatStencil_i,2) = i
-           col(MatStencil_j,2) = j-1
-           col(MatStencil_k,2) = k
-          v(3) = c1
-           col(MatStencil_i,3) = i-1
-           col(MatStencil_j,3) = j
-           col(MatStencil_k,3) = k
-          v(4) = BN(K+1)+ctmp
-           col(MatStencil_i,4) = i
-           col(MatStencil_j,4) = j
-           col(MatStencil_k,4) = k
-          v(5) = c1
-           col(MatStencil_i,5) = i+1
-           col(MatStencil_j,5) = j
-           col(MatStencil_k,5) = k
-          v(6) = c2
-           col(MatStencil_i,6) = i
-           col(MatStencil_j,6) = j+1
-           col(MatStencil_k,6) = k
-      call MatSetValuesStencil(jac,i1,row,i6,col,v,INSERT_VALUES,ierr)
-        enddo
-      enddo
-
-      call MatAssemblyBegin(jac,MAT_FINAL_ASSEMBLY,ierr)
-      call MatAssemblyEnd(jac,MAT_FINAL_ASSEMBLY,ierr)
-END subroutine! ComputeConti
-subroutine ComputeTopbc(ksp,JJ,jac,ctx,ierr)
-USE parmsld
-USE constld
-
-      Mat          jac,JJ
-      PetscErrorCode    ierr
-      PetscInt  i5,i1
-      KSP          ksp
-      DM           da
-      PetscScalar  v(5),Hx,Hy,Hz
-      PetscScalar  ctmp,c1,c2
-      MatStencil   row(4),col(4,5)
-      PetscInt     ctx
-      PetscInt ixx,iy,mx,my,iz,mz
-
-     call KSPGetDM(ksp,da,ierr)
-     call DMDAGetCorners(da,ixx,iy,PETSC_NULL_INTEGER,mx,my,PETSC_NULL_INTEGER,ierr)
-     i1 = 1
-     i5 = 5
-
-     c1 = -1.d0/(DX*DX) 
-     c2 = -1.d0/(DYNEW*DYNEW)
-
-     ctmp = -2.d0*(c1+c2)
-     
-
-        do j=iy,iy+my-1
-          do i=ixx,ixx+mx-1
-          row(MatStencil_i) = i
-          row(MatStencil_j) = j
-          v(1) = c2
-           col(MatStencil_i,1) = i
-           col(MatStencil_j,1) = j-1
-          v(2) = c1
-           col(MatStencil_i,2) = i-1
-           col(MatStencil_j,2) = j
-          v(3) = ctmp
-           col(MatStencil_i,3) = i
-           col(MatStencil_j,3) = j
-          v(4) = c1
-           col(MatStencil_i,4) = i+1
-           col(MatStencil_j,4) = j
-          v(5) = c2
-           col(MatStencil_i,5) = i
-           col(MatStencil_j,5) = j+1
-        call MatSetValuesStencil(jac,i1,row,i5,col,v,INSERT_VALUES,ierr)
-        enddo
-      enddo
-      call MatAssemblyBegin(jac,MAT_FINAL_ASSEMBLY,ierr)
-      call MatAssemblyEnd(jac,MAT_FINAL_ASSEMBLY,ierr)
-END subroutine! ComputeTopbc
+!subroutine ComputeConti(ksp,JJ,jac,ctx,ierr)
+!USE parmsld
+!USE constld
+!
+!      Mat          jac,JJ
+!      PetscErrorCode    ierr
+!      PetscInt  i6,i7,i1
+!      KSP          ksp
+!      DM           da
+!      PetscScalar  v(7)
+!      MatStencil   row(4),col(4,7)
+!      PetscInt     ctx
+!      PetscInt ixx,iy,iz,mx,my,mz
+!      PetscScalar AN(NK2-1),BN(NK2-1),CN(NK2-1),B_loc(NK2),BU(NK2)
+!      PetscScalar DZSQ,TEM
+!      PetscScalar  ctmp,c1,c2
+!
+!
+!      call KSPGetDM(ksp,da,ierr)
+!
+!      call DMDAGetCorners(da,ixx,iy,iz,mx,my,mz,ierr)
+!
+!
+!      i1 = 1
+!      i7 = 7
+!      i6 = 6
+!      c1 = -1.d0/(DX*DX)
+!      c2 = -1.d0/(DYNEW*DYNEW)
+!      ctmp = -2.d0*(c1+c2)
+!      
+!      do K = 1, Nk2-1
+!      B_loc(K) = 1. / ( RHOZ(K) * FNZ(K) )
+!      BU(K) = FNU(K) / RHOU(K)
+!      enddo
+!      BU(Nk2) = FNU(Nk2) / RHOU(Nk2)
+!
+!      DZSQ = DZ*DZ
+!      do K = 1, Nk2-1
+!      TEM = 1. / ( B_loc(K) * DZSQ )
+!      AN(K) = - BU(K) * TEM
+!      CN(K) = - BU(K+1) * TEM
+!      BN(K) = -( AN(K) + CN(K) )
+!      enddo
+!      AN(1) = 0.
+!      CN(Nk2-1) = 0.
+!      k = 0 
+!      do j=iy,iy+my-1
+!        do i=ixx,ixx+mx-1
+!          row(MatStencil_i) = i
+!          row(MatStencil_j) = j
+!          row(MatStencil_k) = k
+!          v(1) = c2
+!           col(MatStencil_i,1) = i
+!           col(MatStencil_j,1) = j-1
+!           col(MatStencil_k,1) = k
+!          v(2) = c1
+!           col(MatStencil_i,2) = i-1
+!           col(MatStencil_j,2) = j
+!           col(MatStencil_k,2) = k
+!          v(3) = BN(K+1)+ctmp
+!           col(MatStencil_i,3) = i
+!           col(MatStencil_j,3) = j
+!           col(MatStencil_k,3) = k
+!          v(4) = c1
+!           col(MatStencil_i,4) = i+1
+!           col(MatStencil_j,4) = j
+!           col(MatStencil_k,4) = k
+!          v(5) = c2
+!           col(MatStencil_i,5) = i
+!           col(MatStencil_j,5) = j+1
+!           col(MatStencil_k,5) = k
+!          v(6) = cn(k+1)
+!           col(MatStencil_i,6) = i
+!           col(MatStencil_j,6) = j
+!           col(MatStencil_k,6) = k+1
+!      call MatSetValuesStencil(jac,i1,row,i6,col,v,INSERT_VALUES,ierr)
+!        enddo
+!      enddo
+!
+!      do k=iz+1,iz+mz-2
+!        do j=iy,iy+my-1
+!          do i=ixx,ixx+mx-1
+!          row(MatStencil_i) = i
+!          row(MatStencil_j) = j
+!          row(MatStencil_k) = k
+!          v(1) = an(k+1)
+!           col(MatStencil_i,1) = i
+!           col(MatStencil_j,1) = j
+!           col(MatStencil_k,1) = k-1
+!          v(2) = c2
+!           col(MatStencil_i,2) = i
+!           col(MatStencil_j,2) = j-1
+!           col(MatStencil_k,2) = k
+!          v(3) = c1
+!           col(MatStencil_i,3) = i-1
+!           col(MatStencil_j,3) = j
+!           col(MatStencil_k,3) = k
+!          v(4) = BN(K+1)+ctmp
+!           col(MatStencil_i,4) = i
+!           col(MatStencil_j,4) = j
+!           col(MatStencil_k,4) = k
+!          v(5) = c1
+!           col(MatStencil_i,5) = i+1
+!           col(MatStencil_j,5) = j
+!           col(MatStencil_k,5) = k
+!          v(6) = c2
+!           col(MatStencil_i,6) = i
+!           col(MatStencil_j,6) = j+1
+!           col(MatStencil_k,6) = k
+!          v(7) = cn(k+1)
+!           col(MatStencil_i,7) = i
+!           col(MatStencil_j,7) = j
+!           col(MatStencil_k,7) = k+1
+!      call MatSetValuesStencil(jac,i1,row,i7,col,v,INSERT_VALUES,ierr)
+!          enddo
+!        enddo
+!      enddo
+!
+!      k = mz -1
+!      do j=iy,iy+my-1
+!        do i=ixx,ixx+mx-1
+!          row(MatStencil_i) = i
+!          row(MatStencil_j) = j
+!          row(MatStencil_k) = k
+!          v(1) = an(k+1)
+!           col(MatStencil_i,1) = i
+!           col(MatStencil_j,1) = j
+!           col(MatStencil_k,1) = k-1
+!          v(2) = c2
+!           col(MatStencil_i,2) = i
+!           col(MatStencil_j,2) = j-1
+!           col(MatStencil_k,2) = k
+!          v(3) = c1
+!           col(MatStencil_i,3) = i-1
+!           col(MatStencil_j,3) = j
+!           col(MatStencil_k,3) = k
+!          v(4) = BN(K+1)+ctmp
+!           col(MatStencil_i,4) = i
+!           col(MatStencil_j,4) = j
+!           col(MatStencil_k,4) = k
+!          v(5) = c1
+!           col(MatStencil_i,5) = i+1
+!           col(MatStencil_j,5) = j
+!           col(MatStencil_k,5) = k
+!          v(6) = c2
+!           col(MatStencil_i,6) = i
+!           col(MatStencil_j,6) = j+1
+!           col(MatStencil_k,6) = k
+!      call MatSetValuesStencil(jac,i1,row,i6,col,v,INSERT_VALUES,ierr)
+!        enddo
+!      enddo
+!
+!      call MatAssemblyBegin(jac,MAT_FINAL_ASSEMBLY,ierr)
+!      call MatAssemblyEnd(jac,MAT_FINAL_ASSEMBLY,ierr)
+!END subroutine! ComputeConti
+!subroutine ComputeTopbc(ksp,JJ,jac,ctx,ierr)
+!USE parmsld
+!USE constld
+!
+!      Mat          jac,JJ
+!      PetscErrorCode    ierr
+!      PetscInt  i5,i1
+!      KSP          ksp
+!      DM           da
+!      PetscScalar  v(5),Hx,Hy,Hz
+!      PetscScalar  ctmp,c1,c2
+!      MatStencil   row(4),col(4,5)
+!      PetscInt     ctx
+!      PetscInt ixx,iy,mx,my,iz,mz
+!
+!     call KSPGetDM(ksp,da,ierr)
+!     call DMDAGetCorners(da,ixx,iy,PETSC_NULL_INTEGER,mx,my,PETSC_NULL_INTEGER,ierr)
+!     i1 = 1
+!     i5 = 5
+!
+!     c1 = -1.d0/(DX*DX) 
+!     c2 = -1.d0/(DYNEW*DYNEW)
+!
+!     ctmp = -2.d0*(c1+c2)
+!     
+!
+!        do j=iy,iy+my-1
+!          do i=ixx,ixx+mx-1
+!          row(MatStencil_i) = i
+!          row(MatStencil_j) = j
+!          v(1) = c2
+!           col(MatStencil_i,1) = i
+!           col(MatStencil_j,1) = j-1
+!          v(2) = c1
+!           col(MatStencil_i,2) = i-1
+!           col(MatStencil_j,2) = j
+!          v(3) = ctmp
+!           col(MatStencil_i,3) = i
+!           col(MatStencil_j,3) = j
+!          v(4) = c1
+!           col(MatStencil_i,4) = i+1
+!           col(MatStencil_j,4) = j
+!          v(5) = c2
+!           col(MatStencil_i,5) = i
+!           col(MatStencil_j,5) = j+1
+!        call MatSetValuesStencil(jac,i1,row,i5,col,v,INSERT_VALUES,ierr)
+!        enddo
+!      enddo
+!      call MatAssemblyBegin(jac,MAT_FINAL_ASSEMBLY,ierr)
+!      call MatAssemblyEnd(jac,MAT_FINAL_ASSEMBLY,ierr)
+!END subroutine! ComputeTopbc
