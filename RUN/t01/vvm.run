@@ -16,8 +16,8 @@ set echo  # echoes the commands
 set expname = wall_periodic
 
 # set job system and compiler
-set compiler = 'pgi_mog39'
-set jobsys = 'pbs_mog39_pgi'
+set compiler = 'intel_jet'
+set jobsys = 'pbs_jet'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `

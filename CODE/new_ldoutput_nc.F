@@ -108,6 +108,7 @@ CONTAINS
           
 ! *** FOR DATA STORAGE FILE MANAGEMENT
       REAL (KIND=real_kind) :: time_l, time_prev
+      REAL (KIND=real_kind), dimension(2) :: time_temp
       INTEGER (KIND=int_kind) :: nt,         &
                                  ITT_OUTPUT    ! model output step 
 ! *** FOR RESTART DATA temporary storage array
@@ -188,7 +189,8 @@ CONTAINS
 
       nc_err = nfmpi_begin_indep_data(ncid_rst_tend)
       if(my_task == 0) then
-        nc_err = nfmpi_put_var_real(ncid_rst_tend, time_id_rst_tend, (/time_prev, time_l/))
+        time_temp = (/time_prev, time_l/)
+        nc_err = nfmpi_put_var_real(ncid_rst_tend, time_id_rst_tend, time_temp)
         if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid_rst_tend, time_id_rst_tend)
       endif
       nc_err = nfmpi_end_indep_data(ncid_rst_tend)
