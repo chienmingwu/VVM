@@ -58,7 +58,7 @@ INC = -I$(CDECKS) -I$(EXPDIR) -I/opt/pgi-hpc-sdk-21.2/netcdf/include -I/opt/pgi-
 
 FC = /opt/pgi-hpc-sdk-21.2/hpc_sdk/Linux_x86_64/21.2/comm_libs/mpi/bin/mpifort -fPIC -O3 -Mlarge_arrays
 
-LDLIBS = -Wl,-rpath,/opt/pgi-hpc-sdk-21.2/petsc/lib -L/opt/pgi-hpc-sdk-21.2/petsc/lib -lpetsc -Wl,-rpath,/opt/pgi-hpc-sdk-21.2/netcdf/lib -L/opt/pgi-hpc-sdk-21.2/netcdf/lib -lpnetcdf -lnetcdff -lnetcdf
+LDLIBS = -Wl,-rpath,/opt/pgi-hpc-sdk-21.2/petsc/lib -L/opt/pgi-hpc-sdk-21.2/petsc/lib -lpetsc -lblas -llapack -Wl,-rpath,/opt/pgi-hpc-sdk-21.2/netcdf/lib -L/opt/pgi-hpc-sdk-21.2/netcdf/lib -lpnetcdf -lnetcdff -lnetcdf
 
 FFLAGS    = $(INC)
 FIXED     = -Mfixed 

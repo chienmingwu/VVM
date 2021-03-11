@@ -3,7 +3,7 @@ MODULE new_ldoutput_nc
 
 ! this module contains the I/O routines related to writing the VVM NetCDF output
 
-USE netcdf
+!USE netcdf
 USE pnetcdf
 
 USE kinds

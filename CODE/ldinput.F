@@ -212,7 +212,7 @@ CONTAINS
                   ! number of calls to the CAM radiation, to ensure
                   ! that NABSEM is a multiple of NRAD.
 
-      petsc_cr = 1
+      petsc_cr = 0
 
       if(my_task == 0)  then
         READ (15, INPUT2)

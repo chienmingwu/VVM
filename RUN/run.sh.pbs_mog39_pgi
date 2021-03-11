@@ -1,0 +1,16 @@
+#PBS -l nodes=np_nodes:ppn=np_threads
+#PBS -N expname
+#PBS -o expname.out
+#PBS -e expname.err
+
+cd $PBS_O_WORKDIR
+
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+
+/opt/pgi-hpc-sdk-21.2/hpc_sdk/Linux_x86_64/21.2/comm_libs/mpi/bin/mpirun -np total_cores ./vvm -ksp_converged_reason < INPUT | tee OUTPUT  
+
+date >> runtime
+
+

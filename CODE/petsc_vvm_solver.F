@@ -1,4 +1,5 @@
 #include "definesld.com"
+#include "petsc/finclude/petscmat.h"
 #include "petsc/finclude/petscksp.h"
 
 MODULE petsc_vvm_solver
@@ -148,9 +149,9 @@ Mat, PRIVATE:: R, Amat,Cmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
 PetscInt, PRIVATE:: MXIT = 2000
-PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-10,dtol_Conti = 1.d2
-PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-8,dtol_TopPsi = 1.d2
-PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-8,dtol_TopChi = 1.d2
+PetscReal, PRIVATE:: tol_Conti = 1.d-15,atol_Conti=1.d-8,dtol_Conti = 1.d2
+PetscReal, PRIVATE:: tol_TopPsi = 1.d-15,atol_TopPsi=1.d-6,dtol_TopPsi = 1.d2
+PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-6,dtol_TopChi = 1.d2
 
 !PetscViewer viewer
 
@@ -199,6 +200,7 @@ endif
       DM_BOUNDARY_PERIODIC,DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,MI_glob/(2**nlv), &
       MJ_glob/(2**nlv),NK2-2,nsbdm_x,nsbdm_y,1,1,nhalo,PETSC_NULL_INTEGER,      &
       PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da3(nlevel),ierr)
+    call DMSetUp(da3(nlevel),ierr) ! must be call after PETSc 3.8.0
 
     call DMDASetUniformCoordinates(da3(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
 
@@ -292,6 +294,7 @@ endif
     call DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                &
       DM_BOUNDARY_PERIODIC,DMDA_STENCIL_BOX,MI_glob/(2**nlv),MJ_glob/(2**nlv), &
       nsbdm_x,nsbdm_y,1,nhalo,PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da2(nlevel),ierr)
+    call DMSetUp(da2(nlevel),ierr) ! must be call after PETSc 3.8.0
 
     call DMDASetUniformCoordinates(da2(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
 

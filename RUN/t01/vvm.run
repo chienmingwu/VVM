@@ -17,7 +17,7 @@ set expname = wall_periodic
 
 # set job system and compiler
 set compiler = 'pgi_mog39'
-set jobsys = 'pbs_mog39'
+set jobsys = 'pbs_mog39_pgi'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -32,9 +32,9 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/np_nodes/4/g' \
-    -e 's/np_threads/4/g' \
-    -e 's/total_cores/16/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/np_nodes/1/g' \
+    -e 's/np_threads/8/g' \
+    -e 's/total_cores/8/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 exit
 

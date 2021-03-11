@@ -352,8 +352,9 @@ CONTAINS
   404 FORMAT (0PF10.0,0PE12.3,0PE12.3)
 
       if(my_task == 0) then
+      INQUIRE(iolength=k) temp
       OPEN(UNIT=99,FILE='bar.dat',FORM='unformatted',STATUS='unknown', &
-      access='direct',recl=nk3)
+      access='direct',recl=k)
       temp=thbar
       write(99,rec=1) temp
       temp=qvbar

@@ -9,7 +9,7 @@ set expname = wall_periodic
 
 # set job system and compiler
 set compiler = 'pgi_mog39'
-set jobsys = 'pbs_mog39'
+set jobsys = 'pbs_mog39_pgi'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -69,7 +69,6 @@ cp ${vvmdir}/CODE/p3_lookup_table_* .
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
-#define PARALLELIO
 #define PHYSICS
 'END1'
 cat definesld.com
@@ -81,7 +80,7 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/32/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/40/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90

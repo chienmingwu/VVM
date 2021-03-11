@@ -5,7 +5,7 @@ MODULE new_output_nc
 ! this module contains the I/O routines related to initializing and 
 ! writing the VVM NetCDF output
 
-USE netcdf
+USE netcdf, only: nf90_strerror, nf90_inquire_variable
 USE kinds
 USE parmsld
 USE constld
@@ -877,13 +877,13 @@ CONTAINS
           xc_len       ! zonal coordinate (column centers)
 
 ! data variables
-      real (KIND=dbl_kind), dimension(zc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
           zc  ! vertical height (model layer position; m)
 
-      real (KIND=dbl_kind), dimension(yc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
           yc  ! meridional coordinates (column centers; m)
 
-      real (KIND=dbl_kind), dimension(xc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
           xc  ! zonal coordinates (column centers; m)
 
 !------------------------------------------------------------------------------
@@ -1088,13 +1088,13 @@ CONTAINS
           xc_len       ! zonal coordinate (column centers or boundaries, dependent on xgrid)
 
 ! data variables
-      real (KIND=dbl_kind), dimension(zc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
           zc  ! vertical height (model layer or interface position; m)
       
-      real (KIND=dbl_kind), dimension(yc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
           yc  ! meridional coordinates (column centers or boundaries; m)
       
-      real (KIND=dbl_kind), dimension(xc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
           xc  ! zonal coordinates (column centers or boundaries; m)
 
 ! zgrid, ygrid, xgrid = character strings identifying the correct grid axes.  
@@ -1326,16 +1326,16 @@ CONTAINS
           xc_len       ! zonal coordinate (column centers)
 
 ! data variables
-      real (KIND=dbl_kind), dimension(zc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
           zc  ! vertical height (model layer position; m)
 
-      real (KIND=dbl_kind), dimension(zc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
           zb  ! vertical height (model interface position; m)
       
-      real (KIND=dbl_kind), dimension(yc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
           yc  ! meridional coordinates (column centers; m)
       
-      real (KIND=dbl_kind), dimension(xc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
           xc  ! zonal coordinates (column centers; m)
 
 #if defined (PHYSICS)
@@ -1578,16 +1578,16 @@ CONTAINS
           xc_len       ! zonal coordinate (column centers)
 
 ! data variables
-      real (KIND=dbl_kind), dimension(yb_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(yb_len), intent(inout) :: &
           yb  ! meridional coordinates (column boundaries; m)
       
-      real (KIND=dbl_kind), dimension(yc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
           yc  ! meridional coordinates (column centers; m)
       
-      real (KIND=dbl_kind), dimension(xb_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(xb_len), intent(inout) :: &
           xb  ! zonal coordinates (column boundaries; m)
 
-      real (KIND=dbl_kind), dimension(xc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
           xc  ! zonal coordinates (column centers; m)
 
 !------------------------------------------------------------------------------
@@ -2017,13 +2017,16 @@ CONTAINS
       character (len=*), intent(in) :: &
           var_nc
 
-      real (KIND=real_kind), intent(in) :: &
+      real (KIND=real_kind), intent(inout) :: &
           time_l
+
+      real (KIND=real_kind), dimension(1) :: &
+          time_temp
           
       integer (KIND=int_kind), dimension(1), intent(in) :: &
           time_start
 
-      real (KIND=tm_kind), dimension(mi1,mj1,k), intent(in) :: &
+      real (KIND=tm_kind), dimension(mi1,mj1,k), intent(inout) :: &
 !      real (KIND=dbl_kind), dimension(mi1,mj1,k), intent(in) :: &
           var_values
 
@@ -2052,7 +2055,8 @@ CONTAINS
 
       count1(1) = 1
       start1 = time_start
-      nc_err = nfmpi_put_vara_real_all(ncid, time_id, start1, count1, (/time_l/) )
+      time_temp = time_l
+      nc_err = nfmpi_put_vara_real_all(ncid, time_id, start1, count1, time_temp )
 !      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, time_id)
 
 ! Inquire variable id
@@ -2095,14 +2099,17 @@ CONTAINS
       character (len=*), intent(in) :: &
           var_nc
 
-      real (KIND=real_kind), intent(in) :: &
+      real (KIND=real_kind), intent(inout) :: &
           time_l
+
+      real (KIND=real_kind), dimension(1) :: &
+          time_temp
           
       integer (KIND=int_kind), dimension(1), intent(in) :: &
           time_start
 
 !      real (KIND=dbl_kind), dimension(mi1,mj1,1), intent(in) :: &
-      real (KIND=tm_kind), dimension(mi1,mj1,1), intent(in) :: &
+      real (KIND=tm_kind), dimension(mi1,mj1,1), intent(inout) :: &
           var_values
 
       integer (KIND=int_kind) :: &
@@ -2129,7 +2136,8 @@ CONTAINS
 
       count1(1) = 1
       start1 = time_start
-      nc_err = nfmpi_put_vara_real_all(ncid, time_id, start1, count1, (/time_l/) )
+      time_temp = time_l
+      nc_err = nfmpi_put_vara_real_all(ncid, time_id, start1, count1, time_temp )
 !      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, time_id)
 
 ! Inquire variable id
@@ -2181,22 +2189,22 @@ CONTAINS
           xc_len       ! zonal coordinate (column centers)
 
 ! data variables
-      real (KIND=dbl_kind), dimension(zc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
           zc  ! vertical height (model layer position; m)
 
-      real (KIND=dbl_kind), dimension(zc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
           zb  ! vertical height (model interface position; m)
       
-      real (KIND=dbl_kind), dimension(yc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
           yc  ! meridional coordinates (column centers; m)
       
-      real (KIND=dbl_kind), dimension(yc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
           yb  ! meridional coordinates (column boundaries; m)
       
-      real (KIND=dbl_kind), dimension(xc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
           xc  ! zonal coordinates (column centers; m)
 
-      real (KIND=dbl_kind), dimension(xc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
           xb  ! zonal coordinates (column boundaries; m)
 
 !------------------------------------------------------------------------------
@@ -3424,22 +3432,22 @@ CONTAINS
           xc_len      ! zonal coordinate (column centers)
 
 ! data variables
-      real (KIND=dbl_kind), dimension(zc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
           zc  ! vertical height (model layer position; m)
 
-      real (KIND=dbl_kind), dimension(zc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
           zb  ! vertical height (model interface position; m)
       
-      real (KIND=dbl_kind), dimension(yc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
           yc  ! meridional coordinates (column centers; m)
       
-      real (KIND=dbl_kind), dimension(yc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
           yb  ! meridional coordinates (column boundaries; m)
       
-      real (KIND=dbl_kind), dimension(xc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
           xc  ! zonal coordinates (column centers; m)
 
-      real (KIND=dbl_kind), dimension(xc_len), intent(in) :: &
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
           xb  ! zonal coordinates (column boundaries; m)
 
 !------------------------------------------------------------------------------
