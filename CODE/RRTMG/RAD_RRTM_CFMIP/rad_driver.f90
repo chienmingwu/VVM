@@ -404,12 +404,12 @@
       cloudFrac(1, 1:nzm) = 1.
     end where
    
-    if (my_task == 0. .and. x_p3==10 .and. y_p3==10) then
-      write(*,*) "in rad"
-      do k=1,nzm
-        write(*,*) k, IWP(1,k), iceRe(1,k), ReI_p3(10,10,k)
-      enddo
-    endif
+    !if (my_task == 0. .and. x_p3==10 .and. y_p3==10) then
+    !  write(*,*) "in rad"
+    !  do k=1,nzm
+    !    write(*,*) k, IWP(1,k), iceRe(1,k), ReI_p3(10,10,k)
+    !  enddo
+    !endif
 #else
     where(LWP(:, :) > 0.)
       liquidRe(:, :) = computeRe_Liquid(real(layerT), merge(0., 1., ocean))

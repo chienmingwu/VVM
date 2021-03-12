@@ -597,12 +597,12 @@
       ReC_p3 => effc
       ReI_p3 => effi
    
-      if (my_task == 0 .and. (mod(itt,nradd)==1)) then
-        write(*,*) "in phys"
-        do k=1,km
-          write(*,*) k, effi(10,10,k),ReI_p3(10,10,k)
-        enddo
-      endif
+      !if (my_task == 0 .and. (mod(itt,nradd)==1)) then
+      !  write(*,*) "in phys"
+      !  do k=1,km
+      !    write(*,*) k, effi(10,10,k),ReI_p3(10,10,k)
+      !  enddo
+      !endif
 #endif
 
 #if defined (MICROCODE)

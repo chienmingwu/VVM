@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = wall_periodic
+set expname = rce_test
 
 # set job system and compiler
 set compiler = 'intel_jet'
@@ -69,7 +69,11 @@ cp ${vvmdir}/CODE/p3_lookup_table_* .
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
+#define DIFFUSION
 #define PHYSICS
+#define MICROCODE
+#define MICROP3
+#define RADCODE
 'END1'
 cat definesld.com
 
@@ -79,21 +83,21 @@ cat definesld.com
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
 sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/32/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/40/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=86400 /
  &INPUT2 RLAT=0, RLON=0 /
- &INPUT3 DX=250.,DYNEW=250.,DZ=250.,DZ1=250.,DT=0.1,NOTURB=T,NOSFX=T,NSFLUX=12,ALADV=1.,UVTAU=86400. /
+ &INPUT3 DX=1000.,DYNEW=1000.,DZ=500.,DZ1=100.,DT=10,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=86400. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=50,NWR11=1,NFLPRT=1,NRESTART=50. /
+ &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360. /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=6.,Q1Q2=F,DTRAD=120. /
+ &INPUT5 IX=3182073,ITINIT=10,ITSTOP=360,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT
