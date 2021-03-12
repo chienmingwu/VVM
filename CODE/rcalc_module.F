@@ -118,10 +118,8 @@ CONTAINS
       DO 300 K = 2, NK2
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
-      tempim=dble(mi1*ni_sbdm+i)
-      pi = 4._8 * atan(1._8)
-      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)*cos(2*pi*tempim/256.)
-      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)*cos(2*pi*tempim/256.)
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
   309 CONTINUE
   SELECT CASE (TRIM(casename))
   CASE ('TWP-ICE','BOMEX')
