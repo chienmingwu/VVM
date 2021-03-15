@@ -1,6 +1,8 @@
 Vector Vorticity equation cloud-resolving Model (VVM)
+=====================================================
 
 Development history
+-------------------
      First develpment. (Jung and Arakawa 2008) 
      Implmentation of topography. (Wu and Arakawa 2011)
      Representing orography with partial steps, and replacing elliptic solver with PETSc. (Chien and Wu 2016)
@@ -9,6 +11,7 @@ Development history
 
 
 Studies use VVM
+---------------
      Jung and Arakawa 2008, 2010, 2014, 2016
      Arakawa et al. 2011
      Jung and Randall 2011
@@ -30,6 +33,7 @@ Studies use VVM
      
 
 To run VVM 
+----------
   Compilers (with MPI3, openmpi or mpich)
      Intel 2011~ (MKL)
      PGI hpc-sdk-21.2 (blas and lapack)
