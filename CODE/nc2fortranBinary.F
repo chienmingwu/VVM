@@ -237,6 +237,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      else 
 !      TMP = 0.
 !      endif
+!      IT=1
 !      DO 502 k=1,NK3
 !  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
 !      hx(I,J)=TOP
