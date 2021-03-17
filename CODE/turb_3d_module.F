@@ -283,8 +283,8 @@ CONTAINS
       DO 260 K=2,NK2
       DO 260 J=1,MJ1
       DO 260 I=1,MI1
-      RKZ(I,J,K)=max(RKM(I,J,K),1.)
-      RKQ(I,J,K)=max(RKH(I,J,K),1.) !ccwu use 1 form vertical
+      RKZ(I,J,K)=max(RKM(I,J,K),CRITMN)
+      RKQ(I,J,K)=max(RKH(I,J,K),CRITMN) !ccwu use 1 form vertical
       RKM(I,J,K)=max(RKM(I,J,K),CRITMN)
       RKH(I,J,K)=max(RKH(I,J,K),CRITMN)
   260 CONTINUE
@@ -337,7 +337,7 @@ CONTAINS
          IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
-      CALL SFLUX_3D ! call sflux every time step 
+!      CALL SFLUX_3D ! call sflux every time step 
       END IF
 
 #endif
