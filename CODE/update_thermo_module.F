@@ -154,21 +154,21 @@ CONTAINS
                   + A*FQG3D(I,J,K,N2)+B*FQG3D(I,J,K,N1))
 #endif
    70 CONTINUE
-!
-!      if (ntracer > 0)then
-!
-!      DO 71 nt = 1,ntracer
-!      DO 71 K = 2, NK2
-!      DO 71 J = 1, MJ1
-!      DO 71 I = 1, MI1
-!
-!      TC3D(I,J,K,nt) = TC3D(I,J,K,nt)          &
-!                  + A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt)
-!     
-!   71 CONTINUE
-!
-!      endif
-!
+
+      if (ntracer > 0)then
+
+      DO 71 nt = 1,ntracer
+      DO 71 K = 2, NK2
+      DO 71 J = 1, MJ1
+      DO 71 I = 1, MI1
+
+      TC3D(I,J,K,nt) = TC3D(I,J,K,nt)          &
+                  + A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt)
+     
+   71 CONTINUE
+
+      endif
+
 
 !ccwut set physics variables on topo to zero
       DO K = 2, maxtopo

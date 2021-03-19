@@ -113,6 +113,9 @@ CONTAINS
 
       DO 5 K = 2, NK2
       invfnt = 1. /fnt(k)
+#if defined (MICROP3)
+! Negative values are filled in P3
+#else
         qctot = qctot + sum(qc3d(1:mi1,1:mj1,k)) * invfnt
         qitot = qitot + sum(qi3d(1:mi1,1:mj1,k)) * invfnt
         qrtot = qrtot + sum(qr3d(1:mi1,1:mj1,k)) * invfnt
@@ -143,6 +146,7 @@ CONTAINS
            qntem(:,:) = min(0.0_dbl_kind, qg3d(:,:,k))
            qgneg = qgneg +  sum(qntem(1:mi1,1:mj1)) * invfnt
         endif
+#endif
        
         if (ntracer > 0)then
           do nt = 1,ntracer
@@ -251,11 +255,15 @@ CONTAINS
 !        '     TC1' )
 !      enddo
 
+#if defined (MICROP3)
+! Negative values are filled in P3
+#else
       IF ( NNEGQC .GT. 0 ) CALL FILL_GLO_3D(QC3D,'      QC' )
       IF ( NNEGQI .GT. 0 ) CALL FILL_GLO_3D(QI3D,'      QI' )
       IF ( NNEGQS .GT. 0 ) CALL FILL_GLO_3D(QS3D,'      QS' )
       IF ( NNEGQG .GT. 0 ) CALL FILL_GLO_3D(QG3D,'      QG' )
       IF ( NNEGQR .GT. 0 ) CALL FILL_GLO_3D(QR3D,'      QR' )
+#endif
 
       if (ntracer > 0)then      
         do nt = 1,ntracer
@@ -279,7 +287,10 @@ CONTAINS
 !        enddo
 !     ENDDO
 
-     
+
+#if defined (MICROP3)
+! Negative values are filled in P3
+#else     
       QSPOS = QSTOT + QSNEG
       IF ( QSPOS .GT. 0. ) THEN
         QSNEG = QSNEG / QSPOS
@@ -314,7 +325,8 @@ CONTAINS
       ELSE
         QINEG = 999.
       ENDIF
-   
+#endif   
+
       if (ntracer > 0)then
         do nt = 1,ntracer
           TCPOS(nt) = TCTOT(nt) + TCNEG(nt)
@@ -326,6 +338,9 @@ CONTAINS
         enddo  
       endif
 
+#if defined (MICROP3)
+! Saturation adjustment is done in P3
+#else
 !-----------------------------------------------------------------------
 !tac -- Saturation adjustment now done in the subroutine 
 !       saturation_adjustment, called from physics_interface.
@@ -364,13 +379,19 @@ CONTAINS
           (QISTAR - (QI1 + QFREEZE))*(2.8336E6/1004.)/DT)*86400.
 
  1000 CONTINUE
+#endif
+
       CALL  BOUND_3D
 
     if(my_task == 0) then
       IF ( MOD ( ITT, nflprt ) .EQ. 0 ) then
      
+#if defined (MICROP3)
+! Negative values are filled in P3
+#else
         WRITE (21,101) ITT,NNEGQC,QCNEG,NNEGQI,QINEG,             &
                        NNEGQR,QRNEG,NNEGQS,QSNEG,NNEGQG,QGNEG  
+#endif
         if (ntracer > 0)then
           do nt = 1,ntracer
             WRITE (21,102) ITT,nt,NNEGT(nt),nt,nt,TCNEG(nt)
