@@ -8,8 +8,8 @@ set echo  # echoes the commands
 set expname = land_test
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'pgi_moggpu_docker'
+set jobsys = 'docker'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -84,8 +84,8 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 

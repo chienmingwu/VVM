@@ -1,0 +1,21 @@
+#PBS -l nodes=np_nodes:ppn=np_threads
+#PBS -N expname
+#PBS -o expname.out
+#PBS -e expname.err
+
+#export LD_LIBRARY_PATH=/opt/vvmlibs/lib:$LD_LIBRARY_PATH  
+#export PATH=/opt/vvmlibs/bin:$PATH  
+
+#NPROCS=`wc -l < $PBS_NODEFILE`
+
+#cd $PBS_O_WORKDIR
+
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+
+mpirun --allow-run-as-root -np 4 ./vvm < INPUT | tee OUTPUT  
+
+date >> runtime
+
+
