@@ -490,8 +490,7 @@ CONTAINS
 
         CALL petsc_solver_initialize(petsc_cr)
 
-        restart_read: 
-        IF (.false.) THEN
+        restart_read: IF (.false.) THEN
 
             !   restart( thermodynamic_file (absolute path) , hydrometer , 
             !            dynamic_variables , {optional} dynamic_file (absolute path) )
@@ -569,8 +568,7 @@ CONTAINS
         call turb_3d_ini
 #endif
 
-        TG_restart: 
-        IF (.false.)THEN
+        TG_restart: IF (.false.)THEN
 
             tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
                         uras_landsea_1800.C.Surface-000192.nc"
