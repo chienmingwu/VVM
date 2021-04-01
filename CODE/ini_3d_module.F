@@ -200,7 +200,7 @@ CONTAINS
         PIBAR(1) = PISFC
         PILOG(1) = LOG ( PIBAR(1) )
 
-        DO 160 IT = 1, 3
+        DO IT = 1, 3
 
             DO K = 1, NK3
                 TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) )
@@ -249,7 +249,7 @@ CONTAINS
             ALPHA(K) = RGAS * TV(K) / PBAR(K)
         ENDDO
 
-        DO 180 K = 2, NK2
+        DO K = 2, NK2
             ALPHAW = ( ALPHA(K) + ALPHA(K+1) ) / 2.
             RHOz(K) = 1. / ALPHAW
         ENDDO
