@@ -529,18 +529,18 @@ CONTAINS
         !-------------------
 #endif
 
-        DO 700 K = 1, NK3
-            DO 700 J = 1, MJ1
-                DO 700 I = 1, MI1
+        DO K = 1, NK3
+            DO J = 1, MJ1
+                DO I = 1, MI1
                     DEFXY(I,J,K)=(U3DY(I+1,J,K)-U3DY(I,J,K))/DX   &
                         +(U3DX(I,J+1,K)-U3DX(I,J,K))/DYNEW
                 ENDDO
             ENDDO
         ENDDO
 
-        DO 710 K = 1, NK2
-            DO 710 J = 1, MJ1 
-                DO 710 I = 1, MI1 
+        DO K = 1, NK2
+            DO J = 1, MJ1 
+                DO I = 1, MI1 
                     DEFXZ(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX   &
                         +(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
                     DEFYZ(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW   &
