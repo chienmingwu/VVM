@@ -161,7 +161,7 @@ CONTAINS
 
 
         ZT1(1) = Zz(1)
-        DO 140 K = 2, NT1
+        DO K = 2, NT1
             ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
                 *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
         ENDDO
