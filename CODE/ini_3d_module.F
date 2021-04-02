@@ -16,12 +16,12 @@ MODULE ini_3d_module
     USE wind_module
     USE petsc_vvm_solver, only: petsc_solver_initialize
 
-    #if defined (DIFFUSION)
-        USE TURB_3D_module
-    #endif
-    #if defined (RADCODE)
-        USE rrtm_vars, only: sstxy,albdo
-    #endif
+#if defined (DIFFUSION)
+    USE TURB_3D_module
+#endif
+#if defined (RADCODE)
+    USE rrtm_vars, only: sstxy,albdo
+#endif
 
 
 IMPLICIT NONE
@@ -302,11 +302,11 @@ CONTAINS
             Q2LS (K) = SCALE * Q2LS (K) / (GAMFAC * SECDAY)
         ENDDO
 
-        #if !defined (RADCODE)
-            DO K = 1, NK3
-                Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
-            ENDDO
-        #endif
+#if !defined (RADCODE)
+        DO K = 1, NK3
+            Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
+        ENDDO
+#endif
 
         DO K = 2, NK2
             PBARMB = PBAR(K) * 0.01
@@ -398,16 +398,16 @@ CONTAINS
                     QC3D(I,J,K) = 0.
                     QI3D(I,J,K) = 0.
                     QR3D(I,J,K) = 0.
-                    #if defined (MICROP3)
-                        NC3D(I,J,K) = 0.
-                        NR3D(I,J,K) = 0.
-                        NI3D(I,J,K) = 0.
-                        QRIM3D(I,J,K) = 0.
-                        BRIM3D(I,J,K) = 0.
-                    #else
-                        QS3D(I,J,K) = 0.
-                        QG3D(I,J,K) = 0.
-                    #endif
+#if defined (MICROP3)
+                    NC3D(I,J,K) = 0.
+                    NR3D(I,J,K) = 0.
+                    NI3D(I,J,K) = 0.
+                    QRIM3D(I,J,K) = 0.
+                    BRIM3D(I,J,K) = 0.
+#else
+                    QS3D(I,J,K) = 0.
+                    QG3D(I,J,K) = 0.
+#endif
                 ENDDO
             ENDDO
         ENDDO
@@ -422,16 +422,16 @@ CONTAINS
                         FQC3D(I,J,K,N)=0.
                         FQI3D(I,J,K,N)=0.
                         FQR3D(I,J,K,N)=0.
-                        #if defined (MICROP3)
-                            FNC3D(I,J,K,N) = 0.
-                            FNR3D(I,J,K,N) = 0.
-                            FNI3D(I,J,K,N) = 0.
-                            FQRIM3D(I,J,K,N) = 0.
-                            FBRIM3D(I,J,K,N) = 0.
-                        #else
-                            FQS3D(I,J,K,N)=0.
-                            FQG3D(I,J,K,N)=0.
-                        #endif
+#if defined (MICROP3)
+                        FNC3D(I,J,K,N) = 0.
+                        FNR3D(I,J,K,N) = 0.
+                        FNI3D(I,J,K,N) = 0.
+                        FQRIM3D(I,J,K,N) = 0.
+                        FBRIM3D(I,J,K,N) = 0.
+#else
+                        FQS3D(I,J,K,N)=0.
+                        FQG3D(I,J,K,N)=0.
+#endif
                         FZX(I,J,K,N)=0.
                         FZY(I,J,K,N)=0.
                     ENDDO
@@ -516,17 +516,17 @@ CONTAINS
         ENDIF restart_read
 
 
-        #if defined (AREAMN)
-            !-------------------
-            !     INSTANT NUDGING
-            !     OF THE AREA MEAN OF HORIZONTAL WIND TO THE INITIAL VALUE.
+#if defined (AREAMN)
+        !-------------------
+        !     INSTANT NUDGING
+        !     OF THE AREA MEAN OF HORIZONTAL WIND TO THE INITIAL VALUE.
 
-            CALL XYAVG2(Z3DX,nhalo,MI1,MJ1,NK2,2,NK1,Z3DX0)
-            CALL XYAVG2(Z3DY,nhalo,MI1,MJ1,NK2,2,NK1,Z3DY0)
+        CALL XYAVG2(Z3DX,nhalo,MI1,MJ1,NK2,2,NK1,Z3DX0)
+        CALL XYAVG2(Z3DY,nhalo,MI1,MJ1,NK2,2,NK1,Z3DY0)
 
-            CALL xyavg1(Z3DZ(:,:,nk2), nhalo, mi1, mj1, Z3DZ0)
-            !-------------------
-        #endif
+        CALL xyavg1(Z3DZ(:,:,nk2), nhalo, mi1, mj1, Z3DZ0)
+        !-------------------
+#endif
 
         DO K = 1, NK3
             DO J = 1, MJ1
@@ -548,11 +548,11 @@ CONTAINS
             ENDDO
         ENDDO
 
-        #if defined (PERIODIC)
-            CALL BOUND_ARB (NK3,DEFXY)
-            CALL BOUND_ARB (NK2,DEFXZ)
-            CALL BOUND_ARB (NK2,DEFYZ)
-        #endif
+#if defined (PERIODIC)
+        CALL BOUND_ARB (NK3,DEFXY)
+        CALL BOUND_ARB (NK2,DEFXZ)
+        CALL BOUND_ARB (NK2,DEFYZ)
+#endif
 
         CALL xyavg1(u3dx(:,:,nk2), nhalo, mi1, mj1, utmn)
         CALL xyavg1(u3dy(:,:,nk2), nhalo, mi1, mj1, vtmn)
@@ -560,12 +560,13 @@ CONTAINS
         VTMN0 = VTMN
       
         IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
-        #if defined (RADCODE)
-            albdo = 0.30
-        #endif    
-        #if defined (DIFFUSION)
-            call turb_3d_ini
-        #endif
+#if defined (RADCODE)
+  
+        albdo = 0.30
+#endif    
+#if defined (DIFFUSION)
+        call turb_3d_ini
+#endif
 
         TG_restart: IF (.false.)THEN
 
@@ -593,71 +594,73 @@ CONTAINS
         ITYPEV = 1
         ITYPEW = 1
 
-        #if defined (TOPOGRAPHY) 
-            !  DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
-            WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-            'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+#if defined (TOPOGRAPHY) 
 
-            PRINT*,FILENAME
+        !  DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
+        WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
+        'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
 
-            OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-            READ(99) ((HX(I,J),I=1,MI1),J=1,MJ1)
-            CLOSE(99)
+        PRINT*,FILENAME
 
-            tmp = maxval(HX)
-            CALL MPI_ALLREDUCE(tmp,H,1,MPI_dbl_kind, MPI_MAX, MPI_COMM_WORLD, mpierr)
-            maxtopo=INT(H) + 1
+        OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
+        READ(99) ((HX(I,J),I=1,MI1),J=1,MJ1)
+        CLOSE(99)
 
-            call bound_arb(1,HX)
+        tmp = maxval(HX)
+        CALL MPI_ALLREDUCE(tmp,H,1,MPI_dbl_kind, MPI_MAX, MPI_COMM_WORLD, mpierr)
+        maxtopo=INT(H) + 1
 
-            DO I=1,MI1
-                DO J=1,MJ1
-                    if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
-                    if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
-                ENDDO
-            ENDDO
+        call bound_arb(1,HX)
 
+        DO I=1,MI1
             DO J=1,MJ1
-                DO I=1,MI1
-                    NN=INT(HX(I,J))
+                if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
+                if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
+            ENDDO
+        ENDDO
 
-                    IF(NN .NE. 0) THEN
-                        DO K=2,NN
-                            ITYPEU(I,J,K)=0
-                            ITYPEV(I,J,K)=0
-                            ITYPEW(I,J,K)=0
-                        ENDDO
+        DO J=1,MJ1
+            DO I=1,MI1
+                NN=INT(HX(I,J))
+
+                IF(NN .NE. 0) THEN
+                    DO K=2,NN
+                        ITYPEU(I,J,K)=0
+                        ITYPEV(I,J,K)=0
+                        ITYPEW(I,J,K)=0
+                    ENDDO
+                ENDIF
+            ENDDO
+        ENDDO
+
+        call bound_int_arb(NK2,ITYPEW)
+
+        DO K=2,NK2
+            DO J=mjm,mjp
+                DO I=mim,mip
+                    NN=ITYPEW(I,J,K)
+
+                    IF(NN .EQ. 0) THEN
+                        ITYPEU(I-1,J,K)=0
+                        ITYPEV(I,J-1,K)=0
                     ENDIF
                 ENDDO
             ENDDO
+        ENDDO
 
-            call bound_int_arb(NK2,ITYPEW)
+        call bound_int_arb(NK2,ITYPEU)
+        call bound_int_arb(NK2,ITYPEV)
 
-            DO K=2,NK2
-                DO J=mjm,mjp
-                    DO I=mim,mip
-                        NN=ITYPEW(I,J,K)
-
-                        IF(NN .EQ. 0) THEN
-                            ITYPEU(I-1,J,K)=0
-                            ITYPEV(I,J-1,K)=0
-                        ENDIF
-                    ENDDO
-                ENDDO
+        DO J=mjm,mjp
+            DO I=mim,mip
+                IF(HX(I,J) .EQ. 0.) HX(I,J)=1.
             ENDDO
+        ENDDO
 
-            call bound_int_arb(NK2,ITYPEU)
-            call bound_int_arb(NK2,ITYPEV)
-
-            DO J=mjm,mjp
-                DO I=mim,mip
-                    IF(HX(I,J) .EQ. 0.) HX(I,J)=1.
-                ENDDO
-            ENDDO
-        #else
-            hx=1
-            maxtopo=2
-        #endif
+#else
+        hx=1
+        maxtopo=2
+#endif
 
     ENDSUBROUTINE PTSPEC
 
@@ -740,71 +743,70 @@ CONTAINS
                 STOP
             ENDIF
 
-            #if defined (MICROP3)
-                ! nc
-                nc_err = nfmpi_inq_varid(ncid,'nc',varid)
-                nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
-                        readlen,NC3D(1:MI1,1:MJ1,1:NK2))
-                IF (nc_err/=0)THEN
-                    WRITE(*,*) "restart nc read fail", nc_err
-                    STOP
-                ENDIF
+#if defined (MICROP3)
+            ! nc
+            nc_err = nfmpi_inq_varid(ncid,'nc',varid)
+            nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+                    readlen,NC3D(1:MI1,1:MJ1,1:NK2))
+            IF (nc_err/=0)THEN
+                WRITE(*,*) "restart nc read fail", nc_err
+                STOP
+            ENDIF
 
-                ! nr
-                nc_err = nfmpi_inq_varid(ncid,'nr',varid)
-                nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
-                        readlen,NR3D(1:MI1,1:MJ1,1:NK2))
-                IF (nc_err/=0)THEN
-                    WRITE(*,*) "restart nr read fail", nc_err
-                    STOP
-                ENDIF
+            ! nr
+            nc_err = nfmpi_inq_varid(ncid,'nr',varid)
+            nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+                    readlen,NR3D(1:MI1,1:MJ1,1:NK2))
+            IF (nc_err/=0)THEN
+                WRITE(*,*) "restart nr read fail", nc_err
+                STOP
+            ENDIF
 
-                ! ni
-                nc_err = nfmpi_inq_varid(ncid,'ni',varid)
-                nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
-                        readlen,NI3D(1:MI1,1:MJ1,1:NK2))
-                IF (nc_err/=0)THEN
-                    WRITE(*,*) "restart ni read fail", nc_err
-                    STOP
-                ENDIF
+            ! ni
+            nc_err = nfmpi_inq_varid(ncid,'ni',varid)
+            nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+                    readlen,NI3D(1:MI1,1:MJ1,1:NK2))
+            IF (nc_err/=0)THEN
+                WRITE(*,*) "restart ni read fail", nc_err
+                STOP
+            ENDIF
 
-                ! qrim
-                nc_err = nfmpi_inq_varid(ncid,'qrim',varid)
-                nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
-                        readlen,QRIM3D(1:MI1,1:MJ1,1:NK2))
-                IF (nc_err/=0)THEN
-                    WRITE(*,*) "restart qrim read fail", nc_err
-                    STOP
-                ENDIF
+            ! qrim
+            nc_err = nfmpi_inq_varid(ncid,'qrim',varid)
+            nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+                    readlen,QRIM3D(1:MI1,1:MJ1,1:NK2))
+            IF (nc_err/=0)THEN
+                WRITE(*,*) "restart qrim read fail", nc_err
+                STOP
+            ENDIF
 
-                ! brim
-                nc_err = nfmpi_inq_varid(ncid,'brim',varid)
-                nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
-                        readlen,BRIM3D(1:MI1,1:MJ1,1:NK2))
-                IF (nc_err/=0)THEN
-                    WRITE(*,*) "restart brim read fail", nc_err
-                    STOP
-                ENDIF
-            #else
-                ! qs
-                nc_err = nfmpi_inq_varid(ncid,'qs',varid)
-                nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
-                        readlen,QS3D(1:MI1,1:MJ1,1:NK2))
-                IF (nc_err/=0)THEN
-                    WRITE(*,*) "restart qs read fail", nc_err
-                    STOP
-                ENDIF
+            ! brim
+            nc_err = nfmpi_inq_varid(ncid,'brim',varid)
+            nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+                    readlen,BRIM3D(1:MI1,1:MJ1,1:NK2))
+            IF (nc_err/=0)THEN
+                WRITE(*,*) "restart brim read fail", nc_err
+                STOP
+            ENDIF
+#else
+            ! qs
+            nc_err = nfmpi_inq_varid(ncid,'qs',varid)
+            nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+                    readlen,QS3D(1:MI1,1:MJ1,1:NK2))
+            IF (nc_err/=0)THEN
+                WRITE(*,*) "restart qs read fail", nc_err
+                STOP
+            ENDIF
 
-                ! qg
-                nc_err = nfmpi_inq_varid(ncid,'qg',varid)
-                nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
-                        readlen,QG3D(1:MI1,1:MJ1,1:NK2))
-                IF (nc_err/=0)THEN
-                    WRITE(*,*) "restart qg read fail", nc_err
-                    STOP
-                ENDIF
-            #endif
-            
+            ! qg
+            nc_err = nfmpi_inq_varid(ncid,'qg',varid)
+            nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+                    readlen,QG3D(1:MI1,1:MJ1,1:NK2))
+            IF (nc_err/=0)THEN
+                WRITE(*,*) "restart qg read fail", nc_err
+                STOP
+            ENDIF
+#endif
             call bound_3d
         ELSE
             call bound_3d
