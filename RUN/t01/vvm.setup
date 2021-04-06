@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tracer_test
+set expname = chem_test
 
 # set job system and compiler
 set compiler = 'intel_jet'
@@ -65,6 +65,9 @@ cp ${vvmdir}/CODE/LSM/VEGPARM.TBL .
 # for P3 scheme
 cp ${vvmdir}/CODE/p3_lookup_table_* .
 
+# for chemical scheme
+cp -r ${vvmdir}/CODE/CHEM/* .
+
 # create CPP list
 cat > definesld.com << 'END1'
 #define MPI
@@ -75,6 +78,7 @@ cat > definesld.com << 'END1'
 #define MICROP3
 #define LSM
 #define RADCODE
+#define CHEM
 'END1'
 cat definesld.com
 
@@ -88,7 +92,7 @@ sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/1/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/20/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
