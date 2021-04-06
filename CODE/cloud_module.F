@@ -61,6 +61,10 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
+#if defined (AUTOMATA)
+   !call BOUND_ARB()
+#endif
+
 #if defined (DIFFUSION)
 
       DO 500 K = 2, NK2
