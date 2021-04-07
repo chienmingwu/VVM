@@ -35,7 +35,7 @@ PRIVATE
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3,ntracer), PUBLIC ::       &
       TC3D        ! passive tracer mixing ratio (kg/kg)
 #if defined (AUTOMATA)
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nCAFinerGrid), PUBLIC ::       &
+   INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp,nCAFinerGrid), PUBLIC ::       &
       AC3D,    &  ! for the finer grid for celluar automata
       ACLF3D      ! for the finer grid for celluar automata's lifetime
 #endif      

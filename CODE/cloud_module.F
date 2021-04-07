@@ -61,53 +61,90 @@ CONTAINS
    SUBROUTINE CLOUD_3D_COREC
 
       INTEGER (KIND=int_kind) :: &
-         i, j, k, nt, iOffset, jOffset ! do loop indices for zonal, meridional and vertical dimensions
+         i, j, k, nt ! do loop indices for zonal, meridional and vertical dimensions
 
 #if defined (AUTOMATA)
-      REAL (KIND=int_kind), DIMENSION(automata_finergrid_size,automata_finergrid_size,5) :: &
-         CAIndex ! [majorGridOffsetX, majorGridOffsetY, indexInFinerGridX, indexInFinerGridY, columnIndexInFinerGrid
+      INTEGER (KIND=int_kind), &
+         DIMENSION(nCAFinerGrid,9,3) :: &
+            CAIndex ! finerGridIndex(1~25), offsetIndex(1~9) --> [MajorX Offset,MajorY Offset,finerGridIndex]
+      INTEGER (KIND=int_kind) :: &   
+         iOffset, jOffset, caInnerIndex, caOffsetIndex, &
+         modI, modJ, &
+         caCount
+      INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp,nCAFinerGrid), PUBLIC ::       &
+         AC3DTEMP,    &  ! for the finer grid for celluar automata
+         ACLF3DTEMP      ! for the finer grid for celluar automata's lifetime         
 
    ! Calculate the index mapping
    DO i=1 , automata_finergrid_size
       DO j=1 , automata_finergrid_size
+         caInnerIndex = (i-1) * automata_finergrid_size + j
          DO iOffset=-1,1
             DO jOffset=-1,1
-               if (i + iOffset <= 0) thtend
-                  CAIndex(i,j,1) = -1
+               caOffsetIndex = (iOffset + 1 ) * 3 + jOffset + 2
+
+               if (i + iOffset <= 0) then
+                  CAIndex(caInnerIndex,caOffsetIndex,1) = -1
                elseif ( i + iOffset > automata_finergrid_size ) then
-                  CAIndex(i,j,1) = +1
+                  CAIndex(caInnerIndex,caOffsetIndex,1) = +1
                else
-                  CAIndex(i,j,1) = 0
+                  CAIndex(caInnerIndex,caOffsetIndex,1) = 0
                endif
-               if (j + jOffset <= 0) thtend
-                  CAIndex(i,j,2) = -1
+
+               if (j + jOffset <= 0) then
+                  CAIndex(caInnerIndex,caOffsetIndex,2) = -1
                elseif ( j + jOffset > automata_finergrid_size ) then
-                  CAIndex(i,j,2) = +1
+                  CAIndex(caInnerIndex,caOffsetIndex,2) = +1
                else
-                  CAIndex(i,j,2) = 0
+                  CAIndex(caInnerIndex,caOffsetIndex,2) = 0
                endif
 
-               CAIndex(i,j,3) = mod(i + automata_finergrid_size + iOffset,automata_finergrid_size)
-               if ( CAIndex(i,j,3) == 0 )  then 
-                  CAIndex(i,j,3) = automata_finergrid_size
+               modI = mod(i + automata_finergrid_size + iOffset, automata_finergrid_size)
+               if ( modI == 0 )  then 
+                  modI = automata_finergrid_size
                endif
 
-               CAIndex(i,j,4) = mod(j + automata_finergrid_size + jOffset,automata_finergrid_size)
-               if ( CAIndex(i,j,4) == 0 )  then 
-                  CAIndex(i,j,4) = automata_finergrid_size
+               modJ = mod(j + automata_finergrid_size + jOffset, automata_finergrid_size)
+               if ( modJ == 0 )  then 
+                  modJ = automata_finergrid_size
                endif
 
-               CAIndex(i,j,5) = ( CAIndex(i,j,3) - 1 ) * automata_finergrid_size + CAIndex(i,j,4)
+               CAIndex(caInnerIndex,caOffsetIndex,3) = ( modI - 1 ) * automata_finergrid_size + modJ
             ENDDO
          ENDDO
       ENDDO
    ENDDO
 
-   call BOUND_ARB(nCAFinerGrid,AC3D)
-   call BOUND_ARB(nCAFinerGrid,ACLF3D)
+   call BOUND_INT_ARB(nCAFinerGrid,AC3D)
+   call BOUND_INT_ARB(nCAFinerGrid,ACLF3D)
 
-   
+   do j=1, MJ1
+      do i=1, MI1
+            caCount = 0
+            DO caInnerIndex=1, nCAFinerGrid
+               DO caOffsetIndex=1, 9
+                  if ( caOffsetIndex == 5 ) then
+                     continue
+                  endif
 
+                  caCount += AC3D( & 
+                     i + CAIndex(caInnerIndex,caOffsetIndex,1), &
+                     j + CAIndex(caInnerIndex,caOffsetIndex,2), &
+                     CAIndex(caInnerIndex,caOffsetIndex,3)
+                  )
+               ENDDO
+
+               if ( caCount < 2 or caCount > 3 ) then
+                  AC3DTEMP(i,j,caInnerIndex) = 0
+               elseif ( caCount == 3 ) then
+                  AC3DTEMP(i,j,caInnerIndex) = 1
+               else
+                  AC3DTEMP(i,j,caInnerIndex) = AC3D(i,j,caInnerIndex)
+               endif
+            ENDDO
+      enddo
+   enddo
+   AC3D = AC3DTEMP
 #endif
 
 #if defined (DIFFUSION)
