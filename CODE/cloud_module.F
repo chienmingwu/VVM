@@ -29,8 +29,10 @@ CONTAINS
          qsat,    & !
          q100,    & !
          total     !
-   REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1,NK2) ::            &
-      cldfrc             ! cloud fraction
+      REAL (KIND=dbl_kind), DIMENSION(MI1,MJ1,NK2) ::            &
+         cldfrc             ! cloud fraction
+
+
 
       INTEGER (KIND=int_kind) ::  &
          i, j, k   ! do loop indices for zonal, meridional and vertical dimensions
@@ -59,10 +61,53 @@ CONTAINS
    SUBROUTINE CLOUD_3D_COREC
 
       INTEGER (KIND=int_kind) :: &
-         i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
+         i, j, k, nt, iOffset, jOffset ! do loop indices for zonal, meridional and vertical dimensions
 
 #if defined (AUTOMATA)
-   !call BOUND_ARB()
+      REAL (KIND=int_kind), DIMENSION(automata_finergrid_size,automata_finergrid_size,5) :: &
+         CAIndex ! [majorGridOffsetX, majorGridOffsetY, indexInFinerGridX, indexInFinerGridY, columnIndexInFinerGrid
+
+   ! Calculate the index mapping
+   DO i=1 , automata_finergrid_size
+      DO j=1 , automata_finergrid_size
+         DO iOffset=-1,1
+            DO jOffset=-1,1
+               if (i + iOffset <= 0) thtend
+                  CAIndex(i,j,1) = -1
+               elseif ( i + iOffset > automata_finergrid_size ) then
+                  CAIndex(i,j,1) = +1
+               else
+                  CAIndex(i,j,1) = 0
+               endif
+               if (j + jOffset <= 0) thtend
+                  CAIndex(i,j,2) = -1
+               elseif ( j + jOffset > automata_finergrid_size ) then
+                  CAIndex(i,j,2) = +1
+               else
+                  CAIndex(i,j,2) = 0
+               endif
+
+               CAIndex(i,j,3) = mod(i + automata_finergrid_size + iOffset,automata_finergrid_size)
+               if ( CAIndex(i,j,3) == 0 )  then 
+                  CAIndex(i,j,3) = automata_finergrid_size
+               endif
+
+               CAIndex(i,j,4) = mod(j + automata_finergrid_size + jOffset,automata_finergrid_size)
+               if ( CAIndex(i,j,4) == 0 )  then 
+                  CAIndex(i,j,4) = automata_finergrid_size
+               endif
+
+               CAIndex(i,j,5) = ( CAIndex(i,j,3) - 1 ) * automata_finergrid_size + CAIndex(i,j,4)
+            ENDDO
+         ENDDO
+      ENDDO
+   ENDDO
+
+   call BOUND_ARB(nCAFinerGrid,AC3D)
+   call BOUND_ARB(nCAFinerGrid,ACLF3D)
+
+   
+
 #endif
 
 #if defined (DIFFUSION)
