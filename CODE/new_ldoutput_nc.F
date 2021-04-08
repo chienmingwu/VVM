@@ -207,6 +207,17 @@ CONTAINS
                   start(1:3), count(1:3), th3d(1:mi1,1:mj1,1:nk2) )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
 
+#if defined (AUTOMATA)
+! AUTOMATA
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, ac3d_id_rst,       &
+                  start(1:3), count(1:3), AC3D(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, aclf3d_id_rst,       &
+                  start(1:3), count(1:3), ACLF3D(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)  
+#endif
+
 ! Vorticity vector      
       nc_err = nfmpi_put_vara_double_all(ncid_rst, z3dx_id_rst,       &
                   start(1:3), count(1:3), z3dx(1:mi1,1:mj1,1:nk2) )
@@ -219,6 +230,7 @@ CONTAINS
       nc_err = nfmpi_put_vara_double_all(ncid_rst, z3dz_id_rst,       &
                   start(1:3), count(1:3), z3dz(1:mi1,1:mj1,1:nk2) )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
 
 #if defined (PHYSICS)
 ! Water variables
@@ -964,6 +976,15 @@ CONTAINS
 ! Thermodynamic Variables
       OUT_tm1(:,:,1:nk2) = th3d(1:mi1,1:mj1,1:nk2)
       call pCDF_WRITE_4D(ncid_th, 'th', TIME_L, time_start, out_tm1, nk2 )
+
+#if defined (AUTOMATA)
+! Automata
+      OUT_tm1(:,:,1:nk2) = AC3D(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D(ncid_th, 'ac', TIME_L, time_start, out_tm1, nk2 )
+      OUT_tm1(:,:,1:nk2) = AC3DLF(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D(ncid_th, 'aclf', TIME_L, time_start, out_tm1, nk2 )      
+#endif
+
 
 #if defined (PHYSICS)
       OUT_tm1(:,:,1:nk2) = qv3d(1:mi1,1:mj1,1:nk2)

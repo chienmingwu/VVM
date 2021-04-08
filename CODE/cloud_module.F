@@ -71,11 +71,11 @@ CONTAINS
          iOffset, jOffset, caInnerIndex, caOffsetIndex, &
          modI, modJ, &
          caCount
-      INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp,nCAFinerGrid), PUBLIC ::       &
+      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3) ::  &
          AC3DTEMP,    &  ! for the finer grid for celluar automata
          ACLF3DTEMP      ! for the finer grid for celluar automata's lifetime         
 
-   ! Calculate the index mapping
+   ! Calculate the index mapping, need to move to the initailization
    DO i=1 , automata_finergrid_size
       DO j=1 , automata_finergrid_size
          caInnerIndex = (i-1) * automata_finergrid_size + j
@@ -115,8 +115,8 @@ CONTAINS
       ENDDO
    ENDDO
 
-   call BOUND_INT_ARB(nCAFinerGrid,AC3D)
-   call BOUND_INT_ARB(nCAFinerGrid,ACLF3D)
+   call BOUND_ARB(nCAFinerGrid,NK3)
+   call BOUND_ARB(nCAFinerGrid,NK3)
 
    do j=1, MJ1
       do i=1, MI1

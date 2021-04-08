@@ -98,6 +98,10 @@ PRIVATE
           qs3d_id_rst, &   ! snow mixing ratio
           qg3d_id_rst, &   ! graupel mixing ratio
 #endif
+#if defined (AUTOMATA)
+          ac3d_id_rst, &   ! automata board
+          aclf3d_id_rst, & ! automata lifetime board
+#endif 
           tc3d_id_rst, &   ! passive tracer mixing ratio
           tg_id_rst, &     ! surface temperature
           zrough_id_rst, & ! surface roughness length
@@ -261,6 +265,14 @@ CONTAINS
       CALL pCDF_INI_4DVAR (ncid_th, 'th', 'potential temperature', &
                           'potential_temperature', 'K', &
                           'zt', 'yt', 'xt')
+#if defined (AUTOMATA)
+      CALL pCDF_INI_4DVAR (ncid_th, 'ac', 'cellular automata', &
+                          'cellular_automata', 'none', &
+                          'zt', 'yt', 'xt')      
+      CALL pCDF_INI_4DVAR (ncid_th, 'aclf', 'cellular automata lifetime', &
+                          'cellular_automata_lifetime', 'none', &
+                          'zt', 'yt', 'xt')                              
+#endif
 
 #if defined (PHYSICS)
 ! QV3D
@@ -2527,7 +2539,49 @@ CONTAINS
       
       nc_err = nfmpi_put_att_double(ncid, th3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+#if defined (AUTOMATA)
+! ac3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'ac3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), ac3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! assign attributes
+      nc_err = nfmpi_put_att_text(ncid, ac3d_id_rst, 'long_name', 21_mpi_offset_kind, 'cellular automata')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
+      nc_err = nfmpi_put_att_text(ncid, ac3d_id_rst, 'standard_name', 21_mpi_offset_kind, 'cellular_automata')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, ac3d_id_rst, 'units', 1_mpi_offset_kind, 'none')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_double(ncid, ac3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_double(ncid, ac3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! aclf3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'aclf3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), aclf3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! assign attributes
+      nc_err = nfmpi_put_att_text(ncid, aclf3d_id_rst, 'long_name', 21_mpi_offset_kind, 'cellular automata lifetime')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_text(ncid, aclf3d_id_rst, 'standard_name', 21_mpi_offset_kind, 'cellular_automata_lifetime')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, aclf3d_id_rst, 'units', 1_mpi_offset_kind, 'none')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_double(ncid, aclf3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_double(ncid, aclf3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+#endif
+
 ! z3dx ------------------------------------------------------------------------
       nc_err = nfmpi_def_var(ncid, 'z3dx', NF_double, 3, (/ xc_dim, yb_dim, zb_dim /), z3dx_id_rst)
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
