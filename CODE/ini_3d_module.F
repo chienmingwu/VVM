@@ -394,6 +394,18 @@ CONTAINS
                     !         !            ((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
                     !                     ((ZT(K)-3200.)/2000.)**2)))**2
                     !ENDIF
+
+#if defined (AUTOMATA)
+                    call RANDOM_NUMBER(temp)
+                    if ( temp > 0.5) then
+                        AC3D(I,J,K) = 1.0
+                        ACLF3D(I,J,K) = 20.0
+                    else
+                        AC3D(I,J,K) = 0.0
+                        ACLF3D(I,J,K) = 0.0
+                    endif
+                    
+#endif
                     QV3D(I,J,K) = QVBAR(K)
                     QC3D(I,J,K) = 0.
                     QI3D(I,J,K) = 0.
@@ -713,6 +725,26 @@ CONTAINS
             WRITE(*,*) "restart qv read fail", nc_err
             STOP
         ENDIF
+
+#if defined (AUTOMATA)
+        ! ac3d
+        nc_err = nfmpi_inq_varid(ncid,'ac',varid)
+        nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+                readlen,AC3D(1:MI1,1:MJ1,1:NK2))
+        IF (nc_err/=0)THEN
+            WRITE(*,*) "restart nc read fail", nc_err
+            STOP
+        ENDIF
+
+        ! aclf3d
+        nc_err = nfmpi_inq_varid(ncid,'aclf',varid)
+        nc_err = nfmpi_get_vara_double_all(ncid,varid,arraystart, &
+                readlen,ACLF3D(1:MI1,1:MJ1,1:NK2))
+        IF (nc_err/=0)THEN
+            WRITE(*,*) "restart nr read fail", nc_err
+            STOP
+        ENDIF
+#endif
 
         IF (hydrometer) THEN
 
