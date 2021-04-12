@@ -396,8 +396,9 @@ CONTAINS
                     !ENDIF
 
 #if defined (AUTOMATA)
-                    call RANDOM_NUMBER(temp)
-                    if ( temp > 0.5) then
+                    call RANDOM_NUMBER(tmp)
+                    !temp = 0.7
+                    if ( tmp > 0.5) then
                         AC3D(I,J,K) = 1.0
                         ACLF3D(I,J,K) = 20.0
                     else

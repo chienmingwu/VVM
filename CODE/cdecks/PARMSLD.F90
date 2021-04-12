@@ -24,7 +24,8 @@ PRIVATE
         MJ_glob = merid_dimension,      &  ! the meridional domain size (no halo points)
         NK2 = vert_dimension ,          &  ! the vertical domain size
         ntracer = tracer_dimension,     &  ! the number of passive tracers
-        nCAFinerGrid = automata_finergrid_size * automata_finergrid_size ! for automata finer grid
+        nCAFinerRatio = automata_finergrid_size,     &  ! finer grid ratio on edge
+        nCAFinerGrid = automata_finergrid_size * automata_finergrid_size ! finer grid ratio on a major grid
       
     ! Define the depth of the halo region, later will preprocess depending on operator order
     INTEGER(KIND=int_kind),PARAMETER, PUBLIC :: &

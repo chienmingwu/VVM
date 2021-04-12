@@ -64,8 +64,7 @@ CONTAINS
          i, j, k, nt ! do loop indices for zonal, meridional and vertical dimensions
 
 #if defined (AUTOMATA)
-      INTEGER (KIND=int_kind), &
-         DIMENSION(nCAFinerGrid,9,3) :: &
+      INTEGER (KIND=int_kind), DIMENSION(nCAFinerGrid,9,3) :: &
             CAIndex ! finerGridIndex(1~25), offsetIndex(1~9) --> [MajorX Offset,MajorY Offset,finerGridIndex]
       INTEGER (KIND=int_kind) :: &   
          iOffset, jOffset, caInnerIndex, caOffsetIndex, &
@@ -76,16 +75,16 @@ CONTAINS
          ACLF3DTEMP      ! for the finer grid for celluar automata's lifetime         
 
    ! Calculate the index mapping, need to move to the initailization
-   DO i=1 , automata_finergrid_size
-      DO j=1 , automata_finergrid_size
-         caInnerIndex = (i-1) * automata_finergrid_size + j
+   DO i=1 , nCAFinerRatio
+      DO j=1 , nCAFinerRatio
+         caInnerIndex = (i-1) * nCAFinerRatio + j
          DO iOffset=-1,1
             DO jOffset=-1,1
                caOffsetIndex = (iOffset + 1 ) * 3 + jOffset + 2
 
                if (i + iOffset <= 0) then
                   CAIndex(caInnerIndex,caOffsetIndex,1) = -1
-               elseif ( i + iOffset > automata_finergrid_size ) then
+               elseif ( i + iOffset > nCAFinerRatio ) then
                   CAIndex(caInnerIndex,caOffsetIndex,1) = +1
                else
                   CAIndex(caInnerIndex,caOffsetIndex,1) = 0
@@ -93,30 +92,30 @@ CONTAINS
 
                if (j + jOffset <= 0) then
                   CAIndex(caInnerIndex,caOffsetIndex,2) = -1
-               elseif ( j + jOffset > automata_finergrid_size ) then
+               elseif ( j + jOffset > nCAFinerRatio ) then
                   CAIndex(caInnerIndex,caOffsetIndex,2) = +1
                else
                   CAIndex(caInnerIndex,caOffsetIndex,2) = 0
                endif
 
-               modI = mod(i + automata_finergrid_size + iOffset, automata_finergrid_size)
+               modI = mod(i + nCAFinerRatio + iOffset, nCAFinerRatio)
                if ( modI == 0 )  then 
-                  modI = automata_finergrid_size
+                  modI = nCAFinerRatio
                endif
 
-               modJ = mod(j + automata_finergrid_size + jOffset, automata_finergrid_size)
+               modJ = mod(j + nCAFinerRatio + jOffset, nCAFinerRatio)
                if ( modJ == 0 )  then 
-                  modJ = automata_finergrid_size
+                  modJ = nCAFinerRatio
                endif
 
-               CAIndex(caInnerIndex,caOffsetIndex,3) = ( modI - 1 ) * automata_finergrid_size + modJ
+               CAIndex(caInnerIndex,caOffsetIndex,3) = ( modI - 1 ) * nCAFinerRatio + modJ
             ENDDO
          ENDDO
       ENDDO
    ENDDO
 
-   call BOUND_ARB(nCAFinerGrid,NK3)
-   call BOUND_ARB(nCAFinerGrid,NK3)
+   call BOUND_ARB(NK3,ACLF3D)
+   call BOUND_ARB(NK3,AC3D)
 
    do j=1, MJ1
       do i=1, MI1
@@ -127,16 +126,16 @@ CONTAINS
                      continue
                   endif
 
-                  caCount += AC3D( & 
+                  caCount = caCount +  AC3D( & 
                      i + CAIndex(caInnerIndex,caOffsetIndex,1), &
                      j + CAIndex(caInnerIndex,caOffsetIndex,2), &
-                     CAIndex(caInnerIndex,caOffsetIndex,3)
+                     CAIndex(caInnerIndex,caOffsetIndex,3) &
                   )
                ENDDO
 
-               if ( caCount < 2 or caCount > 3 ) then
+               if ( caCount < 2 .OR. caCount > 3 ) then
                   AC3DTEMP(i,j,caInnerIndex) = 0
-               elseif ( caCount == 3 ) then
+               else if ( caCount .EQ. 3 ) then
                   AC3DTEMP(i,j,caInnerIndex) = 1
                else
                   AC3DTEMP(i,j,caInnerIndex) = AC3D(i,j,caInnerIndex)

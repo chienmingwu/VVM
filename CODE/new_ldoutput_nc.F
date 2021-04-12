@@ -981,7 +981,7 @@ CONTAINS
 ! Automata
       OUT_tm1(:,:,1:nk2) = AC3D(1:mi1,1:mj1,1:nk2)
       call pCDF_WRITE_4D(ncid_th, 'ac', TIME_L, time_start, out_tm1, nk2 )
-      OUT_tm1(:,:,1:nk2) = AC3DLF(1:mi1,1:mj1,1:nk2)
+      OUT_tm1(:,:,1:nk2) = ACLF3D(1:mi1,1:mj1,1:nk2)
       call pCDF_WRITE_4D(ncid_th, 'aclf', TIME_L, time_start, out_tm1, nk2 )      
 #endif
 

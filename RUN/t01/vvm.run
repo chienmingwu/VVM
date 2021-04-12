@@ -38,7 +38,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
 
 cd ${expdir}
 chmod 700 run.sh
-./run.sh
+#./run.sh
 
 exit
 
