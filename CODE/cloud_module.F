@@ -9,6 +9,7 @@ USE utils
 USE profoutld
 USE bound
 USE damping
+USE domain_decomposition
 
 IMPLICIT NONE
 PRIVATE
@@ -117,21 +118,24 @@ CONTAINS
    call BOUND_ARB(NK3,ACLF3D)
    call BOUND_ARB(NK3,AC3D)
 
+   if ( my_task == 0 ) open(unit=13246,file='acdebug.txt',status='unknown')
+
    do j=1, MJ1
       do i=1, MI1
-            caCount = 0
-            DO caInnerIndex=1, nCAFinerGrid
+           DO caInnerIndex=1, nCAFinerGrid
+               caCount = 0
                DO caOffsetIndex=1, 9
                   if ( caOffsetIndex == 5 ) then
                      continue
                   endif
-
                   caCount = caCount +  AC3D( & 
                      i + CAIndex(caInnerIndex,caOffsetIndex,1), &
                      j + CAIndex(caInnerIndex,caOffsetIndex,2), &
                      CAIndex(caInnerIndex,caOffsetIndex,3) &
                   )
                ENDDO
+
+               write(13246,*) caCount
 
                if ( caCount < 2 .OR. caCount > 3 ) then
                   AC3DTEMP(i,j,caInnerIndex) = 0
@@ -140,10 +144,11 @@ CONTAINS
                else
                   AC3DTEMP(i,j,caInnerIndex) = AC3D(i,j,caInnerIndex)
                endif
-            ENDDO
+           ENDDO
       enddo
    enddo
    AC3D = AC3DTEMP
+   if ( my_task == 0 ) close(13246)
 #endif
 
 #if defined (DIFFUSION)
