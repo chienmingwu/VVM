@@ -44,11 +44,14 @@ CONTAINS
 
         INTEGER (KIND=int_kind) :: &
             RDHOUR  
+        INTEGER (KIND=int_kind),allocatable :: &
+            SEED(:)  
         INTEGER (KIND=int_kind) :: &
             i, j, k, &  ! do loop indices for zonal, meridional and vertical dimensions
             n,    &     ! time level index
             i00, j00, & !
-            IQ,JQ 
+            IQ,JQ, &
+            seed_count,clock ! for random seed
         REAL (KIND=dbl_kind) :: &
             scaleq=0._dbl_kind, &
             rkappa,             &
@@ -396,14 +399,19 @@ CONTAINS
                     !ENDIF
 
 #if defined (AUTOMATA)
-                    call RANDOM_NUMBER(tmp)
-                    !temp = 0.7
-                    if ( tmp > 0.5) then
-                        AC3D(I,J,K) = 1.0
-                        ACLF3D(I,J,K) = 20.0
-                    else
-                        AC3D(I,J,K) = 0.0
-                        ACLF3D(I,J,K) = 0.0
+                    do seed_count=1,my_task+3
+                      call RANDOM_NUMBER(tmp)
+                    enddo
+                    !if ( tmp > 0.5) then
+                    !    AC3D(I,J,K) = 1.0
+                    !    ACLF3D(I,J,K) = 20.0
+                    !else
+                    !    AC3D(I,J,K) = 0.0
+                    !    ACLF3D(I,J,K) = 0.0
+                    !endif
+                    AC3D(i,j,k) = 0.0
+                    if (my_task==0 .and. i==5 .and. j==5)then
+                      if ( k==1 .or. k==2 .or. k==3 .or. k==6 .or. k==8 ) AC3D(i,j,k) = 1.0
                     endif
                     
 #endif

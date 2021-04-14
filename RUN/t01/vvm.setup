@@ -83,13 +83,13 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/16/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/16/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/automata_finergrid_size/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/automata_finergrid_size/3/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'

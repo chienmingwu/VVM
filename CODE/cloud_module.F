@@ -75,6 +75,8 @@ CONTAINS
          AC3DTEMP,    &  ! for the finer grid for celluar automata
          ACLF3DTEMP      ! for the finer grid for celluar automata's lifetime         
 
+   AC3DTEMP = 0.0
+
    ! Calculate the index mapping, need to move to the initailization
    DO i=1 , nCAFinerRatio
       DO j=1 , nCAFinerRatio
@@ -115,40 +117,41 @@ CONTAINS
       ENDDO
    ENDDO
 
+    do j=1, MJ1
+        do i=1, MI1
+            DO caInnerIndex=1, nCAFinerGrid
+                caCount = 0
+                DO caOffsetIndex=1, 9
+                    if ( caOffsetIndex == 5 ) then
+                        cycle
+                    endif
+                    caCount = caCount +  NINT(AC3D( & 
+                        i + CAIndex(caInnerIndex,caOffsetIndex,1), &
+                        j + CAIndex(caInnerIndex,caOffsetIndex,2), &
+                        CAIndex(caInnerIndex,caOffsetIndex,3) &
+                    ),int_kind)
+                ENDDO
+                !if (my_task == 0) then
+                !  write(*,*) 'CACOUNT'
+                !  write(*,*) caCount
+                !endif
+                !write(13246,*) caCount
+
+                if ( caCount < 2 .OR. caCount > 3 ) then
+                    AC3DTEMP(i,j,caInnerIndex) = 0.0
+                else if ( caCount .EQ. 3 ) then
+                    AC3DTEMP(i,j,caInnerIndex) = 1.0
+                else
+                    AC3DTEMP(i,j,caInnerIndex) = AC3D(i,j,caInnerIndex)
+                endif
+            ENDDO
+        enddo
+    enddo
+    AC3D = AC3DTEMP
+    !if ( my_task == 0 ) close(13246)
+
    call BOUND_ARB(NK3,ACLF3D)
    call BOUND_ARB(NK3,AC3D)
-
-   if ( my_task == 0 ) open(unit=13246,file='acdebug.txt',status='unknown')
-
-   do j=1, MJ1
-      do i=1, MI1
-           DO caInnerIndex=1, nCAFinerGrid
-               caCount = 0
-               DO caOffsetIndex=1, 9
-                  if ( caOffsetIndex == 5 ) then
-                     continue
-                  endif
-                  caCount = caCount +  AC3D( & 
-                     i + CAIndex(caInnerIndex,caOffsetIndex,1), &
-                     j + CAIndex(caInnerIndex,caOffsetIndex,2), &
-                     CAIndex(caInnerIndex,caOffsetIndex,3) &
-                  )
-               ENDDO
-
-               write(13246,*) caCount
-
-               if ( caCount < 2 .OR. caCount > 3 ) then
-                  AC3DTEMP(i,j,caInnerIndex) = 0
-               else if ( caCount .EQ. 3 ) then
-                  AC3DTEMP(i,j,caInnerIndex) = 1
-               else
-                  AC3DTEMP(i,j,caInnerIndex) = AC3D(i,j,caInnerIndex)
-               endif
-           ENDDO
-      enddo
-   enddo
-   AC3D = AC3DTEMP
-   if ( my_task == 0 ) close(13246)
 #endif
 
 #if defined (DIFFUSION)
