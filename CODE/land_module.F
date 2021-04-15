@@ -518,7 +518,6 @@ CONTAINS
       pi = 4._8 * atan(1._8)
 !      TG(i,j)=300.-1.5*cos(2*pi*tempim/512.)   !512 points in x direction
 !      TG(i,j)=297.-6.0*cos(2*pi*tempim/512.)   !512 points in x direction
-      TG(i,j)=300.
       TG(i,j)=SST
    ELSE
    TG(I,J) = thbar(hx1)*pibar(hx1)

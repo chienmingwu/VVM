@@ -228,40 +228,45 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       xt(I) = I * DX
       yt(I) = J * DYNEW
 
-!      ! setup Chien and Wu 2016
-!      TMP=abs(real(i)-real(mi_glob)/2.)*DX
-!      if (TMP<=5000.) then
-!      TMP = 1200. 
-!      elseif (TMP>5000. .and. TMP<=20000.) then
-!      TMP = -0.08*(TMP-20000.)
-!      else 
-!      TMP = 0.
-!      endif
-!      IT=1
-!      DO 502 k=1,NK3
-!  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
-!      hx(I,J)=TOP
-
-      hx(I,J)= 1
-      LU(I,J) = 16
-      alb(I,J) = 15.
-      grf(I,J) = 10.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 14
-      ! setup Wu and Chen 2021
-      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
-      LU(I,J) = 7
-      alb(I,J) = 19.
-      grf(I,J) = 80.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 1
+      ! setup Chien and Wu 2016
+      TMP=abs(real(i)-real(mi_glob)/2.)*DX
+      if (TMP<=5000.) then
+      TMP = 1200. 
+      elseif (TMP>5000. .and. TMP<=20000.) then
+      TMP = -0.08*(TMP-20000.)
+      else 
+      TMP = 0.
       endif
+      TOP=1
+      DO 502 k=1,NK2
+      ! for full step 
+  502 IF (TMP >= ZZ(k)) TOP=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      ! for partial step
+!  502 IF (TMP >= ZZ(k)) TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      hx(I,J)=TOP
+!
+!      ENDDO
+
+!      hx(I,J)= 1
+!      LU(I,J) = 16
+!      alb(I,J) = 15.
+!      grf(I,J) = 10.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 14
+!      ! setup Wu and Chen 2021
+!      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
+!      LU(I,J) = 7
+!      alb(I,J) = 19.
+!      grf(I,J) = 80.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 1
+!      endif
   500 CONTINUE
 
 ! 5 large island in Maritime Continent
@@ -309,19 +314,19 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !  700 YT (J) = J*DYNEW
 
 
-      DO I=1,mi_glob
-      DO J=1,mj_glob
-      TMP=DBLE(hgt(I,J))
-
-      IF (TMP .GT. 0.) HX(I,J) = 2.
-      DO K=2,NK1
-      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-
-      ENDDO
-      IF(HX(I,J).LT.0)HX(I,J)=0
-
-      ENDDO
-      ENDDO
+!      DO I=1,mi_glob
+!      DO J=1,mj_glob
+!      TMP=DBLE(hgt(I,J))
+!
+!      IF (TMP .GT. 0.) HX(I,J) = 2.
+!      DO K=2,NK1
+!      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!
+!      ENDDO
+!      IF(HX(I,J).LT.0)HX(I,J)=0
+!
+!      ENDDO
+!      ENDDO
 
       ENDIF
 

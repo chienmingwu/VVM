@@ -81,10 +81,10 @@ CONTAINS
       DO K=2,maxtopo
       DO J=1,MJ1
       DO I=1,MI1
-      IF(ITYPEV(I,J,K) .EQ. 0) THEN
+      IF(ITYPEV(I,J,K) .NE. 1) THEN
       FZXBU(I,J,K)=0.
       ENDIF
-      IF(ITYPEU(I,J,K) .EQ. 0) THEN
+      IF(ITYPEU(I,J,K) .NE. 1) THEN
       FZYBU(I,J,K)=0.
       ENDIF
       ENDDO

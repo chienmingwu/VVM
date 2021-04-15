@@ -74,7 +74,7 @@ CONTAINS
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
       LOGICAL (KIND=log_kind) :: decay_loc
 
-      call update_tracer_source      
+      !call update_tracer_source      
 
 
 !  SELECT CASE (TRIM(casename))

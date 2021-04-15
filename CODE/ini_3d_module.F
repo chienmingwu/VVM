@@ -370,7 +370,7 @@ CONTAINS
 
 
       ! isentropic environment
-      !THBAR=THBAR(2)
+      THBAR=THBAR(2)
 
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
@@ -384,14 +384,14 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      !IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2&
-      !        !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
-      !        +((ZT(K)-3200.)/2000.)**2)<=1)THEN
-      !  TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
-      !                sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2+ &
-      !         !            ((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
-      !                     ((ZT(K)-3200.)/2000.)**2)))**2
-      !ENDIF
+      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2&
+              !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
+              +((ZT(K)-3200.)/2000.)**2)<=1)THEN
+        TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
+                      sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2+ &
+               !            ((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
+                           ((ZT(K)-3200.)/2000.)**2)))**2
+      ENDIF
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -459,7 +459,7 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 !      U3DX(I,J,K)=UG(K)
 !      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=3.2
+      U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
 
@@ -499,6 +499,8 @@ CONTAINS
       CALL BOUND_3D_XY 
       ENDIF restart_read
 
+
+      CALL DIRECTIB_ini
 
 #if defined (AREAMN)
 !-------------------
@@ -575,7 +577,7 @@ CONTAINS
 
 #if defined (TOPOGRAPHY) 
 
-!      DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
+!      DATA L/75000./,H/4000./ !width and height of bell shaped mountain.
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
       'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
 
@@ -591,48 +593,93 @@ CONTAINS
 
       call bound_arb(1,HX)
 
-      DO I=1,MI1
-      DO J=1,MJ1
-      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
-      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
+      DO J=mjm,MJ1
+      DO I=mim,MI1
+!      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
+!      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
+
+      HXU(I,J) = MAX(HX(I,J),HX(I+1,J))
+      HXV(I,J) = MAX(HX(I,J),HX(I,J+1))
+      ENDDO
+      ENDDO
+
+      call bound_arb(1,HXU)
+      call bound_arb(1,HXV)
+
+      DO J=mjm,mjp
+      DO I=mim,mip
+
+      NHX(I,J) = INT(HX(I,J))
+      NXU(I,J) = INT(HXU(I,J))
+      NXV(I,J) = INT(HXV(I,J))
       ENDDO
       ENDDO
 
       DO J=1,MJ1
       DO I=1,MI1
-      NN=INT(HX(I,J))
-      IF(NN .NE. 0) THEN
-      DO K=2,NN
-      ITYPEU(I,J,K)=0
-      ITYPEV(I,J,K)=0
-      ITYPEW(I,J,K)=0
-      ENDDO
-      ENDIF
+        DO K=1,NHX(I,J)
+        ITYPEW(I,J,K)=0
+        ENDDO
+
+        DO K=1,NXU(I,J)-1
+        ITYPEU(I,J,K)=0
+        ENDDO
+        IF (NXU(I,J) .GE. 1) ITYPEU(I,J,NXU(I,J)) = -1
+        IF (NXU(I,J) .EQ. 0) ITYPEU(I,J,1) = -1
+
+        DO K=1,NXV(I,J)-1
+        ITYPEV(I,J,K)=0
+        ENDDO
+        IF (NXV(I,J) .GE. 1) ITYPEV(I,J,NXV(I,J)) = -1
+        IF (NXV(I,J) .EQ. 0) ITYPEV(I,J,1) = -1
       ENDDO
       ENDDO
 
       call bound_int_arb(NK2,ITYPEW)
 
-      DO K=2,NK2
-      DO J=mjm,mjp
-      DO I=mim,mip
-      NN=ITYPEW(I,J,K)
-      IF(NN .EQ. 0) THEN
-      ITYPEU(I-1,J,K)=0
-      ITYPEV(I,J-1,K)=0
+      DO K=2,maxtopo
+      DO J=1,mjp
+      DO I=1,mip
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I-1,J,K) .EQ. 1) THEN
+!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I+1,J,K) ) THEN
+      ITYPEU(I-1,J,K) = -1
+!      ITYPEV(I-1,J,K) = -1
       ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I+1,J,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I-1,J,K) .GT. ITYPEW(I,J,K) ) THEN
+      ITYPEU(I,J,K) = -1
+      ITYPEV(I,J,K) = -1
+      ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J-1,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I,J+1,K) ) THEN
+!      ITYPEU(I,J-1,K) = -1
+      ITYPEV(I,J-1,K) = -1
+      ENDIF
+      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J+1,K) .EQ. 1 ) THEN
+!      IF (ITYPEW(I,J-1,K) .GT. ITYPEW(I,J,K) ) THEN
+      ITYPEU(I,J,K) = -1
+      ITYPEV(I,J,K) = -1
+      ENDIF
+
       ENDDO
+      ENDDO
+      ENDDO
+
+      DO J=1,mjp
+      DO I=1,mip
+
+      IF (ITYPEU(I,J,2) .NE. 1 ) THEN
+      ITYPEU(I,J,1) = 0
+      ENDIF
+      IF (ITYPEV(I,J,2) .NE. 1 ) THEN
+      ITYPEU(I,J,1) = 0
+      ENDIF
+
       ENDDO
       ENDDO
 
       call bound_int_arb(NK2,ITYPEU)
       call bound_int_arb(NK2,ITYPEV)
-
-      DO J=mjm,mjp
-      DO I=mim,mip
-      IF(HX(I,J) .EQ. 0.) HX(I,J)=1.
-      ENDDO
-      ENDDO
 
 #else
       hx=1
