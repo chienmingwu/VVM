@@ -36,9 +36,11 @@ PRIVATE
       TC3D        ! passive tracer mixing ratio (kg/kg)
 #if defined (AUTOMATA)
    !INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp,nCAFinerGrid), PUBLIC ::       &
-   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3), PUBLIC ::       &
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3), PUBLIC :: &
       AC3D,    &  ! for the finer grid for celluar automata
       ACLF3D      ! for the finer grid for celluar automata's lifetime
+   INTEGER (KIND=int_kind), DIMENSION(nCAFinerGrid,9,3), PUBLIC :: &
+      CAIndex ! finerGridIndex(1~25), offsetIndex(1~9) --> [MajorX Offset,MajorY Offset,finerGridIndex]
 #endif      
 !*****************************
 ! Prognostic dynamical variables

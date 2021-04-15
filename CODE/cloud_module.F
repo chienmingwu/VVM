@@ -65,11 +65,9 @@ CONTAINS
          i, j, k, nt ! do loop indices for zonal, meridional and vertical dimensions
 
 #if defined (AUTOMATA)
-      INTEGER (KIND=int_kind), DIMENSION(nCAFinerGrid,9,3) :: &
-            CAIndex ! finerGridIndex(1~25), offsetIndex(1~9) --> [MajorX Offset,MajorY Offset,finerGridIndex]
       INTEGER (KIND=int_kind) :: &   
-         iOffset, jOffset, caInnerIndex, caOffsetIndex, &
-         modI, modJ, &
+         caInnerIndex, caOffsetIndex, &
+         !modI, modJ,iOffset, jOffset, &
          caCount
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3) ::  &
          AC3DTEMP,    &  ! for the finer grid for celluar automata
@@ -77,45 +75,45 @@ CONTAINS
 
    AC3DTEMP = 0.0
 
-   ! Calculate the index mapping, need to move to the initailization
-   DO i=1 , nCAFinerRatio
-      DO j=1 , nCAFinerRatio
-         caInnerIndex = (i-1) * nCAFinerRatio + j
-         DO iOffset=-1,1
-            DO jOffset=-1,1
-               caOffsetIndex = (iOffset + 1 ) * 3 + jOffset + 2
+   ! ! Calculate the index mapping, need to move to the initailization
+   ! DO i=1 , nCAFinerRatio
+   !    DO j=1 , nCAFinerRatio
+   !       caInnerIndex = (i-1) * nCAFinerRatio + j
+   !       DO iOffset=-1,1
+   !          DO jOffset=-1,1
+   !             caOffsetIndex = (iOffset + 1 ) * 3 + jOffset + 2
 
-               if (i + iOffset <= 0) then
-                  CAIndex(caInnerIndex,caOffsetIndex,1) = -1
-               elseif ( i + iOffset > nCAFinerRatio ) then
-                  CAIndex(caInnerIndex,caOffsetIndex,1) = +1
-               else
-                  CAIndex(caInnerIndex,caOffsetIndex,1) = 0
-               endif
+   !             if (i + iOffset <= 0) then
+   !                CAIndex(caInnerIndex,caOffsetIndex,1) = -1
+   !             elseif ( i + iOffset > nCAFinerRatio ) then
+   !                CAIndex(caInnerIndex,caOffsetIndex,1) = +1
+   !             else
+   !                CAIndex(caInnerIndex,caOffsetIndex,1) = 0
+   !             endif
 
-               if (j + jOffset <= 0) then
-                  CAIndex(caInnerIndex,caOffsetIndex,2) = -1
-               elseif ( j + jOffset > nCAFinerRatio ) then
-                  CAIndex(caInnerIndex,caOffsetIndex,2) = +1
-               else
-                  CAIndex(caInnerIndex,caOffsetIndex,2) = 0
-               endif
+   !             if (j + jOffset <= 0) then
+   !                CAIndex(caInnerIndex,caOffsetIndex,2) = -1
+   !             elseif ( j + jOffset > nCAFinerRatio ) then
+   !                CAIndex(caInnerIndex,caOffsetIndex,2) = +1
+   !             else
+   !                CAIndex(caInnerIndex,caOffsetIndex,2) = 0
+   !             endif
 
-               modI = mod(i + nCAFinerRatio + iOffset, nCAFinerRatio)
-               if ( modI == 0 )  then 
-                  modI = nCAFinerRatio
-               endif
+   !             modI = mod(i + nCAFinerRatio + iOffset, nCAFinerRatio)
+   !             if ( modI == 0 )  then 
+   !                modI = nCAFinerRatio
+   !             endif
 
-               modJ = mod(j + nCAFinerRatio + jOffset, nCAFinerRatio)
-               if ( modJ == 0 )  then 
-                  modJ = nCAFinerRatio
-               endif
+   !             modJ = mod(j + nCAFinerRatio + jOffset, nCAFinerRatio)
+   !             if ( modJ == 0 )  then 
+   !                modJ = nCAFinerRatio
+   !             endif
 
-               CAIndex(caInnerIndex,caOffsetIndex,3) = ( modI - 1 ) * nCAFinerRatio + modJ
-            ENDDO
-         ENDDO
-      ENDDO
-   ENDDO
+   !             CAIndex(caInnerIndex,caOffsetIndex,3) = ( modI - 1 ) * nCAFinerRatio + modJ
+   !          ENDDO
+   !       ENDDO
+   !    ENDDO
+   ! ENDDO
 
     do j=1, MJ1
         do i=1, MI1

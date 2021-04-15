@@ -51,7 +51,8 @@ CONTAINS
             n,    &     ! time level index
             i00, j00, & !
             IQ,JQ, &
-            seed_count,clock ! for random seed
+            seed_count,clock, & ! for random seed computataion
+            iOffset, jOffset, modJ, modI, caInnerIndex, caOffsetIndex ! for CAFinerGrid Mapping
         REAL (KIND=dbl_kind) :: &
             scaleq=0._dbl_kind, &
             rkappa,             &
@@ -587,6 +588,48 @@ CONTAINS
 #endif    
 #if defined (DIFFUSION)
         call turb_3d_ini
+#endif
+
+#if defined (AUTOMATA)
+        ! Calculate the index mapping of each finer grid and it's 9-neighbor
+        DO i=1 , nCAFinerRatio
+            DO j=1 , nCAFinerRatio
+                caInnerIndex = (i-1) * nCAFinerRatio + j
+                DO iOffset=-1,1
+                    DO jOffset=-1,1
+                    caOffsetIndex = (iOffset + 1 ) * 3 + jOffset + 2
+
+                    if (i + iOffset <= 0) then
+                        CAIndex(caInnerIndex,caOffsetIndex,1) = -1
+                    elseif ( i + iOffset > nCAFinerRatio ) then
+                        CAIndex(caInnerIndex,caOffsetIndex,1) = +1
+                    else
+                        CAIndex(caInnerIndex,caOffsetIndex,1) = 0
+                    endif
+
+                    if (j + jOffset <= 0) then
+                        CAIndex(caInnerIndex,caOffsetIndex,2) = -1
+                    elseif ( j + jOffset > nCAFinerRatio ) then
+                        CAIndex(caInnerIndex,caOffsetIndex,2) = +1
+                    else
+                        CAIndex(caInnerIndex,caOffsetIndex,2) = 0
+                    endif
+
+                    modI = mod(i + nCAFinerRatio + iOffset, nCAFinerRatio)
+                    if ( modI == 0 )  then 
+                        modI = nCAFinerRatio
+                    endif
+
+                    modJ = mod(j + nCAFinerRatio + jOffset, nCAFinerRatio)
+                    if ( modJ == 0 )  then 
+                        modJ = nCAFinerRatio
+                    endif
+
+                    CAIndex(caInnerIndex,caOffsetIndex,3) = ( modI - 1 ) * nCAFinerRatio + modJ
+                    ENDDO
+                ENDDO
+            ENDDO
+        ENDDO
 #endif
 
         TG_restart: IF (.false.)THEN
