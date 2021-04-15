@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = empty_physics_test
+set expname = physics_10x_cafrac_to_q1ls
 
 # set job system and compiler
 set compiler = 'pgi_moggpu_docker'
@@ -74,7 +74,7 @@ cat > definesld.com << 'END1'
 #define NO_MICROCODE
 #define NO_LSM
 #define NO_RADCODE
-#define NO_AUTOMATA
+#define AUTOMATA
 'END1'
 cat definesld.com
 

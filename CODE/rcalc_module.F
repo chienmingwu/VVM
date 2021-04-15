@@ -39,6 +39,12 @@ CONTAINS
       INTEGER (KIND=int_kind) ::  &
          i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
          l, nt      ! time level index, tracer index
+#if defined (AUTOMATA)
+      INTEGER (KIND=int_kind) ::  &
+         finerGridCount, finerGridIndex ! for iterate finer grid 
+      REAL (KIND=dbl_kind) :: &
+         finerGridFrac
+#endif
       REAL (KIND=dbl_kind) :: fntddz, pi
 
       INTEGER (KIND=int_kind) ::  &
@@ -118,11 +124,20 @@ CONTAINS
       DO 300 K = 2, NK2
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
+#if defined (AUTOMATA)
+          finerGridCount = 0
+          do finerGridIndex=1,nCAFinerGrid
+              if ( AC3D(I,J,finerGridIndex) > 0.5 ) then
+                  finerGridCount = finerGridCount + 1   
+              endif
+          enddo
+          finerGridFrac = real(finerGridCount,dbl_kind)/real(nCAFinerGrid,dbl_kind)
+#endif
       ! Q1LS = large scale forcing
       ! here we need convective heating 
       ! so the automata effect should be the negative terms
       ! to the Q1LS
-      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K) ! -automata parameteriztion
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K) - 10.0 * finerGridFrac ! minus automata finergrid frac
       FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
   309 CONTINUE
   SELECT CASE (TRIM(casename))

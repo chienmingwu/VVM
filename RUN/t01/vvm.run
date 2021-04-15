@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = empty_physics_test
+set expname = physics_10x_cafrac_to_q1ls
 
 # set job system and compiler
 set compiler = 'pgi_moggpu_docker'
