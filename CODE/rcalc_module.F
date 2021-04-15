@@ -118,7 +118,11 @@ CONTAINS
       DO 300 K = 2, NK2
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
-      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)
+      ! Q1LS = large scale forcing
+      ! here we need convective heating 
+      ! so the automata effect should be the negative terms
+      ! to the Q1LS
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K) ! -automata parameteriztion
       FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
   309 CONTINUE
   SELECT CASE (TRIM(casename))

@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = land_test
+set expname = empty_physics_test
 
 # set job system and compiler
 set compiler = 'pgi_moggpu_docker'

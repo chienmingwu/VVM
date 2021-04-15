@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = land_test
+set expname = empty_physics_test
 
 # set job system and compiler
 set compiler = 'pgi_moggpu_docker'
@@ -71,10 +71,10 @@ cat > definesld.com << 'END1'
 #define PERIODIC
 #define DIFFUSION
 #define PHYSICS
-#define MICROCODE
-#define LSM
-#define RADCODE
-#define AUTOMATA
+#define NO_MICROCODE
+#define NO_LSM
+#define NO_RADCODE
+#define NO_AUTOMATA
 'END1'
 cat definesld.com
 
@@ -83,8 +83,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/16/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/16/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
@@ -97,9 +97,9 @@ cat > INPUT << 'END6'
  &INPUT2 RLAT=0, RLON=0 /
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=50.,DT=5.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=1,NWR11=1,NFLPRT=1,NRESTART=120. /
+ &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=120. /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0,DTHMAX=0.5,Z2PERT=100. /
+ &INPUT5 IX=3182073,ITINIT=30,ITSTOP=120,SCALE=1.,Q1Q2=T,DTRAD=120.,petsc_cr=0,DTHMAX=0.5,Z2PERT=100. /
 #                                                              (s)
 'END6'
 cat INPUT
