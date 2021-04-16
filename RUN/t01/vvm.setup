@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = bubble_full 
+set expname = bubble_partial 
 
 # set job system and compiler
 set compiler = 'intel_jet'

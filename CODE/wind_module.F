@@ -391,7 +391,7 @@ SUBROUTINE DIRECTIB
 
       ENDIF
 
-      DO 500 K=1,maxtopo+1
+      DO 500 K=1,NK3
       DO 500 J=mjm,mjp
       DO 500 I=mim,mip
       IF (ITYPEU(I,J,K) .NE. 1) THEN
@@ -406,7 +406,7 @@ SUBROUTINE DIRECTIB
       ENDIF
  500  CONTINUE
 
-      DO 550 K=1,maxtopo+1
+      DO 550 K=1,NK2
       DO 550 J=mjm,mjp
       DO 550 I=mim,mip
       IF (ITYPEW(I,J,K) .NE. 1) THEN
@@ -436,29 +436,29 @@ SUBROUTINE DIRECTIB
 
 !      Z3DXT(I,J,K) =(-HXVT/DZ*FNZ(K) -Z3DY(I,J,K+2)*(1.-HTP))/RATIO
 
-!      HXVB = 0.
-!      HXVT = 0.
-!      HXWS = 0.
-!      HXWN = 0.
-!
-!      RATIO = 2. * (1.-HTP)*DZ/FNZ(K)
-!      DDZ = DZ/FNZ(K)
-!      KP = K+1 
-!      KPP = KP+1
-!      JP = J+1
-!      if (RATIO .LT. DDZ) THEN
-!      call INTERP1(U3DY(I,J,KP),U3DY(I,J,KPP),RATIO,DDZ,HXVT)
-!      call INTERP1(U3DY(I,J,K),U3DY(I,J,KP),RATIO,DDZ,HXVB)
-!      CALL INTERP1(W3D(I,J,K),W3D(I,J,KP),RATIO,DDZ,HXWS)
-!      CALL INTERP1(W3D(I,JP,K),W3D(I,JP,KP),RATIO,DDZ,HXWN)
-!      ELSE
-!      call INTERP1(U3DY(I,J,KPP),U3DY(I,J,KPP+1),RATIO-DDZ,DDZ,HXVT)
-!      call INTERP1(U3DY(I,J,KP),U3DY(I,J,KPP),RATIO-DDZ,DDZ,HXVB)
-!      CALL INTERP1(W3D(I,J,KP),W3D(I,J,KPP),RATIO-DDZ,DDZ,HXWS)
-!      CALL INTERP1(W3D(I,JP,KP),W3D(I,JP,KPP),RATIO-DDZ,DDZ,HXWN)
-!      ENDIF
-!
-!      RATIO = ((HXWN-HXWS)/DYNEW-(HXVT-HXVB)/DDZ)
+      HXVB = 0.
+      HXVT = 0.
+      HXWS = 0.
+      HXWN = 0.
+
+      RATIO = 2. * (1.-HTP)*DZ/FNZ(K)
+      DDZ = DZ/FNZ(K)
+      KP = K+1 
+      KPP = KP+1
+      JP = J+1
+      if (RATIO .LT. DDZ) THEN
+      call INTERP1(U3DY(I,J,KP),U3DY(I,J,KPP),RATIO,DDZ,HXVT)
+      call INTERP1(U3DY(I,J,K),U3DY(I,J,KP),RATIO,DDZ,HXVB)
+      CALL INTERP1(W3D(I,J,K),W3D(I,J,KP),RATIO,DDZ,HXWS)
+      CALL INTERP1(W3D(I,JP,K),W3D(I,JP,KP),RATIO,DDZ,HXWN)
+      ELSE
+      call INTERP1(U3DY(I,J,KPP),U3DY(I,J,KPP+1),RATIO-DDZ,DDZ,HXVT)
+      call INTERP1(U3DY(I,J,KP),U3DY(I,J,KPP),RATIO-DDZ,DDZ,HXVB)
+      CALL INTERP1(W3D(I,J,KP),W3D(I,J,KPP),RATIO-DDZ,DDZ,HXWS)
+      CALL INTERP1(W3D(I,JP,KP),W3D(I,JP,KPP),RATIO-DDZ,DDZ,HXWN)
+      ENDIF
+
+      RATIO = ((HXWN-HXWS)/DYNEW-(HXVT-HXVB)/DDZ)
 !      CALL INTERP1(U3DY(I,J,K),U3DY(I,J,K+1),(1.-HTP)*DZ/FNZ(K),DZ/FNZ(K),HXVT)
 
 !      Z3DXT(I,J,K) = 2.*0. - RATIO
@@ -481,7 +481,7 @@ SUBROUTINE DIRECTIB
       IF (ITYPEU(I,J,K) .EQ. -1 .AND. NPU(I,J) .EQ. K) THEN
       Z3DYT(I,J,K) = HXZY(I,J)
       ELSEIF (ITYPEU(I,J,K) .EQ. 0 .AND. ITYPEU(I,J,K+1).EQ. -1) THEN
-      HTP = MAX(dble(NXU(I,J))-HX(I,J)+1.,dble(NXU(I,J))-HX(I+1,J)+1.)
+      HTP = MAX(NXU(I,J)-HX(I,J)+1,NXU(I,J)-HX(I+1,J)+1)
 !      IF( J .EQ. 10 .AND. K .EQ. 2) PRINT*,I,HX(I,J),HX(I+1,J)
 
 !      IF (ABS(HTP) .LT. 0.0001 .OR. NXU(I,J) .EQ. 0) THEN
@@ -495,29 +495,29 @@ SUBROUTINE DIRECTIB
 !      IF(J .EQ. 10) PRINT*,I,K, HTP
 !      CALL INTERP1(U3DX(I,J,K),U3DX(I,J,K+1),(1.-HTP)*DZ/FNZ(K),DZ/FNZ(K),HXUT)
 
-!      HXUB = 0.
-!      HXUT = 0.
-!      HXWW = 0.
-!      HXWE = 0.
-!
-!      RATIO = 2. * (1.-HTP)*DZ/FNZ(K)
-!      DDZ = DZ/FNZ(K)
-!      KP = K+1
-!      KPP = KP+1
-!      IP = I+1
-!      if (RATIO .LT. DDZ) THEN
-!      call INTERP1(U3DX(I,J,KP),U3DX(I,J,KPP),RATIO,DDZ,HXUT)
-!      call INTERP1(U3DX(I,J,K),U3DX(I,J,KP),RATIO,DDZ,HXUB)
-!      CALL INTERP1(W3D(I,J,K),W3D(I,J,KP),RATIO,DDZ,HXWW)
-!      CALL INTERP1(W3D(IP,J,K),W3D(IP,J,KP),RATIO,DDZ,HXWE)
-!      ELSE
-!      call INTERP1(U3DX(I,J,KPP),U3DX(I,J,KPP+1),RATIO-DDZ,DDZ,HXUT)
-!      call INTERP1(U3DX(I,J,KP),U3DX(I,J,KPP),RATIO-DDZ,DDZ,HXUB)
-!      CALL INTERP1(W3D(I,J,KP),W3D(I,J,KPP),RATIO-DDZ,DDZ,HXWW)
-!      CALL INTERP1(W3D(IP,J,KP),W3D(IP,J,KPP),RATIO-DDZ,DDZ,HXWE)
-!      ENDIF
-!
-!      RATIO = ((HXWE-HXWW)/DX-(HXUT-HXUB)/DDZ)
+      HXUB = 0.
+      HXUT = 0.
+      HXWW = 0.
+      HXWE = 0.
+
+      RATIO = 2. * (1.-HTP)*DZ/FNZ(K)
+      DDZ = DZ/FNZ(K)
+      KP = K+1
+      KPP = KP+1
+      IP = I+1
+      if (RATIO .LT. DDZ) THEN
+      call INTERP1(U3DX(I,J,KP),U3DX(I,J,KPP),RATIO,DDZ,HXUT)
+      call INTERP1(U3DX(I,J,K),U3DX(I,J,KP),RATIO,DDZ,HXUB)
+      CALL INTERP1(W3D(I,J,K),W3D(I,J,KP),RATIO,DDZ,HXWW)
+      CALL INTERP1(W3D(IP,J,K),W3D(IP,J,KP),RATIO,DDZ,HXWE)
+      ELSE
+      call INTERP1(U3DX(I,J,KPP),U3DX(I,J,KPP+1),RATIO-DDZ,DDZ,HXUT)
+      call INTERP1(U3DX(I,J,KP),U3DX(I,J,KPP),RATIO-DDZ,DDZ,HXUB)
+      CALL INTERP1(W3D(I,J,KP),W3D(I,J,KPP),RATIO-DDZ,DDZ,HXWW)
+      CALL INTERP1(W3D(IP,J,KP),W3D(IP,J,KPP),RATIO-DDZ,DDZ,HXWE)
+      ENDIF
+
+      RATIO = ((HXWE-HXWW)/DX-(HXUT-HXUB)/DDZ)
 
 !      CALL INTERP1(U3DX(I,J,K),U3DX(I,J,K+1),(1.-HTP)*DZ/FNZ(K),DZ/FNZ(K),HXUT)
 
@@ -538,11 +538,11 @@ SUBROUTINE DIRECTIB
       ENDIF
   700 CONTINUE
 
-      call bound_3dt_xy
-
       TC3D(:,:,1:nk2,1)=ITYPEW
-      TC3D(:,:,1:nk2,2)=ITYPEU
-      TC3D(:,:,1:nk2,3)=ITYPEV
+      TC3D(:,:,1:nk2,2)=z3dxt
+      TC3D(:,:,1:nk2,3)=z3dyt
+
+      call bound_3dt_xy
 
 END SUBROUTINE DIRECTIB
 SUBROUTINE DIRECTIB_ini
@@ -564,7 +564,6 @@ REAL(kind=dbl_kind) :: ZI,ZE,ZL,ZH
       NPU(I,J) = K
       HXZ(I,J)=(HXU(I,J)-NXU(I,J))*DZ/FNZ(K)
       HXDIJ(I,J) = 2.* HXZ(I,J)
-      write(*,*) "DIRECTIB x"
       ENDIF
       ENDDO
       ENDDO
@@ -576,7 +575,6 @@ REAL(kind=dbl_kind) :: ZI,ZE,ZL,ZH
       NPV(I,J) = K
       HYZ(I,J)=(HXV(I,J)-NXV(I,J))*DZ/FNZ(K)
       HYDIJ(I,J) = 2.*HYZ(I,J)
-      write(*,*) "DIRECTIB y"
       ENDIF
       ENDDO
       ENDDO

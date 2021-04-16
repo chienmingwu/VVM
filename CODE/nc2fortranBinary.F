@@ -240,9 +240,9 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       TOP=1
       DO 502 k=1,NK2
       ! for full step 
-  502 IF (TMP >= ZZ(k)) TOP=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!  502 IF (TMP >= ZZ(k)) TOP=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
       ! for partial step
-!  502 IF (TMP >= ZZ(k)) TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+  502 IF (TMP >= ZZ(k)) TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
       hx(I,J)=TOP
 !
 !      ENDDO
