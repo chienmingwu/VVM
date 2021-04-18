@@ -240,33 +240,33 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       TOP=1
       DO 502 k=1,NK2
       ! for full step 
-!  502 IF (TMP >= ZZ(k)) TOP=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+  502 IF (TMP >= ZZ(k)) TOP=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
       ! for partial step
-  502 IF (TMP >= ZZ(k)) TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!  502 IF (TMP >= ZZ(k)) TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
       hx(I,J)=TOP
-!
+
 !      ENDDO
 
-!      hx(I,J)= 1
-!      LU(I,J) = 16
-!      alb(I,J) = 15.
-!      grf(I,J) = 10.
-!      lai(I,J) = 4.
-!      SHDMAX(I,J) = 10.
-!      SHDMIN(I,J) = 10.
-!      SLOPE(I,J) = 1
-!      SOIL(I,J) = 14
-!      ! setup Wu and Chen 2021
-!      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
-!      LU(I,J) = 7
-!      alb(I,J) = 19.
-!      grf(I,J) = 80.
-!      lai(I,J) = 4.
-!      SHDMAX(I,J) = 10.
-!      SHDMIN(I,J) = 10.
-!      SLOPE(I,J) = 1
-!      SOIL(I,J) = 1
-!      endif
+      LU(I,J) = 16
+      alb(I,J) = 15.
+      grf(I,J) = 10.
+      lai(I,J) = 4.
+      SHDMAX(I,J) = 10.
+      SHDMIN(I,J) = 10.
+      SLOPE(I,J) = 1
+      SOIL(I,J) = 14
+      ! setup Wu and Chen 2021
+      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
+      if (hx(I,J)<2) hx(I,J)=2
+      LU(I,J) = 7
+      alb(I,J) = 19.
+      grf(I,J) = 80.
+      lai(I,J) = 4.
+      SHDMAX(I,J) = 10.
+      SHDMIN(I,J) = 10.
+      SLOPE(I,J) = 1
+      SOIL(I,J) = 1
+      endif
   500 CONTINUE
 
 ! 5 large island in Maritime Continent

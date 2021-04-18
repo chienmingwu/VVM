@@ -538,9 +538,9 @@ SUBROUTINE DIRECTIB
       ENDIF
   700 CONTINUE
 
-      TC3D(:,:,1:nk2,1)=ITYPEW
-      TC3D(:,:,1:nk2,2)=z3dxt
-      TC3D(:,:,1:nk2,3)=z3dyt
+      !TC3D(:,:,1:nk2,1)=ITYPEW
+      !TC3D(:,:,1:nk2,2)=z3dxt
+      !TC3D(:,:,1:nk2,3)=z3dyt
 
       call bound_3dt_xy
 
