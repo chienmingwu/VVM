@@ -334,7 +334,7 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
+         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D(ITT)
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
 !      CALL SFLUX_3D ! call sflux every time step 
@@ -1083,7 +1083,7 @@ CONTAINS
 !-----7---------------------------------------------------------------72
 #if defined (DIFFUSION)
 
-   SUBROUTINE SFLUX_3D
+   SUBROUTINE SFLUX_3D(ITT)
 
 !     Case of TGSPEC=.TRUE.  
 !     Surface layer model: Businger et al. (1971) & Deardorff (1972)
@@ -1091,6 +1091,8 @@ CONTAINS
 !
 !     OUTPUT : UW,WV,WTH,WQV AT LOWER BOUNDARY
 !
+      INTEGER (KIND=int_kind), INTENT(IN) ::   &
+         ITT     ! time step count
 
 ! local variables
       REAL (KIND=dbl_kind) ::    &
@@ -1183,6 +1185,10 @@ CONTAINS
 
 #else
 !==========================================================
+
+      ! TG is T0+10*sin((t-6hr)*pi/12hr) (chris)
+      TG=273.15+27.+10.*sin((real(ITT)*PASS_BIG_DT/3600.)*3.14159265/12.)
+      IF (my_task == 0) write(*,*) ITT, TG(1,1)
 
       DO 110 J=1,MJ1
       DO 110 I=1,MI1

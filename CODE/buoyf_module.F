@@ -77,7 +77,6 @@ CONTAINS
 
 
 !ccwut set buoy term on topo to zero
-
       DO K=2,maxtopo
       DO J=1,MJ1
       DO I=1,MI1
