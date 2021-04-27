@@ -331,6 +331,10 @@ CONTAINS
          UW(I,J)  = 0.
          WV(I,J)  = 0.
          WTH(I,J) = 0.
+         !! for partial step debugging
+         !WTH(I,J) = (273.15+27.+10.-TH3D(i,j,int(hx(i,j))+1)*&
+         !           pibar(int(hx(i,j))+1))*0.01/pibar(int(hx(i,j))+1)&
+         !          *DZ/FNT(hx(i,j))/((int(hx(i,j))+1-hx(i,j))*DZ/FNT(int(hx(i,j))))
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
@@ -1134,7 +1138,10 @@ CONTAINS
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 !ccwu
       INTEGER (KIND=int_kind) ::   &
-         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo, tempim       ! do loop indices for zonal, meridional and vertical dimensions
+         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo, tempim &    ! do loop indices for zonal, meridional and vertical dimensions
+        ,k, kp, kpp
+
+      REAL(kind=dbl_kind) :: DDZ,DELTA_Z,HTP,HXVN,HXVS,HXUE,HXUW
 
       CP = 1004.5
       pi = 4._8 * atan(1._8)
@@ -1147,8 +1154,55 @@ CONTAINS
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
 
-      SPEEDTP(I,J)=0.5*SQRT((U3DX(I-1,J,hxp)+U3DX(I,J,hxp))**2  &
-                           +(U3DY(I,J-1,hxp)+U3DY(I,J,hxp))**2)
+      IF (NXU(I,J) .EQ. hx1 .AND. HXU(I,J) .NE. DBLE(NXU(I,J))) THEN
+        K = NXU(I,J)
+        KP = K + 1
+        KPP = KP + 1
+        DDZ = DZ/FNZ(K)
+        HXUE = 0.
+        CALL INTERP1(U3DX(I,J,KP),U3DX(I,J,KPP),HXZ(I,J),DDZ,HXUE)
+      ELSE
+        HXUE = U3DX(I,J,hxp)
+      ENDIF
+
+      IF (NXU(I-1,J) .EQ. hx1 .AND. HXU(I-1,J) .NE. DBLE(NXU(I-1,J))) THEN
+        K = NXU(I-1,J)
+        KP = K + 1
+        KPP = KP + 1
+        DDZ = DZ/FNZ(K)
+        HXUW = 0.
+        CALL INTERP1(U3DX(I-1,J,KP),U3DX(I-1,J,KPP),HXZ(I-1,J),DDZ,HXUW)
+      ELSE
+        HXUW = U3DX(I-1,J,hxp)
+      ENDIF
+
+      IF (NXV(I,J) .EQ. hx1 .AND. HXV(I,J) .NE. DBLE(NXV(I,J))) THEN
+        K = NXV(I,J)
+        KP = K + 1
+        KPP = KP + 1
+        DDZ = DZ/FNZ(K)
+        HXVN = 0.
+        CALL INTERP1(U3DY(I,J,KP),U3DY(I,J,KPP),HYZ(I,J),DDZ,HXVN)
+      ELSE
+        HXVN = U3DY(I,J,hxp)
+      ENDIF
+
+      IF (NXV(I,J-1) .EQ. hx1 .AND. HXV(I,J-1) .NE. DBLE(NXV(I,J-1))) THEN
+        K = NXV(I,J-1)
+        KP = K + 1
+        KPP = KP + 1
+        DDZ = DZ/FNZ(K)
+        HXVS = 0.
+        CALL INTERP1(U3DY(I,J-1,KP),U3DY(I,J-1,KPP),HYZ(I,J-1),DDZ,HXVS)
+      ELSE
+        HXVS = U3DY(I,J-1,hxp)
+      ENDIF
+
+      IF (DELTA_Z==0.) DELTA_Z = .5*DZ/FNT(hxp)
+      SPEEDTP(I,J)=0.5*SQRT((HXUW+HXUE)**2  &
+                           +(HXVS+HXVN)**2)
+!      SPEEDTP(I,J)=0.5*SQRT((U3DX(I-1,J,hxp)+U3DX(I,J,hxp))**2  &
+!                           +(U3DY(I,J-1,hxp)+U3DY(I,J,hxp))**2)
 !      if(hx1 .ge. 2) then
 !      tg(i,j)=thbar(hx1)*pibar(hx1)   !specify the ground temp. at the corresponding level
 !      gwet(i,j)=0.8
@@ -1194,7 +1248,8 @@ CONTAINS
       DO 110 I=1,MI1
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
-      ztmp = .5*DZ/FNT(hxp)
+!      ztmp = .5*DZ/FNT(hxp)
+      ztmp = DELTA_Z
 
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 ) 
@@ -1632,5 +1687,11 @@ SUBROUTINE TURB_3D_INI
 #endif
 
    END SUBROUTINE TURB_3D_INI
+
+   SUBROUTINE INTERP1(XA,XB,D,DX,X)
+   REAL(KIND=dbl_kind), intent(IN) :: XA,XB,D,DX
+   REAL(KIND=dbl_kind), intent(OUT) :: X
+   X=(XA*(DX-D)+XB*D)/DX
+   END SUBROUTINE INTERP1
 
 END MODULE turb_3d_module

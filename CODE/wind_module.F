@@ -18,10 +18,6 @@ USE turb_1d_module
 IMPLICIT NONE
 PRIVATE
 
-REAL(kind=dbl_kind) ,DIMENSION(mim:mip,mjm:mjp),PRIVATE ::HXZ,HYZ,HXDIJ,HYDIJ
-INTEGER(kind=int_kind) ,DIMENSION(mim:mip,mjm:mjp),PRIVATE :: NPU,NPV 
-
-
 PUBLIC :: wind_3d,DIRECTIB_ini
 
 CONTAINS
@@ -281,7 +277,7 @@ SUBROUTINE DIRECTIB
       IF (HXV(I,J) .GT. HX(I,JP) ) &
       CALL INTERP1(W3D(I,JP,K),W3D(I,JP,KP),HYZ(I,J),DDZ,HXWN)
 
-      HXVT = 0.
+      !HXVT = 0.
 
       HXZX(I,J) = ((HXWN-HXWS)/DYNEW-(HXVT - HXVB)/DDZ)
 
@@ -307,7 +303,7 @@ SUBROUTINE DIRECTIB
       CALL INTERP1(W3D(I,JP,KP),W3D(I,JP,KPP),HYDIJ(I,J)-DDZ,DDZ,HXWN)
       ENDIF
 
-      HXVT = 0.
+      !HXVT = 0.
 
       RATIO = ((HXWN-HXWS)/DYNEW-(HXVT-HXVB)/DDZ)
 

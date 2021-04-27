@@ -258,4 +258,9 @@ PRIVATE
       hxu, & ! location of west cornor  topography 
       hxv    ! location of south cornor topography
 
+   REAL(kind=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::HXZ,HYZ,HXDIJ,HYDIJ
+
+   INTEGER(kind=int_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC :: NPU,NPV
+
+
 END MODULE const3d
