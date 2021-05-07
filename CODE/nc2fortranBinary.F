@@ -233,8 +233,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      if (TMP<=5000.) then
 !      TMP = 1200. 
 !      elseif (TMP>5000. .and. TMP<=20000.) then
-      if (TMP<=15000.) then
-      TMP = -0.08*(TMP-15000.)
+      if (TMP<=10000.) then
+      TMP = 200.-0.01*(TMP-10000.)
       else 
       TMP = 0.
       endif
