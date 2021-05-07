@@ -214,6 +214,7 @@ SRC_FREE_CODE = \
 	time_interp_module.F \
 	time_manager_module.F \
         land_module.F \
+        kpp_module.F \
 	turb_3d_module.F \
 	turb_1d_module.F \
 	update_thermo_module.F \
@@ -534,7 +535,9 @@ time_interp_module.o: kinds.o PARMSLD.o TIMEINTERP.o CONST3D.o CONSTLD.o workcom
 
 time_manager_module.o: kinds.o PARMSLD.o TIMEINFO.o CONSTLD.o ldinput.o TIMEINTERP.o CONST3D.o workcom.o domain_decomposition.o
 
-land_module.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o module_simple_driver.o
+land_module.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o module_simple_driver.o kpp_module.o
+
+kpp_module.o: kpp_module.F
 
 #======hchun====================================
 turb_3d_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o workcom.o bound.o utils.o land_module.o

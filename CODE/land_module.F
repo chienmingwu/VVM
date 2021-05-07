@@ -10,6 +10,9 @@ USE rrtm_vars, only: sstxy,albdo
 !===hchun=================================
 USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
+#if defined (KPP)
+USE kpp_module ! KPP (Der)
+#endif
 
 IMPLICIT NONE
 PRIVATE
@@ -48,6 +51,28 @@ PRIVATE
          zmcapdt,       & ! 1/cw*dt
          sig,           & ! boltzman constant
          zfluxw           ! flux change across ocean surface
+#endif
+
+#if defined (KPP)
+  INTEGER, parameter :: olev=15
+ 
+  REAL, dimension(MI1,MJ1,olev) :: To, Uo, Vo, Ho &
+                                 ,rNu, rKappa, rGamma, bldpth
+  REAL, dimension(MI1,MJ1) :: taux, tauy, Qsol, Qtot
+
+  REAL, dimension(olev) :: Tin, Hin, kappa, nu
+  DATA Tin   / 1.00,  0.98,  0.94,  0.91,  0.86, &
+               0.81,  0.75,  0.69,  0.62,  0.54, &
+               0.46,  0.37,  0.28,  0.18,  0.06/
+  DATA Hin   /10.00, 10.00, 15.00, 15.00, 20.00, &
+              20.00, 25.00, 25.00, 30.00, 30.00, &
+              35.00, 35.00, 40.00, 40.00, 50.00/
+  DATA kappa /15*1.0e-5/
+  DATA nu    /15*1.0e-4/
+  
+  real, parameter :: Tbot=10.
+  integer :: k
+
 #endif
 
 !public member functions
@@ -139,7 +164,24 @@ CONTAINS
 !      TG(I,J)=300.+(tempim-384.)/383.*3.
 !      endif
 !ccwu
- 
+
+#if defined (KPP)
+
+     To(I,J,1) = TG(I,J) - 273.15
+      
+!     call kpp_coef(Uo(i,j,:),Vo(i,j,:),To(i,j,:),Ho(i,j,:) &
+!                   ,taux(i,j),tauy(i,j),Qsol(i,j),Qtot(i,j) &
+!                   ,1,1,olev,olev+1,Tbot,nui(i,j,:),kappa(i,j,:) &
+!                   ,rNu(i,j,:),rKappa(i,j,:),rGamma(i,j,:),bldpth(i,j))
+
+!    call dRMIX(1,1,olev,U(i,j,:),V(i,j,:),T(i,j,:),H(i,j,:) &
+!              ,rNU(i,j,:),rKAPPA(i,j,:),rGAMMA(i,j,:),Tbot,DT)
+
+     TG(I,J) = To(I,J,1) + 273.15
+
+     if (my_task==0 .and. i==1 .and. j==1) write(*,*) "SST:", TG(i,j) 
+#endif
+
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( P1(I,J) - ES1 )
       TS   = CP * TG(I,J) + GRAV * ZL(I,J)
@@ -552,6 +594,21 @@ CONTAINS
         zmcapdt=nsflux*dt/zmixcap       !1/cw*dt
         sig= 5.66E-8             ! boltzman constant
 
+#endif
+
+
+#if defined (KPP)
+   Uo = 0.
+   Vo = 0.
+   DO K=1,olev
+   DO J=1,MJ1
+   DO I=1,MI1
+     Ho(i,j,k) = Hin(k)
+     To(i,j,k) = (TG(i,j)-273.15)*Tin(k) + Tbot*(1.-Tin(k))
+     if (my_task==0 .and. i==1 .and. j==1) write(*,*) "ocean T:", To(i,j,k)
+   ENDDO
+   ENDDO
+   ENDDO
 #endif
 
 #endif

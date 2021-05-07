@@ -251,17 +251,17 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMIN(I,J) = 10.
       SLOPE(I,J) = 1
       SOIL(I,J) = 14
-      ! setup Wu and Chen 2021
-      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
-      LU(I,J) = 7
-      alb(I,J) = 19.
-      grf(I,J) = 80.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 1
-      endif
+!      ! setup Wu and Chen 2021
+!      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
+!      LU(I,J) = 7
+!      alb(I,J) = 19.
+!      grf(I,J) = 80.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 1
+!      endif
   500 CONTINUE
 
 ! 5 large island in Maritime Continent
