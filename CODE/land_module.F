@@ -57,8 +57,8 @@ PRIVATE
   INTEGER, parameter :: olev=15
  
   REAL, dimension(MI1,MJ1,olev) :: To, Uo, Vo, Ho &
-                                 ,rNu, rKappa, rGamma, bldpth
-  REAL, dimension(MI1,MJ1) :: taux, tauy, Qsol, Qtot
+                                 ,rNu, rKappa, rGamma
+  REAL, dimension(MI1,MJ1) :: taux, tauy, Qsol, Qtot, bldpth
 
   REAL, dimension(olev) :: Tin, Hin, kappa, nu
   DATA Tin   / 1.00,  0.98,  0.94,  0.91,  0.86, &
@@ -72,6 +72,7 @@ PRIVATE
   
   real, parameter :: Tbot=10.
   integer :: k
+  real :: dt4
 
 #endif
 
@@ -167,19 +168,31 @@ CONTAINS
 
 #if defined (KPP)
 
-     To(I,J,1) = TG(I,J) - 273.15
+      To(I,J,1) = TG(I,J) - 273.15
+
+      taux(i,j) = -UW(i,j)
+      tauy(i,j) = -WV(i,j)
+  
+      Qsol(i,j) = swD(I,J)-swU(I,J)
+      Qtot(i,j) = swD(I,J)-swU(I,J)+lwD(I,J)-lwU(I,J)-CP*WT(I,J)-HLF*WQ(I,J)
+      if (my_task==0 .and. i==1 .and. j==1) write(*,*) "SST:", TG(i,j) 
       
-!     call kpp_coef(Uo(i,j,:),Vo(i,j,:),To(i,j,:),Ho(i,j,:) &
-!                   ,taux(i,j),tauy(i,j),Qsol(i,j),Qtot(i,j) &
-!                   ,1,1,olev,olev+1,Tbot,nui(i,j,:),kappa(i,j,:) &
-!                   ,rNu(i,j,:),rKappa(i,j,:),rGamma(i,j,:),bldpth(i,j))
+      call kpp_coef(Uo(i,j,1:olev),Vo(i,j,1:olev),To(i,j,1:olev),Ho(i,j,1:olev) &
+                    ,taux(i,j),tauy(i,j),Qsol(i,j),Qtot(i,j) &
+                    ,1,1,olev,olev+1,Tbot,nu(1:olev),kappa(1:olev) &
+                    ,rNu(i,j,1:olev),rKappa(i,j,1:olev),rGamma(i,j,1:olev),bldpth(i,j))
+      !if (my_task==0 .and. i==1 .and. j==1) write(*,*) "kpp, rNu:", rNu(i,j,1:olev), &
+      !  ", rKappa :", rKappa(i,j,1:olev), ", rGamma :",rGamma(i,j,1:olev), ", blh :", &
+      !   bldpth(i,j), "SST:", To(i,j,1)
+      if (my_task==0 .and. i==1 .and. j==1) write(*,*) "kpp, sw:", Qsol(i,j), ", total:", &
+         Qtot(i,j)
 
-!    call dRMIX(1,1,olev,U(i,j,:),V(i,j,:),T(i,j,:),H(i,j,:) &
-!              ,rNU(i,j,:),rKAPPA(i,j,:),rGAMMA(i,j,:),Tbot,DT)
+      call dRMIX(1,1,olev,Uo(i,j,1:olev),Vo(i,j,1:olev),To(i,j,1:olev),Ho(i,j,1:olev) &
+                ,rNU(i,j,1:olev),rKAPPA(i,j,1:olev),rGAMMA(i,j,1:olev),Tbot,dt4)
 
-     TG(I,J) = To(I,J,1) + 273.15
-
-     if (my_task==0 .and. i==1 .and. j==1) write(*,*) "SST:", TG(i,j) 
+      TG(I,J) = To(I,J,1) + 273.15
+ 
+      if (my_task==0 .and. i==1 .and. j==1) write(*,*) "SST:", TG(i,j) 
 #endif
 
       ES1  = ES ( TG(I,J) )
@@ -598,6 +611,7 @@ CONTAINS
 
 
 #if defined (KPP)
+   dt4=DT*nsflux
    Uo = 0.
    Vo = 0.
    DO K=1,olev

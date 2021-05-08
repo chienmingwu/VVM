@@ -93,7 +93,7 @@ sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=10 /
+ &INPUT1 NEWRUN=T, ITTADD=43200 /
  &INPUT2 RLAT=0, RLON=0 /
  &INPUT3 DX=1000.,DYNEW=1000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=30,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
