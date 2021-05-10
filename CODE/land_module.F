@@ -5,6 +5,7 @@ USE kinds
 USE utils
 USE parmsld
 USE constld
+USE workcom, only: uw, wv
 USE domain_decomposition
 USE rrtm_vars, only: sstxy,albdo
 !===hchun=================================
@@ -56,7 +57,7 @@ PRIVATE
 #if defined (KPP)
   INTEGER, parameter :: olev=15
  
-  REAL, dimension(MI1,MJ1,olev) :: To, Uo, Vo, Ho &
+  REAL, dimension(MI1,MJ1,olev) :: To, Uo, Vo &
                                  ,rNu, rKappa, rGamma
   REAL, dimension(MI1,MJ1) :: taux, tauy, Qsol, Qtot, bldpth
 
@@ -72,7 +73,11 @@ PRIVATE
   
   real, parameter :: Tbot=10.
   integer :: k
-  real :: dt4
+  real :: dt_o, dum1, dum2, dum3
+
+  REAL(kind=dbl_kind), PRIVATE::  &
+   rhoh2o,        & ! density of water [kg/m**3]
+   zcpwater         ! watar heat capacity [J/K/kg]
 
 #endif
 
@@ -167,32 +172,40 @@ CONTAINS
 !ccwu
 
 #if defined (KPP)
-
-      To(I,J,1) = TG(I,J) - 273.15
-
       taux(i,j) = -UW(i,j)
       tauy(i,j) = -WV(i,j)
   
       Qsol(i,j) = swD(I,J)-swU(I,J)
       Qtot(i,j) = swD(I,J)-swU(I,J)+lwD(I,J)-lwU(I,J)-CP*WT(I,J)-HLF*WQ(I,J)
-      if (my_task==0 .and. i==1 .and. j==1) write(*,*) "SST:", TG(i,j) 
       
-      call kpp_coef(Uo(i,j,1:olev),Vo(i,j,1:olev),To(i,j,1:olev),Ho(i,j,1:olev) &
+      call kpp_coef(Uo(i,j,1:olev),Vo(i,j,1:olev),To(i,j,1:olev),Hin(1:olev) &
                     ,taux(i,j),tauy(i,j),Qsol(i,j),Qtot(i,j) &
                     ,1,1,olev,olev+1,Tbot,nu(1:olev),kappa(1:olev) &
                     ,rNu(i,j,1:olev),rKappa(i,j,1:olev),rGamma(i,j,1:olev),bldpth(i,j))
-      !if (my_task==0 .and. i==1 .and. j==1) write(*,*) "kpp, rNu:", rNu(i,j,1:olev), &
-      !  ", rKappa :", rKappa(i,j,1:olev), ", rGamma :",rGamma(i,j,1:olev), ", blh :", &
-      !   bldpth(i,j), "SST:", To(i,j,1)
-      if (my_task==0 .and. i==1 .and. j==1) write(*,*) "kpp, sw:", Qsol(i,j), ", total:", &
-         Qtot(i,j)
 
-      call dRMIX(1,1,olev,Uo(i,j,1:olev),Vo(i,j,1:olev),To(i,j,1:olev),Ho(i,j,1:olev) &
-                ,rNU(i,j,1:olev),rKAPPA(i,j,1:olev),rGAMMA(i,j,1:olev),Tbot,dt4)
+      call dRMIX(1,1,olev,Uo(i,j,1:olev),Vo(i,j,1:olev),To(i,j,1:olev),Hin(1:olev) &
+                ,rNU(i,j,1:olev),rKAPPA(i,j,1:olev),rGAMMA(i,j,1:olev),Tbot,dt_o)
+
+      ! solar radiative flux penetration
+      dum3=Qsol(i,j)*solarpen(Hin(1)+Hin(2),3)
+      dum2=Qsol(i,j)*solarpen(Hin(1)       ,3)
+      dum1=Qtot(i,j)-dum3-dum2
+
+      To(i,j,1) = To(i,j,1) + dum1/(rhoh2o*zcpwater)*dt_o
+      To(i,j,2) = To(i,j,2) + dum2/(rhoh2o*zcpwater)*dt_o
+      To(i,j,3) = To(i,j,3) + dum3/(rhoh2o*zcpwater)*dt_o
+    
+      Uo(i,j,1) = Uo(i,j,1) + taux(i,j)/rhoh2o*dt_o
+      Vo(i,j,1) = Vo(i,j,1) + tauy(i,j)/rhoh2o*dt_o
 
       TG(I,J) = To(I,J,1) + 273.15
  
-      if (my_task==0 .and. i==1 .and. j==1) write(*,*) "SST:", TG(i,j) 
+      if (my_task==0 .and. i==1 .and. j==1) &
+         write(*,194) "  SST: ", TG(i,j), &
+                      ", MLD: ", bldpth(i,j), &
+                      ", U_s: ", Uo(i,j,1), &
+                      ", V_s: ", Vo(i,j,1)
+      194 format(4(A,F10.5))
 #endif
 
       ES1  = ES ( TG(I,J) )
@@ -611,15 +624,15 @@ CONTAINS
 
 
 #if defined (KPP)
-   dt4=DT*nsflux
+   dt_o=dt*nsflux
+   rhoh2o = 1024.75     
+   zcpwater = 4218.0
    Uo = 0.
    Vo = 0.
    DO K=1,olev
    DO J=1,MJ1
    DO I=1,MI1
-     Ho(i,j,k) = Hin(k)
      To(i,j,k) = (TG(i,j)-273.15)*Tin(k) + Tbot*(1.-Tin(k))
-     if (my_task==0 .and. i==1 .and. j==1) write(*,*) "ocean T:", To(i,j,k)
    ENDDO
    ENDDO
    ENDDO
