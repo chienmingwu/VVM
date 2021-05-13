@@ -191,9 +191,9 @@ CONTAINS
       dum2=Qsol(i,j)*solarpen(Hin(1)       ,3)
       dum1=Qtot(i,j)-dum3-dum2
 
-      To(i,j,1) = To(i,j,1) + dum1/(rhoh2o*zcpwater)*dt_o
-      To(i,j,2) = To(i,j,2) + dum2/(rhoh2o*zcpwater)*dt_o
-      To(i,j,3) = To(i,j,3) + dum3/(rhoh2o*zcpwater)*dt_o
+      To(i,j,1) = To(i,j,1) + dum1/(rhoh2o*zcpwater*Hin(1))*dt_o
+      To(i,j,2) = To(i,j,2) + dum2/(rhoh2o*zcpwater*Hin(2))*dt_o
+      To(i,j,3) = To(i,j,3) + dum3/(rhoh2o*zcpwater*Hin(3))*dt_o
     
       Uo(i,j,1) = Uo(i,j,1) + taux(i,j)/rhoh2o*dt_o
       Vo(i,j,1) = Vo(i,j,1) + tauy(i,j)/rhoh2o*dt_o
