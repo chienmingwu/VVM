@@ -43,6 +43,16 @@ CONTAINS
       DO 888 K = 1,NK2
       DO 888 J = mjm,mjp
       DO 888 I = mim,mip
+!      ! chemical transport with mountain
+!        TC3D(I,J,K,1)=0.
+!        TC3D(I,J,K,2)=40.
+!        TC3D(I,J,K,3)=0.
+!        TC3D(I,J,K,4)=0.
+!        TC3D(I,J,K,5)=40.
+!        TC3D(I,J,K,6)=0.
+!        TC3D(I,J,K,7)=0.
+
+      ! VFdA2005
         if (zt(K) .lt. 350.) then
           TC3D(I,J,K,1)=0.
           TC3D(I,J,K,2)=20.
@@ -62,7 +72,7 @@ CONTAINS
 
   888 CONTINUE
 
-!   
+!       call update_tracer
 
    END SUBROUTINE update_tracer_init
 
@@ -84,15 +94,6 @@ CONTAINS
       IF (my_task==0) WRITE(*,*) "chemistry update successfully"
 #endif
 
-!    DO 908 nt = 1,ntracer
-!      DO 908 K = 1, 15
-!      DO 908 J = mjm,mjp
-!      DO 908 I = mim,mip
-!      IF (nt==3) TC3D(I,J,K,nt)=TC3D(I,J,K,nt)-0.5
-!      IF (nt==4) TC3D(I,J,K,nt)=TC3D(I,J,K,nt)-1.0
-!  908 CONTINUE
-
- 
    END SUBROUTINE update_tracer
 
    SUBROUTINE UPDATE_TRACER_source
@@ -116,31 +117,38 @@ CONTAINS
 
 !      DO 988 J = mjm,mjp
 !      DO 988 I = mim,mip
-!        TC3D(I,J,2,1)=TC3D(I,J,2,1)+0.1/40.
-!        TC3D(I,J,2,3)=TC3D(I,J,2,3)+0.05/40.
-!        TC3D(I,J,2,4)=TC3D(I,J,2,4)+0.1/40.
+!        tempim=mi1*ni_sbdm+i
+!        tempjm=mj1*nj_sbdm+j
+!      ! source
+!        IF (tempim .EQ. 513) THEN
+!          IF (tempjm .EQ. 32) THEN
+!            ! tracer
+!            TC3D(I,J,2,1)=TC3D(I,J,2,1)+80.55
+!          ENDIF
+!        ENDIF
+!        IF (tempim .EQ. 513) THEN
+!            ! industrail
+!            TC3D(I,J,2,3)=TC3D(I,J,2,3)+3.26
+!            TC3D(I,J,2,4)=TC3D(I,J,2,4)+0.36
+!        ENDIF
+!        IF (tempim .GT. 513 .AND. tempim .LT. 768) THEN
+!          IF (coszen .GT. 0.00) THEN
+!            ! traffic
+!            TC3D(I,J,2,6)=TC3D(I,J,2,6)+0.02217
+!            TC3D(I,J,2,7)=TC3D(I,J,2,7)+0.00246
+!          ENDIF
+!        ENDIF
+!       ! remove (boundary)
+!        IF (tempim .EQ. 199) THEN
+!           TC3D(I,J,:,:)=0
+!        ENDIF
+!        IF (tempim .EQ. 200) THEN
+!           TC3D(I,J,:,:)=0
+!        ENDIF
+!        IF (tempim .EQ. 201) THEN
+!           TC3D(I,J,:,:)=0
+!        ENDIF
 !  988 CONTINUE
-
-      
- 
-      !DO J = mjm,mjp
-      !  DO I = mim,mip
-      !    tempim=mi1*ni_sbdm+i
-      !    tempjm=mj1*nj_sbdm+j
-      !    IF (tempjm .EQ. 128 .AND. tempim .EQ. 128) THEN
-      !      TC3D(I,J,3,1)=1.
-      !    ENDIF
-      !    IF (tempjm .EQ. 128 .AND. tempim .EQ. 129) THEN
-      !      TC3D(I,J,3,1)=1.
-      !    ENDIF
-      !    IF (tempjm .EQ. 129 .AND. tempim .EQ. 128) THEN
-      !      TC3D(I,J,3,1)=1.
-      !    ENDIF
-      !    IF (tempjm .EQ. 129 .AND. tempim .EQ. 129) THEN
-      !      TC3D(I,J,3,1)=1.
-      !    ENDIF
-      !  ENDDO
-      !ENDDO
 
    END SUBROUTINE update_tracer_source
 !c

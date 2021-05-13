@@ -241,28 +241,108 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      DO 502 k=1,NK3
 !  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
 !      hx(I,J)=TOP
+!      ! Default(Ocean)
+!      hx(I,J)= 1
+!      LU(I,J) = 16
+!      alb(I,J) = 15.
+!      grf(I,J) = 10.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 14
 
+      ! Oklahoma(Dryland Cropland and Pasture)
       hx(I,J)= 1
-      LU(I,J) = 16
-      alb(I,J) = 15.
-      grf(I,J) = 10.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
+      LU(I,J) = 2
+      alb(I,J) = 20.
+      grf(I,J) = 80.
+      lai(I,J) = 5.68
+      SHDMAX(I,J) = 80.
+      SHDMIN(I,J) = 80.
       SLOPE(I,J) = 1
       SOIL(I,J) = 14
-      ! setup Wu and Chen 2021
-      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
-      LU(I,J) = 7
-      alb(I,J) = 19.
-      grf(I,J) = 80.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 1
-      endif
+!      ! setup Wu and Chen 2021
+!      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
+!      LU(I,J) = 7
+!      alb(I,J) = 19.
+!      grf(I,J) = 80.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 1
+!      endif
   500 CONTINUE
+
+
+!!ccwu half land
+!      DO 501 J = 1,MJ_GLOB
+!      DO 501 I = MI_GLOB*3/4,MI_GLOB
+!
+!! add 1000m height mountain
+!! move three points to the left
+!
+!      if(I .lt. MI_GLOB*7/8) then
+!      tmp=(I-MI_GLOB*3/4)*1000./128.
+!      else
+!      tmp=1000.+(MI_GLOB*7/8-I)*1000./128.
+!      endif
+!
+!      DO K=2,NK1
+!      IF(tmp .GE. ZZ(K)) THEN
+!      HX(I,J)=K
+!     1 +NINT((tmp-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!      ENDIF
+!
+!      IF(HX(I,J) .LT. 0) THEN
+!      HX(I,J)=1
+!      ENDIF
+!      ENDDO
+!
+!  501 CONTINUE
+!
+!
+!      DO J = 1,MJ_GLOB
+!      DO I = MI_GLOB/2+1,MI_GLOB*3/4
+!      !grassland
+!!      LU(I,J) = 7
+!!      alb(I,J) = 19.
+!!      grf(I,J) = 80.
+!!      lai(I,J) = 4.
+!!      SHDMAX(I,J) = 80.
+!!      SHDMIN(I,J) = 80.
+!!      SLOPE(I,J) = 1
+!!      SOIL(I,J) = 13
+!
+!      !urban
+!      LU(I,J) = 1
+!      alb(I,J) = 15.
+!      grf(I,J) = 10.
+!      lai(I,J) = 1.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 13
+!
+!      ENDDO
+!      ENDDO
+!
+!      DO J = 1,MJ_GLOB
+!      DO I = MI_GLOB*3/4+1,MI_GLOB
+!      !evergreen broadleaf forest
+!      LU(I,J) = 13
+!      alb(I,J) = 12.
+!      grf(I,J) = 95.
+!      lai(I,J) = 6.48
+!      SHDMAX(I,J) = 95.
+!      SHDMIN(I,J) = 95.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 13
+!
+!      ENDDO
+!      ENDDO
+
 
 ! 5 large island in Maritime Continent
 
@@ -309,20 +389,20 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !  700 YT (J) = J*DYNEW
 
 
-      DO I=1,mi_glob
-      DO J=1,mj_glob
-      TMP=DBLE(hgt(I,J))
-
-      IF (TMP .GT. 0.) HX(I,J) = 2.
-      DO K=2,NK1
-      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-
-      ENDDO
-      IF(HX(I,J).LT.0)HX(I,J)=0
-
-      ENDDO
-      ENDDO
-
+!      DO I=1,mi_glob
+!      DO J=1,mj_glob
+!      TMP=DBLE(hgt(I,J))
+!
+!      IF (TMP .GT. 0.) HX(I,J) = 2.
+!      DO K=2,NK1
+!      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!
+!      ENDDO
+!      IF(HX(I,J).LT.0)HX(I,J)=0
+!
+!      ENDDO
+!      ENDDO
+!
       ENDIF
 
       NP = 0

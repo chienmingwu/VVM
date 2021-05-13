@@ -277,8 +277,8 @@ SUBROUTINE initchem
   dtchmovie= 60
   idtchmovie = dtchmovie/tres
   firstchem= 1
-  lastchem = 20
-  nchsp    = 20
+  lastchem = 4
+  nchsp    = 4
   lcloudKconst  = .false.
   lsegr    = .false.
 
@@ -1248,7 +1248,6 @@ implicit none
     endif
 
     call calc_K(pl,thl,exnf,ql,pres,y)
-
     ynew(:,:,1:nchsp) = y(1:i1,1:j1, pl,1:nchsp)
     ysum(:,:,1:nchsp)  = y(1:i1,1:j1, pl,1:nchsp)
     call ITER (0.0,pl)
@@ -1756,6 +1755,7 @@ implicit none
         keffT(:,:,RC(i)%Kindex) = RC(i)%A * convppb(:,:)
       case(2) !temperature depence of K
         keffT(:,:,RC(i)%Kindex) = RC(i)%A * exp(RC(i)%B / T_abs(:,:)) * convppb(:,:)
+        IF (myid==0 .and. k==2) write(*,*) keffT(1,1,RC(i)%Kindex),RC(i)%A,RC(i)%B,T_abs(1,1),convppb(1,1)
       case (3) !more complex temperature dependence
         keffT(:,:,RC(i)%Kindex) = RC(i)%A * (T_abs(:,:)/RC(i)%B)**RC(i)%C * exp(RC(i)%D / T_abs(:,:))* convppb(:,:)
       case(4:5) !use Lindemann-Hinshelwood equation  4 = second order 5 = first order so no conv_XXX factor
@@ -1939,7 +1939,7 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
   enddo
 
   do m=1,nr_raddep
-  IF (myid==0 ) write(*,*) keff(10,10,m,4)
+  IF (myid==0) write(*,*) 'ratech',keff(10,10,m,4)
   enddo
 
   zbasesum = 0.
@@ -2118,6 +2118,7 @@ implicit none
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) * ynew(:,:,PL_scheme(n)%PL(j)%comp1)
         case (2)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) * ynew(:,:,PL_scheme(n)%PL(j)%comp1) * ynew(:,:,PL_scheme(n)%PL(j)%comp2)
+          !IF(myid==0) write(*,*) 'RAD',PL_scheme(n)%PL(j)%coef,PL_scheme(n)%name,keff(10,10,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k),n,j
         case (3)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1
         case (4)
@@ -2149,6 +2150,7 @@ implicit none
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + kreact(:,:) * ynew(:,:,PL_scheme(n)%PL(j)%comp1)
         case (2)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + kreact(:,:) * ynew(:,:,PL_scheme(n)%PL(j)%comp1) * ynew(:,:,PL_scheme(n)%PL(j)%comp2)
+          !IF(myid==0) write(*,*) 'ITER',kreact(10,10),PL_scheme(n)%PL(j)%coef,PL_scheme(n)%name,KeffT(10,10,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex),n,j
         case (3)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + kreact(:,:) * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1
         case (4)

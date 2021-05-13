@@ -14,9 +14,9 @@ timeav_glob= 60.
 /
 &NAMCHEM
 lchem       = .true.
-tnor        = 19
+tnor        = 2
 firstchem   = 1
-lastchem    = 20
+lastchem    = 4
 ldiuvar     = .true. 
 lchconst    = .false.
 h_ref       = 0.
