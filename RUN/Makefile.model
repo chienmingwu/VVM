@@ -195,7 +195,6 @@ SRC_FREE_CODE = \
 	buoyf_module.F \
 	cloud_module.F \
 	elliptic.F \
-        petsc_vvm_solver.F \
 	force_3d_module.F \
 	gather_scatter.F \
 	ldinput.F \
@@ -231,6 +230,9 @@ SRC_FREE_CODE = \
         new_ldoutput_nc.F \
 	ldmain.F \
 	vertical_adaptive.F
+
+SRC_FREE_NCHECK = \
+	petsc_vvm_solver.F \
 
 ####hchun###
 SRC_FREE = $(SRC_FREE_RAD_RRTM) $(SRC_FREE_RRTMG) $(SRC_FREE_CDECKS)  $(SRC_FREE_CODE) $(SRC_FREE_LSM)

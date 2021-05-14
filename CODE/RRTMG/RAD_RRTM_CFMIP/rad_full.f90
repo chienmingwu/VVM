@@ -544,7 +544,7 @@
       NetswDownToaClearSky(i,j) = swDownClearSky(1,nzrad-k+3) - swUpClearSky(1,nzrad-k+3) ! net clearsky shortwave down at TOA
 
       NetswDownSurface(i,j) = swDown(1,k) - swUp(1,k) ! net shortwave down at surface
-      NetswDownSurfaceClearSky(i,j) = swDownClearSky(i,k) - swUpClearSky(i,k) ! net clearsky shortwave down at surface
+      NetswDownSurfaceClearSky(i,j) = swDownClearSky(1,k) - swUpClearSky(1,k) ! net clearsky shortwave down at surface
 
       ! longwave fluxes at top-of-atmosphere (TOA) and surface -- NOTE POSITIVE UPWARDS
       lwDownSurface(i,j) = lwDown(1,k) ! longwave down at surface

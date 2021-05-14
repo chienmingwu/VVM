@@ -328,10 +328,18 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       NP = 0
 
       DO 800 J = 1,MJ_GLOB
+      JI = J-1
+      JE = J+1
+      IF (JI<1) JI=JI+MJ_GLOB
+      IF (JE>MJ_GLOB) JE=JE-MJ_GLOB
       DO 800 I = 1,MI_GLOB
-      IF (HX(I+1,J) .GT. HX(I,J) .AND. HX(I-1,J) .GT. HX(I,J) .AND.
-     1 HX(I,J+1) .GT. HX(I,J) .AND. HX(I,J-1) .GT. HX(I,J)) THEN
-      HX(I,J) =MIN(HX(I+1,J),HX(I-1,J),HX(I,J+1),HX(I,J-1))
+      II = I-1
+      IE = I+1
+      IF (II<1) II=II+MI_GLOB
+      IF (IE>MI_GLOB) IE=IE-MI_GLOB
+      IF (HX(IE,J) .GT. HX(I,J) .AND. HX(II,J) .GT. HX(I,J) .AND.
+     1 HX(I,JE) .GT. HX(I,J) .AND. HX(I,JI) .GT. HX(I,J)) THEN
+      HX(I,J) =MIN(HX(IE,J),HX(II,J),HX(I,JE),HX(I,JI))
       NP = NP +1
       ENDIF
   800 CONTINUE
