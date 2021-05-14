@@ -16,8 +16,8 @@ set echo  # echoes the commands
 set expname = tracer_test
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'fujitsu_fugaku'
+set jobsys = 'pjm'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -37,7 +37,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/total_cores/16/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-qsub run.sh
+#qsub run.sh
 
 exit
 

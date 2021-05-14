@@ -8,8 +8,8 @@ set echo  # echoes the commands
 set expname = tracer_test
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'fujitsu_fugaku'
+set jobsys = 'pjm'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -73,7 +73,6 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define MICROP3
-#define LSM
 #define RADCODE
 'END1'
 cat definesld.com
@@ -88,7 +87,7 @@ sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/1/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
@@ -108,10 +107,10 @@ cat INPUT
 cd ${expdir}'/compile_code'
 make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
 
-# make for topography
-make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
-cd ${expdir}
-./nc2fortranBinary > topo.log
+## make for topography
+#make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
+#cd ${expdir}
+#./nc2fortranBinary > topo.log
 
 exit
 
