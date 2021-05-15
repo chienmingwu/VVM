@@ -13,11 +13,11 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = tracer_test
+set expname = rce_test
 
 # set job system and compiler
 set compiler = 'fujitsu_fugaku'
-set jobsys = 'pjm'
+set jobsys = 'pjm_fugaku'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -32,9 +32,10 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/np_nodes/1/g' \
-    -e 's/np_threads/16/g' \
-    -e 's/total_cores/16/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/walltime/1:00:00/g' \
+    -e 's/np_nodes/2/g' \
+    -e 's/np_threads/32/g' \
+    -e 's/total_cores/64/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
 #qsub run.sh

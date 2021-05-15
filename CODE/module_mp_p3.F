@@ -50,7 +50,7 @@
 
  real, parameter    :: real_rcollsize = real(rcollsize)
 
- real, dimension(densize,rimsize,isize,tabsize) :: itab   !ice lookup table values
+ real*8, dimension(densize,rimsize,isize,tabsize) :: itab   !ice lookup table values
 
 !ice lookup table values for ice-rain collision/collection
  double precision, dimension(densize,rimsize,isize,rcollsize,colltabsize)    :: itabcoll
