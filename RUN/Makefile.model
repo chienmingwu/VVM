@@ -278,7 +278,7 @@ shr_kind_mod.o: shr_kind_mod.f90
 
 shr_orb_mod.o: shr_kind_mod.o
 
-cam_rad_parameterizations.o: shr_orb_mod.o
+cam_rad_parameterizations.o: shr_orb_mod.o PARMSLD.o
 
 cldefrint.o: rrtm_grid.o cam_rad_parameterizations.o
 

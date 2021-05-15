@@ -106,7 +106,6 @@
               diag_vmi(im,km),diag_di(im,km),diag_rhoi(im,km), dt_p3, &
               th_old_p3(im,km), qv_old_p3(im,km), diag_3d(im,km,3), diag_2d(im,1), &
               cldfrac(im,km)
-      REAL, TARGET :: effc(im,jm,km), effi(im,jm,km)
 
       INTEGER (KIND=int_kind) :: itt_p3, stat
 
@@ -167,12 +166,6 @@
       scpf_on       = .False. ! cloud fraction version not used
       scpf_pfrac    = 0.      ! dummy variable (not used), set to 0
       scpf_resfact  = 0.      ! dummy variable (not used), set to 0
-
-      effc=0.
-      effi=0.   
-
-      ReC_p3 => effc
-      ReI_p3 => effi
 #else
       ! initialize for Lin microphysics scheme
       CALL initialize_physics
@@ -460,8 +453,8 @@
       STOP
       ENDIF
 
-      effc(:,j,:) = diag_effc
-      effi(:,j,:) = diag_effi
+      ReC_p3(1:mi1,j,1:nk2-1) = diag_effc
+      ReI_p3(1:mi1,j,1:nk2-1) = diag_effi
 
       DO 200 I=1,im
         hxp=INT(hx(I,J))
@@ -594,13 +587,14 @@
       enddo  ! j loop
 
 #if defined (MICROP3)
-      ReC_p3 => effc
-      ReI_p3 => effi
-   
-      !if (my_task == 0 .and. (mod(itt,nradd)==1)) then
+      !if (my_task == 0) then
       !  write(*,*) "in phys"
+      !  do j=1,jm
+      !  do i=1,im
       !  do k=1,km
-      !    write(*,*) k, effi(10,10,k),ReI_p3(10,10,k)
+      !  if (ReC_p3(i,j,k)>50.e-6) write(*,*) k, ReC_p3(i,j,k)
+      !  enddo
+      !  enddo
       !  enddo
       !endif
 #endif
