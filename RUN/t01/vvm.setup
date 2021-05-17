@@ -8,8 +8,8 @@ set echo  # echoes the commands
 set expname = rce_test
 
 # set job system and compiler
-set compiler = 'fujitsu_fugaku'
-set jobsys = 'pjm_fugaku'
+set compiler = 'fujitsu_odyssey'
+set jobsys = 'pjm_odyssey'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
