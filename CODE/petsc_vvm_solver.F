@@ -242,6 +242,7 @@ endif
     call KSPGetPC(Conti,PC_Conti,ierr)
     call PCSetType(PC_Conti,pc_type_conti,ierr)
     IF (pc_type_conti .eq. PCEISENSTAT) call PCEisenstatSetOmega(PC_Conti,Omega,ierr)
+    IF (pc_type_conti .eq. PCEISENSTAT) call PCEisenstatSetNoDiagonalScaling(PC_Conti,PETSC_TRUE,ierr)
 #if defined (PETSCMG)
     call PCSetDM(PC_Conti,da3(1),ierr)
     call PCMGSetLevels(PC_Conti, nlevel,PETSC_NULL_OBJECT,ierr)
@@ -364,6 +365,7 @@ endif
 
 #endif
     IF (pc_type_toppsi .eq. PCEISENSTAT) call PCEisenstatSetOmega(PC_Toppsi,Omega,ierr)
+    IF (pc_type_toppsi .eq. PCEISENSTAT) call PCEisenstatSetNoDiagonalScaling(PC_Toppsi,PETSC_TRUE,ierr)
     call KSPSetTolerances(Toppsi,tol_Toppsi,atol_Toppsi,dtol_Toppsi,mxit,ierr)
     call VecSet(rhs,0.d0,ierr)
     call KSPSetFromOptions(Toppsi,ierr)
@@ -416,6 +418,7 @@ endif
 
 #endif
     IF (pc_type_topchi .eq. PCEISENSTAT) call PCEisenstatSetOmega(PC_Topchi,Omega,ierr)
+    IF (pc_type_topchi .eq. PCEISENSTAT) call PCEisenstatSetNoDiagonalScaling(PC_Topchi,PETSC_TRUE,ierr)
     call KSPSetTolerances(Topchi,tol_Topchi,atol_Topchi,dtol_Topchi,mxit,ierr)
 
     call VecSet(rhs,0.d0,ierr)
