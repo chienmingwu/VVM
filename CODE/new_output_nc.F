@@ -320,6 +320,28 @@ CONTAINS
                           'graupel_mixing_ratio', 'kg kg-1', &
                           'zt', 'yt', 'xt')
 
+#if defined (HEATING)
+! QS3D
+      CALL pCDF_INI_4DVAR (ncid_th, 'ldep', 'latent heating due to deposition', &
+                          'latent_heating_due_to_deposition', 'K s-1', &
+                          'zt', 'yt', 'xt')
+
+! QG3D
+      CALL pCDF_INI_4DVAR (ncid_th, 'lcon', 'latent heating due to condensation', &
+                          'latent_heating_due_to_condensation', 'K s-1', &
+                          'zt', 'yt', 'xt')
+
+! QS3D
+      CALL pCDF_INI_4DVAR (ncid_th, 'lfre', 'latent heating due to freeze', &
+                          'latent_heating_due_to_freeze', 'K s-1', &
+                          'zt', 'yt', 'xt')
+
+! QS3D
+      CALL pCDF_INI_4DVAR (ncid_th, 'lmet', 'latent heating due to melt', &
+                          'latent_heating_due_to_melt', 'K s-1', &
+                          'zt', 'yt', 'xt')
+#endif
+
 #endif
 
 ! RAS cumulus parameterization

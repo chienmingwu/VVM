@@ -373,6 +373,16 @@ CONTAINS
 !   Complete latent heating rate calculation by adding saturation
 !   adjustment processes. 
 !   Convert to K/day.
+#if defined (HEATING)
+      L_dep(i,j,k) = L_dep(i,j,k) + &
+                     (QISTAR - QI1 - QFREEZE)*(2.8336E6/1004.5)/DT
+      L_con(i,j,k) = L_con(i,j,k) + &
+                     (QCSTAR - QC1 + QFREEZE)*(2.5E6/1004.5)/DT
+      L_fre(i,j,k) = L_fre(i,j,k) + &
+                     QFREEZE*3.336E5/1004.5/DT
+      IF (QFREEZE<0.) L_met(i,j,k) = L_met(i,j,k) + &
+                     QFREEZE*3.336E5/1004.5/DT
+#endif
       RLHR3D(I,J,K) = (RLHR3D(I,J,K) +       &
           (QCSTAR - QC1 + QFREEZE)*(2.5E6/1004.)/DT +       &
           (QFREEZE*3.336E5/DT) +       &
