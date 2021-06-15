@@ -50,7 +50,7 @@ CONTAINS
       ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
    50 CONTINUE
 
-      filename="/work/gi55/i55076/VVM/rcemip_data/snd_rcemip_anal300_v3"
+      filename="/home/der0318/snd_rcemip_anal300_v3"
       OPEN(939,FILE=trim(filename))
       READ(939,*)
       DO k=1,74

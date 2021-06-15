@@ -114,7 +114,7 @@ CONTAINS
       SST = 300.
       
 !     initialization for rcemip
-      filename="/work/gi55/i55076/VVM/rcemip_data/snd_rcemip_anal300_v3"
+      filename="/home/der0318/snd_rcemip_anal300_v3"
       OPEN(939,FILE=trim(filename))
       READ(939,*)
       DO k=1,74
@@ -516,7 +516,7 @@ CONTAINS
 
       CALL petsc_solver_initialize(petsc_cr)
 
-      restart_read: IF (.true.)THEN
+      restart_read: IF (.false.)THEN
 
 !   restart( thermodynamic_file (absolute path) , hydrometer , 
 !            dynamic_variables , {optional} dynamic_file (absolute path) )

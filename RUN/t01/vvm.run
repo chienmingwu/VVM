@@ -13,11 +13,11 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = RCE_300K_d384r2km_3
+set expname = RCE_300K_d384r2km
 
 # set job system and compiler
-set compiler = 'fujitsu_odyssey'
-set jobsys = 'pjm_odyssey'
+set compiler = 'intel_jet'
+set jobsys = 'pbs_jet'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -33,9 +33,9 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/walltime/12:00:00/g' \
-    -e 's/np_nodes/3/g' \
-    -e 's/np_threads/48/g' \
+    -e 's/walltime/96:00:00/g' \
+    -e 's/np_nodes/12/g' \
+    -e 's/np_threads/12/g' \
     -e 's/total_cores/144/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
