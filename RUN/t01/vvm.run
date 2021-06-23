@@ -16,7 +16,7 @@ set echo  # echoes the commands
 set expname = RCE_300K_d384r2km
 
 # set job system and compiler
-set compiler = 'pgi_taiwania3'
+set compiler = 'intel_taiwania3'
 set jobsys = 'slurm_taiwania3'
 
 # set paths

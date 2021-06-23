@@ -114,7 +114,7 @@ CONTAINS
       SST = 300.
       
 !     initialization for rcemip
-      filename="/home/der0318/snd_rcemip_anal300_v3"
+      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
       OPEN(939,FILE=trim(filename))
       READ(939,*)
       DO k=1,74

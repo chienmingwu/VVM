@@ -49,21 +49,25 @@ OS := $(shell uname)
 # Linux Cluster, optimized for saddleback
 #-----------------------------------------------------------------------------
 
-VVMLIBS  = /work/der0318zxc/vvmlibs
-
 CPP 	 = /usr/bin/cpp
-CPPFLAGS = -P -traditional -I$(EXPDIR) -I$(VVMLIBS)/include
+CPPFLAGS = -P -traditional -I$(EXPDIR) -I/work/peter50504/vvmlibs/include 
+#CPPFLAGS = -P -traditional -I$(BINDIR) -I/opt/petsc-intel/include 
 
 SUF      = f
 
-INC = -I$(CDECKS) -I$(EXPDIR) -I$(VVMLIBS)/include
+#INC = -I/opt/netcdf4-intel/include -I$(CDECKS) -I/opt/hdf5-intel/include -I/opt/pnetcdf-intel/include -I/opt/petsc-intel/include
 
-FC = mpifort -fPIC -O3 -Mlarge_arrays
+INC = -I$(CDECKS) -I$(EXPDIR) -I/opt/ohpc/Taiwania3/libs/i2021-Ompi405/netcdf-4.7.4/include -I/opt/ohpc/Taiwania3/libs/i2021-Ompi405/netcdf-4.7.4/include -I/work/peter50504/vvmlibs/include -I/opt/ohpc/Taiwania3/libs/i2021-Ompi405/pnetcdf-1.12.2/include
 
-LDLIBS = -Wl,-rpath,$(VVMLIBS)/lib -L$(VVMLIBS)/lib -lpetsc -lblas -llapack -lpnetcdf -lnetcdff -lnetcdf
+
+FC = mpifort -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large
+#FC = ${FLINKER} -shared-intel -mcmodel=large
+
+LDLIBS = -Wl,-rpath,/opt/ohpc/Taiwania3/libs/i2021-Ompi405/netcdf-4.7.4/lib -L/opt/ohpc/Taiwania3/libs/i2021-Ompi405/netcdf-4.7.4/lib -lnetcdff -Wl,-rpath,/opt/ohpc/Taiwania3/libs/i2021-Ompi405/pnetcdf-1.12.2/lib -L/opt/ohpc/Taiwania3/libs/i2021-Ompi405/pnetcdf-1.12.2/lib -lpnetcdf -Wl,-rpath,/work/peter50504/vvmlibs/lib -L/work/peter50504/vvmlibs/lib -lpetsc -Wl,-rpath,/opt/ohpc/Taiwania3/libs/i2021-Ompi405/hdf5-1.12/lib -L/opt/ohpc/Taiwania3/libs/i2021-Ompi405/hdf5-1.12/lib -lhdf5 -lhdf5_hl -Wl,-rpath,/opt/ohpc/Taiwania3/pkg/intel/2021/mkl/2021.1.1/lib/intel64 -L/opt/ohpc/Taiwania3/pkg/intel/2021/mkl/2021.1.1/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential 
+
 
 FFLAGS    = $(INC)
-FIXED     = -Mfixed 
-FREE      = -Mfree
+FIXED     = -fixed 
+FREE      = -free
 LD        = $(FC)
 
