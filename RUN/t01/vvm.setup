@@ -8,8 +8,8 @@ set echo  # echoes the commands
 set expname = RCE_300K_d384r2km
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'pgi_taiwania3'
+set jobsys = 'slurm_taiwania3'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -108,9 +108,9 @@ cd ${expdir}'/compile_code'
 make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
 
 ## make for topography
-#make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
-#cd ${expdir}
-#./nc2fortranBinary > topo.log
+make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
+cd ${expdir}
+./nc2fortranBinary > topo.log
 
 exit
 
