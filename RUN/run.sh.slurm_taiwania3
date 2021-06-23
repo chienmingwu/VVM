@@ -1,0 +1,24 @@
+#!/usr/bin/bash
+#SBATCH -J expname      # Job name
+#SBATCH -A ENT110230    # Account number
+#SBATCH -p serial       # job partition
+#SBATCH -N np_nodes       # Run all processes on a single node	
+#SBATCH -c 1              # cores per MPI rank
+#SBATCH -n total_cores    # Run a single task
+#SBATCH -o expname%j.out  # output file
+#SBATCH -e expname%j.err  # error file
+
+module load nvidia/hpc_sdk/21.5
+
+export PATH=/work/der0318zxc/vvmlibs/bin:$PATH
+export LD_LIBRARY_PATH=/work/der0318zxc/vvmlibs/lib:$PATH
+
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+
+mpirun -np total_cores ./vvm < INPUT | tee OUTPUT  
+
+date >> runtime
+
+
