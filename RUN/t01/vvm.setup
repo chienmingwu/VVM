@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = RCE_300K_d384r2km
+set expname = tcvvm_beta
 
 # set job system and compiler
 set compiler = 'intel_jet'
@@ -74,6 +74,7 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define MICROP3
 #define RADCODE
+#define NSWALL
 'END1'
 cat definesld.com
 
@@ -82,20 +83,20 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/192/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/192/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/12/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/12/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/75/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=432000 /
  &INPUT2 RLAT=0, RLON=0 /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
+ &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360. /
+ &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360 /
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=1200,SCALE=6.,Q1Q2=F,DTRAD=300.,petsc_cr=0 /
 #                                                              (s)

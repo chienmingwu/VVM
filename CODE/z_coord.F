@@ -53,7 +53,7 @@ CONTAINS
       filename="/home/der0318/snd_rcemip_anal300_v3"
       OPEN(939,FILE=trim(filename))
       READ(939,*)
-      DO k=1,74
+      DO k=1,nk2
         READ(939,111) ZZ(k+1), ZT(k+1)
         111 FORMAT(2F16.4)
       ENDDO

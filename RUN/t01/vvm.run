@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = RCE_300K_d384r2km
+set expname = tcvvm_beta
 
 # set job system and compiler
 set compiler = 'intel_jet'
@@ -34,12 +34,12 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
     -e 's/walltime/96:00:00/g' \
-    -e 's/np_nodes/12/g' \
-    -e 's/np_threads/12/g' \
-    -e 's/total_cores/144/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/np_nodes/4/g' \
+    -e 's/np_threads/16/g' \
+    -e 's/total_cores/64/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-#qsub run.sh
+qsub run.sh
 
 exit
 
