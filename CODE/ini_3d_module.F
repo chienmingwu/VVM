@@ -117,7 +117,7 @@ CONTAINS
       filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
       OPEN(939,FILE=trim(filename))
       READ(939,*)
-      DO k=1,74
+      DO k=1,nk2
         READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1)
         111 FORMAT(32X,3F16.4)
       ENDDO

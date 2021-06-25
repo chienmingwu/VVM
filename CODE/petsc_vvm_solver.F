@@ -115,9 +115,17 @@ IMPLICIT NONE
 PRIVATE
 PetscInt, PRIVATE:: i,j,k,kt,npt,np
 PetscInt, PRIVATE:: ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
+#if defined (NSWALL)
+PetscInt, PRIVATE:: ixx2,iy2,iz2,mx2,my2,mz2,ixg2,iyg2,izg2,mxg2,myg2,mzg2
+#endif
 PetscInt, PRIVATE:: ctx3,ctx2
 PetscScalar, PRIVATE:: tmp(1)
+#if defined (NSWALL)
+PetscScalar, PRIVATE:: vsum,tpts = -1.d0/dble(mi_glob*(mj_glob-2))
+PetscScalar, PRIVATE:: tpts2 = -1.d0/dble(mi_glob*(mj_glob-3))
+#else
 PetscScalar, PRIVATE:: vsum,tpts = -1.d0/dble(mi_glob*mj_glob)
+#endif
 PetscOffset, PRIVATE:: ip
 PetscErrorCode, PRIVATE:: ierr
 Vec, PRIVATE::v,vl,rhs,v1,v2
@@ -138,14 +146,25 @@ KSP sksp_Conti(2*nlevel-1),sksp_topChi(2*nlevel-1),sksp_topPsi(2*nlevel-1)
 
 #else
 PetscInt, PARAMETER, PRIVATE:: nlevel = 1, nlv = 0
+#if defined (NSWALL)
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPBCGS, pc_type_Conti = PCEISENSTAT
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPBCGS, pc_type_toppsi = PCEISENSTAT
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPBCGS, pc_type_topchi = PCEISENSTAT
+#else
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCEISENSTAT
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCEISENSTAT
 Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCEISENSTAT
+#endif
 !sub-ksp and respect pc for PCMG setting
 
 #endif
+#if defined (NSWALL)
+DM, PRIVATE::da3(nlevel),da2(nlevel),da2a(nlevel)
+Mat, PRIVATE:: R, Amat,Bmat,Cmat
+#else
 DM, PRIVATE::da3(nlevel),da2(nlevel)
 Mat, PRIVATE:: R, Amat,Cmat
+#endif
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
 PetscInt, PRIVATE:: MXIT = 2000
@@ -181,6 +200,9 @@ SUBROUTINE petsc_solver_initialize(petsc_cr)
 ! Get the grid information about grid size @ global by
 ! DMDAGetCorners and DMDAGetGhostCorners
 PetscInt, intent(in) :: petsc_cr
+#if defined (NSWALL)
+PetscInt :: ly(nsbdm_y), lya(nsbdm_y)
+#endif
 
 ! set additional criterion if petsc_cr == 1 
 if (petsc_cr .eq. 1) then
@@ -196,10 +218,24 @@ atol_TopChi=1.d-8
 dtol_TopChi = 1.d2
 endif
 
+#if defined (NSWALL)
+    ly=MJ_glob/nsbdm_y
+    ly(1)=ly(1)-1
+    ly(nsbdm_y)=ly(nsbdm_y)-1
+    if (my_task==0) then
+      write(*,*) MJ_glob, nsbdm_y
+      write(*,*) ly
+    endif
+    call DMDACreate3d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                       &
+      DM_BOUNDARY_NONE,DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,MI_glob/(2**nlv), &
+      (MJ_glob-2)/(2**nlv),NK2-2,nsbdm_x,nsbdm_y,1,1,nhalo,PETSC_NULL_INTEGER,      &
+      ly,PETSC_NULL_INTEGER,da3(nlevel),ierr)
+#else
     call DMDACreate3d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                       &
       DM_BOUNDARY_PERIODIC,DM_BOUNDARY_NONE,DMDA_STENCIL_STAR,MI_glob/(2**nlv), &
       MJ_glob/(2**nlv),NK2-2,nsbdm_x,nsbdm_y,1,1,nhalo,PETSC_NULL_INTEGER,      &
       PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da3(nlevel),ierr)
+#endif
     call DMSetUp(da3(nlevel),ierr) ! must be call after PETSc 3.8.0
 
     call DMDASetUniformCoordinates(da3(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
@@ -214,12 +250,24 @@ endif
     call DMDAGetCorners(da3(1),ixx,iy,iz,mx,my,mz,ierr)
     call DMDAGetGhostCorners(da3(1),ixg,iyg,izg,mxg,myg,mzg,ierr)
 
+#if defined (NSWALL)
+    write(*,515) my_task,ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
+    515 format(13I4)
+
+    npt=mi_glob*(mj_glob-2)*(NK2-2)
+    np=nsbdm_x*nsbdm_y
+
+    call MatCreateAIJ(MPI_COMM_WORLD,mx*my*mz,mx*my*mz,npt,npt,7, &
+         PETSC_NULL_INTEGER,5,PETSC_NULL_INTEGER,Cmat,ierr)
+#else
     npt=mi_glob*mj_glob*(NK2-2)
     np=nsbdm_x*nsbdm_y
 
     call MatCreateAIJ(MPI_COMM_WORLD,npt/np,npt/np,npt,npt,7, &
          PETSC_NULL_INTEGER,5,PETSC_NULL_INTEGER,Cmat,ierr)
+#endif
     call OperatorConti(Cmat)
+
 
 ! http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP
 ! Connect KSP with DM grid -- KSPSetDM
@@ -291,9 +339,18 @@ endif
 ! The grid information can be used in both 2d and 3d grid.
 
 
+    ! for toppsi
+#if defined (NSWALL)
+    lya=ly
+    lya(nsbdm_y)=lya(nsbdm_y)-1
+    call DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                &
+      DM_BOUNDARY_NONE,DMDA_STENCIL_BOX,MI_glob/(2**nlv),(MJ_glob-3)/(2**nlv), &
+      nsbdm_x,nsbdm_y,1,nhalo,PETSC_NULL_INTEGER,lya,da2(nlevel),ierr)
+#else
     call DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                &
       DM_BOUNDARY_PERIODIC,DMDA_STENCIL_BOX,MI_glob/(2**nlv),MJ_glob/(2**nlv), &
       nsbdm_x,nsbdm_y,1,nhalo,PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da2(nlevel),ierr)
+#endif
     call DMSetUp(da2(nlevel),ierr) ! must be call after PETSc 3.8.0
 
     call DMDASetUniformCoordinates(da2(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
@@ -305,23 +362,42 @@ endif
 
     ENDDO
 
+#if defined (NSWALL)
+    call DMDAGetCorners(da2(1),ixx2,iy2,iz2,mx2,my2,mz2,ierr)
+    call DMDAGetGhostCorners(da2(1),ixg2,iyg2,izg2,mxg2,myg2,mzg2,ierr)
+
+    write(*,515) my_task,ixx2,iy2,iz2,mx2,my2,mz2,ixg2,iyg2,izg2,mxg2,myg2,mzg2
+#endif
+
 !    call DMDAGetCorners(da2(1),ixx,iy,iz,mx,my,mz,ierr)
 !    call DMDAGetGhostCorners(da2(1),ixg,iyg,izg,mxg,myg,mzg,ierr)
 
     call DMCreateGlobalVector(da2(1),v1,ierr)
+#if defined (NSWALL)
+#else
     call DMCreateGlobalVector(da2(1),v2,ierr)
+#endif
     call DMCreateGlobalVector(da2(1),rhs,ierr)
 
     call KSPCreate(MPI_COMM_WORLD,Toppsi,ierr)
 !    call KSPSetDM(Toppsi,da2,ierr)
 !    call KSPSetComputeOperators(Toppsi,ComputeTopbc,ctx2,ierr)
 
+#if defined (NSWALL)
+    npt=mi_glob*(mj_glob-3)
+    np=nsbdm_x*nsbdm_y
+
+    call MatCreateAIJ(MPI_COMM_WORLD,mx2*my2,mx2*my2,npt,npt,5, &
+         PETSC_NULL_INTEGER,3,PETSC_NULL_INTEGER,Amat,ierr)
+    call OperatorToppsi(Amat)
+#else
     npt=mi_glob*mj_glob
     np=nsbdm_x*nsbdm_y
 
     call MatCreateAIJ(MPI_COMM_WORLD,npt/np,npt/np,npt,npt,5, &
          PETSC_NULL_INTEGER,3,PETSC_NULL_INTEGER,Amat,ierr)
     call OperatorTopbc(Amat)
+#endif
     call KSPSetOperators(Toppsi,Amat,Amat,ierr)
 
     call KSPSetType(Toppsi, ksp_type_toppsi,ierr)
@@ -369,13 +445,44 @@ endif
     call KSPSetFromOptions(Toppsi,ierr)
     call KSPSolve(Toppsi,rhs,v1,ierr)
     call KSPSetInitialGuessNonzero(Toppsi,PETSC_TRUE,ierr)
+#if defined (NSWALL)
+    call VecDestroy(rhs,ierr)
 
+    ! for topchi
+
+    call DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                &
+      DM_BOUNDARY_NONE,DMDA_STENCIL_BOX,MI_glob/(2**nlv),(MJ_glob-2)/(2**nlv), &
+      nsbdm_x,nsbdm_y,1,nhalo,PETSC_NULL_INTEGER,ly,da2a(nlevel),ierr)
+    call DMSetUp(da2a(nlevel),ierr) ! must be call after PETSc 3.8.0
+
+    call DMDASetUniformCoordinates(da2a(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
+
+    DO I = nlevel,2,-1
+    call DMDASetRefinementFactor(da2a(I),2,2,1,ierr)
+    call DMRefine(da2a(I), PETSC_COMM_WORLD, da2a(I-1),ierr)
+    call DMDASetUniformCoordinates(da2a(I-1),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
+
+    ENDDO
+
+    call DMCreateGlobalVector(da2a(1),v2,ierr)
+    call DMCreateGlobalVector(da2a(1),rhs,ierr)
+#endif
 
     call KSPCreate(MPI_COMM_WORLD,Topchi,ierr)
 !    call KSPSetDM(Topchi,da2,ierr)
 !    call KSPSetComputeOperators(Topchi,ComputeTopbc,ctx2,ierr)
 
+#if defined (NSWALL)
+    npt=mi_glob*(mj_glob-2)
+    np=nsbdm_x*nsbdm_y
+
+    call MatCreateAIJ(MPI_COMM_WORLD,mx*my,mx*my,npt,npt,5, &
+         PETSC_NULL_INTEGER,3,PETSC_NULL_INTEGER,Bmat,ierr)
+    call OperatorTopchi(Bmat)
+    call KSPSetOperators(Topchi,Bmat,Bmat,ierr)
+#else
     call KSPSetOperators(Topchi,Amat,Amat,ierr)
+#endif
     call KSPSetType(Topchi, ksp_type_topchi,ierr)
     call KSPGetPC(Topchi,PC_Topchi,ierr)
     call PCSetType(PC_Topchi,pc_type_topchi,ierr)
@@ -439,6 +546,9 @@ SUBROUTINE petsc_solver_finalize
     DO I=1,nlevel
     call DMDestroy(da3(i),ierr)
     call DMDestroy(da2(i),ierr)
+#if defined (NSWALL)
+    call DMDestroy(da2a(i),ierr)
+#endif
     enddo
 END SUBROUTINE petsc_solver_finalize
 SUBROUTINE petsc_solve_3d(F,X)
@@ -454,7 +564,15 @@ PetscReal norm
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + (k - izg)*mxg*myg + 1
+#if defined (NSWALL)
+      if (iy==0) then
+        tmp(ip+kt)=-F(I-ixx+1,J-iy+2,K+1)
+      else
+        tmp(ip+kt)=-F(I-ixx+1,J-iy+1,K+1)
+      endif
+#else
       tmp(ip+kt)=-F(I-ixx+1,J-iy+1,K+1)
+#endif
       enddo
       enddo
       enddo
@@ -481,7 +599,15 @@ PetscReal norm
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + (k - izg)*mxg*myg + 1
+#if defined (NSWALL)
+      if (iy==0) then
+        X(I-ixx+2,J-iy+3,K+2) = tmp(ip+kt) / RHOZ(K+2)
+      else
+        X(I-ixx+2,J-iy+2,K+2) = tmp(ip+kt) / RHOZ(K+2)
+      endif
+#else
       X(I-ixx+2,J-iy+2,K+2) = tmp(ip+kt) / RHOZ(K+2)
+#endif
       enddo
       enddo
       enddo
@@ -500,19 +626,36 @@ PetscReal norm
     call DMCreateLocalVector(da2(1),vl,ierr)
 
       call VecGetArray(vl,tmp,ip,ierr)
+#if defined (NSWALL)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      if (iy==0) then
+        tmp(ip+kt)=-X(I-ixx2+2,J-iy2+3)
+      else
+        tmp(ip+kt)=-X(I-ixx2+2,J-iy2+2)
+      endif
+      enddo
+      enddo
+#else
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + 1
       tmp(ip+kt)=-X(I-ixx+2,J-iy+2)
       enddo
       enddo
+#endif
       call VecRestoreArray(vl,tmp,ip,ierr)
 
       call DMLocalToGlobalBegin(da2(1),vl,INSERT_VALUES,rhs,ierr)
       call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
 
       call vecsum(rhs,vsum,ierr)
+#if defined (NSWALL)
+      call vecshift(rhs,vsum*tpts2, ierr)
+#else
       call vecshift(rhs,vsum*tpts, ierr)
+#endif
 
       call KSPSetFromOptions(Toppsi,ierr)
       call KSPSolve(Toppsi,rhs,v1,ierr)
@@ -531,12 +674,25 @@ PetscReal norm
       call DMGlobalToLocalEnd(da2(1),v1,INSERT_VALUES,vl,ierr)
 
       call VecGetArray(vl,tmp,ip,ierr)
+#if defined (NSWALL)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      if (iy==0) then
+        X(I-ixx2+2,J-iy2+3) = tmp(ip+kt)
+      else
+        X(I-ixx2+2,J-iy2+2) = tmp(ip+kt)
+      endif
+      enddo
+      enddo
+#else
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + 1
       X(I-ixx+2,J-iy+2) = tmp(ip+kt)
       enddo
       enddo
+#endif
       call VecRestoreArray(vl,tmp,ip,ierr)
 
     call VecDestroy(rhs,ierr)
@@ -548,20 +704,38 @@ REAL (KIND=dbl_kind), INTENT(INOUT)::X(mi1+2,mj1+2)
 PetscInt its
 PetscReal norm
 
+#if defined (NSWALL)
+    call DMCreateGlobalVector(da2a(1),rhs,ierr)
+    call DMCreateLocalVector(da2a(1),vl,ierr)
+#else
     call DMCreateGlobalVector(da2(1),rhs,ierr)
     call DMCreateLocalVector(da2(1),vl,ierr)
+#endif
 
       call VecGetArray(vl,tmp,ip,ierr)
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + 1
+#if defined (NSWALL)
+      if (iy==0) then
+        tmp(ip+kt)= -X(I-ixx+2,J-iy+3)
+      else
+        tmp(ip+kt)= -X(I-ixx+2,J-iy+2)
+      endif
+#else
       tmp(ip+kt)= -X(I-ixx+2,J-iy+2)
+#endif 
       enddo
       enddo
       call VecRestoreArray(vl,tmp,ip,ierr)
 
+#if defined (NSWALL)
+      call DMLocalToGlobalBegin(da2a(1),vl,INSERT_VALUES,rhs,ierr)
+      call DMLocalToGlobalEnd(da2a(1),vl,INSERT_VALUES,rhs,ierr)
+#else
       call DMLocalToGlobalBegin(da2(1),vl,INSERT_VALUES,rhs,ierr)
       call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
+#endif
 
       call vecsum(rhs,vsum,ierr)
       call vecshift(rhs,vsum*tpts, ierr)
@@ -580,14 +754,27 @@ PetscReal norm
       call vecsum(v2,vsum,ierr)
 !      call vecshift(v2,vsum*tpts,ierr)
 
+#if defined (NSWALL)
+      call DMGlobalToLocalBegin(da2a(1),v2,INSERT_VALUES,vl,ierr)
+      call DMGlobalToLocalEnd(da2a(1),v2,INSERT_VALUES,vl,ierr)
+#else
       call DMGlobalToLocalBegin(da2(1),v2,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da2(1),v2,INSERT_VALUES,vl,ierr)
+#endif
 
       call VecGetArray(vl,tmp,ip,ierr)
       do j=iy,iy+my-1
       do i=ixx,ixx+mx-1
       kt = i - ixg + (j - iyg)*mxg + 1
+#if defined (NSWALL)
+      if (iy==0) then
+        X(I-ixx+2,J-iy+3) = tmp(ip+kt)
+      else
+        X(I-ixx+2,J-iy+2) = tmp(ip+kt)
+      endif
+#else
       X(I-ixx+2,J-iy+2) = tmp(ip+kt)
+#endif
       enddo
       enddo
       call VecRestoreArray(vl,tmp,ip,ierr)
@@ -602,7 +789,7 @@ SUBROUTINE OperatorConti(jac)
       PetscInt     ltog(1)
       PetscOffset idltog,idx
       PetscInt grow(1)
-      PetscInt row,i1,i7,i6,irow,jrow,krow
+      PetscInt row,i1,i7,i6,i5,irow,jrow,krow
       PetscInt col(7),iseven
       PetscScalar two,one,lambda,c1,c2,ctmp,tem,dzsq
       PetscScalar vv(7),AN(NK2-2),BN(NK2-2),CN(NK2-2),B_loc(NK2),BU(NK2)
@@ -614,6 +801,7 @@ SUBROUTINE OperatorConti(jac)
       i1 = 1
       i7 = 7
       i6 = 6
+      i5 = 5
       c1 = -1.d0/(DX*DX)
       c2 = -1.d0/(DYNEW*DYNEW)
       ctmp = -2.d0*(c1+c2)
@@ -647,6 +835,33 @@ SUBROUTINE OperatorConti(jac)
             krow = irow + (i - ixg)
             grow(1) = ltog(idltog+krow)
 !          print*,i,j,k,krow,ltog(idltog+krow)
+#if defined (NSWALL)
+            if (j==0) then
+            vv(1)   = c1
+            col(1) = ltog(idltog+krow - 1)
+            vv(2)   = ctmp + bn(k+1) + c2
+            col(2) = grow(1)
+            vv(3)   = c1
+            col(3) = ltog(idltog+krow + 1)
+            vv(4)   = c2
+            col(4) = ltog(idltog+krow + mxg)
+            vv(5)   = cn(k+1)
+            col(5) = ltog(idltog+krow + mxg*myg)
+      call MatSetValues(jac,i1,grow,i5,col,vv,INSERT_VALUES,ierr)
+            elseif (j==mj_glob-3) then
+            vv(1)   = c2
+            col(1) = ltog(idltog+krow - mxg)
+            vv(2)   = c1
+            col(2) = ltog(idltog+krow - 1)
+            vv(3)   = ctmp + bn(k+1) + c2
+            col(3) = grow(1)
+            vv(4)   = c1
+            col(4) = ltog(idltog+krow + 1)
+            vv(5)   = cn(k+1)
+            col(5) = ltog(idltog+krow + mxg*myg)
+      call MatSetValues(jac,i1,grow,i5,col,vv,INSERT_VALUES,ierr)
+            else
+#endif
             vv(1)   = c2
             col(1) = ltog(idltog+krow - mxg)
             vv(2)   = c1
@@ -660,6 +875,9 @@ SUBROUTINE OperatorConti(jac)
             vv(6)   = cn(k+1)
             col(6) = ltog(idltog+krow + mxg*myg)
       call MatSetValues(jac,i1,grow,i6,col,vv,INSERT_VALUES,ierr)
+#if defined (NSWALL)
+            endif
+#endif
           enddo
         enddo
 
@@ -671,6 +889,37 @@ SUBROUTINE OperatorConti(jac)
             krow = irow + (i - ixg)
             grow(1) = ltog(idltog+krow)
 !          print*,i,j,k,krow,ltog(idltog+krow)
+#if defined (NSWALL)
+            if (j==0) then
+            vv(1)   = an(k+1)
+            col(1) = ltog(idltog+krow - mxg*myg)
+            vv(2)   = c1
+            col(2) = ltog(idltog+krow - 1)
+            vv(3)   = ctmp + bn(k+1) + c2
+            col(3) = grow(1)
+            vv(4)   = c1
+            col(4) = ltog(idltog+krow + 1)
+            vv(5)   = c2
+            col(5) = ltog(idltog+krow + mxg)
+            vv(6)   = cn(k+1)
+            col(6) = ltog(idltog+krow + mxg*myg)
+      call MatSetValues(jac,i1,grow,i6,col,vv,INSERT_VALUES,ierr)
+            elseif (j==mj_glob-3) then
+            vv(1)   = an(k+1)
+            col(1) = ltog(idltog+krow - mxg*myg)
+            vv(2)   = c2
+            col(2) = ltog(idltog+krow - mxg)
+            vv(3)   = c1
+            col(3) = ltog(idltog+krow - 1)
+            vv(4)   = ctmp + bn(k+1) + c2
+            col(4) = grow(1)
+            vv(5)   = c1
+            col(5) = ltog(idltog+krow + 1)
+            vv(6)   = cn(k+1)
+            col(6) = ltog(idltog+krow + mxg*myg)
+      call MatSetValues(jac,i1,grow,i6,col,vv,INSERT_VALUES,ierr)
+            else
+#endif
             vv(1)   = an(k+1)
             col(1) = ltog(idltog+krow - mxg*myg)
             vv(2)   = c2
@@ -686,6 +935,9 @@ SUBROUTINE OperatorConti(jac)
             vv(7)   = cn(k+1)
             col(7) = ltog(idltog+krow + mxg*myg)
       call MatSetValues(jac,i1,grow,i7,col,vv,INSERT_VALUES,ierr)
+#if defined (NSWALL)
+            endif
+#endif
           enddo
         enddo
       enddo
@@ -698,6 +950,33 @@ SUBROUTINE OperatorConti(jac)
             krow = irow + (i - ixg)
             grow(1) = ltog(idltog+krow)
 !          print*,i,j,k,krow,ltog(idltog+krow)
+#if defined (NSWALL)
+            if (j==0) then
+            vv(1)   = an(k+1)
+            col(1) = ltog(idltog+krow - mxg*myg)
+            vv(2)   = c1
+            col(2) = ltog(idltog+krow - 1)
+            vv(3)   = ctmp + bn(k+1) + c2
+            col(3) = grow(1)
+            vv(4)   = c1
+            col(4) = ltog(idltog+krow + 1)
+            vv(5)   = c2
+            col(5) = ltog(idltog+krow + mxg)
+      call MatSetValues(jac,i1,grow,i5,col,vv,INSERT_VALUES,ierr)
+            elseif (j==mj_glob-3) then
+            vv(1)   = an(k+1)
+            col(1) = ltog(idltog+krow - mxg*myg)
+            vv(2)   = c2
+            col(2) = ltog(idltog+krow - mxg)
+            vv(3)   = c1
+            col(3) = ltog(idltog+krow - 1)
+            vv(4)   = ctmp + bn(k+1) + c2
+            col(4) = grow(1)
+            vv(5)   = c1
+            col(5) = ltog(idltog+krow + 1)
+      call MatSetValues(jac,i1,grow,i5,col,vv,INSERT_VALUES,ierr)
+            else
+#endif
             vv(1)   = an(k+1)
             col(1) = ltog(idltog+krow - mxg*myg)
             vv(2)   = c2
@@ -711,6 +990,9 @@ SUBROUTINE OperatorConti(jac)
             vv(6)   = c2
             col(6) = ltog(idltog+krow + mxg)
       call MatSetValues(jac,i1,grow,i6,col,vv,INSERT_VALUES,ierr)
+#if defined (NSWALL)
+            endif
+#endif
           enddo
         enddo
 
@@ -722,6 +1004,158 @@ SUBROUTINE OperatorConti(jac)
 
 
 END SUBROUTINE OperatorConti
+#if defined (NSWALL)
+SUBROUTINE OperatorTopchi(jac)
+
+      Mat         jac
+      PetscInt     ltog(1)
+      PetscOffset idltog,idx
+      PetscInt grow(1)
+      PetscInt row,ione,irow,jrow,krow
+      PetscInt col(5),ifive,ifour
+      PetscScalar two,one,lambda
+      PetscScalar vv(5)
+      PetscScalar  ctmp,c1,c2
+      ISLocalToGlobalMapping ltogm
+
+      ione   = 1
+      ifive = 5
+      ifour = 4
+      one    = 1.
+
+      c1     = -1./dble(DX*DX)
+      c2     = -1./dble(DYNEW*DYNEW)
+      ctmp   = -2.*(c1+c2)
+
+      call DMGetLocalToGlobalMapping(da2a(1),ltogm,ierr)
+      call ISLocalToGlobalMappingGetIndices(ltogm,ltog,idltog,ierr)
+
+        do 20 j=iy,iy+my-1
+          irow = (j - iyg)*mxg + ixx - ixg
+!          do 30 i=xs,xs+xm-1
+          do 30 i=ixx,ixx+mx-1
+            krow = irow + (i - ixg)
+            grow(1) = ltog(idltog+krow)
+!          print*,i,j,krow,ltog(idltog+krow)
+            if (j==0) then
+            vv(1)   = c1
+            col(1) = ltog(idltog+krow - 1)
+            vv(2)   = ctmp + c2
+            col(2) = grow(1)
+            vv(3)   = c1
+            col(3) = ltog(idltog+krow + 1)
+            vv(4)   = c2
+            col(4) = ltog(idltog+krow + mxg)
+      call MatSetValues(jac,ione,grow,ifour,col,vv,INSERT_VALUES,ierr)
+            elseif (j==mj_glob-3) then
+            vv(1)   = c2
+            col(1) = ltog(idltog+krow - mxg)
+            vv(2)   = c1
+            col(2) = ltog(idltog+krow - 1)
+            vv(3)   = ctmp + c2
+            col(3) = grow(1)
+            vv(4)   = c1
+            col(4) = ltog(idltog+krow + 1)
+      call MatSetValues(jac,ione,grow,ifour,col,vv,INSERT_VALUES,ierr)
+            else
+            vv(1)   = c2
+            col(1) = ltog(idltog+krow - mxg)
+            vv(2)   = c1
+            col(2) = ltog(idltog+krow - 1)
+            vv(3)   = ctmp
+            col(3) = grow(1)
+            vv(4)   = c1
+            col(4) = ltog(idltog+krow + 1)
+            vv(5)   = c2
+            col(5) = ltog(idltog+krow + mxg)
+      call MatSetValues(jac,ione,grow,ifive,col,vv,INSERT_VALUES,ierr)
+            endif
+ 30   continue
+!      endif
+ 20   continue
+      call ISLocalToGlobalMappingRestoreIndices(ltogm,ltog,idltog,ierr)
+
+      call MatAssemblyBegin(jac,MAT_FINAL_ASSEMBLY,ierr)
+      call MatAssemblyEnd(jac,MAT_FINAL_ASSEMBLY,ierr)
+      return
+
+END SUBROUTINE
+SUBROUTINE OperatorToppsi(jac)
+
+      Mat         jac
+      PetscInt     ltog(1)
+      PetscOffset idltog,idx
+      PetscInt grow(1)
+      PetscInt row,ione,irow,jrow,krow
+      PetscInt col(5),ifive,ifour
+      PetscScalar two,one,lambda
+      PetscScalar vv(5)
+      PetscScalar  ctmp,c1,c2
+      ISLocalToGlobalMapping ltogm
+
+      ione   = 1
+      ifive = 5
+      ifour = 4
+      one    = 1.
+
+      c1     = -1./dble(DX*DX)
+      c2     = -1./dble(DYNEW*DYNEW)
+      ctmp   = -2.*(c1+c2)
+
+      call DMGetLocalToGlobalMapping(da2(1),ltogm,ierr)
+      call ISLocalToGlobalMappingGetIndices(ltogm,ltog,idltog,ierr)
+
+        do 20 j=iy2,iy2+my2-1
+          irow = (j - iyg2)*mxg2 + ixx2 - ixg2
+!          do 30 i=xs,xs+xm-1
+          do 30 i=ixx2,ixx2+mx2-1
+            krow = irow + (i - ixg2)
+            grow(1) = ltog(idltog+krow)
+!          print*,i,j,krow,ltog(idltog+krow)
+            if (j==0) then
+            vv(1)   = c1
+            col(1) = ltog(idltog+krow - 1)
+            vv(2)   = ctmp
+            col(2) = grow(1)
+            vv(3)   = c1
+            col(3) = ltog(idltog+krow + 1)
+            vv(4)   = c2
+            col(4) = ltog(idltog+krow + mxg)
+      call MatSetValues(jac,ione,grow,ifour,col,vv,INSERT_VALUES,ierr)
+            elseif (j==mj_glob-4) then
+            vv(1)   = c2
+            col(1) = ltog(idltog+krow - mxg)
+            vv(2)   = c1
+            col(2) = ltog(idltog+krow - 1)
+            vv(3)   = ctmp
+            col(3) = grow(1)
+            vv(4)   = c1
+            col(4) = ltog(idltog+krow + 1)
+      call MatSetValues(jac,ione,grow,ifour,col,vv,INSERT_VALUES,ierr)
+            else
+            vv(1)   = c2
+            col(1) = ltog(idltog+krow - mxg)
+            vv(2)   = c1
+            col(2) = ltog(idltog+krow - 1)
+            vv(3)   = ctmp
+            col(3) = grow(1)
+            vv(4)   = c1
+            col(4) = ltog(idltog+krow + 1)
+            vv(5)   = c2
+            col(5) = ltog(idltog+krow + mxg)
+      call MatSetValues(jac,ione,grow,ifive,col,vv,INSERT_VALUES,ierr)
+            endif
+ 30   continue
+!      endif
+ 20   continue
+      call ISLocalToGlobalMappingRestoreIndices(ltogm,ltog,idltog,ierr)
+
+      call MatAssemblyBegin(jac,MAT_FINAL_ASSEMBLY,ierr)
+      call MatAssemblyEnd(jac,MAT_FINAL_ASSEMBLY,ierr)
+      return
+
+END SUBROUTINE
+#else
 SUBROUTINE OperatorTopbc(jac)
 
       Mat         jac
@@ -774,6 +1208,7 @@ SUBROUTINE OperatorTopbc(jac)
       return
 
 END SUBROUTINE
+#endif
 
 END MODULE petsc_vvm_solver
 !subroutine ComputeConti(ksp,JJ,jac,ctx,ierr)

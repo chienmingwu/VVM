@@ -97,6 +97,20 @@ CONTAINS
       CALL BOUND_3D_XY
 
 !  Updating the vertical component of vorticity.
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        Z3DX(:,0:1,:) = 0.
+        Z3DY(:,1,:) = Z3DY(:,2,:)
+        Z3DY(:,0,:) = Z3DY(:,2,:)
+        FZTOP(:,1,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        Z3DX(:,mj1-1:mj1+1,:) = 0.
+        Z3DY(:,mj1,:) = Z3DY(:,mj1-1,:)
+        Z3DY(:,mj1+1,:) = Z3DY(:,mj1-1,:)
+        FZTOP(:,mj1-1:mj1,:) = 0.
+      ENDIF
+#endif
+
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
       Z3DZ(I,J,NK2)=Z3DZ(I,J,NK2)+A*FZTOP(I,J,N2)+B*FZTOP(I,J,N1)
@@ -133,6 +147,14 @@ CONTAINS
 
 #if defined (DIFFUSION)
       CALL ABM_3D_TURB
+
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        FZTOPB(:,1) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZTOPB(:,mj1-1:mj1) = 0.
+      ENDIF
+#endif
 
       DO 200 J=1,MJ1
       DO 200 I=1,MI1
@@ -196,6 +218,17 @@ CONTAINS
 #endif
 
       CALL BOUND_3D_XY
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        Z3DX(:,0:1,:) = 0.
+        Z3DY(:,1,:) = Z3DY(:,2,:)
+        Z3DY(:,0,:) = Z3DY(:,2,:)
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        Z3DX(:,mj1-1:mj1+1,:) = 0.
+        Z3DY(:,mj1,:) = Z3DY(:,mj1-1,:)
+        Z3DY(:,mj1+1,:) = Z3DY(:,mj1-1,:)
+      ENDIF
+#endif
 
       DO 500 K=NK1,1,-1
       DO 500 J=1,MJ1
@@ -1150,6 +1183,15 @@ CONTAINS
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
 
 ! JH  Applying free-slip condition at the surface.
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        FZXBU(:,1,:) = 0.
+        FZX(:,1,:,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZXBU(:,mj1-1:mj1,:) = 0.
+        FZX(:,mj1-1:mj1,:,:) = 0.
+      ENDIF
+#endif
 
       DO 10 K = 2,NK1
       DO 10 J = 1,MJ1
@@ -1164,6 +1206,16 @@ CONTAINS
       Z3DX(I,J, 1) = 0.
       Z3DX(I,J,NK2) = 0.
    20 CONTINUE
+
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        FZYBU(:,1,:) = 0.
+        FZY(:,1,:,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZYBU(:,mj1,:) = 0.
+        FZY(:,mj1,:,:) = 0.
+      ENDIF
+#endif
 
       DO 30 K = 2,NK1
       DO 30 J = 1,MJ1
@@ -1185,6 +1237,14 @@ CONTAINS
    
       INTEGER (KIND=int_kind) :: i, j, k   ! loop indices
 
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        FZXTB(:,1,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZXTB(:,mj1-1:mj1,:) = 0.
+      ENDIF
+#endif
+
       DO 100 K = 2,NK1
       DO 100 J = 1,MJ1
       DO 100 I = 1,MI1
@@ -1196,6 +1256,14 @@ CONTAINS
       Z3DX(I,J, 1) = 0.
       Z3DX(I,J,NK2) = 0.
   200 CONTINUE
+
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        FZYTB(:,1,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZYTB(:,mj1,:) = 0.
+      ENDIF
+#endif
 
       DO 300 K = 2,NK1
       DO 300 J = 1,MJ1
