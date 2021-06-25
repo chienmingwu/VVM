@@ -251,8 +251,8 @@ endif
     call DMDAGetGhostCorners(da3(1),ixg,iyg,izg,mxg,myg,mzg,ierr)
 
 #if defined (NSWALL)
-    write(*,515) my_task,ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
-    515 format(13I4)
+    !write(*,515) my_task,ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
+    !515 format(13I4)
 
     npt=mi_glob*(mj_glob-2)*(NK2-2)
     np=nsbdm_x*nsbdm_y
@@ -366,7 +366,7 @@ endif
     call DMDAGetCorners(da2(1),ixx2,iy2,iz2,mx2,my2,mz2,ierr)
     call DMDAGetGhostCorners(da2(1),ixg2,iyg2,izg2,mxg2,myg2,mzg2,ierr)
 
-    write(*,515) my_task,ixx2,iy2,iz2,mx2,my2,mz2,ixg2,iyg2,izg2,mxg2,myg2,mzg2
+    !write(*,515) my_task,ixx2,iy2,iz2,mx2,my2,mz2,ixg2,iyg2,izg2,mxg2,myg2,mzg2
 #endif
 
 !    call DMDAGetCorners(da2(1),ixx,iy,iz,mx,my,mz,ierr)

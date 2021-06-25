@@ -387,7 +387,7 @@ CONTAINS
    INTEGER (KIND=int_kind):: i,j,itmp,jtmp
    CHARACTER(50):: FILENAME
    INTEGER (KIND=int_kind) :: hxp, hx1
-   REAL (KIND=dbl_kind) :: CP,tempim
+   REAL (KIND=dbl_kind) :: CP,tempim, tempjm, dum1, dum2
 
    CP = 1004.5
 
@@ -514,11 +514,14 @@ CONTAINS
 ! determine surface temp of water body
    IF (LU(I,J) .eq. 16) THEN
    IF (hx1 .eq. 1) THEN
-      tempim=dble(mi1*ni_sbdm+i)
-      pi = 4._8 * atan(1._8)
-!      TG(i,j)=300.-1.5*cos(2*pi*tempim/512.)   !512 points in x direction
-!      TG(i,j)=297.-6.0*cos(2*pi*tempim/512.)   !512 points in x direction
-       TG(i,j)=300.
+     tempjm=dble(mj1*nj_sbdm+j)
+     pi = 4._8 * atan(1._8)
+
+     ! qobs SST
+     dum1=abs(tempjm-dble(mj_glob)/2.-0.5)*DYNEW/6.37E6+0.5*DYNEW/6.37E6
+     dum2=pi/3.
+
+     TG(i,j)= 273.15 + 27*(cos(dum1/dum2)**2 +cos(dum1/dum2)**4)/2.
    ELSE
    TG(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
