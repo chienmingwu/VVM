@@ -468,7 +468,29 @@ CONTAINS
 #endif
 #endif
 
-
+#if defined (BETA)
+!====================================
+!     Coriolis Force with Beta Effect
+!====================================
+      DO 600 K = 2,NK1
+      DO 600 J = 1,MJ1
+      DO 600 I = 1,MI1
+      FZX(I,J,K,L)=FZX(I,J,K,L)                                &
+                  +0.25*F(J)*FNZ(K)/DZ                            &
+                         *(U3DX(I-1,J  ,K+1)-U3DX(I-1,J  ,K)   &
+                          +U3DX(I  ,J  ,K+1)-U3DX(I  ,J  ,K)   &
+                          +U3DX(I  ,J+1,K+1)-U3DX(I  ,J+1,K)   &
+                          +U3DX(I-1,J+1,K+1)-U3DX(I-1,J+1,K))
+  600 CONTINUE
+#if defined (SETWIND)
+      DO 650 K = 2,NK1
+      DO 650 J = 1,MJ1
+      DO 650 I = 1,MI1
+      FZX(I,J,K,L)=FZX(I,J,K,L)                &
+                  -F(J)*FNZ(K)*(UG(K+1)-UG(K))/DZ
+  650 CONTINUE
+#endif
+#endif
 
 !ccwut set source term of zx on the topo to zero
 
@@ -700,6 +722,30 @@ CONTAINS
       DO 650 I = 1,MI1
       FZY(I,J,K,L)=FZY(I,J,K,L)                &
                   +F*FNZ(K)*(VG(K+1)-VG(K))/DZ
+  650 CONTINUE
+#endif
+#endif
+
+#if defined (BETA)
+!====================================
+!     Coriolis Force with Beta Effect
+!====================================
+      DO 600 K = 2,NK1
+      DO 600 J = 1,MJ1
+      DO 600 I = 1,MI1
+      FZY(I,J,K,L)=FZY(I,J,K,L)                               &
+                  -0.25*0.5*(F(J)+F(J-1))*FNZ(K)/DZ           &
+                         *(U3DY(I+1,J  ,K+1)-U3DY(I+1,J  ,K)  &
+                          +U3DY(I  ,J  ,K+1)-U3DY(I  ,J  ,K)  &
+                          +U3DY(I  ,J-1,K+1)-U3DY(I  ,J-1,K)  &
+                          +U3DY(I+1,J-1,K+1)-U3DY(I+1,J-1,K))
+  600 CONTINUE
+#if defined (SETWIND)
+      DO 650 K = 2,NK1
+      DO 650 J = 1,MJ1
+      DO 650 I = 1,MI1
+      FZY(I,J,K,L)=FZY(I,J,K,L)                &
+                  +F(J)*FNZ(K)*(VG(K+1)-VG(K))/DZ
   650 CONTINUE
 #endif
 #endif
@@ -969,6 +1015,21 @@ CONTAINS
                           +U3DX(I+1,J+1,NK2)-U3DX(I-1,J+1,NK2))/DX   &
                   -0.25*F*(U3DY(I  ,J+1,NK2)-U3DY(I  ,J-1,NK2)       &
                           +U3DY(I+1,J+1,NK2)-U3DY(I+1,J-1,NK2))/DYNEW
+ 1000 CONTINUE
+#endif
+
+#if defined (BETA)
+!====================================
+!     Coriolis Force with Beta Effect
+!====================================
+      DO 1000 J = 1,MJ1
+      DO 1000 I = 1,MI1
+      FZTOP(I,J,L)=FZTOP(I,J,L)                                      &
+                  -0.25*F(J)*(U3DX(I+1,J  ,NK2)-U3DX(I-1,J  ,NK2)       &
+                          +U3DX(I+1,J+1,NK2)-U3DX(I-1,J+1,NK2))/DX   &
+                  -0.25*F(J)*(U3DY(I  ,J+1,NK2)-U3DY(I  ,J-1,NK2)       &
+                          +U3DY(I+1,J+1,NK2)-U3DY(I+1,J-1,NK2))/DYNEW&
+                  -0.5*FCOS(J)/6.37E6*(U3DY(I , J ,NK2)+U3DY(I+1 , J ,NK2))
  1000 CONTINUE
 #endif
 

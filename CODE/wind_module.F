@@ -274,6 +274,27 @@ CONTAINS
       FVTMN(L)=FVTMN(L)+F*UG(NK2)
 #endif
 #endif
+
+#if defined (BETA)
+      DO 200 J=1,MJ1
+      DO 200 I=1,MI1
+      temu(i,j) = F(J)*U3DY(I,J,NK2)
+      temv(i,j) = 0.5*(F(J)+F(J-1))*U3DX(I,J,NK2)
+  200 CONTINUE
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        temu(:,1) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        temu(:,mj1) = 0.
+      ENDIF
+#endif
+
+      CALL xyavg1(temu,0,mi1,mj1,sumu1)
+      CALL xyavg1(temv,0,mi1,mj1,sumv1)
+
+      FUTMN(L)=FUTMN(L)+SUMU1
+      FVTMN(L)=FVTMN(L)-SUMV1
+#endif
  
 #if defined (NSWALL)
       FUTMN(L)=FUTMN(L)*dble(mj_glob)/dble(mj_glob-2)
