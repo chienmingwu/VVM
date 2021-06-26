@@ -162,8 +162,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04
+      T1(K) =  T1(K) !* 1.E-01 + 273.16
+      QV1(K)= QV1(K) !* 1.E-04
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -173,7 +173,7 @@ CONTAINS
 
 !     *** MIXED LAYER PROFILE ***
 
-      T1(3) = PI1(3) * T1(2) / PI1(2)
+!      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
