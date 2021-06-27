@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tcvvm_300K
+set expname = tcvvm_qobs
 
 # set job system and compiler
 set compiler = 'intel_taiwania3'

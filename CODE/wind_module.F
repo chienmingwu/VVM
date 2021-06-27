@@ -94,6 +94,8 @@ CONTAINS
       CALL XYAVG1(VTOP,nhalo,mi1,mj1,VTOPM)
 
 #if defined (NSWALL)
+      if (my_task==0) write(*,992) "Top wind =", UTMN, UTOPM, VTMN, VTOPM
+      992 format(A,4F10.5)
       VTOPM=0.
       VTMN=0.
 #endif

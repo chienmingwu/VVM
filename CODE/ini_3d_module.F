@@ -534,11 +534,11 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/work/gi55/i55076/VVM/DATA/RCE_300K_d384r2km_2/archive/&
-              &RCE_300K_d384r2km_2.L.Thermodynamic-000264.nc"
+      thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs/archive/&
+              &tcvvm_qobs.L.Thermodynamic-000022.nc"
 
-      dynamic_file = "/work/gi55/i55076/VVM/DATA/RCE_300K_d384r2km_2/archive/&
-              &RCE_300K_d384r2km_2.L.Dynamic-000264.nc" 
+      dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs/archive/&
+              &tcvvm_qobs.L.Dynamic-000022.nc" 
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
