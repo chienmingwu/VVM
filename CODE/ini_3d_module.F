@@ -459,7 +459,7 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 !      U3DX(I,J,K)=UG(K)
 !      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=0.
+      U3DX(I,J,K)=0.5
       U3DY(I,J,K)=0.
   610 CONTINUE
 
