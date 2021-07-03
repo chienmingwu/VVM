@@ -1067,14 +1067,17 @@ CONTAINS
 !------------------------------------------------------------------------------
 ! store zc
         temlen=zc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store yc
         temlen=yc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store xc
         temlen=xc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
@@ -1309,14 +1312,17 @@ CONTAINS
 !------------------------------------------------------------------------------
 ! store zc
         temlen=zc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store yc
         temlen=yc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store xc
         temlen=xc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
@@ -1553,18 +1559,22 @@ CONTAINS
 !------------------------------------------------------------------------------
 ! store zc
         temlen=zc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store zb
         temlen=zc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, zb_id, (/1_mpi_offset_kind/), (/temlen/), zb)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store yc
         temlen=yc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store xc
         temlen=xc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
@@ -1790,18 +1800,22 @@ CONTAINS
 !------------------------------------------------------------------------------
 ! store yb
         temlen=yb_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, yb_id, (/1_mpi_offset_kind/), (/temlen/), yb)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store yc
         temlen=yc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store xb
         temlen=xb_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, xb_id, (/1_mpi_offset_kind/), (/temlen/), xb)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store xc
         temlen=xc_len
+        if (my_task /= 0) temlen=0
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
