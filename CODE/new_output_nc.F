@@ -254,24 +254,29 @@ CONTAINS
       call fname_nc(itp1, EXPHDR, 'Thermodynamic', ITT_OUTPUT, filnam_nc)
       nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
                             mpi_info_null, ncid_th)
+      if (my_task==0) write(*,*) "after create"
       CALL pCDF_INI_THERMO (ncid_th, time_len, &
                            nk2, mj_glob, mi_glob, zt(1:nk2), &
                            yt(1:mj_glob), xt(1:mi_glob))
+      if (my_task==0) write(*,*) "after ini thermo"
 
       CALL pCDF_INI_4DVAR (ncid_th, 'th', 'potential temperature', &
                           'potential_temperature', 'K', &
                           'zt', 'yt', 'xt')
+      if (my_task==0) write(*,*) "after ini th"
 
 #if defined (PHYSICS)
 ! QV3D
       CALL pCDF_INI_4DVAR (ncid_th, 'qv', 'water vapor mixing ratio', &
                           'vapor_mixing_ratio', 'kg kg-1', &
                           'zt', 'yt', 'xt')
+      if (my_task==0) write(*,*) "after ini qv"
       
 ! QC3D
       CALL pCDF_INI_4DVAR (ncid_th, 'qc', 'cloud water mixing ratio', &
                           'cloud_water_mixing', 'kg kg-1', &
                           'zt', 'yt', 'xt')
+      if (my_task==0) write(*,*) "after ini qc"
             
 ! QR3D
       CALL pCDF_INI_4DVAR (ncid_th, 'qr', 'rain mixing ratio', &
