@@ -521,7 +521,7 @@ CONTAINS
 
       CALL petsc_solver_initialize(petsc_cr)
 
-      restart_read: IF (.false.)THEN
+      restart_read: IF (.true.)THEN
 
 !   restart( thermodynamic_file (absolute path) , hydrometer , 
 !            dynamic_variables , {optional} dynamic_file (absolute path) )
@@ -534,11 +534,11 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs/archive/&
-              &tcvvm_qobs.L.Thermodynamic-000022.nc"
+      thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
+              &tcvvm_qobs_large_uras.L.Thermodynamic-000030.nc"
 
-      dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs/archive/&
-              &tcvvm_qobs.L.Dynamic-000022.nc" 
+      dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
+              &tcvvm_qobs_large_uras.L.Dynamic-000030.nc" 
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
