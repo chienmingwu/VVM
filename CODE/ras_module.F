@@ -230,12 +230,12 @@ CONTAINS
       !write(*,*) my_task,i,j,prec_cumulus(i,j),thad_cumulus(i,j,:),qvad_cumulus(i,j,:)
       !print *,sigmao(nn),xmb(nn),muc(nn),wbarc(nn),wc(nn),rhoc(nn)
 
-      !TC3D(i,j,1+1,1)=sigmao(nn) 
-      !TC3D(i,j,2+1,1)=xmb(nn) 
-      !TC3D(i,j,3+1,1)=muc(nn) 
-      !TC3D(i,j,4+1,1)=wbarc(nn) 
-      !TC3D(i,j,5+1,1)=wc(nn) 
-      !TC3D(i,j,6+1,1)=rhoc(nn) 
+      TC3D(i,j,1+1,1)=sigmao(nn) 
+      TC3D(i,j,2+1,1)=xmb(nn) 
+      TC3D(i,j,3+1,1)=muc(nn) 
+      TC3D(i,j,4+1,1)=wbarc(nn) 
+      TC3D(i,j,5+1,1)=wc(nn) 
+      TC3D(i,j,6+1,1)=rhoc(nn) 
 
  ENDDO!i
 ENDDO!j
@@ -752,7 +752,7 @@ ENDDO!j
       rkmin = -0.02
       upa=1./3.
       upb=1.95
-      upt=1800.
+      upt=10800.
       relaxas = dt/upt
       sigmao=1.
 
@@ -778,10 +778,11 @@ ENDDO!j
       ohltm  = 1.0/hltm
       const1 = cp*p608*ohltm
       ccritl= pcon*critl
-!     rmfmax = (500./lev)/(dt/1800.)
-!     rmfmax = (500./lev)/(dt/1200.)
-!     rmfmax = (150./lev)/(dt/600.)
-      rmfmax = (200./lev)/(dt/600.)
+!      rmfmax = (500./lev)/(dt/1800.)
+!      rmfmax = (500./lev)/(dt/1200.)
+!      rmfmax = (150./lev)/(dt/600.)
+!      rmfmax = (200./lev)/(dt/600.)
+      rmfmax = (200./72)/(225./600.)
 !
 !cc   linear instability requires: rmfmax*0.001*dt/dp < 1.0
 !     constant descriptions
@@ -1286,6 +1287,7 @@ ENDDO!j
           if ((zl(i,ktop(i)) .ge. 3000.) .and. &
               (zl(i,kcbase(i)) .le. 3000.)) then
 
+          if (mod(my_task,32)==0) write(*,*) kcbase(i),ktop(i) 
           do k= kcbase(i),ktop(i),-1
           if ((zl(i,k) .le. 3000.) .and. &
               (zl(i,k-1) .gt. 3000.)) exit

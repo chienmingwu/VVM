@@ -232,6 +232,9 @@ SRC_FREE_CODE = \
 	ldmain.F \
 	vertical_adaptive.F
 
+SRC_FREE_NODEBUG = \
+        petsc_vvm_solver.F \
+
 ####hchun###
 SRC_FREE = $(SRC_FREE_RAD_RRTM) $(SRC_FREE_RRTMG) $(SRC_FREE_CDECKS)  $(SRC_FREE_CODE) $(SRC_FREE_LSM)
 ############

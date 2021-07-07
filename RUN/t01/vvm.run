@@ -13,11 +13,12 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = output_test2
+set expname = tcvvm_qobs_large_3_uras_debug
 
 # set job system and compiler
 set compiler = 'intel_taiwania3'
 set jobsys = 'slurm_taiwania3'
+set debug_opt = '-g -traceback -check all -debug all'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -27,16 +28,16 @@ set expdir = ${datadir}'/'${expname}
 set codedir = ${datadir}'/'${expname}'/CODE'
 
 cd ${expdir}'/compile_code'
-make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile -j8
+make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} DEBUG="${debug_opt}" -f ${rundir}/makefile -j8
 
 # Set walltime to large number instead of marking it if you don't need it.
 sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/walltime/00:30:00/g' \
-    -e 's/np_nodes/10/g' \
+    -e 's/walltime/12:00:00/g' \
+    -e 's/np_nodes/12/g' \
     -e 's/np_threads/48/g' \
-    -e 's/total_cores/512/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/total_cores/640/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
 #qsub run.sh

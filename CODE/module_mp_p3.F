@@ -6077,7 +6077,7 @@ SUBROUTINE access_lookup_table_coll(dumjj,dumii,dumj,dumi,index,dum1,dum3,      
 
    ! check unrealistic values T
      if (.not.(T(k)>T_low .and. T(k)<T_high)) then
-        write(*,*) "unrealistic values T :", T(k)
+        write(*,*) "unrealistic values T :", T(k), k
         badvalue_found = .true.
      endif
    ! check for NANs:

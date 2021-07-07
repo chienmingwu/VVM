@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 #SBATCH -J expname        # Job name
 #SBATCH -A MST109184      # Account number
-#SBATCH -p ct560          # job partition
+#SBATCH -p ct2k          # job partition
 #SBATCH -N np_nodes       # Run all processes on a single node	
 #SBATCH -c 1              # cores per MPI rank
 #SBATCH -n total_cores    # Run a single task
