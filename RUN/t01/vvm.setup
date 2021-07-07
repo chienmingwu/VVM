@@ -5,11 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rce_test
+set expname = output_test2
 
 # set job system and compiler
-set compiler = 'fujitsu_odyssey'
-set jobsys = 'pjm_odyssey'
+set compiler = 'intel_taiwania3'
+set jobsys = 'slurm_taiwania3'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -74,6 +74,9 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define MICROP3
 #define RADCODE
+#define LSM
+#define NSWALL
+#define BETA
 'END1'
 cat definesld.com
 
@@ -82,22 +85,22 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/16/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=172800 /
+ &INPUT1 NEWRUN=T, ITTADD=360 /
  &INPUT2 RLAT=0, RLON=0 /
- &INPUT3 DX=1000.,DYNEW=1000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=30,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=16000.,DYNEW=16000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360. /
+ &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=10,ITSTOP=360,SCALE=6.,Q1Q2=F,DTRAD=300.,petsc_cr=0 /
+ &INPUT5 IX=3182073,ITINIT=10,ITSTOP=30,SCALE=6.,Q1Q2=F,DTRAD=1200.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT
@@ -108,9 +111,9 @@ cd ${expdir}'/compile_code'
 make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
 
 ## make for topography
-#make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
-#cd ${expdir}
-#./nc2fortranBinary > topo.log
+make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
+cd ${expdir}
+./nc2fortranBinary > topo.log
 
 exit
 

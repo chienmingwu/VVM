@@ -3,6 +3,7 @@
 #PJM -L rscgrp="regular-o"
 #PJM -L node=np_nodes
 #PJM -L elapse=walltime
+#PJM --mpi "max-proc-per-node=48"
 #PJM --mpi proc=np_threads
 #PJM -N expname 
 #PJM -j
@@ -22,7 +23,7 @@ export FLIB_BARRIER=HARD
 
 source ~/.bashrc
 
-export LD_LIBRARY_PATH=/data/01/gi55/i55076/.local/lib:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=/work/01/gi55/i55076/.local/lib:$LD_LIBRARY_PATH
 export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime

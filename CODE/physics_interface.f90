@@ -104,8 +104,13 @@
               ssat(im,km), pcprt_liq(im), pcprt_sol(im), w_p3(im,km), &
               diag_ze(im,km),diag_effc(im,km),diag_effi(im,km), &
               diag_vmi(im,km),diag_di(im,km),diag_rhoi(im,km), dt_p3, &
-              th_old_p3(im,km), qv_old_p3(im,km), diag_3d(im,km,3), diag_2d(im,1), &
-              cldfrac(im,km)
+              th_old_p3(im,km), qv_old_p3(im,km), &
+#if defined (HEATING)
+              diag_3d(im,km,7),&
+#else
+              diag_3d(im,km,3),&
+#endif
+              diag_2d(im,1), cldfrac(im,km)
 
       INTEGER (KIND=int_kind) :: itt_p3, stat
 
@@ -445,13 +450,30 @@
                    p_p3,dz_p3,itt_p3,pcprt_liq,pcprt_sol,                &
                    1,im,1,km,1,diag_ze,diag_effc,                        &
                    diag_effi,diag_vmi,diag_di,diag_rhoi,                 &
-                   1,diag_2d,3,diag_3d,log_predictNc,typeDiags_ON,model, &
+                   1,diag_2d, &
+#if defined (HEATING)
+                   7,diag_3d, &
+#else
+                   3,diag_3d, &
+#endif                   
+                   log_predictNc,typeDiags_ON,model, &
                    1.0,1.0,debug_on,scpf_on,scpf_pfrac,scpf_resfact,cldfrac)
 
       IF (global_status == -1 )THEN
       WRITE(*,*) "microphysics stop"
       STOP
       ENDIF
+
+#if defined (HEATING)
+      DO K=2,km
+      DO I=1,im
+        L_dep(I,J,K) = dble(diag_3d(I,K-1,4)) / dt
+        L_con(I,J,K) = dble(diag_3d(I,K-1,5)) / dt
+        L_fre(I,J,K) = dble(diag_3d(I,K-1,6)) / dt
+        L_met(I,J,K) = dble(diag_3d(I,K-1,7)) / dt
+      ENDDO
+      ENDDO
+#endif
 
       ReC_p3(1:mi1,j,1:nk2-1) = diag_effc
       ReI_p3(1:mi1,j,1:nk2-1) = diag_effi
@@ -568,6 +590,12 @@
         QSAD_MICRO(i,j,k) = tendency_microphysics_qs(I,K-1)
         QGAD_MICRO(i,j,k) = tendency_microphysics_qg(I,K-1)
         QRAD_MICRO(i,j,k) = tendency_microphysics_qr(I,K-1)
+#if defined (HEATING)
+        L_dep(i,j,k) = lhdep(i,k-1)
+        L_con(i,j,k) = lhcon(i,k-1)
+        L_fre(i,j,k) = lhfre(i,k-1)
+        L_met(i,j,k) = lhmet(i,k-1)
+#endif
         RLHR3D(i,j,k)     = latent_heating_rate(i,k-1)
   510 CONTINUE
 
@@ -622,6 +650,46 @@
 
 ! Periodic continuation for serial code
       CALL BOUND_3D
+
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        DO k=1,nk3
+          TH3D(:,0:1,K) = THBAR(K)
+        ENDDO
+        QV3D(:,0:1,:) = 0.
+        QC3D(:,0:1,:) = 0.
+        QR3D(:,0:1,:) = 0.
+        QI3D(:,0:1,:) = 0.
+#if defined (MICROP3)
+        NC3D(:,0:1,:) = 0.
+        NR3D(:,0:1,:) = 0.
+        NI3D(:,0:1,:) = 0.
+        QRIM3D(:,0:1,:) = 0.
+        BRIM3D(:,0:1,:) = 0.
+#else
+        QS3D(:,0:1,:) = 0.
+        QG3D(:,0:1,:) = 0.
+#endif
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        DO k=1,nk3
+          TH3D(:,mj1:mj1+1,K) = THBAR(K)
+        ENDDO
+        QV3D(:,mj1:mj1+1,:) = 0.
+        QC3D(:,mj1:mj1+1,:) = 0.
+        QR3D(:,mj1:mj1+1,:) = 0.
+        QI3D(:,mj1:mj1+1,:) = 0.
+#if defined (MICROP3)
+        NC3D(:,mj1:mj1+1,:) = 0.
+        NR3D(:,mj1:mj1+1,:) = 0.
+        NI3D(:,mj1:mj1+1,:) = 0.
+        QRIM3D(:,mj1:mj1+1,:) = 0.
+        BRIM3D(:,mj1:mj1+1,:) = 0.
+#else
+        QS3D(:,mj1:mj1+1,:) = 0.
+        QG3D(:,mj1:mj1+1,:) = 0.
+#endif
+      ENDIF
+#endif
  
 !======================================================================
 

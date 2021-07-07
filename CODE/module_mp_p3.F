@@ -1,3 +1,4 @@
+#include "definesld.com"
 !__________________________________________________________________________________________
 ! This module contains the Predicted Particle Property (P3) bulk microphysics scheme.      !
 !                                                                                          !
@@ -276,12 +277,12 @@
  print*, '   P3_INIT (reading/creating look-up tables [v',trim(version_intended_table_1), &
          ', v',trim(version_intended_table_2),']) ...'
 
- open(unit=10,file=lookup_file_1, status='old')
+ open(unit=951,file=lookup_file_1, status='old')
 
  !-- check that table version is correct:
  !   note:  to override and use a different lookup table, simply comment out
  !   the 'return' below, and the 'stop' if using WRF
- read(10,*) dumstr,version_header_table_1
+ read(951,*) dumstr,version_header_table_1
  if (trim(version_intended_table_1) /= trim(version_header_table_1)) then
     print*
     print*, '***********   WARNING in P3_INIT   *************'
@@ -298,13 +299,13 @@
     endif
     return
  endif
- read(10,*)
+ read(951,*)
 
 
  do jj = 1,densize
     do ii = 1,rimsize
        do i = 1,isize
-          read(10,*) dum,dum,dum,dum,itab(jj,ii,i,1),itab(jj,ii,i,2),           &
+          read(951,*) dum,dum,dum,dum,itab(jj,ii,i,1),itab(jj,ii,i,2),           &
                itab(jj,ii,i,3),itab(jj,ii,i,4),itab(jj,ii,i,5),                 &
                itab(jj,ii,i,6),itab(jj,ii,i,7),itab(jj,ii,i,8),dum,             &
                itab(jj,ii,i,9),itab(jj,ii,i,10),itab(jj,ii,i,11),               &
@@ -313,7 +314,7 @@
       !read in table for ice-rain collection
        do i = 1,isize
           do j = 1,rcollsize
-             read(10,*) dum,dum,dum,dum,dum,itabcoll(jj,ii,i,j,1),              &
+             read(951,*) dum,dum,dum,dum,dum,itabcoll(jj,ii,i,j,1),              &
               itabcoll(jj,ii,i,j,2),dum
               itabcoll(jj,ii,i,j,1) = dlog10(max(itabcoll(jj,ii,i,j,1),1.d-90))
               itabcoll(jj,ii,i,j,2) = dlog10(max(itabcoll(jj,ii,i,j,2),1.d-90))
@@ -322,7 +323,7 @@
     enddo
  enddo
 
- close(10)
+ close(951)
 
 ! read in ice-ice collision lookup table
 
@@ -3141,6 +3142,16 @@ END subroutine p3_init
                               qcheti(iice)+qrhetc(iice)+qrheti(iice)-qimlt(iice))*       &
                               xlf(i,k)*inv_cp)*dt
 
+#if defined (HEATING)
+          diag_3d(i,k,4) = diag_3d(i,k,4) + &
+                             (qidep(iice)-qisub(iice)+qinuc(iice))*xxls(i,k)*inv_cp*dt
+          diag_3d(i,k,6) = diag_3d(i,k,6) + &
+                             (qrcol(iice)+qccol(iice)+qchetc(iice)+qcheti(iice) &
+                             +qrhetc(iice)+qrheti(iice)-qimlt(iice))*xlf(i,k)*inv_cp*dt
+          diag_3d(i,k,7) = diag_3d(i,k,7) - &
+                             (qimlt(iice))*xlf(i,k)*inv_cp*dt
+#endif
+  
        enddo iice_loop2
    !==
 
@@ -3162,6 +3173,11 @@ END subroutine p3_init
        qv(i,k) = qv(i,k) + (-qcnuc-qccon-qrcon+qcevp+qrevp)*dt
        th(i,k) = th(i,k) + th(i,k)/t(i,k)*((qcnuc+qccon+qrcon-qcevp-qrevp)*xxlv(i,k)*    &
                  inv_cp)*dt
+
+#if defined (HEATING)
+       diag_3d(i,k,5) = diag_3d(i,k,5) + (qcnuc+qccon+qrcon-qcevp-qrevp)*xxlv(i,k)*inv_cp*dt
+#endif
+
    !==
 
      ! clipping for small hydrometeor values
@@ -3170,6 +3186,9 @@ END subroutine p3_init
           th(i,k) = th(i,k) - th(i,k)/t(i,k)*qc(i,k)*xxlv(i,k)*inv_cp
           qc(i,k) = 0.
           nc(i,k) = 0.
+#if defined (HEATING)
+          diag_3d(i,k,5) = diag_3d(i,k,5) - qc(i,k)*xxlv(i,k)*inv_cp
+#endif
        else
           log_hydrometeorsPresent = .true.
        endif
@@ -3179,6 +3198,9 @@ END subroutine p3_init
           th(i,k) = th(i,k) - th(i,k)/t(i,k)*qr(i,k)*xxlv(i,k)*inv_cp
           qr(i,k) = 0.
           nr(i,k) = 0.
+#if defined (HEATING)
+          diag_3d(i,k,5) = diag_3d(i,k,5) - qr(i,k)*xxlv(i,k)*inv_cp
+#endif
        else
           log_hydrometeorsPresent = .true.
        endif
@@ -3191,6 +3213,9 @@ END subroutine p3_init
              nitot(i,k,iice) = 0.
              qirim(i,k,iice) = 0.
              birim(i,k,iice) = 0.
+#if defined (HEATING)
+             diag_3d(i,k,4) = diag_3d(i,k,4) - qitot(i,k,iice)*xxls(i,k)*inv_cp
+#endif
           else
              log_hydrometeorsPresent = .true.
           endif
@@ -3711,6 +3736,9 @@ END subroutine p3_init
           th(i,k) = th(i,k) + th(i,k)/t(i,k)*Q_nuc*xlf(i,k)*inv_cp
           qc(i,k) = 0.  != qc(i,k) - Q_nuc
           nc(i,k) = 0.  != nc(i,k) - N_nuc
+#if defined (HEATING)
+          diag_3d(i,k,6) = diag_3d(i,k,6) + Q_nuc*xlf(i,k)*inv_cp
+#endif
        endif
 
        if (qr(i,k).ge.qsmall .and. t(i,k).lt.233.15) then
@@ -3732,6 +3760,9 @@ END subroutine p3_init
           th(i,k) = th(i,k) + th(i,k)/t(i,k)*Q_nuc*xlf(i,k)*inv_cp
           qr(i,k) = 0.  ! = qr(i,k) - Q_nuc
           nr(i,k) = 0.  ! = nr(i,k) - N_nuc
+#if defined (HEATING)
+          diag_3d(i,k,6) = diag_3d(i,k,6) + Q_nuc*xlf(i,k)*inv_cp
+#endif
        endif
 
     enddo k_loop_fz
@@ -3757,6 +3788,9 @@ END subroutine p3_init
           th(i,k) = th(i,k)-th(i,k)/t(i,k)*qc(i,k)*xxlv(i,k)*inv_cp
           qc(i,k) = 0.
           nc(i,k) = 0.
+#if defined (HEATING)
+          diag_3d(i,k,5) = diag_3d(i,k,5) - qc(i,k)*xxlv(i,k)*inv_cp
+#endif
        endif
 
     ! rain:
@@ -3786,6 +3820,9 @@ END subroutine p3_init
           th(i,k) = th(i,k)-th(i,k)/t(i,k)*qr(i,k)*xxlv(i,k)*inv_cp
           qr(i,k) = 0.
           nr(i,k) = 0.
+#if defined (HEATING)
+          diag_3d(i,k,5) = diag_3d(i,k,5) - qr(i,k)*xxlv(i,k)*inv_cp
+#endif
        endif
 
     ! ice:
@@ -3847,7 +3884,9 @@ END subroutine p3_init
              qirim(i,k,iice) = 0.
              birim(i,k,iice) = 0.
              diag_di(i,k,iice) = 0.
-
+#if defined (HEATING)
+             diag_3d(i,k,4) = diag_3d(i,k,4) - qitot(i,k,iice)*xxls(i,k)*inv_cp
+#endif
           endif qi_not_small
 
        enddo iice_loop_final_diagnostics
@@ -6033,14 +6072,19 @@ SUBROUTINE access_lookup_table_coll(dumjj,dumii,dumj,dumi,index,dum1,dum3,      
 
   badvalue_found = .false.
   nk = size(T,1)
-  
+
   k_loop: do k = 1,nk
 
-   ! check unrealistic values T and Qv
+   ! check unrealistic values T
      if (.not.(T(k)>T_low .and. T(k)<T_high)) then
+        write(*,*) "unrealistic values T :", T(k)
         badvalue_found = .true.
      endif
-
+   ! check for NANs:
+      if (.not.(T(k)  == T(k))) then
+        write(*,*) "found Nan"
+        badvalue_found = .true.
+     endif
 
   enddo k_loop
 

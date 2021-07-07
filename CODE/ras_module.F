@@ -230,12 +230,12 @@ CONTAINS
       !write(*,*) my_task,i,j,prec_cumulus(i,j),thad_cumulus(i,j,:),qvad_cumulus(i,j,:)
       !print *,sigmao(nn),xmb(nn),muc(nn),wbarc(nn),wc(nn),rhoc(nn)
 
-      TC3D(i,j,1+1,1)=sigmao(nn) 
-      TC3D(i,j,2+1,1)=xmb(nn) 
-      TC3D(i,j,3+1,1)=muc(nn) 
-      TC3D(i,j,4+1,1)=wbarc(nn) 
-      TC3D(i,j,5+1,1)=wc(nn) 
-      TC3D(i,j,6+1,1)=rhoc(nn) 
+      !TC3D(i,j,1+1,1)=sigmao(nn) 
+      !TC3D(i,j,2+1,1)=xmb(nn) 
+      !TC3D(i,j,3+1,1)=muc(nn) 
+      !TC3D(i,j,4+1,1)=wbarc(nn) 
+      !TC3D(i,j,5+1,1)=wc(nn) 
+      !TC3D(i,j,6+1,1)=rhoc(nn) 
 
  ENDDO!i
 ENDDO!j

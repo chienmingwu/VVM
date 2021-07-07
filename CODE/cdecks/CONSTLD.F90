@@ -1,3 +1,4 @@
+#include "definesld.com"
 MODULE constld
 
 ! This file contains profiles that do not vary across the domain and
@@ -96,7 +97,12 @@ PRIVATE
       crad,      &  ! formerly c(40) coefficient for gravity wave damping
       scale,     &  ! formerly c(41) scale factor for Q1 and Q2
       crad1,     &  ! formerly c(42) coefficient for Newtonian cooling
+#if defined (BETA)
+      f(mjm:mjp),     &  ! coefficient for Coriolis force
+      fcos(mjm:mjp),  &  ! coefficient for Beta
+#else
       f,         &  ! formerly c(54) coefficient for Coriolis force
+#endif
       dthmax,    &  ! formerly c(61) coefficient for random perturbation
       dtpert,    &  ! formerly c(62) coefficient for random perturbation
       z1pert,    &  ! formerly c(63) z_low for random perturbation
