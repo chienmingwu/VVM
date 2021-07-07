@@ -219,6 +219,7 @@ endif
 
     call MatCreateAIJ(MPI_COMM_WORLD,npt/np,npt/np,npt,npt,7, &
          PETSC_NULL_INTEGER,5,PETSC_NULL_INTEGER,Cmat,ierr)
+    !call MatSetUp(Cmat,ierr)
     call OperatorConti(Cmat)
 
 ! http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSP.html#KSP
@@ -322,6 +323,7 @@ endif
 
     call MatCreateAIJ(MPI_COMM_WORLD,npt/np,npt/np,npt,npt,5, &
          PETSC_NULL_INTEGER,3,PETSC_NULL_INTEGER,Amat,ierr)
+    !call MatSetUp(Amat,ierr)
     call OperatorTopbc(Amat)
     call KSPSetOperators(Toppsi,Amat,Amat,ierr)
 
