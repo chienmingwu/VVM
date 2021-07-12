@@ -13,12 +13,12 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = tcvvm_qobs_large_3_uras_debug
+set expname = tcvvm_qobs_large_7
 
 # set job system and compiler
 set compiler = 'intel_taiwania3'
 set jobsys = 'slurm_taiwania3'
-set debug_opt = '-g -traceback -check all -debug all'
+set debug_opt = ''#'-g -traceback -check bounds -debug all'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
