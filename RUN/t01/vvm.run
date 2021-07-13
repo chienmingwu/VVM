@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = tcvvm_qobs_large_8
+set expname = tcvvm_qobs_large
 
 # set job system and compiler
 set compiler = 'intel_taiwania3'
@@ -35,9 +35,9 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
     -e 's/walltime/12:00:00/g' \
-    -e 's/np_nodes/12/g' \
+    -e 's/np_nodes/23/g' \
     -e 's/np_threads/48/g' \
-    -e 's/total_cores/640/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/total_cores/1248/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
 #qsub run.sh
