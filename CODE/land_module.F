@@ -518,13 +518,13 @@ CONTAINS
      pi = 4._8 * atan(1._8)
 
      ! qobs SST
-     dum1=abs(tempjm-dble(mj_glob)/2.-0.5)*DYNEW/6.37E6+0.5*DYNEW/6.37E6
+     dum1=(tempjm-dble(mj_glob)/2.-0.5)*DYNEW/6.37E6+0.5*DYNEW/6.37E6
      dum2=pi/12.
      dum1=dum1-dum2
      dum2=pi/4.
 
      TG(i,j)= 273.15 + 27*(cos(dum1/dum2)**2 +cos(dum1/dum2)**4)/2.
-     if (abs(dum1)>=pi/3.) TG(i,j)= 273.15
+     if (abs(dum1)>pi/180.*70.) TG(i,j)= 273.15
      !TG(i,j)=300.
    ELSE
    TG(I,J) = thbar(hx1)*pibar(hx1)
