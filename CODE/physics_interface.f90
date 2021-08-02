@@ -460,7 +460,7 @@
                    1.0,1.0,debug_on,scpf_on,scpf_pfrac,scpf_resfact,cldfrac)
 
       IF (global_status == -1 )THEN
-      WRITE(*,*) "microphysics stop"
+      WRITE(*,*) "microphysics stop", ni_sbdm, nj_sbdm 
       STOP
       ENDIF
 

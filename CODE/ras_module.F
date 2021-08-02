@@ -168,7 +168,7 @@ CONTAINS
       ktopo=NK2-HX(i,j)
       cblimit=1
       DO k = ktopo, cthmax, -1
-       IF ( zl(nn,k)-zl(nn,ktopo) >= 5000.) then
+       IF ( zl(nn,k)-zl(nn,ktopo) >= 3000.) then
         cblimit=k
        exit
        endif
