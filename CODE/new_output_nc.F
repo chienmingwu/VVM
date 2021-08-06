@@ -1926,6 +1926,21 @@ CONTAINS
       nc_err = nfmpi_put_att_real(ncid, var_id, 'missing_value', NF_FLOAT, 1_mpi_offset_kind, (/realval/))
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
+      nc_err = nfmpi_put_att_int(ncid, var_id, 'FieldType', NF_INT, 1_mpi_offset_kind, (/104/))
+!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      clen = len("XYZ")      
+      nc_err = nfmpi_put_att_text(ncid, var_id, 'MemoryOrder', clen, "XYZ")
+!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      clen = len("")      
+      nc_err = nfmpi_put_att_text(ncid, var_id, 'stagger', clen, "")
+!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      clen = len("xc yc")      
+      nc_err = nfmpi_put_att_text(ncid, var_id, 'coordinates', clen, "xc yc")
+!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
 ! leave define mode
       nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)

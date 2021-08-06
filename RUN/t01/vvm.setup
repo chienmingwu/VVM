@@ -5,11 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = output_test2
+set expname = output_test
 
 # set job system and compiler
-set compiler = 'intel_taiwania3'
-set jobsys = 'slurm_taiwania3'
+set compiler = 'pgi_mog39'
+set jobsys = 'pbs_mog39_pgi'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -70,13 +70,6 @@ cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
 #define DIFFUSION
-#define PHYSICS
-#define MICROCODE
-#define MICROP3
-#define RADCODE
-#define LSM
-#define NSWALL
-#define BETA
 'END1'
 cat definesld.com
 
@@ -85,10 +78,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/16/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/64/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
@@ -96,7 +89,7 @@ sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=360 /
  &INPUT2 RLAT=0, RLON=0 /
- &INPUT3 DX=16000.,DYNEW=16000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
 #         ( case output frequency)   ( result could be seen in ncfile)
