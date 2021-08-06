@@ -370,7 +370,12 @@ CONTAINS
 
 
       ! isentropic environment
-      !THBAR=THBAR(2)
+      THBAR=THBAR(2)
+      RHO=1.
+      RHOZ=1.
+      RHOU=1.
+      RHOT=1.
+      RHOW=1.   
 
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
@@ -384,14 +389,14 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      !IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2&
-      !        !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
-      !        +((ZT(K)-3200.)/2000.)**2)<=1)THEN
-      !  TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
-      !                sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2+ &
-      !         !            ((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
-      !                     ((ZT(K)-3200.)/2000.)**2)))**2
-      !ENDIF
+      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2&
+              !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
+              +((ZT(K)-3200.)/2000.)**2)<=1)THEN
+        TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
+                      sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2+ &
+               !            ((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
+                           ((ZT(K)-3200.)/2000.)**2)))**2
+      ENDIF
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -459,7 +464,7 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 !      U3DX(I,J,K)=UG(K)
 !      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=0.5
+      U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
 
@@ -638,8 +643,8 @@ CONTAINS
       call bound_int_arb(NK2,ITYPEW)
 
       DO K=2,maxtopo
-      DO J=1,mjp
-      DO I=1,mip
+      DO J=1,mj1
+      DO I=1,mi1
       IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I-1,J,K) .EQ. 1) THEN
 !      IF (ITYPEW(I,J,K) .GT. ITYPEW(I+1,J,K) ) THEN
       ITYPEU(I-1,J,K) = -1

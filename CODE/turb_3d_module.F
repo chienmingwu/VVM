@@ -331,10 +331,8 @@ CONTAINS
          UW(I,J)  = 0.
          WV(I,J)  = 0.
          WTH(I,J) = 0.
-         !! for partial step debugging
-         !WTH(I,J) = (273.15+27.+10.-TH3D(i,j,int(hx(i,j))+1)*&
-         !           pibar(int(hx(i,j))+1))*0.01/pibar(int(hx(i,j))+1)&
-         !          *DZ/FNT(hx(i,j))/((int(hx(i,j))+1-hx(i,j))*DZ/FNT(int(hx(i,j))))
+         ! for partial step debugging
+         if (HX(I,J)>=4. .and. hx(I,J)-int(hx(I,J))<0.5) WTH(I,J) = 0.02*DZ
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
@@ -564,6 +562,10 @@ CONTAINS
       DO 630 J=1,MJ1
       DO 630 I=1,MI1
       hxp=INT(hx(I,J))+1
+      if (hx(I,J)-int(hx(I,J))>=0.5) then
+        hxp=hxp+1
+        !write(*,*) hx(I,J), int(hx(I,J)), hxp
+      endif
       DDX(I,J,hxp)=DDX(I,J,hxp)                                     &
        +FNU(hxp)*WTH(I,J)/(RHOU(hxp)*DZ)
      

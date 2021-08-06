@@ -171,6 +171,28 @@ CONTAINS
 
 
 !ccwut set physics variables on topo to zero
+!      K=1
+!      DO J = 1, MJ1
+!      DO I = 1, MI1
+!      if (hx(I,J)-int(hx(I,J))>=0.5) then
+!      TH3D(I,J,int(hx(I,J))+K) = THBAR(int(hx(I,J)+K))
+!      QV3D(I,J,int(hx(I,J))+K) = 0.
+!      QC3D(I,J,int(hx(I,J))+K) = 0.
+!      QR3D(I,J,int(hx(I,J))+K) = 0.
+!#if defined (MICROP3)
+!      NC3D(I,J,int(hx(I,J))+K) = 0.
+!      NR3D(I,J,int(hx(I,J))+K) = 0.
+!      NI3D(I,J,int(hx(I,J))+K) = 0.
+!      QRIM3D(I,J,int(hx(I,J))+K) = 0.
+!      BRIM3D(I,J,int(hx(I,J))+K) = 0.
+!#else
+!      QS3D(I,J,int(hx(I,J))+K) = 0.
+!      QG3D(I,J,int(hx(I,J))+K) = 0.
+!#endif
+!      endif
+!      ENDDO
+!      ENDDO
+
       DO K = 2, maxtopo
       DO J = 1, MJ1
       DO I = 1, MI1
