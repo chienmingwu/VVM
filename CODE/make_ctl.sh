@@ -84,17 +84,17 @@ endif
 end
 
 # get information of 3D coordinate  
-set dum1    =  ` ncdump -v xc ${dynamic} `
+set dum1    =  ` ncdump -v lon ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 5 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set nx      =  ` echo ${dum2} | cut -d" " -f 1 `
 
-set dum1    =  ` ncdump -v yc ${dynamic} `
+set dum1    =  ` ncdump -v lat ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 4 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set ny      =  ` echo ${dum2} | cut -d" " -f 1 `
 
-set dum1    =  ` ncdump -v zc ${dynamic} `
+set dum1    =  ` ncdump -v lev ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 3 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set nz      =  ` echo ${dum2} | cut -d" " -f 1 `
