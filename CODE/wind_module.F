@@ -50,10 +50,6 @@ CONTAINS
 
       CALL XYAVG1(UTOP,nhalo,mi1,mj1,UTOPM)
 
-#if defined (NSWALL)
-      UTOPM = UTOPM * dble(mj_glob)/dble(mj_glob-2)
-#endif
-
 !      call bound_arb(1,UTOP)
 
       DO 210 J=1,MJ1
@@ -80,25 +76,8 @@ CONTAINS
 #if defined (PERIODIC)
       call bound_arb(nk3,u3dx)
 #endif
-#if defined (NSWALL)
-      IF (nj_sbdm==0) THEN
-        U3DX(:,1,:) = U3DX(:,2,:)
-        U3DX(:,0,:) = U3DX(:,2,:)
-      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
-        U3DX(:,mj1,:) = U3DX(:,mj1-1,:)
-        U3DX(:,mj1+1,:) = U3DX(:,mj1-1,:)
-      ENDIF
-#endif
-
 
       CALL XYAVG1(VTOP,nhalo,mi1,mj1,VTOPM)
-
-#if defined (NSWALL)
-      if (my_task==0) write(*,992) "Top wind =", UTMN, UTOPM, VTMN, VTOPM
-      992 format(A,4F10.5)
-      VTOPM=0.
-      VTMN=0.
-#endif
 
       DO 310 J=1,MJ1
       DO 310 I=1,MI1
@@ -124,13 +103,6 @@ CONTAINS
  
 #if defined (PERIODIC)
       call bound_arb(nk3,u3dy)
-#endif
-#if defined (NSWALL)
-      IF (nj_sbdm==0) THEN
-        U3DY(:,0:1,:) = 0.
-      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
-        U3DY(:,mj1-1:mj1+1,:) = 0.
-      ENDIF
 #endif
 
 !  Calculating the deformation: (3.32) in Jung & Arakawa (2005) 
@@ -203,14 +175,6 @@ CONTAINS
            (RHOU(NK1)*U3DY(I,J,NK1)+RHOU(NK2)*U3DY(I,J,NK2)) &
                 *(W3D(I,J,NK1)+W3D(I,J+1,NK1))
   100 CONTINUE
-#if defined (NSWALL)
-      IF (nj_sbdm==0) THEN
-        temu(:,1) = 0.
-      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
-        temu(:,mj1) = 0.
-      ENDIF
-#endif
-
       CALL xyavg1(temu,0,mi1,mj1,sumu1)
       CALL xyavg1(temv,0,mi1,mj1,sumv1)
  
@@ -228,14 +192,6 @@ CONTAINS
            (RKM(I,J,NK1)+RKM(I,J+1,NK1)+RKM(I,J,NK2)+RKM(I,J+1,NK2)) &
                  *DEFYZ(I,J,NK1)*RHOZ(NK1)
   120 CONTINUE
-#if defined (NSWALL)
-      IF (nj_sbdm==0) THEN
-        temu(:,1) = 0.
-      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
-        temu(:,mj1) = 0.
-      ENDIF
-#endif
-
       CALL xyavg1(temu,0,mi1,mj1,sumu2)
       CALL xyavg1(temv,0,mi1,mj1,sumv2)
 #endif
@@ -257,14 +213,6 @@ CONTAINS
       temu(i,j) = F*U3DY(I,J,NK2) 
       temv(i,j) = F*U3DX(I,J,NK2) 
   200 CONTINUE
-#if defined (NSWALL)
-      IF (nj_sbdm==0) THEN
-        temu(:,1) = 0.
-      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
-        temu(:,mj1) = 0.
-      ENDIF
-#endif
-
       CALL xyavg1(temu,0,mi1,mj1,sumu1)
       CALL xyavg1(temv,0,mi1,mj1,sumv1)
 
@@ -276,32 +224,7 @@ CONTAINS
       FVTMN(L)=FVTMN(L)+F*UG(NK2)
 #endif
 #endif
-
-#if defined (BETA)
-      DO 200 J=1,MJ1
-      DO 200 I=1,MI1
-      temu(i,j) = F(J)*U3DY(I,J,NK2)
-      temv(i,j) = 0.5*(F(J)+F(J-1))*U3DX(I,J,NK2)
-  200 CONTINUE
-#if defined (NSWALL)
-      IF (nj_sbdm==0) THEN
-        temu(:,1) = 0.
-      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
-        temu(:,mj1) = 0.
-      ENDIF
-#endif
-
-      CALL xyavg1(temu,0,mi1,mj1,sumu1)
-      CALL xyavg1(temv,0,mi1,mj1,sumv1)
-
-      FUTMN(L)=FUTMN(L)+SUMU1
-      FVTMN(L)=FVTMN(L)-SUMV1
-#endif
  
-#if defined (NSWALL)
-      FUTMN(L)=FUTMN(L)*dble(mj_glob)/dble(mj_glob-2)
-#endif
-
       UTMN = UTMN + A*FUTMN(N2) + B*FUTMN(N1)
       VTMN = VTMN + A*FVTMN(N2) + B*FVTMN(N1)
 

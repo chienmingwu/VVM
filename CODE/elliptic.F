@@ -60,16 +60,6 @@ CONTAINS
       W3D(I,J,NK2) = 0. 
   150 CONTINUE
 
-#if defined (NSWALL)
-      IF (nj_sbdm==0) THEN
-        W3D(:,1,:) = W3D(:,2,:)
-        W3D(:,0,:) = W3D(:,2,:)
-      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
-        W3D(:,mj1,:) = W3D(:,mj1-1,:)
-        W3D(:,mj1+1,:) = W3D(:,mj1-1,:)
-      ENDIF
-#endif
-
       call timer_stop('DIRECT_3D')
 
       END SUBROUTINE DIRECT_3D

@@ -651,46 +651,6 @@
 ! Periodic continuation for serial code
       CALL BOUND_3D
 
-#if defined (NSWALL)
-      IF (nj_sbdm==0) THEN
-        DO k=1,nk3
-          TH3D(:,0:1,K) = THBAR(K)
-        ENDDO
-        QV3D(:,0:1,:) = 0.
-        QC3D(:,0:1,:) = 0.
-        QR3D(:,0:1,:) = 0.
-        QI3D(:,0:1,:) = 0.
-#if defined (MICROP3)
-        NC3D(:,0:1,:) = 0.
-        NR3D(:,0:1,:) = 0.
-        NI3D(:,0:1,:) = 0.
-        QRIM3D(:,0:1,:) = 0.
-        BRIM3D(:,0:1,:) = 0.
-#else
-        QS3D(:,0:1,:) = 0.
-        QG3D(:,0:1,:) = 0.
-#endif
-      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
-        DO k=1,nk3
-          TH3D(:,mj1:mj1+1,K) = THBAR(K)
-        ENDDO
-        QV3D(:,mj1:mj1+1,:) = 0.
-        QC3D(:,mj1:mj1+1,:) = 0.
-        QR3D(:,mj1:mj1+1,:) = 0.
-        QI3D(:,mj1:mj1+1,:) = 0.
-#if defined (MICROP3)
-        NC3D(:,mj1:mj1+1,:) = 0.
-        NR3D(:,mj1:mj1+1,:) = 0.
-        NI3D(:,mj1:mj1+1,:) = 0.
-        QRIM3D(:,mj1:mj1+1,:) = 0.
-        BRIM3D(:,mj1:mj1+1,:) = 0.
-#else
-        QS3D(:,mj1:mj1+1,:) = 0.
-        QG3D(:,mj1:mj1+1,:) = 0.
-#endif
-      ENDIF
-#endif
- 
 !======================================================================
 
       RETURN
