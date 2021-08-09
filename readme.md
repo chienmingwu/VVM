@@ -3,11 +3,11 @@ Vector Vorticity equation cloud-resolving Model (VVM)
 
 Development history
 -------------------
-   * First develpment. (Jung and Arakawa 2008) 
-   * Implmentation of topography. (Wu and Arakawa 2011)
+   * First development. (Jung and Arakawa 2008) 
+   * Implementation of topography. (Wu and Arakawa 2011)
    * Representing orography with partial steps, and replacing elliptic solver with PETSc. (Chien and Wu 2016)
    * Coupled to Noah Land Surface Model (Noah LSM) and Rapid Radiative Transfer Model (RRTMG). (Wu et al. 2019)
-   * Implmentation of Predicted Particle Properties (P3) microphysics scheme. (Huang and Wu 2020)
+   * Implementation of Predicted Particle Properties (P3) microphysics scheme. (Huang and Wu 2020)
 
 
 Studies use VVM
