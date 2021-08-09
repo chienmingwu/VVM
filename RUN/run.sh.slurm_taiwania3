@@ -1,0 +1,33 @@
+#!/usr/bin/bash
+#SBATCH -J expname        # Job name
+#SBATCH -A MST109184      # Account number
+#SBATCH -p ct560          # job partition
+#SBATCH -N np_nodes       # Run all processes on a single node	
+#SBATCH -c 1              # cores per MPI rank
+#SBATCH -n total_cores    # Run a single task
+#SBATCH -o expname%j.out  # output file
+#SBATCH -e expname%j.err  # error file
+
+module purge
+
+module load compiler/intel/2021
+module load OpenMPI/4.0.5
+module load hdf5/1.12 netcdf/4.7.4 pnetcdf/1.12.2 szip/2.1.1
+
+export UCX_TLS="ud,dc,rc,sm,self"
+export OMPI_MCA_btl="^vader,tcp,openib,uct"
+export OMPI_MCA_pml="ucx"
+export KMP_AFFINITY="compact,noverbose"
+export UCX_NET_DEVICES=mlx5_0:1
+
+export LD_LIBRARY_PATH=/work/peter50504/vvmlibs/lib:/opt/ohpc/Taiwania3/pkg/intel/2021/mkl/2021.1.1/lib/intel64:$LD_LIBRARY_PATH
+
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+
+mpirun -np total_cores ./vvm < INPUT | tee OUTPUT  
+
+date >> runtime
+
+

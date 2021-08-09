@@ -221,24 +221,48 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ENDDO
 
 
-!      HX = 1
-!      DO 500 J = 1,MJ_GLOB
-!      DO 500 I = 1,MI_GLOB
-!
-!      xt(I) = I * DX
-!      yt(I) = J * DYNEW
-!
-!      hx(I,J) = 1
-!      LU(I,J) = 16
-!      alb(I,J) = 15.
-!      grf(I,J) = 10.
+      HX = 1
+      DO 500 J = 1,MJ_GLOB
+      DO 500 I = 1,MI_GLOB
+
+      xt(I) = I * DX
+      yt(I) = J * DYNEW
+
+!      ! setup Chien and Wu 2016
+!      TMP=abs(real(i)-real(mi_glob)/2.)*DX
+!      if (TMP<=5000.) then
+!      TMP = 1200. 
+!      elseif (TMP>5000. .and. TMP<=20000.) then
+!      TMP = -0.08*(TMP-20000.)
+!      else 
+!      TMP = 0.
+!      endif
+!      IT=1
+!      DO 502 k=1,NK3
+!  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
+!      hx(I,J)=TOP
+
+      hx(I,J)= 1
+      LU(I,J) = 16
+      alb(I,J) = 15.
+      grf(I,J) = 10.
+      lai(I,J) = 4.
+      SHDMAX(I,J) = 10.
+      SHDMIN(I,J) = 10.
+      SLOPE(I,J) = 1
+      SOIL(I,J) = 14
+!      ! setup Wu and Chen 2021
+!      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
+!      LU(I,J) = 7
+!      alb(I,J) = 19.
+!      grf(I,J) = 80.
 !      lai(I,J) = 4.
 !      SHDMAX(I,J) = 10.
 !      SHDMIN(I,J) = 10.
 !      SLOPE(I,J) = 1
 !      SOIL(I,J) = 1
-!     
-!  500 CONTINUE
+!      endif
+  500 CONTINUE
 
 ! 5 large island in Maritime Continent
 

@@ -65,6 +65,9 @@ PRIVATE
 ! *** storage arrays for time-average physical output
       REAL (KIND=tm_kind) ::            &
          STD_TM5(mi1,mj1,IVAR5),        &
+#if defined (HEATING)
+         STD_TM55(mi1,mj1,nk2,4),       &
+#endif
          STD_RAD(mi1,mj1,nk2,8)
 #if defined (RAS)
       REAL (KIND=tm_kind) ::            &
@@ -670,6 +673,18 @@ CONTAINS
       STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       *  dtfac
  1226 CONTINUE
 
+#if defined (HEATING)
+      DO 1986 K=1,nk2
+      DO 1986 J=1,mj1
+      DO 1986 I=1,mi1
+      STD_TM55(I,J,K,1)=STD_TM55(I,J,K,1)+  L_dep(I,J,K)   *  dtfac
+      STD_TM55(I,J,K,2)=STD_TM55(I,J,K,2)+  L_con(I,J,K)   *  dtfac
+      STD_TM55(I,J,K,3)=STD_TM55(I,J,K,3)+  L_fre(I,J,K)   *  dtfac
+      STD_TM55(I,J,K,4)=STD_TM55(I,J,K,4)+  L_met(I,J,K)   *  dtfac
+ 1986 CONTINUE
+
+#endif
+
 #if defined (RAS)
       DO 1231 J=1,mj1
       DO 1231 I=1,mi1
@@ -819,6 +834,9 @@ CONTAINS
 !      FAC = 1. / FLOAT ( isample )   ! Mars comment to test sprec
       std_rad = std_rad * fac
       std_tm5 = std_tm5 * fac
+#if defined (HEATING)
+      std_tm55 = std_tm55 * fac
+#endif
       out_tm9 = out_tm9 * fac
 #if defined (RAS)
       std_tm91= std_tm91* fac
@@ -1004,6 +1022,19 @@ CONTAINS
 
 #endif
 
+#if defined (HEATING)
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,1)
+      call pCDF_WRITE_4D(ncid_th, 'ldep', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,2)
+      call pCDF_WRITE_4D(ncid_th, 'lcon', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,3)
+      call pCDF_WRITE_4D(ncid_th, 'lfre', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,4)
+      call pCDF_WRITE_4D(ncid_th, 'lmet', TIME_L, time_start, out_tm1, nk2 )
+#endif
 
 #if defined (RAS)
       call pCDF_WRITE_4D(ncid_ras, 'dth', TIME_C, time_start, std_tm91(:,:,1:nk2,1), nk2 )
@@ -1036,7 +1067,7 @@ CONTAINS
 !===hchun
 #if defined (DIFFUSION)
 #if defined (LSM)
-        if (ITT==0 .or. ITT_OUTPUT==1 ) std_lsm=0.
+        if (ITT==0 .or. ITT_OUTPUT==0 ) std_lsm=0.
         call pCDF_WRITE_xy(ncid_lsm, 'emissi', TIME_C, time_start, std_lsm(:,:,1) )
         call pCDF_WRITE_xy(ncid_lsm, 'cmc', TIME_C, time_start, std_lsm(:,:,2) )
         call pCDF_WRITE_xy(ncid_lsm, 't1', TIME_C, time_start, std_lsm(:,:,3) )

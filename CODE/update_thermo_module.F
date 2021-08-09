@@ -154,21 +154,21 @@ CONTAINS
                   + A*FQG3D(I,J,K,N2)+B*FQG3D(I,J,K,N1))
 #endif
    70 CONTINUE
-!
-!      if (ntracer > 0)then
-!
-!      DO 71 nt = 1,ntracer
-!      DO 71 K = 2, NK2
-!      DO 71 J = 1, MJ1
-!      DO 71 I = 1, MI1
-!
-!      TC3D(I,J,K,nt) = TC3D(I,J,K,nt)          &
-!                  + A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt)
-!     
-!   71 CONTINUE
-!
-!      endif
-!
+
+      if (ntracer > 0)then
+
+      DO 71 nt = 1,ntracer
+      DO 71 K = 2, NK2
+      DO 71 J = 1, MJ1
+      DO 71 I = 1, MI1
+
+      TC3D(I,J,K,nt) = TC3D(I,J,K,nt)          &
+                  + A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt)
+     
+   71 CONTINUE
+
+      endif
+
 
 !ccwut set physics variables on topo to zero
       DO K = 2, maxtopo
@@ -198,6 +198,46 @@ CONTAINS
 
 #endif
       CALL BOUND_3D
+
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        DO k=1,nk3
+          TH3D(:,0:1,K) = THBAR(K)
+        ENDDO
+        QV3D(:,0:1,:) = 0.
+        QC3D(:,0:1,:) = 0.
+        QR3D(:,0:1,:) = 0.
+        QI3D(:,0:1,:) = 0.
+#if defined (MICROP3)
+        NC3D(:,0:1,:) = 0.
+        NR3D(:,0:1,:) = 0.
+        NI3D(:,0:1,:) = 0.
+        QRIM3D(:,0:1,:) = 0.
+        BRIM3D(:,0:1,:) = 0.
+#else
+        QS3D(:,0:1,:) = 0.
+        QG3D(:,0:1,:) = 0.
+#endif
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        DO k=1,nk3
+          TH3D(:,mj1:mj1+1,K) = THBAR(K)
+        ENDDO
+        QV3D(:,mj1:mj1+1,:) = 0.
+        QC3D(:,mj1:mj1+1,:) = 0.
+        QR3D(:,mj1:mj1+1,:) = 0.
+        QI3D(:,mj1:mj1+1,:) = 0.
+#if defined (MICROP3)
+        NC3D(:,mj1:mj1+1,:) = 0.
+        NR3D(:,mj1:mj1+1,:) = 0.
+        NI3D(:,mj1:mj1+1,:) = 0.
+        QRIM3D(:,mj1:mj1+1,:) = 0.
+        BRIM3D(:,mj1:mj1+1,:) = 0.
+#else
+        QS3D(:,mj1:mj1+1,:) = 0.
+        QG3D(:,mj1:mj1+1,:) = 0.
+#endif
+      ENDIF
+#endif
 
    END SUBROUTINE update_thermodynamics
 

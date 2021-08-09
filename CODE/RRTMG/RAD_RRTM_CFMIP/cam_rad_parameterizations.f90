@@ -1,6 +1,7 @@
 #include "definesld.com"
 module cam_rad_parameterizations
   use shr_orb_mod
+  use PARMSLD
   !
   ! CAM 3.0 parameterizations related to radiation
   !
@@ -8,7 +9,7 @@ module cam_rad_parameterizations
   private
 
 #if defined (MICROP3)
-  real, dimension(:,:,:), pointer, public :: ReI_p3, ReC_p3
+  real, dimension(1:mi1,1:mj1,1:nk2-1), public :: ReI_p3, ReC_p3
 #endif  
 
   real, parameter :: tmelt = 273.16  ! specify melting temperature

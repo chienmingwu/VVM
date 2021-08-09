@@ -404,10 +404,10 @@
       cloudFrac(1, 1:nzm) = 1.
     end where
    
-    !if (my_task == 0. .and. x_p3==10 .and. y_p3==10) then
+    !if (my_task == 0.) then
     !  write(*,*) "in rad"
     !  do k=1,nzm
-    !    write(*,*) k, IWP(1,k), iceRe(1,k), ReI_p3(10,10,k)
+    !    if (liquidRe(1,k)>50.) write(*,*) k, LWP(1,k), liquidRe(1,k), ReC_p3(x_p3,y_p3,k)
     !  enddo
     !endif
 #else

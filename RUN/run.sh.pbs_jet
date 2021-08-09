@@ -14,7 +14,7 @@ export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
 
-/opt/vvmlibs/bin/mpirun -np total_cores ./vvm < INPUT | tee OUTPUT  
+/opt/vvmlibs/bin/mpirun -np total_cores ./vvm -ksp_converged_reason < INPUT | tee OUTPUT  
 
 date >> runtime
 
