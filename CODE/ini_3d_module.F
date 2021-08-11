@@ -370,7 +370,12 @@ CONTAINS
 
 
       ! isentropic environment
-      !THBAR=THBAR(2)
+      THBAR=THBAR(2)
+      RHO=1.
+      RHOZ=1.
+      RHOU=1.
+      RHOT=1.
+      RHOW=1.
 
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
@@ -384,14 +389,12 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      !IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/16.)**2&
-      !        !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
-      !        +((real(K)-10.)/8.)**2)<=1)THEN
-      !  TH3D(I,J,K) = TH3D(I,J,K) - 3.*(cos(3.14159265*0.5* &
-      !                sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/16.)**2+ &
-      !         !            ((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
-      !                     ((real(K)-10.)/8.)**2)))**2
-      !ENDIF
+      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*dx/8000.)**2&
+              +((zt(K)-3200.)/2000.)**2)<=1)THEN
+        TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
+                      sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*dx/8000.)**2+ &
+                           ((zt(K)-3200.)/2000.)**2)))**2
+      ENDIF
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
