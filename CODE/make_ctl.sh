@@ -83,20 +83,22 @@ if( ! -f *.L.Thermodynamic-${number}* )then
 endif
 end
 
+echo "get dimension informations"
+
 # get information of 3D coordinate  
-set dum1    =  ` ncdump -v xc ${dynamic} `
+set dum1    =  ` ncdump -v lon ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 5 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set nx      =  ` echo ${dum2} | cut -d" " -f 1 `
 
-set dum1    =  ` ncdump -v yc ${dynamic} `
+set dum1    =  ` ncdump -v lat ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 4 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set ny      =  ` echo ${dum2} | cut -d" " -f 1 `
 
 set dum1    =  ` ncdump -v zc ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 3 `
-set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
+set dum3    =  ` echo ${dum1} | rev | cut -d"=" -f 1 | rev `
 set nz      =  ` echo ${dum2} | cut -d" " -f 1 `
 set prezc   =  ` echo ${dum3} | cut -d";" -f 1 `
 
@@ -176,6 +178,8 @@ set ylen    =  ` echo ${preyy} | cut -d"," -f 2 `
 
 rm a.out input.txt xydef.f95 xydef.txt
 cd ../${dir}
+
+echo "get variable informations"
 
 # get information of variables
 # =================thermo=========================
