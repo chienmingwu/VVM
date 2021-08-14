@@ -1299,6 +1299,8 @@ CONTAINS
       INTEGER (KIND=int_kind) :: i, j, k   ! loop indices
 
 #if defined (NSWALL)
+      REAL (KIND=dbl_kind), PARAMETER :: wall_damp=1./86400.
+  
       IF (nj_sbdm==0) THEN
         FZXTB(:,1,:) = 0.
       ELSEIF (nj_sbdm==nsbdm_y-1) THEN
@@ -1310,6 +1312,15 @@ CONTAINS
       DO 100 J = 1,MJ1
       DO 100 I = 1,MI1
       Z3DX(I,J,K) = Z3DX(I,J,K) + DT*FZXTB(I,J,K)
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        Z3DX(I,J,K) = Z3DX(I,J,K) - DT*wall_damp*Z3DX(I,J,K)*dble(J)/dble(MJ1)
+        if (ni_sbdm==0) write(*,*) j, dble(J)/dble(MJ1)
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        Z3DX(I,J,K) = Z3DX(I,J,K) - DT*wall_damp*Z3DX(I,J,K)*dble(-J+33)/dble(MJ1)
+        if (ni_sbdm==0) write(*,*) j, dble(-J+33)/dble(MJ1)
+      ENDIF
+#endif
   100 CONTINUE
 
       DO 200 J = 1,MJ1

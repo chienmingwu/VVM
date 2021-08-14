@@ -73,6 +73,7 @@ cat > definesld.com << 'END1'
 #define DIFFUSION
 #define PHYSICS
 #define MICROCODE
+#define MICROP3
 #define RADCODE
 #define LSM
 #define NSWALL
