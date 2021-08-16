@@ -120,7 +120,7 @@ PetscScalar, PRIVATE:: tmp(1)
 PetscScalar, PRIVATE:: vsum,tpts = -1.d0/dble(mi_glob*mj_glob)
 PetscOffset, PRIVATE:: ip
 PetscErrorCode, PRIVATE:: ierr
-Vec, PRIVATE::v,vl,rhs,v1,v2
+Vec, PRIVATE::v,vl,rhs,v1,v2, Rv
 PC, PRIVATE::PC_Conti,PC_Toppsi,PC_Topchi
 KSP Conti,Toppsi,Topchi
 #if defined (PETSCMG)
@@ -246,15 +246,15 @@ endif
     IF (pc_type_conti .eq. PCEISENSTAT) call PCEisenstatSetNoDiagonalScaling(PC_Conti,PETSC_TRUE,ierr)
 #if defined (PETSCMG)
     call PCSetDM(PC_Conti,da3(1),ierr)
-    call PCMGSetLevels(PC_Conti, nlevel,PETSC_NULL_OBJECT,ierr)
+    call PCMGSetLevels(PC_Conti, nlevel,PETSC_NULL_MPI_COMM,ierr)
     call PCMGSetCycleType(PC_Conti, PC_MG_CYCLE_V,ierr)
     call PCMGSetType(PC_Conti,PC_MG_MULTIPLICATIVE,ierr)
 !    call PCMGSetType(PC_Conti,PC_MG_FULL,ierr)
 !    call PCMGSetType(pc,PC_MG_ADDITIVE,ierr)
-    call PCMGSetGalerkin(PC_Conti,PETSC_TRUE,ierr)
+    call PCMGSetGalerkin(PC_Conti,PC_MG_GALERKIN_BOTH,ierr)
 
     DO I = 1, nlevel -1
-    call DMCreateInterpolation(da3(I+1),da3(I),R,PETSC_NULL_OBJECT,ierr)
+    call DMCreateInterpolation(da3(I+1),da3(I),R,Rv,ierr)
     call PCMGSetInterpolation(PC_Conti,nlevel-I,R,ierr)
     call MATDestroy(R,ierr)
     ENDDO
@@ -334,14 +334,14 @@ endif
 #if defined (PETSCMG)
 
     call PCSetDM(PC_Toppsi,da2(1),ierr)
-    call PCMGSetLevels(PC_Toppsi, nlevel,PETSC_NULL_OBJECT,ierr)
+    call PCMGSetLevels(PC_Toppsi, nlevel,PETSC_NULL_MPI_COMM,ierr)
     call PCMGSetCycleType(PC_Toppsi, PC_MG_CYCLE_V,ierr)
     call PCMGSetType(PC_Toppsi,PC_MG_MULTIPLICATIVE,ierr)
 !    call PCMGSetType(pc,PC_MG_ADDITIVE,ierr)
-    call PCMGSetGalerkin(PC_Toppsi,PETSC_TRUE,ierr)
+    call PCMGSetGalerkin(PC_Toppsi,PC_MG_GALERKIN_BOTH,ierr)
 
     DO I = 1, nlevel -1
-    call DMCreateInterpolation(da2(I+1),da2(I),R,PETSC_NULL_OBJECT,ierr)
+    call DMCreateInterpolation(da2(I+1),da2(I),R,Rv,ierr)
     call PCMGSetInterpolation(PC_Toppsi,nlevel-I,R,ierr)
     call MATDestroy(R,ierr)
     ENDDO
@@ -387,14 +387,14 @@ endif
 
 #if defined (PETSCMG)
     call PCSetDM(PC_Topchi,da2(1),ierr)
-    call PCMGSetLevels(PC_Topchi, nlevel,PETSC_NULL_OBJECT,ierr)
+    call PCMGSetLevels(PC_Topchi, nlevel,PETSC_NULL_MPI_COMM,ierr)
     call PCMGSetCycleType(PC_Topchi, PC_MG_CYCLE_V,ierr)
     call PCMGSetType(PC_Topchi,PC_MG_MULTIPLICATIVE,ierr)
 !    call PCMGSetType(pc,PC_MG_ADDITIVE,ierr)
-    call PCMGSetGalerkin(PC_Topchi,PETSC_TRUE,ierr)
+    call PCMGSetGalerkin(PC_Topchi,PC_MG_GALERKIN_BOTH,ierr)
 
     DO I = 1, nlevel -1
-    call DMCreateInterpolation(da2(I+1),da2(I),R,PETSC_NULL_OBJECT,ierr)
+    call DMCreateInterpolation(da2(I+1),da2(I),R,Rv,ierr)
     call PCMGSetInterpolation(PC_Topchi,nlevel-I,R,ierr)
     call MATDestroy(R,ierr)
     ENDDO
