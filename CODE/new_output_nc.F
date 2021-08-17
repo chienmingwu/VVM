@@ -237,10 +237,10 @@ CONTAINS
         yz(i) = yt(i) + dynew/2.
       enddo
 
-      lonc=(xt-0.5*(dx*mi_glob))/6.37E6
-      lonz=(xz-0.5*(dx*mi_glob))/6.37E6
-      latc=(yt-0.5*(dynew*mj_glob))/6.37E6
-      latz=(yz-0.5*(dynew*mj_glob))/6.37E6
+      lonc=(xt-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
+      lonz=(xz-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
+      latc=(yt-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
+      latz=(yz-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
       levc=zt(1:nk2)/1000.
 
 !      yt(:) = xt(:)
