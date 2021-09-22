@@ -86,7 +86,7 @@ sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/40/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag2d_dimension/1/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/5/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
