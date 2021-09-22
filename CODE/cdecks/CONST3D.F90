@@ -41,6 +41,13 @@ PRIVATE
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3,ntracer), PUBLIC ::       &
       TC3D        ! passive tracer mixing ratio (kg/kg)
 
+#if defined (DIAG)
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,ndiag_2d), PUBLIC ::       &
+      DIAG2D        ! 2-D diagnostic array
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3,ndiag_3d), PUBLIC ::       &
+      DIAG3D        ! 3-D diagnostic array
+#endif
+
 !*****************************
 ! Prognostic dynamical variables
 !  formerly common/d3pred2/
