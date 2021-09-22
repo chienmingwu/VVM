@@ -36,6 +36,9 @@ PRIVATE
           ncid_ras, &                        ! RAS output ID
           ncid_z3dx, &                       ! dynamic variables output ID
           ncid_tc, &                         ! tracers output ID
+#if defined (DIAG)
+          ncid_diag, &                       ! diagnostics output ID
+#endif
           ncid_rad, ncid_phys                ! radiation and surface variables output ID
 
 !===hchun
@@ -487,6 +490,37 @@ CONTAINS
         enddo
       endif
 
+#if defined (DIAG)
+! Tracers ---------------------------------------------------------------------
+      if (ndiag_2d > 0 .or. ndiag_3d > 0) then
+      call fname_nc(itp1, EXPHDR, 'Diag', ITT_OUTPUT, filnam_nc)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_diag)
+      CALL pCDF_INI_THERMO (ncid_diag, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      if (ndiag_2d > 0) then
+        do nt = 1,ndiag_2d
+          write(unit=trnum,fmt='(i2.2)')nt
+          CALL pCDF_INI_XY_VAR (ncid_diag, 'ds'//trnum, &
+                          'single-level diagnostic variable '//trnum, &
+                          'single_level_diagnostic_variable '//trnum, ' ', &
+                          'yt', 'xt')
+        enddo
+      endif
+
+      if (ndiag_2d > 0) then
+        do nt = 1,ndiag_2d
+          write(unit=trnum,fmt='(i2.2)')nt
+          CALL pCDF_INI_4DVAR (ncid_diag, 'dm'//trnum, &
+                          'multi-level diagnostic variable '//trnum, &
+                          'multi_level_diagnostic_variable '//trnum, ' ', &
+                          'zt', 'yt', 'xt')
+        enddo
+#endif
+
+
 #if defined (PHYSICS)
 ! Dataset C (time-averaged physics fields) ------------------------------------
       call fname_nc(itp2, EXPHDR, 'Surface', ITT_OUTPUT, filnam_nc)
@@ -782,6 +816,10 @@ CONTAINS
     if (ntracer > 0) then
       nc_err = nfmpi_close(ncid_tc)
     endif
+
+#if defined (DIAG)
+     nc_err = nfmpi_close(ncid_diag)
+#endif
 
 #if defined (PHYSICS)
 #if defined (RADCODE)
