@@ -690,18 +690,52 @@ CONTAINS
 #endif
 
 #if defined (DIAG)
+      if (ndiag_2d>0) then
       DO 1987 NT=1,ndiag_2d
       DO 1987 J=1,mj1
       DO 1987 I=1,mi1
       STD_TMD2(I,J,NT)=STD_TMD2(I,J,NT) + DIAG2D(I,J,NT) * dtfac 
  1987 CONTINUE
+      endif
 
+      ! diagnostics for YH kuo
+      DIAG3D=0.
+      DO k=2,nk2
+#if defined (MICROP3)
+        DIAG3D(:,:,K,1)=0.5*GRAV*( (TH3D(:,:,K)/THBAR(K)+QV3D(:,:,K)-QC3D(:,:,K) &
+                                                  -QR3D(:,:,K)-QI3D(:,:,K)) &
+                          +(TH3D(:,:,K+1)/THBAR(K+1)+QV3D(:,:,K+1)-QC3D(:,:,K+1) &
+                                              -QR3D(:,:,K+1)-QI3D(:,:,K+1)) ) 
+#else
+        DIAG3D(:,:,K,1)=0.5*GRAV*( (TH3D(:,:,K)/THBAR(K)+QV3D(:,:,K)-QC3D(:,:,K) &
+                             -QR3D(:,:,K)-QI3D(:,:,K)-QS3D(:,:,K)-QG3D(:,:,K)) &
+                          +(TH3D(:,:,K+1)/THBAR(K+1)+QV3D(:,:,K+1)-QC3D(:,:,K+1) &
+                     -QR3D(:,:,K+1)-QI3D(:,:,K+1)-QS3D(:,:,K+1)-QG3D(:,:,K+1)) )
+#endif
+      DO j=1,mj1
+      DO i=1,mi1 
+        DIAG3D(i,j,k,2)=0.5*(z3dx(i,j,k)+z3dx(i,j-1,k))
+        DIAG3D(i,j,k,3)=0.5*(z3dy(i,j,k)+z3dy(i-1,j,k))
+        DIAG3D(i,j,k,4)=0.125*( z3dz(i  ,j  ,k)+z3dz(i  ,j  ,k+1) &
+                               +z3dz(i-1,j  ,k)+z3dz(i-1,j  ,k+1) &
+                               +z3dz(i  ,j-1,k)+z3dz(i  ,j-1,k+1) &
+                               +z3dz(i-1,j-1,k)+z3dz(i-1,j-1,k+1) )
+        DIAG3D(i,j,k,5)=0.25*(z3dy(i  ,j,k)*(u3dx(i  ,j,k)+u3dx(i  ,j,k+1)) &
+                             +z3dy(i-1,j,k)*(u3dx(i-1,j,k)+u3dx(i-1,j,k+1))) &
+                       -0.25*(z3dx(i,j  ,k)*(u3dy(i,j  ,k)+u3dy(i,j  ,k+1)) &
+                             +z3dx(i,j-1,k)*(u3dy(i,j-1,k)+u3dy(i,j-1,k+1)))
+      ENDDO
+      ENDDO 
+      ENDDO
+
+      if (ndiag_3d>0) then
       DO 1988 NT=1,ndiag_3d
       DO 1988 K=1,nk2
       DO 1988 J=1,mj1
       DO 1988 I=1,mi1
       STD_TMD3(I,J,K,NT)=STD_TMD3(I,J,K,NT) + DIAG3D(I,J,K,NT) * dtfac 
  1988 CONTINUE
+      endif
 #endif
 
 #if defined (RAS)
