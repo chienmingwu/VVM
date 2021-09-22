@@ -510,14 +510,16 @@ CONTAINS
         enddo
       endif
 
-      if (ndiag_2d > 0) then
-        do nt = 1,ndiag_2d
+      if (ndiag_3d > 0) then
+        do nt = 1,ndiag_3d
           write(unit=trnum,fmt='(i2.2)')nt
           CALL pCDF_INI_4DVAR (ncid_diag, 'dm'//trnum, &
                           'multi-level diagnostic variable '//trnum, &
                           'multi_level_diagnostic_variable '//trnum, ' ', &
                           'zt', 'yt', 'xt')
         enddo
+      endif
+      endif
 #endif
 
 

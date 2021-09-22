@@ -16,8 +16,8 @@ set echo  # echoes the commands
 set expname = output_test
 
 # set job system and compiler
-set compiler = 'pgi_mog39'
-set jobsys = 'pbs_mog39_pgi'
+set compiler = 'intel_jet'
+set jobsys = 'pbs_jet'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -34,9 +34,9 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
     -e 's/walltime/00:30:00/g' \
-    -e 's/np_nodes/1/g' \
-    -e 's/np_threads/16/g' \
-    -e 's/total_cores/16/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/np_nodes/8/g' \
+    -e 's/np_threads/8/g' \
+    -e 's/total_cores/64/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
 qsub run.sh
