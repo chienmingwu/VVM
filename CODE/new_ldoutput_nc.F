@@ -702,15 +702,19 @@ CONTAINS
       DIAG3D=0.
       DO k=2,nk2
 #if defined (MICROP3)
-        DIAG3D(:,:,K,1)=0.5*GRAV*( (TH3D(:,:,K)/THBAR(K)+QV3D(:,:,K)-QC3D(:,:,K) &
-                                                  -QR3D(:,:,K)-QI3D(:,:,K)) &
-                          +(TH3D(:,:,K+1)/THBAR(K+1)+QV3D(:,:,K+1)-QC3D(:,:,K+1) &
-                                              -QR3D(:,:,K+1)-QI3D(:,:,K+1)) ) 
+        DIAG3D(:,:,K,1)=0.5*GRAV*( ((TH3D(:,:,K)-THBAR(K))/THBAR(K) &
+                                     +DELTA*QV3D(:,:,K)-QC3D(:,:,K) &
+                                          -QR3D(:,:,K)-QI3D(:,:,K)) &
+                            +((TH3D(:,:,K+1)-THBAR(K+1))/THBAR(K+1) &
+                                 +DELTA*QV3D(:,:,K+1)-QC3D(:,:,K+1) &
+                                      -QR3D(:,:,K+1)-QI3D(:,:,K+1)) ) 
 #else
-        DIAG3D(:,:,K,1)=0.5*GRAV*( (TH3D(:,:,K)/THBAR(K)+QV3D(:,:,K)-QC3D(:,:,K) &
-                             -QR3D(:,:,K)-QI3D(:,:,K)-QS3D(:,:,K)-QG3D(:,:,K)) &
-                          +(TH3D(:,:,K+1)/THBAR(K+1)+QV3D(:,:,K+1)-QC3D(:,:,K+1) &
-                     -QR3D(:,:,K+1)-QI3D(:,:,K+1)-QS3D(:,:,K+1)-QG3D(:,:,K+1)) )
+        DIAG3D(:,:,K,1)=0.5*GRAV*( ((TH3D(:,:,K)-THBAR(K))/THBAR(K) &
+                                     +DELTA*QV3D(:,:,K)-QC3D(:,:,K) &
+                  -QR3D(:,:,K)-QI3D(:,:,K)-QS3D(:,:,K)-QG3D(:,:,K)) &
+                            +((TH3D(:,:,K+1)-THBAR(K+1))/THBAR(K+1) &
+                                 +DELTA*QV3D(:,:,K+1)-QC3D(:,:,K+1) &
+          -QR3D(:,:,K+1)-QI3D(:,:,K+1)-QS3D(:,:,K+1)-QG3D(:,:,K+1)) )
 #endif
       DO j=1,mj1
       DO i=1,mi1 

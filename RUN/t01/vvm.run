@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = output_test
+set expname = kuo_test
 
 # set job system and compiler
 set compiler = 'intel_jet'

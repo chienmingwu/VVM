@@ -826,7 +826,7 @@ echo 'ENDVARS' >> ras.ctl
 endif
 # =================RAS======================================
 if( ${diag} != "nan" )then
-echo 'DSET ^../archive/'${expname}'.L.DIAG-%tm6'${tail}' \
+echo 'DSET ^../archive/'${expname}'.L.Diag-%tm6'${tail}' \
 DTYPE netcdf \
 OPTIONS template \
 TITLE tracers \
