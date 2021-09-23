@@ -70,7 +70,6 @@ cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
 #define PHYSICS
-#define TOPOGRAPHY
 #define DIAG
 'END1'
 cat definesld.com

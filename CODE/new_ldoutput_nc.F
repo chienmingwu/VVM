@@ -718,6 +718,9 @@ CONTAINS
 #endif
       DO j=1,mj1
       DO i=1,mi1 
+      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2)<1 .and. j==3) &
+              write(*,*) DIAG3D(i,j,K,1), TH3D(i,j,K), thbar(k) &
+                                 ,DELTA, GRAV, QV3D(i,j,K)
         DIAG3D(i,j,k,2)=0.5*(z3dx(i,j,k)+z3dx(i,j-1,k))
         DIAG3D(i,j,k,3)=0.5*(z3dy(i,j,k)+z3dy(i-1,j,k))
         DIAG3D(i,j,k,4)=0.125*( z3dz(i  ,j  ,k)+z3dz(i  ,j  ,k+1) &
@@ -893,6 +896,10 @@ CONTAINS
       std_tm5 = std_tm5 * fac
 #if defined (HEATING)
       std_tm55 = std_tm55 * fac
+#endif
+#if defined (DIAG)
+      if(ndiag_2d > 0) std_tmd2 = std_tmd2 * fac
+      if(ndiag_3d > 0) std_tmd3 = std_tmd3 * fac
 #endif
       out_tm9 = out_tm9 * fac
 #if defined (RAS)
@@ -1288,8 +1295,8 @@ CONTAINS
       std_tm5 = 0.0
       out_tm9 = 0.0
 #if defined (DIAG)
-      std_tmd2 = 0.0
-      std_tmd3 = 0.0
+      if(ndiag_2d > 0) std_tmd2 = 0.0
+      if(ndiag_3d > 0) std_tmd3 = 0.0
 #endif
 #if defined (RAS)
       std_tm91= 0.0
