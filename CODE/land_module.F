@@ -13,6 +13,7 @@ USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
 #if defined (KPP)
 USE kpp_module ! KPP (Der)
+USE const3d, only: TC3D
 #endif
 
 IMPLICIT NONE
@@ -55,21 +56,25 @@ PRIVATE
 #endif
 
 #if defined (KPP)
-  INTEGER, parameter :: olev=15
+  INTEGER, parameter :: olev=24, nsolarpen=12 
  
   REAL, dimension(MI1,MJ1,olev) :: To, Uo, Vo &
                                  ,rNu, rKappa, rGamma
   REAL, dimension(MI1,MJ1) :: taux, tauy, Qsol, Qtot, bldpth
 
   REAL, dimension(olev) :: Tin, Hin, kappa, nu
-  DATA Tin   / 1.00,  0.98,  0.94,  0.91,  0.86, &
-               0.81,  0.75,  0.69,  0.62,  0.54, &
-               0.46,  0.37,  0.28,  0.18,  0.06/
-  DATA Hin   /10.00, 10.00, 15.00, 15.00, 20.00, &
+  DATA Tin   / 1.0000, 0.9999, 0.9998, 0.9998, 0.9997, &
+               0.9997, 0.9995, 0.9992, 0.9987, 0.9965, &
+               0.9906, 0.9738, 0.9352, 0.8636, 0.7355, &
+               0.5713, 0.4386, 0.3381, 0.2571, 0.1970, &
+               0.1488, 0.1113, 0.0812, 0.0561/
+  DATA Hin   / 0.50,  0.50,  0.50,  0.50,  1.00, &
+               1.00,  2.00,  4.00,  5.00,  5.00, &
+              10.00, 10.00, 15.00, 15.00, 20.00, &
               20.00, 25.00, 25.00, 30.00, 30.00, &
-              35.00, 35.00, 40.00, 40.00, 50.00/
-  DATA kappa /15*1.0e-5/
-  DATA nu    /15*1.0e-4/
+              40.00, 40.00, 50.00, 50.00/
+  DATA kappa /olev*1.0e-5/
+  DATA nu    /olev*1.0e-4/
   
   real, parameter :: Tbot=10.
   integer :: k
@@ -187,13 +192,19 @@ CONTAINS
                 ,rNU(i,j,1:olev),rKAPPA(i,j,1:olev),rGAMMA(i,j,1:olev),Tbot,dt_o)
 
       ! solar radiative flux penetration
-      dum3=Qsol(i,j)*solarpen(Hin(1)+Hin(2),3)
-      dum2=Qsol(i,j)*solarpen(Hin(1)       ,3)
-      dum1=Qtot(i,j)-dum3-dum2
-
-      To(i,j,1) = To(i,j,1) + dum1/(rhoh2o*zcpwater*Hin(1))*dt_o
-      To(i,j,2) = To(i,j,2) + dum2/(rhoh2o*zcpwater*Hin(2))*dt_o
-      To(i,j,3) = To(i,j,3) + dum3/(rhoh2o*zcpwater*Hin(3))*dt_o
+      dum1=Qtot(i,j)
+      DO k=1,nsolarpen
+        dum2=sum(Hin(1:k))
+        dum3=Qsol(i,j)*solarpen(dum2,3)
+        dum2=dum1-dum3
+        dum1=dum3
+        To(i,j,k) = To(i,j,k) + dum2/(rhoh2o*zcpwater*Hin(k))*dt_o
+        !if (my_task==0) write(*,*) "solar:",k, dum1, dum2
+        if (dum1<0.) then
+          write(*,*) "solarpen negative"
+          stop
+        endif
+      ENDDO
     
       Uo(i,j,1) = Uo(i,j,1) + taux(i,j)/rhoh2o*dt_o
       Vo(i,j,1) = Vo(i,j,1) + tauy(i,j)/rhoh2o*dt_o
@@ -206,6 +217,11 @@ CONTAINS
                       ", U_s: ", Uo(i,j,1), &
                       ", V_s: ", Vo(i,j,1)
       194 format(4(A,F10.5))
+
+      TC3D(1:mi1,1:mj1,1:24,1)=To(:,:,1:24)
+      TC3D(1:mi1,1:mj1,1:24,2)=Uo(:,:,1:24)
+      TC3D(1:mi1,1:mj1,1:24,3)=Vo(:,:,1:24)
+      TC3D(1:mi1,1:mj1,2,4)=bldpth(:,:)
 #endif
 
       ES1  = ES ( TG(I,J) )
