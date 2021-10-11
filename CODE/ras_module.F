@@ -1240,7 +1240,7 @@ ENDDO!j
         akernl(i,itype) = rkmin
         ! turn off this cloud if it unstabilize the environment 
         ! (CY Su and JD Huang)
-        exist(i,itype)=.false
+        exist(i,itype)=.false.
       endif
 !
       flxmas(i,itype) = -relaxas*aforce(i,itype)/akernl(i,itype)
