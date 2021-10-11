@@ -23,10 +23,8 @@ PRIVATE
         MI_glob = zonal_dimension,      &  ! the zonal domain size (no halo points)
         MJ_glob = merid_dimension,      &  ! the meridional domain size (no halo points)
         NK2 = vert_dimension ,          &  ! the vertical domain size
-#if defined (DIAG)
         ndiag_2d = diag2d_dimension ,   &  ! the number for 2d diagnostics
         ndiag_3d = diag3d_dimension ,   &  ! the number for 3d diagnostics
-#endif
         ntracer = tracer_dimension         ! the number of passive tracers
       
     ! Define the depth of the halo region, later will preprocess depending on operator order

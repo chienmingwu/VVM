@@ -68,10 +68,8 @@ PRIVATE
 #if defined (HEATING)
          STD_TM55(mi1,mj1,nk2,4),       &
 #endif
-#if defined (DIAG)
          STD_TMD2(mi1,mj1,ndiag_2d),    &
          STD_TMD3(mi1,mj1,nk2,ndiag_3d),&
-#endif
          STD_RAD(mi1,mj1,nk2,8)
 #if defined (RAS)
       REAL (KIND=tm_kind) ::            &
@@ -689,7 +687,6 @@ CONTAINS
 
 #endif
 
-#if defined (DIAG)
       if (ndiag_2d>0) then
       DO 1987 NT=1,ndiag_2d
       DO 1987 J=1,mj1
@@ -698,6 +695,7 @@ CONTAINS
  1987 CONTINUE
       endif
 
+#if defined (DIAG)
       ! diagnostics for YH kuo
       DIAG3D=0.
       DO k=2,nk2
@@ -734,6 +732,7 @@ CONTAINS
       ENDDO
       ENDDO 
       ENDDO
+#endif
 
       if (ndiag_3d>0) then
       DO 1988 NT=1,ndiag_3d
@@ -743,7 +742,6 @@ CONTAINS
       STD_TMD3(I,J,K,NT)=STD_TMD3(I,J,K,NT) + DIAG3D(I,J,K,NT) * dtfac 
  1988 CONTINUE
       endif
-#endif
 
 #if defined (RAS)
       DO 1231 J=1,mj1
@@ -897,10 +895,8 @@ CONTAINS
 #if defined (HEATING)
       std_tm55 = std_tm55 * fac
 #endif
-#if defined (DIAG)
       if(ndiag_2d > 0) std_tmd2 = std_tmd2 * fac
       if(ndiag_3d > 0) std_tmd3 = std_tmd3 * fac
-#endif
       out_tm9 = out_tm9 * fac
 #if defined (RAS)
       std_tm91= std_tm91* fac

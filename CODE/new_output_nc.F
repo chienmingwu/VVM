@@ -36,9 +36,7 @@ PRIVATE
           ncid_ras, &                        ! RAS output ID
           ncid_z3dx, &                       ! dynamic variables output ID
           ncid_tc, &                         ! tracers output ID
-#if defined (DIAG)
           ncid_diag, &                       ! diagnostics output ID
-#endif
           ncid_rad, ncid_phys                ! radiation and surface variables output ID
 
 !===hchun
@@ -490,8 +488,7 @@ CONTAINS
         enddo
       endif
 
-#if defined (DIAG)
-! Tracers ---------------------------------------------------------------------
+! Diagnose ---------------------------------------------------------------------
       if (ndiag_2d > 0 .or. ndiag_3d > 0) then
       call fname_nc(itp1, EXPHDR, 'Diag', ITT_OUTPUT, filnam_nc)
       nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
@@ -520,7 +517,6 @@ CONTAINS
         enddo
       endif
       endif
-#endif
 
 
 #if defined (PHYSICS)
@@ -819,9 +815,10 @@ CONTAINS
       nc_err = nfmpi_close(ncid_tc)
     endif
 
-#if defined (DIAG)
+! Diag
+    if (ndiag_2d > 0 .or. ndiag_3d > 0) then
      nc_err = nfmpi_close(ncid_diag)
-#endif
+    endif
 
 #if defined (PHYSICS)
 #if defined (RADCODE)
