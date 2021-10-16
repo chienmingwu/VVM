@@ -60,6 +60,47 @@ CONTAINS
       W3D(I,J,NK2) = 0. 
   150 CONTINUE
 
+#if defined (DIAG)
+      CALL BOUND_ARB (NK3,DIAG3D(:,:,:,6))
+      CALL BOUND_ARB (NK3,DIAG3D(:,:,:,7))
+      CALL BOUND_ARB (NK3,DIAG3D(:,:,:,8))
+      CALL BOUND_ARB (NK3,DIAG3D(:,:,:,9))
+
+      DO K = 1, Nk2-2
+      DO J = 1, Mj1
+      DO I = 1, mi1
+      YTEM(I,J,K)=(DIAG3D(I,J,K+1,7)-DIAG3D(I-1,J,K+1,7))*RHOZ(K+1)/DX  &
+        + (DIAG3D(I,J,K+1,6)-DIAG3D(I,J-1,K+1,6))*RHOZ(K+1)/DYNEW
+      ENDDO
+      ENDDO
+      ENDDO
+      
+      call petsc_solve_3d(YTEM,DIAG3D(:,:,1:nk2,6))
+      CALL BOUND_ARB (NK2,DIAG3D(:,:,1:nk2,6))
+      
+      DIAG3D(:,:,1,6)=0.     
+      DIAG3D(:,:,nk2,6)=0.     
+      DIAG3D(:,:,:,6)=DIAG3D(:,:,:,6)/DT
+
+      DO K = 1, Nk2-2
+      DO J = 1, Mj1
+      DO I = 1, mi1
+      YTEM(I,J,K)=(DIAG3D(I,J,K+1,9)-DIAG3D(I-1,J,K+1,9))*RHOZ(K+1)/DX  &
+        + (DIAG3D(I,J,K+1,8)-DIAG3D(I,J-1,K+1,8))*RHOZ(K+1)/DYNEW
+      ENDDO
+      ENDDO
+      ENDDO
+      
+      call petsc_solve_3d(YTEM,DIAG3D(:,:,1:nk2,7))
+      CALL BOUND_ARB (NK2,DIAG3D(:,:,1:nk2,7))
+      
+      DIAG3D(:,:,1,7)=0.     
+      DIAG3D(:,:,nk2,7)=0.     
+      DIAG3D(:,:,:,7)=DIAG3D(:,:,:,7)/DT
+
+      DIAG3D(:,:,:,8)=DIAG3D(:,:,:,6)+DIAG3D(:,:,:,7)
+#endif 
+
       call timer_stop('DIRECT_3D')
 
       END SUBROUTINE DIRECT_3D

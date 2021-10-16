@@ -1157,6 +1157,10 @@ CONTAINS
       Z3DX(I,J,K) = Z3DX(I,J,K)                       &
                   + DT*FZXBU(I,J,K)                   &
                   + A*FZX(I,J,K,N2) + B*FZX(I,J,K,N1)
+#if defined (DIAG)
+      DIAG3D(I,J,K,6)=A*FZX(I,J,K,N2) + B*FZX(I,J,K,N1)
+      DIAG3D(I,J,K,8)=DT*FZXBU(I,J,K)
+#endif
    10 CONTINUE
 
       DO 20 J = 1,MJ1
@@ -1171,6 +1175,10 @@ CONTAINS
       Z3DY(I,J,K) = Z3DY(I,J,K)                       &
                   + DT*FZYBU(I,J,K)                   &
                   + A*FZY(I,J,K,N2) + B*FZY(I,J,K,N1)
+#if defined (DIAG)
+      DIAG3D(I,J,K,7)=A*FZY(I,J,K,N2) + B*FZY(I,J,K,N1)
+      DIAG3D(I,J,K,9)=DT*FZYBU(I,J,K)
+#endif
    30 CONTINUE
 
       DO 40 J = 1,MJ1
@@ -1189,6 +1197,9 @@ CONTAINS
       DO 100 J = 1,MJ1
       DO 100 I = 1,MI1
       Z3DX(I,J,K) = Z3DX(I,J,K) + DT*FZXTB(I,J,K)
+#if defined (DIAG)
+      DIAG3D(I,J,K,6)=DIAG3D(I,J,K,6)+DT*FZXTB(I,J,K)
+#endif
   100 CONTINUE
 
       DO 200 J = 1,MJ1
@@ -1201,6 +1212,9 @@ CONTAINS
       DO 300 J = 1,MJ1
       DO 300 I = 1,MI1
       Z3DY(I,J,K) = Z3DY(I,J,K) + DT*FZYTB(I,J,K)
+#if defined (DIAG)
+      DIAG3D(I,J,K,7)=DIAG3D(I,J,K,7)+DT*FZYTB(I,J,K)
+#endif
   300 CONTINUE
 
       DO 400 J = 1,MJ1

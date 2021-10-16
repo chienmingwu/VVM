@@ -285,7 +285,11 @@ endif
     call VecSet(rhs,0.d0,ierr)
 
     call KSPSolve(Conti,rhs,v,ierr)
+#if defined (DIAG)
+    ! solving from zero every steps for convergence
+#else
     call KSPSetInitialGuessNonzero(Conti,PETSC_TRUE,ierr)
+#endif
     call VecDestroy(rhs,ierr)
 ! Create 2d grid for top equations
 ! The grid information can be used in both 2d and 3d grid.
