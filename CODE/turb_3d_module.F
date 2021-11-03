@@ -95,7 +95,7 @@ CONTAINS
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
 !      CRITMN=100.
 !      New Value for TWP-ICE
-      CRITMN=1._dbl_kind !ccwu for LES run
+      CRITMN=0._dbl_kind !ccwu for LES run
 !      CRITMN=100._dbl_kind !ccwu for TCVVM
 
       RAMD0S=(0.23_dbl_kind*DELD)**2
@@ -336,6 +336,8 @@ CONTAINS
   110    CONTINUE
       ELSE
          IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
+         WTH = 0.
+         WQV = 0.
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
 !      CALL SFLUX_3D ! call sflux every time step 

@@ -50,6 +50,35 @@ CONTAINS
       ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
    50 CONTINUE
 
+      zz=zz+1200.
+      zt=zt+1200.
+
+      zt(1)=1195.
+      zt(2)=1205.
+      zt(121:161)=zt(1:41)
+      zz(121:161)=zz(1:41)
+      fnt(121:161)=fnt(1:41)
+      fnz(121:161)=fnz(1:41)
+
+      Zz(1) = ZB
+      DO K = 2, 120
+      Zz(K) = Zz(K-1) + DZ1
+      ENDDO
+      ZT(1) = Zz(1)
+      ZT(2) = Zz(1) + DZ1 / 2.
+      DO K = 3, 120
+      ZT(K) = ZT(K-1) + DZ1
+      ENDDO
+
+      DO k=2,122
+        FNZ(k)=DZ/(ZT(k+1)-ZT(k))
+      ENDDO
+      FNZ(1)=FNZ(2)
+      DO k=2,122
+        FNT(k)=DZ/(ZZ(k)-ZZ(k-1))
+      ENDDO
+      FNT(1)=FNT(2)
+
 !      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
 !      OPEN(939,FILE=trim(filename))
 !      READ(939,*)

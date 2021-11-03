@@ -176,48 +176,48 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
-      OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
-      READ(15,*) xt
-      CLOSE(15)
-      OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
-      READ(15,*) yt
-      CLOSE(15)
-
-      OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
-      READ(15,*) alb
-      CLOSE(15)
-
-      OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
-      READ(15,*) grf
-      CLOSE(15)
-
-      OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
-      READ(15,*) hgt
-      CLOSE(15)
-
-      OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
-      READ(15,*) lai
-      CLOSE(15)
-
-      OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
-      READ(15,*) lu
-      CLOSE(15)
-
-      OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
-      READ(15,*) shdmax
-      CLOSE(15)
-
-      OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
-      READ(15,*) shdmin
-      CLOSE(15)
-
-      OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
-      READ(15,*) slope
-      CLOSE(15)
-
-      OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
-      READ(15,*) soil
-      CLOSE(15)
+!      OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
+!      READ(15,*) xt
+!      CLOSE(15)
+!      OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
+!      READ(15,*) yt
+!      CLOSE(15)
+!
+!      OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
+!      READ(15,*) alb
+!      CLOSE(15)
+!
+!      OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
+!      READ(15,*) grf
+!      CLOSE(15)
+!
+!      OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
+!      READ(15,*) hgt
+!      CLOSE(15)
+!
+!      OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
+!      READ(15,*) lai
+!      CLOSE(15)
+!
+!      OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
+!      READ(15,*) lu
+!      CLOSE(15)
+!
+!      OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
+!      READ(15,*) shdmax
+!      CLOSE(15)
+!
+!      OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
+!      READ(15,*) shdmin
+!      CLOSE(15)
+!
+!      OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
+!      READ(15,*) slope
+!      CLOSE(15)
+!
+!      OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
+!      READ(15,*) soil
+!      CLOSE(15)
       
       DO J=1,MJ_GLOB
       DO I=1,MI_GLOB

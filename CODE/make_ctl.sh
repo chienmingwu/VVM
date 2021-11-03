@@ -165,7 +165,7 @@ cir=40075.018*cos(lat/180*pi) \
   \
 OPEN(10,FILE="xydef.txt") \
 WRITE(10,777) lon, ",", dx/1000/cir*360 \
-777 FORMAT(f8.4,a1,f12.8) \
+777 FORMAT(f12.6,a1,f12.8) \
 WRITE(10,777) lat, ",", dy/1000/40007.86*360 \
 CLOSE(10) \
   \

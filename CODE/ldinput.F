@@ -149,7 +149,7 @@ CONTAINS
       DZ      = 500._dbl_kind
 
       DZ1     = 100._dbl_kind
-      DOMAIN  = 15000._dbl_kind
+      DOMAIN  = 3000._dbl_kind
       ZB      = 0.
 
       NSFLUX  = 6
