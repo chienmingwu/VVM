@@ -152,23 +152,25 @@ CONTAINS
       do k=1,NK3
       tl=thetal(k)*pibar(k)
       xx=tl
-      es1=es(xx)
-      qvs=es1*0.622/(pbar(k)-es1)
-      ql(k)=max(qt(k)-qvs,0.)
-      if(ql(k) .gt. 0.) then
-      do iterate=1,3
-      x1=lv/(cp*xx)
-      xx=xx-(xx-tl*(1.+x1*ql(k)))/(1.+x1*tl     &
-         *(ql(k)/xx+(1.+qvs*rgas/rv)*qvs*lv/(rv*xx*xx)))
-      es1=es(xx)
-      qvs=es1*0.622/(pbar(k)-es1)
-      ql(k)=max(qt(k)-qvs,0.)
-      enddo
-      endif
-      thbar(k)=xx/pibar(k)
-      qvbar(k)=qt(k)-ql(k)
-      qcbar(k)=ql(k)
-      tv(k) = xx * ( 1. + 0.608 * qvbar(k)-qcbar(k) )
+      !es1=es(xx)
+      !qvs=es1*0.622/(pbar(k)-es1)
+      !ql(k)=max(qt(k)-qvs,0.)
+      !if(ql(k) .gt. 0.) then
+      !do iterate=1,3
+      !x1=lv/(cp*xx)
+      !xx=xx-(xx-tl*(1.+x1*ql(k)))/(1.+x1*tl     &
+      !   *(ql(k)/xx+(1.+qvs*rgas/rv)*qvs*lv/(rv*xx*xx)))
+      !es1=es(xx)
+      !qvs=es1*0.622/(pbar(k)-es1)
+      !ql(k)=max(qt(k)-qvs,0.)
+      !enddo
+      !endif
+      !thbar(k)=xx/pibar(k)
+      !qvbar(k)=qt(k)-ql(k)
+      !qcbar(k)=ql(k)
+      thbar(k)=thetal(k)
+      qvbar(k)=qt(k)
+      tv(k) = xx * ( 1. + 0.608 * qvbar(k))
       enddo
 
 !!     initialization for rcemip

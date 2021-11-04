@@ -231,19 +231,34 @@
  bact   = vi*osm*epsm*mw*rhoa/(map*rhow)
 ! inv_bact = (map*rhow)/(vi*osm*epsm*mw*rhoa)    *** to replace /bact **
 
+!! mode 1
+! inv_rm1 = 2.e+7           ! inverse aerosol mean size (m-1)
+! sig1    = 2.0             ! aerosol standard deviation
+! nanew1  = 300.e6          ! aerosol number mixing ratio (kg-1)
+! f11     = 0.5*exp(2.5*(log(sig1))**2)
+! f21     = 1. + 0.25*log(sig1)
+!
+!! note: currently only set for a single mode, droplet activation code needs to
+!!       be modified to include the second mode
+!! mode 2
+! inv_rm2 = 7.6923076e+5    ! inverse aerosol mean size (m-1)
+! sig2    = 2.5             ! aerosol standard deviation
+! nanew2  = 0.              ! aerosol number mixing ratio (kg-1)
+! f12     = 0.5*exp(2.5*(log(sig2))**2)
+! f22     = 1. + 0.25*log(sig2)
+
+! for ASC 
 ! mode 1
- inv_rm1 = 2.e+7           ! inverse aerosol mean size (m-1)
- sig1    = 2.0             ! aerosol standard deviation
- nanew1  = 300.e6          ! aerosol number mixing ratio (kg-1)
+ inv_rm1 = 5.e+6           ! inverse aerosol mean size (m-1)
+ sig1    = 1.5             ! aerosol standard deviation
+ nanew1  = 170.e6          ! aerosol number mixing ratio (kg-1)
  f11     = 0.5*exp(2.5*(log(sig1))**2)
  f21     = 1. + 0.25*log(sig1)
 
-! note: currently only set for a single mode, droplet activation code needs to
-!       be modified to include the second mode
 ! mode 2
- inv_rm2 = 7.6923076e+5    ! inverse aerosol mean size (m-1)
- sig2    = 2.5             ! aerosol standard deviation
- nanew2  = 0.              ! aerosol number mixing ratio (kg-1)
+ inv_rm2 = 1.43e+6         ! inverse aerosol mean size (m-1)
+ sig2    = 2.45            ! aerosol standard deviation
+ nanew2  = 7.e6            ! aerosol number mixing ratio (kg-1)
  f12     = 0.5*exp(2.5*(log(sig2))**2)
  f22     = 1. + 0.25*log(sig2)
 
