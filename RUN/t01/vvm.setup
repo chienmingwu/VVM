@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = isdac_ice
+set expname = isdac_large
 
 # set job system and compiler
 set compiler = 'intel_jet'
@@ -82,8 +82,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/64/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/160/g' ${codedir}/cdecks/PARMSLD.F90
@@ -93,9 +93,9 @@ sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=86400 /
+ &INPUT1 NEWRUN=T, ITTADD=120 /
  &INPUT2 RLAT=71.32, RLON=-156.61 /
- &INPUT3 DX=50.,DYNEW=50.,DZ=50.,DZ1=10.,DT=1.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
+ &INPUT3 DX=200.,DYNEW=200.,DZ=50.,DZ1=20.,DT=1.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
 #         ( case output frequency)   ( result could be seen in ncfile)

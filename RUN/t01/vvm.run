@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = isdac_ice
+set expname = isdac_large 
 
 # set job system and compiler
 set compiler = 'intel_jet'

@@ -251,14 +251,14 @@
 ! mode 1
  inv_rm1 = 5.e+6           ! inverse aerosol mean size (m-1)
  sig1    = 1.5             ! aerosol standard deviation
- nanew1  = 170.e6          ! aerosol number mixing ratio (kg-1)
+ nanew1  = 120.e6          ! aerosol number mixing ratio (kg-1)
  f11     = 0.5*exp(2.5*(log(sig1))**2)
  f21     = 1. + 0.25*log(sig1)
 
 ! mode 2
  inv_rm2 = 1.43e+6         ! inverse aerosol mean size (m-1)
  sig2    = 2.45            ! aerosol standard deviation
- nanew2  = 7.e6            ! aerosol number mixing ratio (kg-1)
+ nanew2  = 0.              ! aerosol number mixing ratio (kg-1)
  f12     = 0.5*exp(2.5*(log(sig2))**2)
  f22     = 1. + 0.25*log(sig2)
 
