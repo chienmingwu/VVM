@@ -75,6 +75,7 @@ cat > definesld.com << 'END1'
 #define MICROP3
 #define LSM
 #define RADCODE
+#define PETSCMG
 'END1'
 cat definesld.com
 
