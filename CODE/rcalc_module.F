@@ -118,8 +118,11 @@ CONTAINS
       DO 300 K = 2, NK2
       DO 309 J = 1, MJ1
       DO 309 I = 1, MI1
-      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)
-      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
+      ! for ASC
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L)-0.5*(Q1LS(K)*(TH3D(I,J,K+1)+TH3D(I,J,K)) &
+                                        -Q1LS(K-1)*(TH3D(I,J,K)+TH3D(I,J,K-1)))/DZ*FNT(K)
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L)-0.5*(Q2LS(K)*(QV3D(I,J,K+1)+QV3D(I,J,K)) &
+                                        -Q2LS(K-1)*(QV3D(I,J,K)+QV3D(I,J,K-1)))/DZ*FNT(K)
   309 CONTINUE
   SELECT CASE (TRIM(casename))
   CASE ('TWP-ICE','BOMEX')

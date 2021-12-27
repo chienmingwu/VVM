@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = isdac_large
+set expname = isdac_zhang
 
 # set job system and compiler
 set compiler = 'intel_jet'
@@ -86,7 +86,7 @@ sed -i 's/zonal_dimension/192/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_dimension/192/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/125/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/100/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90

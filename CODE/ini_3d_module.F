@@ -98,7 +98,8 @@ CONTAINS
 !     PU1 (MB) , U1(M/S)
 
       REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6), &
-                               thetal(nk3),qt(nk3),ql(nk3),xx,x1,qvs,tl,iterate
+                               thetal(nk3),qt(nk3),ql(nk3)
+      real (KIND=dbl_kind) :: xx,x1,qvs,tl,iterate
       DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
       DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
       DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
@@ -118,7 +119,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 267.
+      SST = 265.
       
 ! ISDAC profiles
       pbar(1)=1020.
@@ -133,20 +134,33 @@ CONTAINS
 
       do k=1,nk3
 
-      if(zt(k) .lt. 400.) then
-      thetal(k)=265.+0.004*(zt(k)-400.)
-      qt(k)=1.5-0.00075*(zt(k)-400.)
-      elseif (zt(k) .ge. 400. .and. zt(k) .lt. 825.) then
-      thetal(k)=265.
-      qt(k)=1.5
-      elseif (zt(k) .ge. 825. .and. zt(k) .lt. 2045.) then
-      thetal(k)=266.+(zt(k)-825.)**0.3
-      qt(k)=1.2
-      elseif (zt(k) .ge. 2045.) then
-      thetal(k)=271.+(zt(k)-2000.)**0.33
-      qt(k)=0.5-0.00075*(zt(k)-2045.)
+      ! Ovchinnikov et al. 2014
+      !if(zt(k) .lt. 400.) then
+      !thetal(k)=265.+0.004*(zt(k)-400.)
+      !qt(k)=1.5-0.00075*(zt(k)-400.)
+      !elseif (zt(k) .ge. 400. .and. zt(k) .lt. 825.) then
+      !thetal(k)=265.
+      !qt(k)=1.5
+      !elseif (zt(k) .ge. 825. .and. zt(k) .lt. 2045.) then
+      !thetal(k)=266.+(zt(k)-825.)**0.3
+      !qt(k)=1.2
+      !elseif (zt(k) .ge. 2045.) then
+      !thetal(k)=271.+(zt(k)-2000.)**0.33
+      !qt(k)=0.5-0.00075*(zt(k)-2045.)
+      !endif
+      !qt(k)=qt(k)/1000.
+
+      ! Zhang et al. 2020
+      if (zt(k) .le. 825.) then
+        thetal(k)=SST
+        xx=thetal(1)!*pibar(1)
+        qt(k)=0.8*es(xx)*0.622/(pbar(1)-es(xx))
+      else
+        thetal(k)=SST+5.+0.005*(zt(k)-825.)
+        xx=thetal(k)*pibar(k)
+        qt(k)=0.6*es(xx)*0.622/(pbar(k)-es(xx))
       endif
-      qt(k)=qt(k)/1000.
+
       enddo
 
       do k=1,NK3
@@ -395,6 +409,15 @@ CONTAINS
       DO 210 K = 1, NK3
       Q1LS (K) = -1.* SCALE * Q1LS (K) / PIBAR(K) / SECDAY
       Q2LS (K) = SCALE * Q2LS (K) / (GAMFAC * SECDAY)
+
+      ! for ASC
+      if (zz(k) .le. 825.) then
+        Q1LS (K) = -5.e-6*zz(k)
+        Q2LS (K) = -5.e-6*zz(k)
+      else
+        Q1LS (K) = -4.125e-3
+        Q2LS (K) = -4.125e-3
+      endif
   210 CONTINUE
 
 #if !defined (RADCODE)
