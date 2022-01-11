@@ -387,7 +387,7 @@ SUBROUTINE DIRECTIB
 
       ENDIF
 
-      DO 500 K=1,NK3
+      DO 500 K=1,NK2
       DO 500 J=mjm,mjp
       DO 500 I=mim,mip
       IF (ITYPEU(I,J,K) .NE. 1) THEN

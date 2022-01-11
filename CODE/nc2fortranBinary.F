@@ -226,39 +226,39 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       DO 500 I = 1,MI_GLOB
 
       xt(I) = I * DX
-      yt(I) = J * DYNEW
+      yt(J) = J * DYNEW
 
       ! setup Chien and Wu 2016
       TMP=abs(real(i)-real(mi_glob)/2.)*DX
-!      if (TMP<=5000.) then
-!      TMP = 1200. 
-!      elseif (TMP>5000. .and. TMP<=20000.) then
-      if (TMP<=10000.) then
-      TMP = 200.-0.01*(TMP-10000.)
+      if (TMP<=5000.) then
+      TMP = 1200. 
+      elseif (TMP>5000. .and. TMP<=20000.) then
+!      if (TMP<=10000.) then
+      TMP = -0.08*(TMP-20000.)
       else 
       TMP = 0.
       endif
       TOP=1
       DO 502 k=1,NK2
       ! for full step 
-  502 IF (TMP >= ZZ(k)) TOP=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+  502 IF (TMP >= ZZ(k)) TOP=K+INT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
       ! for partial step
 !  502 IF (TMP >= ZZ(k)) TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
       hx(I,J)=TOP
 
 !      ENDDO
 
-!      LU(I,J) = 16
-!      alb(I,J) = 15.
-!      grf(I,J) = 10.
-!      lai(I,J) = 4.
-!      SHDMAX(I,J) = 10.
-!      SHDMIN(I,J) = 10.
-!      SLOPE(I,J) = 1
-!      SOIL(I,J) = 14
+      LU(I,J) = 16
+      alb(I,J) = 15.
+      grf(I,J) = 10.
+      lai(I,J) = 4.
+      SHDMAX(I,J) = 10.
+      SHDMIN(I,J) = 10.
+      SLOPE(I,J) = 1
+      SOIL(I,J) = 14
 !      ! setup Wu and Chen 2021
 !      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
-!      if (hx(I,J)<2) hx(I,J)=2
+!      !if (hx(I,J)<2) hx(I,J)=2
 !      LU(I,J) = 7
 !      alb(I,J) = 19.
 !      grf(I,J) = 80.
@@ -334,10 +334,18 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       NP = 0
 
       DO 800 J = 1,MJ_GLOB
+      JI = J-1
+      JE = J+1
+      IF (JI<1) JI=JI+MJ_GLOB
+      IF (JE>MJ_GLOB) JE=JE-MJ_GLOB
       DO 800 I = 1,MI_GLOB
-      IF (HX(I+1,J) .GT. HX(I,J) .AND. HX(I-1,J) .GT. HX(I,J) .AND.
-     1 HX(I,J+1) .GT. HX(I,J) .AND. HX(I,J-1) .GT. HX(I,J)) THEN
-      HX(I,J) =MIN(HX(I+1,J),HX(I-1,J),HX(I,J+1),HX(I,J-1))
+      II = I-1
+      IE = I+1
+      IF (II<1) II=II+MI_GLOB
+      IF (IE>MI_GLOB) IE=IE-MI_GLOB
+      IF (HX(IE,J) .GT. HX(I,J) .AND. HX(II,J) .GT. HX(I,J) .AND.
+     1 HX(I,JE) .GT. HX(I,J) .AND. HX(I,JI) .GT. HX(I,J)) THEN
+      HX(I,J) =MIN(HX(IE,J),HX(II,J),HX(I,JE),HX(I,JI))
       NP = NP +1
       ENDIF
   800 CONTINUE
