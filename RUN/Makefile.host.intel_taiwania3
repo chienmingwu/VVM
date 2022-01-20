@@ -49,42 +49,25 @@ OS := $(shell uname)
 # Linux Cluster, optimized for saddleback
 #-----------------------------------------------------------------------------
 
-spack_opt=/vol0004/apps/oss/spack/opt/spack/linux-rhel8-a64fx/fj-4.3.1/
-
-opt_hdf5=hdf5-1.10.7-tezymjnw4jp5c5hxssbppdmoodlkobjr
-opt_netcdf=netcdf-c-4.7.4-b64cq4cc3leo23drfdmeyjsifn7dvguq
-opt_netcdff=netcdf-fortran-4.5.3-cliy7c2aoetmqmbfgin44jq53prrqs5z
-opt_pnetcdf=parallel-netcdf-1.12.1-rcnzuiw5br5gmxolsknsswiqidqhejmt
-
-include_hdf5=-I${spack_opt}${opt_hdf5}/include
-include_netcdf=-I${spack_opt}${opt_netcdf}/include
-include_netcdff=-I${spack_opt}${opt_netcdff}/include
-include_pnetcdf=-I${spack_opt}${opt_pnetcdf}/include
-
-link_hdf5=-L${spack_opt}${opt_hdf5}/lib -lhdf5 -lhdf5_hl
-link_netcdf=-L${spack_opt}${opt_netcdf}/lib -lnetcdf
-link_netcdff=-L${spack_opt}${opt_netcdff}/lib -lnetcdff
-link_pnetcdf=-L${spack_opt}${opt_pnetcdf}/lib -lpnetcdf
-
 CPP 	 = /usr/bin/cpp
-#CPPFLAGS = -P -traditional -I$(BINDIR) -I/opt/petsc360/include  
-CPPFLAGS = -P -traditional -I$(BINDIR) -I${HOME}/.local/include $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
+CPPFLAGS = -P -traditional -I$(EXPDIR) -I/work/peter50504/vvmlibs/include 
 #CPPFLAGS = -P -traditional -I$(BINDIR) -I/opt/petsc-intel/include 
 
 SUF      = f
 
 #INC = -I/opt/netcdf4-intel/include -I$(CDECKS) -I/opt/hdf5-intel/include -I/opt/pnetcdf-intel/include -I/opt/petsc-intel/include
 
-INC = -I${HOME}/.local/include -I$(CDECKS) $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
+INC = -I$(CDECKS) -I$(EXPDIR) -I/opt/ohpc/Taiwania3/libs/i2021-Ompi405/netcdf-4.7.4/include -I/opt/ohpc/Taiwania3/libs/i2021-Ompi405/netcdf-4.7.4/include -I/work/peter50504/vvmlibs/include -I/opt/ohpc/Taiwania3/libs/i2021-Ompi405/pnetcdf-1.12.2/include
 
 
-FC = mpifrtpx -Kfast -fw 
+FC = mpifort -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large
 #FC = ${FLINKER} -shared-intel -mcmodel=large
 
-LDLIBS = -L${HOME}/.local/lib -lpetsc $(link_netcdff) $(link_netcdf) $(link_pnetcdf) $(link_hdf5) -SSL2 -L/opt/FJSVxtclanga/tcsds-1.2.30a/lib64 -lfjprofmpi -lmpi_cxx -lfjc++ -lfjc++abi -lfjcrt -lfjdemgl 
+LDLIBS = -Wl,-rpath,/opt/ohpc/Taiwania3/libs/i2021-Ompi405/netcdf-4.7.4/lib -L/opt/ohpc/Taiwania3/libs/i2021-Ompi405/netcdf-4.7.4/lib -lnetcdff -Wl,-rpath,/opt/ohpc/Taiwania3/libs/i2021-Ompi405/pnetcdf-1.12.2/lib -L/opt/ohpc/Taiwania3/libs/i2021-Ompi405/pnetcdf-1.12.2/lib -lpnetcdf -Wl,-rpath,/work/peter50504/vvmlibs/lib -L/work/peter50504/vvmlibs/lib -lpetsc -Wl,-rpath,/opt/ohpc/Taiwania3/libs/i2021-Ompi405/hdf5-1.12/lib -L/opt/ohpc/Taiwania3/libs/i2021-Ompi405/hdf5-1.12/lib -lhdf5 -lhdf5_hl -Wl,-rpath,/opt/ohpc/Taiwania3/pkg/intel/2021/mkl/2021.1.1/lib/intel64 -L/opt/ohpc/Taiwania3/pkg/intel/2021/mkl/2021.1.1/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lmkl_sequential 
+
 
 FFLAGS    = $(INC)
-FIXED     = -Fixed 
-FREE      = -Free
+FIXED     = -fixed 
+FREE      = -free
 LD        = $(FC)
 

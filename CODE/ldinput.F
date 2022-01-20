@@ -309,9 +309,9 @@ CONTAINS
 #endif
 
 #if defined (BETA)
-      DO 519 J = 1,mj1
-      F(J) = 2.*OMEGA*SIN(((nj_sbdm-nsbdm_y/2)*mj1+J-0.5)*DYNEW/6.37E6)
-      FCOS(J) = 2.*OMEGA*COS(((nj_sbdm-nsbdm_y/2)*mj1+J-0.5)*DYNEW/6.37E6)
+      DO 519 J = mjm,mjp
+      F(J) = 2.*OMEGA*SIN((dble(mj1*nj_sbdm+j)-dble(mj_glob)/2.-0.5)*DYNEW/6.37E6)
+      FCOS(J) = 2.*OMEGA*COS((dble(mj1*nj_sbdm+j)-dble(mj_glob)/2.-0.5)*DYNEW/6.37E6)
   519 CONTINUE
 #endif
 

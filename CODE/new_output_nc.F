@@ -36,6 +36,9 @@ PRIVATE
           ncid_ras, &                        ! RAS output ID
           ncid_z3dx, &                       ! dynamic variables output ID
           ncid_tc, &                         ! tracers output ID
+#if defined (DIAG)
+          ncid_diag, &                       ! diagnostics output ID
+#endif
           ncid_rad, ncid_phys                ! radiation and surface variables output ID
 
 !===hchun
@@ -63,6 +66,18 @@ PRIVATE
           xz
       real (KIND=dbl_kind), dimension(mj_glob), public :: &
           yz
+
+      real (KIND=dbl_kind), dimension(mi_glob), public :: &
+          lonc
+      real (KIND=dbl_kind), dimension(mj_glob), public :: &
+          latc
+      real (KIND=dbl_kind), dimension(nk2), public :: &
+          levc
+
+      real (KIND=dbl_kind), dimension(mi_glob), public :: &
+          lonz
+      real (KIND=dbl_kind), dimension(mj_glob), public :: &
+          latz
 
 ! restart variable id
       integer (KIND=int_kind), public :: &
@@ -225,6 +240,12 @@ CONTAINS
         yz(i) = yt(i) + dynew/2.
       enddo
 
+      lonc=(xt-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
+      lonz=(xz-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
+      latc=(yt-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
+      latz=(yz-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
+      levc=zt(1:nk2)/1000.
+
 !      yt(:) = xt(:)
 !      yz(:) = xz(:)
 
@@ -319,6 +340,28 @@ CONTAINS
       CALL pCDF_INI_4DVAR (ncid_th, 'qg', 'graupel mixing ratio', &
                           'graupel_mixing_ratio', 'kg kg-1', &
                           'zt', 'yt', 'xt')
+
+#if defined (HEATING)
+! QS3D
+      CALL pCDF_INI_4DVAR (ncid_th, 'ldep', 'latent heating due to deposition', &
+                          'latent_heating_due_to_deposition', 'K s-1', &
+                          'zt', 'yt', 'xt')
+
+! QG3D
+      CALL pCDF_INI_4DVAR (ncid_th, 'lcon', 'latent heating due to condensation', &
+                          'latent_heating_due_to_condensation', 'K s-1', &
+                          'zt', 'yt', 'xt')
+
+! QS3D
+      CALL pCDF_INI_4DVAR (ncid_th, 'lfre', 'latent heating due to freeze', &
+                          'latent_heating_due_to_freeze', 'K s-1', &
+                          'zt', 'yt', 'xt')
+
+! QS3D
+      CALL pCDF_INI_4DVAR (ncid_th, 'lmet', 'latent heating due to melt', &
+                          'latent_heating_due_to_melt', 'K s-1', &
+                          'zt', 'yt', 'xt')
+#endif
 
 #endif
 
@@ -446,6 +489,39 @@ CONTAINS
                           'zt', 'yt', 'xt')
         enddo
       endif
+
+#if defined (DIAG)
+! Tracers ---------------------------------------------------------------------
+      if (ndiag_2d > 0 .or. ndiag_3d > 0) then
+      call fname_nc(itp1, EXPHDR, 'Diag', ITT_OUTPUT, filnam_nc)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_diag)
+      CALL pCDF_INI_THERMO (ncid_diag, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      if (ndiag_2d > 0) then
+        do nt = 1,ndiag_2d
+          write(unit=trnum,fmt='(i2.2)')nt
+          CALL pCDF_INI_XY_VAR (ncid_diag, 'ds'//trnum, &
+                          'single-level diagnostic variable '//trnum, &
+                          'single_level_diagnostic_variable '//trnum, ' ', &
+                          'yt', 'xt')
+        enddo
+      endif
+
+      if (ndiag_3d > 0) then
+        do nt = 1,ndiag_3d
+          write(unit=trnum,fmt='(i2.2)')nt
+          CALL pCDF_INI_4DVAR (ncid_diag, 'dm'//trnum, &
+                          'multi-level diagnostic variable '//trnum, &
+                          'multi_level_diagnostic_variable '//trnum, ' ', &
+                          'zt', 'yt', 'xt')
+        enddo
+      endif
+      endif
+#endif
+
 
 #if defined (PHYSICS)
 ! Dataset C (time-averaged physics fields) ------------------------------------
@@ -743,6 +819,10 @@ CONTAINS
       nc_err = nfmpi_close(ncid_tc)
     endif
 
+#if defined (DIAG)
+     nc_err = nfmpi_close(ncid_diag)
+#endif
+
 #if defined (PHYSICS)
 #if defined (RADCODE)
 ! Radiation variables
@@ -922,23 +1002,24 @@ CONTAINS
 !------------------------------------------------------------------------------
 
 ! time ------------------------------------------------------------------------
-      nc_err = nfmpi_def_dim(ncid, 'Time', nfmpi_unlimited, time_dim)
+      temlen=time_len
+      nc_err = nfmpi_def_dim(ncid, 'time', nfmpi_unlimited, time_dim)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       time_dims(1) = time_dim
-      nc_err = nfmpi_def_var(ncid, 'Time', NF_REAL, 1, time_dims, time_id)
+      nc_err = nfmpi_def_var(ncid, 'time', NF_REAL, 1, time_dims, time_id)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, time_id, 'axis',       &
-                                  4_mpi_offset_kind, 'Time')
+                                  1_mpi_offset_kind, 'T')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, time_id, 'long_name',  &
-                                  4_mpi_offset_kind, 'Time')
+                                  4_mpi_offset_kind, 'time')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, time_id, 'standard_name',   &
-                                  4_mpi_offset_kind, 'Time')
+                                  4_mpi_offset_kind, 'time')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       nc_err = nfmpi_put_att_text(ncid, time_id, 'units',      &
@@ -947,15 +1028,11 @@ CONTAINS
 
 ! zc --------------------------------------------------------------------------
         temlen=zc_len
-        nc_err = nfmpi_def_dim(ncid, 'bottom_top', temlen, zc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lev', temlen, zc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         zc_dims(1) = zc_dim
         nc_err = nfmpi_def_var(ncid, 'zc', NF_double, 1, zc_dims, zc_id)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-        nc_err = nfmpi_put_att_text(ncid, zc_id, 'axis',        &
-                                    1_mpi_offset_kind, 'Z')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'long_name',   &
@@ -970,21 +1047,38 @@ CONTAINS
                                     1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
+! lev for grads and vapor -----------------------------------------------------
+        zc_dims(1) = zc_dim
+        nc_err = nfmpi_def_var(ncid, 'lev', NF_double, 1, zc_dims, zc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'axis',        &
+                                    1_mpi_offset_kind, 'Z')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'long_name',   &
+                                    8_mpi_offset_kind, 'altitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'standard_name',  &
+                                    8_mpi_offset_kind, 'altitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
+                                    5_mpi_offset_kind, 'level')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
                                     2_mpi_offset_kind, 'up')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 ! yc --------------------------------------------------------------------------
         temlen=yc_len
-        nc_err = nfmpi_def_dim(ncid, 'south_north', temlen, yc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lat', temlen, yc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         yc_dims(1) = yc_dim
         nc_err = nfmpi_def_var(ncid, 'yc', NF_double, 1, yc_dims, yc_id)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-        nc_err = nfmpi_put_att_text(ncid, yc_id, 'axis',    &
-                                    1_mpi_offset_kind, 'Y')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, yc_id, 'long_name',      &
@@ -996,17 +1090,31 @@ CONTAINS
                                     1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
+! lat for grads and vapor -----------------------------------------------------
+        yc_dims(1) = yc_dim
+        nc_err = nfmpi_def_var(ncid, 'lat', NF_double, 1, yc_dims, yc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'axis',    &
+                                    1_mpi_offset_kind, 'Y')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'long_name',      &
+                 8_mpi_offset_kind,                               &
+                 'latitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'units',  &
+                                    13_mpi_offset_kind, 'degrees_north')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
 ! xc --------------------------------------------------------------------------
         temlen=xc_len
-        nc_err = nfmpi_def_dim(ncid, 'west_east', temlen, xc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lon', temlen, xc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         xc_dims(1) = xc_dim
         nc_err = nfmpi_def_var(ncid, 'xc', NF_double, 1, xc_dims, xc_id)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-        nc_err = nfmpi_put_att_text(ncid, xc_id, 'axis',    &
-                                    1_mpi_offset_kind, 'X')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'long_name',      &
@@ -1016,6 +1124,24 @@ CONTAINS
 
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'units',  &
                                     1_mpi_offset_kind, 'm')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! lon for grads and vapor -----------------------------------------------------
+        xc_dims(1) = xc_dim
+        nc_err = nfmpi_def_var(ncid, 'lon', NF_double, 1, xc_dims, xc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'axis',    &
+                                    1_mpi_offset_kind, 'X')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'long_name',      &
+                 9_mpi_offset_kind,                               &
+                 'longitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'units',  &
+                                    12_mpi_offset_kind, 'degrees_east')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 !------------------------------------------------------------------------------
@@ -1045,15 +1171,27 @@ CONTAINS
 !------------------------------------------------------------------------------
 ! store zc
         temlen=zc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'zc', zc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
+      nc_err = nfmpi_inq_varid(ncid, 'lev', zc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), levc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store yc
         temlen=yc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'yc', yc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
+      nc_err = nfmpi_inq_varid(ncid, 'lat', yc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), latc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store xc
         temlen=xc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'xc', xc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
+      nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 !==============================================================================
@@ -1141,23 +1279,23 @@ CONTAINS
 !------------------------------------------------------------------------------
 
 ! time ------------------------------------------------------------------------
-      nc_err = nfmpi_def_dim(ncid, 'Time', nfmpi_unlimited, time_dim)
+      nc_err = nfmpi_def_dim(ncid, 'time', nfmpi_unlimited, time_dim)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       time_dims(1) = time_dim
-      nc_err = nfmpi_def_var(ncid, 'Time', NF_REAL, 1, time_dims, time_id)
+      nc_err = nfmpi_def_var(ncid, 'time', NF_REAL, 1, time_dims, time_id)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nfmpi_put_att_text(ncid, time_id, 'axis',       &
-                                  4_mpi_offset_kind, 'Time')
+                                  1_mpi_offset_kind, 'T')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
  
       nc_err = nfmpi_put_att_text(ncid, time_id, 'long_name',  & 
-                                  4_mpi_offset_kind, 'Time')
+                                  4_mpi_offset_kind, 'time')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nfmpi_put_att_text(ncid, time_id, 'standard_name',   &
-                                  4_mpi_offset_kind, 'Time')
+                                  4_mpi_offset_kind, 'time')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nfmpi_put_att_text(ncid, time_id, 'units',      &
@@ -1166,11 +1304,34 @@ CONTAINS
       
 ! zc --------------------------------------------------------------------------
         temlen=zc_len
-        nc_err = nfmpi_def_dim(ncid, 'bottom_top', temlen, zc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lev', temlen, zc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         zc_dims(1) = zc_dim
         nc_err = nfmpi_def_var(ncid, 'zc', NF_double, 1, zc_dims, zc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      if (zgrid == 'zz') then
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'long_name',   &
+                                    40_mpi_offset_kind, 'vertical height of model interfaces, MSL')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      endif
+      if (zgrid == 'zt') then
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'long_name',   &
+                                    36_mpi_offset_kind, 'vertical height of model layers, MSL')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      endif
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'standard_name',  &
+                                    8_mpi_offset_kind, 'altitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
+                                    1_mpi_offset_kind, 'm')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+! lev for grads and vapor -----------------------------------------------------
+        zc_dims(1) = zc_dim
+        nc_err = nfmpi_def_var(ncid, 'lev', NF_double, 1, zc_dims, zc_id)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'axis',        &
@@ -1179,12 +1340,12 @@ CONTAINS
 
       if (zgrid == 'zz') then      
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'long_name',   &
-                                    40_mpi_offset_kind, 'vertical height of model interfaces, MSL')
+                                    8_mpi_offset_kind, 'altitude')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       endif
       if (zgrid == 'zt') then      
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'long_name',   &
-                                    36_mpi_offset_kind, 'vertical height of model layers, MSL')
+                                    8_mpi_offset_kind, 'altitude')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       endif
         
@@ -1193,7 +1354,7 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
-                                    1_mpi_offset_kind, 'm')
+                                    5_mpi_offset_kind, 'level')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
@@ -1202,15 +1363,11 @@ CONTAINS
   
 ! yc --------------------------------------------------------------------------
         temlen=yc_len
-        nc_err = nfmpi_def_dim(ncid, 'south_north', temlen, yc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lat', temlen, yc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         yc_dims(1) = yc_dim
         nc_err = nfmpi_def_var(ncid, 'yc', NF_double, 1, yc_dims, yc_id)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, yc_id, 'axis',    &
-                                    1_mpi_offset_kind, 'Y')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       if (ygrid == 'yz') then
@@ -1225,24 +1382,46 @@ CONTAINS
                  'y-coordinate of grid cell centers in Cartesian system')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       endif
-        
+
         nc_err = nfmpi_put_att_text(ncid, yc_id, 'units',  &
                                     1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
+! lat for grads and vapor -----------------------------------------------------
+        yc_dims(1) = yc_dim
+        nc_err = nfmpi_def_var(ncid, 'lat', NF_double, 1, yc_dims, yc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'axis',    &
+                                    1_mpi_offset_kind, 'Y')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      if (ygrid == 'yz') then
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'long_name',      &
+                 8_mpi_offset_kind,                               &
+                 'latitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      endif
+      if (ygrid == 'yt') then
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'long_name',      &
+                 8_mpi_offset_kind,                               &
+                 'latitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      endif
+        
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'units',  &
+                                    13_mpi_offset_kind, 'degrees_north')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
 ! xc --------------------------------------------------------------------------
         temlen=xc_len
-        nc_err = nfmpi_def_dim(ncid, 'west_east', temlen, xc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lon', temlen, xc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         xc_dims(1) = xc_dim
         nc_err = nfmpi_def_var(ncid, 'xc', NF_double, 1, xc_dims, xc_id)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, xc_id, 'axis',    &
-                                    1_mpi_offset_kind, 'X')
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+
       if (xgrid == 'xz') then
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'long_name',      &
                  56_mpi_offset_kind,                               &
@@ -1255,9 +1434,35 @@ CONTAINS
                  'x-coordinate of grid cell centers in Cartesian system')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       endif
-        
+
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'units',  &
                                     1_mpi_offset_kind, 'm')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! lon for grads and vapor -----------------------------------------------------
+        xc_dims(1) = xc_dim
+        nc_err = nfmpi_def_var(ncid, 'lon', NF_double, 1, xc_dims, xc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'axis',    &
+                                    1_mpi_offset_kind, 'X')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      if (xgrid == 'xz') then
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'long_name',      &
+                 9_mpi_offset_kind,                               &
+                 'longitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      endif
+      if (xgrid == 'xt') then
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'long_name',      &
+                 9_mpi_offset_kind,                               &
+                 'longitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      endif
+        
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'units',  &
+                                    12_mpi_offset_kind, 'degrees_east')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !------------------------------------------------------------------------------
@@ -1287,15 +1492,27 @@ CONTAINS
 !------------------------------------------------------------------------------
 ! store zc
         temlen=zc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'zc', zc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
+      nc_err = nfmpi_inq_varid(ncid, 'lev', zc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), levc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store yc
         temlen=yc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'yc', yc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
+      nc_err = nfmpi_inq_varid(ncid, 'lat', yc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), latc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store xc
         temlen=xc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'xc', xc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
+      nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !==============================================================================
@@ -1379,23 +1596,23 @@ CONTAINS
 !------------------------------------------------------------------------------
 
 ! time ------------------------------------------------------------------------
-      nc_err = nfmpi_def_dim(ncid, 'Time', nfmpi_unlimited, time_dim)
+      nc_err = nfmpi_def_dim(ncid, 'time', nfmpi_unlimited, time_dim)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       time_dims(1) = time_dim
-      nc_err = nfmpi_def_var(ncid, 'Time', NF_REAL, 1, time_dims, time_id)
+      nc_err = nfmpi_def_var(ncid, 'time', NF_REAL, 1, time_dims, time_id)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nfmpi_put_att_text(ncid, time_id, 'axis',       &
-                                  4_mpi_offset_kind, 'Time')
+                                  1_mpi_offset_kind, 'T')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
  
       nc_err = nfmpi_put_att_text(ncid, time_id, 'long_name',  & 
-                                  4_mpi_offset_kind, 'Time')
+                                  4_mpi_offset_kind, 'time')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nfmpi_put_att_text(ncid, time_id, 'standard_name',   &
-                                  4_mpi_offset_kind, 'Time')
+                                  4_mpi_offset_kind, 'time')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nfmpi_put_att_text(ncid, time_id, 'units',      &
@@ -1404,15 +1621,12 @@ CONTAINS
       
 ! zc (model layer heights) ----------------------------------------------------
         temlen=zc_len
-        nc_err = nfmpi_def_dim(ncid, 'bottom_top', temlen, zc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lev', temlen, zc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+        zb_dim = zc_dim
 
         zc_dims(1) = zc_dim
         nc_err = nfmpi_def_var(ncid, 'zc', NF_double, 1, zc_dims, zc_id)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, zc_id, 'axis',        &
-                                    1_mpi_offset_kind, 'Z')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'long_name',   &
@@ -1427,21 +1641,9 @@ CONTAINS
                                     1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
-        nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
-                                    2_mpi_offset_kind, 'up')
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-    
 ! zb (model interface heights) ----------------------------------------------------
-        temlen=zc_len
-        nc_err = nfmpi_def_dim(ncid, 'bottom_top', temlen, zb_dim)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
         zb_dims(1) = zb_dim
         nc_err = nfmpi_def_var(ncid, 'zb', NF_double, 1, zb_dims, zb_id)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, zb_id, 'axis',        &
-                                    1_mpi_offset_kind, 'Z')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, zb_id, 'long_name',   &
@@ -1456,17 +1658,52 @@ CONTAINS
                                     1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
-        nc_err = nfmpi_put_att_text(ncid, zb_id, 'positive',   &
+! lev for grads and vapor -----------------------------------------------------
+        zc_dims(1) = zc_dim
+        nc_err = nfmpi_def_var(ncid, 'lev', NF_double, 1, zc_dims, zc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'axis',        &
+                                    1_mpi_offset_kind, 'Z')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'long_name',   &
+                                    8_mpi_offset_kind, 'altitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'standard_name',  &
+                                    8_mpi_offset_kind, 'altitude')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
+                                    5_mpi_offset_kind, 'level')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
                                     2_mpi_offset_kind, 'up')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-    
+ 
 ! yc --------------------------------------------------------------------------
         temlen=yc_len
-        nc_err = nfmpi_def_dim(ncid, 'south_north', temlen, yc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lat', temlen, yc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         yc_dims(1) = yc_dim
         nc_err = nfmpi_def_var(ncid, 'yc', NF_double, 1, yc_dims, yc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'long_name',      &
+                 53_mpi_offset_kind,                               &
+                 'y-coordinate of grid cell centers in Cartesian system')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'units',  &
+                                    1_mpi_offset_kind, 'm')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! lat for grads and vapor -----------------------------------------------------
+        yc_dims(1) = yc_dim
+        nc_err = nfmpi_def_var(ncid, 'lat', NF_double, 1, yc_dims, yc_id)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, yc_id, 'axis',    &
@@ -1474,21 +1711,35 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, yc_id, 'long_name',      &
-                 53_mpi_offset_kind,                               &
-                 'y-coordinate of grid cell centers in Cartesian system')
+                 8_mpi_offset_kind,                               &
+                 'latitude')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, yc_id, 'units',  &
-                                    1_mpi_offset_kind, 'm')
+                                    13_mpi_offset_kind, 'degrees_north')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 ! xc --------------------------------------------------------------------------
         temlen=xc_len
-        nc_err = nfmpi_def_dim(ncid, 'west_east', temlen, xc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lon', temlen, xc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         xc_dims(1) = xc_dim
         nc_err = nfmpi_def_var(ncid, 'xc', NF_double, 1, xc_dims, xc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'long_name',      &
+                 53_mpi_offset_kind,                               &
+                 'x-coordinate of grid cell centers in Cartesian system')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'units',  &
+                                    1_mpi_offset_kind, 'm')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! lon for grads and vapor -----------------------------------------------------
+        xc_dims(1) = xc_dim
+        nc_err = nfmpi_def_var(ncid, 'lon', NF_double, 1, xc_dims, xc_id)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'axis',    &
@@ -1496,12 +1747,12 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'long_name',      &
-                 53_mpi_offset_kind,                               &
-                 'x-coordinate of grid cell centers in Cartesian system')
+                 9_mpi_offset_kind,                               &
+                 'longitude')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'units',  &
-                                    1_mpi_offset_kind, 'm')
+                                    12_mpi_offset_kind, 'degrees_east')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !------------------------------------------------------------------------------
@@ -1531,19 +1782,29 @@ CONTAINS
 !------------------------------------------------------------------------------
 ! store zc
         temlen=zc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'zc', zc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
-!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-! store zb
-        temlen=zc_len
+      nc_err = nfmpi_inq_varid(ncid, 'zb', zb_id)
       nc_err = nfmpi_put_vara_double_all(ncid, zb_id, (/1_mpi_offset_kind/), (/temlen/), zb)
+      nc_err = nfmpi_inq_varid(ncid, 'lev', zc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), levc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store yc
         temlen=yc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'yc', yc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
+      nc_err = nfmpi_inq_varid(ncid, 'lat', yc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), latc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store xc
         temlen=xc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'xc', xc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
+      nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 #endif
@@ -1630,58 +1891,72 @@ CONTAINS
 !------------------------------------------------------------------------------
 
 ! time ------------------------------------------------------------------------
-      nc_err = nfmpi_def_dim(ncid, 'Time', nfmpi_unlimited, time_dim)
+      nc_err = nfmpi_def_dim(ncid, 'time', nfmpi_unlimited, time_dim)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       time_dims(1) = time_dim
-      nc_err = nfmpi_def_var(ncid, 'Time', NF_REAL, 1, time_dims, time_id)
+      nc_err = nfmpi_def_var(ncid, 'time', NF_REAL, 1, time_dims, time_id)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nfmpi_put_att_text(ncid, time_id, 'axis',       &
-                                  4_mpi_offset_kind, 'Time')
+                                  1_mpi_offset_kind, 'T')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
  
       nc_err = nfmpi_put_att_text(ncid, time_id, 'long_name',  & 
-                                  4_mpi_offset_kind, 'Time')
+                                  4_mpi_offset_kind, 'time')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
-      nc_err = nfmpi_put_att_text(ncid, time_id, 'standard_name',   &
-                                  4_mpi_offset_kind, 'Time')
+      nc_err = nfmpi_put_att_text(ncid, time_id, 'stantard_name',   &
+                                  4_mpi_offset_kind, 'time')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       nc_err = nfmpi_put_att_text(ncid, time_id, 'units',      &
                                   25_mpi_offset_kind, 'minutes since 1900-01-01 00:00')
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
-! yb --------------------------------------------------------------------------
-        temlen=yb_len
-        nc_err = nfmpi_def_dim(ncid, 'south_north', temlen, yb_dim)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-        yb_dims(1) = yb_dim
-        nc_err = nfmpi_def_var(ncid, 'yb', NF_double, 1, yb_dims, yb_id)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, yb_id, 'axis',    &
-                                    1_mpi_offset_kind, 'Y')
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, yb_id, 'long_name',      &
-                 56_mpi_offset_kind,                               &
-                 'y-coordinate of grid cell boundaries in Cartesian system')
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, yb_id, 'units',  &
-                                    1_mpi_offset_kind, 'm')
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
+!! yb --------------------------------------------------------------------------
+!        temlen=yb_len
+!        nc_err = nfmpi_def_dim(ncid, 'south_north', temlen, yb_dim)
+!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!
+!        yb_dims(1) = yb_dim
+!        nc_err = nfmpi_def_var(ncid, 'yb', NF_double, 1, yb_dims, yb_id)
+!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!      
+!!        nc_err = nfmpi_put_att_text(ncid, yb_id, 'axis',    &
+!!                                    1_mpi_offset_kind, 'Y')
+!!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!      
+!        nc_err = nfmpi_put_att_text(ncid, yb_id, 'long_name',      &
+!                 56_mpi_offset_kind,                               &
+!                 'y-coordinate of grid cell boundaries in Cartesian system')
+!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!      
+!        nc_err = nfmpi_put_att_text(ncid, yb_id, 'units',  &
+!                                    1_mpi_offset_kind, 'm')
+!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!
 ! yc --------------------------------------------------------------------------
         temlen=yc_len
-        nc_err = nfmpi_def_dim(ncid, 'south_north', temlen, yc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lat', temlen, yc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         yc_dims(1) = yc_dim
         nc_err = nfmpi_def_var(ncid, 'yc', NF_double, 1, yc_dims, yc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'long_name',      &
+                 53_mpi_offset_kind,                               &
+                 'y-coordinate of grid cell centers in Cartesian system')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, yc_id, 'units',  &
+                                    1_mpi_offset_kind, 'm')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! lat for grads and vapor -----------------------------------------------------
+        yc_dims(1) = yc_dim
+        nc_err = nfmpi_def_var(ncid, 'lat', NF_double, 1, yc_dims, yc_id)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, yc_id, 'axis',    &
@@ -1689,43 +1964,57 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, yc_id, 'long_name',      &
-                 53_mpi_offset_kind,                               &
-                 'y-coordinate of grid cell centers in Cartesian system')
+                 8_mpi_offset_kind,                               &
+                 'latitude')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, yc_id, 'units',  &
-                                    1_mpi_offset_kind, 'm')
+                                    13_mpi_offset_kind, 'degrees_north')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
-! xb --------------------------------------------------------------------------
-        temlen=xb_len
-        nc_err = nfmpi_def_dim(ncid, 'west_east', temlen, xb_dim)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-        xb_dims(1) = xb_dim
-        nc_err = nfmpi_def_var(ncid, 'xb', NF_double, 1, xb_dims, xb_id)
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, xb_id, 'axis',    &
-                                    1_mpi_offset_kind, 'X')
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, xb_id, 'long_name',      &
-                 56_mpi_offset_kind,                               &
-                 'x-coordinate of grid cell boundaries in Cartesian system')
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-        nc_err = nfmpi_put_att_text(ncid, xb_id, 'units',  &
-                                    1_mpi_offset_kind, 'm')
-!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
+!! xb --------------------------------------------------------------------------
+!        temlen=xb_len
+!        nc_err = nfmpi_def_dim(ncid, 'west_east', temlen, xb_dim)
+!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!
+!        xb_dims(1) = xb_dim
+!        nc_err = nfmpi_def_var(ncid, 'xb', NF_double, 1, xb_dims, xb_id)
+!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!      
+!!        nc_err = nfmpi_put_att_text(ncid, xb_id, 'axis',    &
+!!                                    1_mpi_offset_kind, 'X')
+!!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!      
+!        nc_err = nfmpi_put_att_text(ncid, xb_id, 'long_name',      &
+!                 56_mpi_offset_kind,                               &
+!                 'x-coordinate of grid cell boundaries in Cartesian system')
+!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!      
+!        nc_err = nfmpi_put_att_text(ncid, xb_id, 'units',  &
+!                                    1_mpi_offset_kind, 'm')
+!!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!      
 ! xc --------------------------------------------------------------------------
         temlen=xc_len
-        nc_err = nfmpi_def_dim(ncid, 'west_east', temlen, xc_dim)
+        nc_err = nfmpi_def_dim(ncid, 'lon', temlen, xc_dim)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         xc_dims(1) = xc_dim
         nc_err = nfmpi_def_var(ncid, 'xc', NF_double, 1, xc_dims, xc_id)
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'long_name',      &
+                 53_mpi_offset_kind,                               &
+                 'x-coordinate of grid cell centers in Cartesian system')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, xc_id, 'units',  &
+                                    1_mpi_offset_kind, 'm')
+!        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+! lon for grads and vapor -----------------------------------------------------
+        xc_dims(1) = xc_dim
+        nc_err = nfmpi_def_var(ncid, 'lon', NF_double, 1, xc_dims, xc_id)
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'axis',    &
@@ -1733,12 +2022,12 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'long_name',      &
-                 53_mpi_offset_kind,                               &
-                 'x-coordinate of grid cell centers in Cartesian system')
+                 9_mpi_offset_kind,                               &
+                 'longitude')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, xc_id, 'units',  &
-                                    1_mpi_offset_kind, 'm')
+                                    12_mpi_offset_kind, 'degrees_east')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !------------------------------------------------------------------------------
@@ -1766,21 +2055,31 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 !------------------------------------------------------------------------------
-! store yb
-        temlen=yb_len
-      nc_err = nfmpi_put_vara_double_all(ncid, yb_id, (/1_mpi_offset_kind/), (/temlen/), yb)
-!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store yb
+!        temlen=yb_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_put_vara_double_all(ncid, yb_id, (/1_mpi_offset_kind/), (/temlen/), yb)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store yc
         temlen=yc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'yc', yc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
+      nc_err = nfmpi_inq_varid(ncid, 'lat', yc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), latc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-! store xb
-        temlen=xb_len
-      nc_err = nfmpi_put_vara_double_all(ncid, xb_id, (/1_mpi_offset_kind/), (/temlen/), xb)
-!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store xb
+!        temlen=xb_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_put_vara_double_all(ncid, xb_id, (/1_mpi_offset_kind/), (/temlen/), xb)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 ! store xc
         temlen=xc_len
+        if (my_task /= 0) temlen=0
+      nc_err = nfmpi_inq_varid(ncid, 'xc', xc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
+      nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
+      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !==============================================================================
@@ -1842,14 +2141,20 @@ CONTAINS
 !------------------------------------------------------------------------------
 
 ! Inquire dimension IDs
-      if (zgrid == 'zz') zdim_name = 'bottom_top'
-      if (zgrid == 'zt') zdim_name = 'bottom_top'
-      if (ygrid == 'yz') ydim_name = 'south_north'
-      if (ygrid == 'yt') ydim_name = 'south_north'
-      if (xgrid == 'xz') xdim_name = 'west_east'
-      if (xgrid == 'xt') xdim_name = 'west_east'
+!      if (zgrid == 'zz') zdim_name = 'bottom_top'
+!      if (zgrid == 'zt') zdim_name = 'bottom_top'
+      if (zgrid == 'zz') zdim_name = 'lev'
+      if (zgrid == 'zt') zdim_name = 'lev'
+!      if (ygrid == 'yz') ydim_name = 'south_north'
+!      if (ygrid == 'yt') ydim_name = 'south_north'
+      if (ygrid == 'yz') ydim_name = 'lat'
+      if (ygrid == 'yt') ydim_name = 'lat'
+!      if (xgrid == 'xz') xdim_name = 'west_east'
+!      if (xgrid == 'xt') xdim_name = 'west_east'
+      if (xgrid == 'xz') xdim_name = 'lon'
+      if (xgrid == 'xt') xdim_name = 'lon'
 
-      nc_err = nfmpi_inq_dimid(ncid, 'Time', time_dim)
+      nc_err = nfmpi_inq_dimid(ncid, 'time', time_dim)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       nc_err = nfmpi_inq_dimid(ncid, zdim_name, zc_dim)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
@@ -1952,12 +2257,16 @@ CONTAINS
 !------------------------------------------------------------------------------
 
 ! Inquire dimension IDs
-      if (ygrid == 'yz') ydim_name = 'south_north'
-      if (ygrid == 'yt') ydim_name = 'south_north'
-      if (xgrid == 'xz') xdim_name = 'west_east'
-      if (xgrid == 'xt') xdim_name = 'west_east'
+!      if (ygrid == 'yz') ydim_name = 'south_north'
+!      if (ygrid == 'yt') ydim_name = 'south_north'
+      if (ygrid == 'yz') ydim_name = 'lat'
+      if (ygrid == 'yt') ydim_name = 'lat'
+!      if (xgrid == 'xz') xdim_name = 'west_east'
+!      if (xgrid == 'xt') xdim_name = 'west_east'
+      if (xgrid == 'xz') xdim_name = 'lon'
+      if (xgrid == 'xt') xdim_name = 'lon'
 
-      nc_err = nfmpi_inq_dimid(ncid, 'Time', time_dim)
+      nc_err = nfmpi_inq_dimid(ncid, 'time', time_dim)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       nc_err = nfmpi_inq_dimid(ncid, ydim_name, yc_dim)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
@@ -2050,7 +2359,7 @@ CONTAINS
       count4(4) = 1
 
 ! Inquire time id and store time
-      nc_err = nfmpi_inq_varid(ncid, 'Time',time_id)
+      nc_err = nfmpi_inq_varid(ncid, 'time',time_id)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       count1(1) = 1
@@ -2131,7 +2440,7 @@ CONTAINS
       count3(3) = 1
 
 ! Inquire time id and store time
-      nc_err = nfmpi_inq_varid(ncid, 'Time',time_id)
+      nc_err = nfmpi_inq_varid(ncid, 'time',time_id)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
       count1(1) = 1

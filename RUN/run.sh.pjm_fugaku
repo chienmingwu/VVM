@@ -1,0 +1,29 @@
+#! /bin/bash -x
+#PJM -g hp200271
+#PJM -L rscgrp="small"
+#PJM -L node=np_nodes
+#PJM -L elapse=walltime
+#PJM --mpi "max-proc-per-node=48"
+#PJM --mpi proc=np_threads
+#PJM -N expname 
+#PJM --no-stging
+#PJM -j
+#PJM -s
+
+export PARALLEL=1
+export OMP_NUM_THREADS=${PARALLEL}
+export FORT90L=-Wl,-T
+export PLE_MPI_STD_EMPTYFILE=off
+export OMP_WAIT_POLICY=active
+export FLIB_BARRIER=HARD
+
+source ~/.bashrc
+
+export LD_LIBRARY_PATH=${spack_opt}${opt_hdf5}/lib:${spack_opt}${opt_netcdf}/lib:${spack_opt}${opt_netcdff}/lib:${spack_opt}${opt_pnetcdf}/lib:${HOME}/.local/lib:$LD_LIBRARY_PATH
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+mpiexec -n total_cores ./vvm 
+date >> runtime
+
+

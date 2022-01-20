@@ -63,25 +63,30 @@ CONTAINS
 
       integer nu1, nt1, nq1, k1, k2, it
       logical lf
-      DATA NU1/6/,NT1/20/,NQ1/20/
+      DATA NU1/6/,NT1/29/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(21),T1(21),QV1(21),QC1(21)
+      REAL (KIND=dbl_kind) :: ZT1(29),PI1(29),TV1(29),PILOG1(29)
+      REAL (KIND=dbl_kind) :: PQ1(20),P1(29),T1(29),QV1(29),QC1(29)
       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
               ,111.3,92.6/
-      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
-             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
-             ,133.6,111.3,92.6/
-      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
-             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
-             ,-726.4,-755.8,-749.0/
-      DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
-              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
-      DATA QC1/21*0./
+      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0,775.0 &
+             ,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0,350.0 &
+             ,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0,70.0 &
+             ,50./
+      DATA T1/301.246,299.169,297.515,296.35,295.014,293.752,292.521,291.309,290.106 &
+             ,288.867,287.545,284.466,280.821,276.82,272.996,268.835,263.996,258.415 &
+             ,251.848,243.709,233.844,228.075,221.699,214.639,206.84,198.676,191.745 &
+             ,194.587,206.771/
+      DATA QV1/0.0179026,0.0174521,0.0164586,0.0150866,0.013841,0.0124337,0.0110566 &
+              ,0.00974031,0.00858361,0.00759569,0.00676534,0.00555704,0.00457475,0.00363432 &
+              ,0.00280347,0.00208696,0.00147428,0.000984061,0.000624419,0.000359956,0.000167552 &
+              ,0.000100977,5.50747e-05,2.7595e-05,1.2715e-05,5.39508e-06,2.6389e-06,2.24212e-06 &
+              ,2.29645e-06/
+      DATA QC1/29*0./
 
       REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
       DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
@@ -113,6 +118,42 @@ CONTAINS
 
       SST = 305.
       
+!!     initialization for rcemip
+!      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
+!      OPEN(939,FILE=trim(filename))
+!      READ(939,*)
+!      DO k=1,nk2
+!        READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1)
+!        111 FORMAT(32X,3F16.4)
+!      ENDDO
+!      CLOSE(939)
+!
+!      PBAR(1)=PBAR(2)
+!      THBAR(1)=THBAR(2)
+!      QVBAR(1)=QVBAR(2)
+!
+!      PBAR(nk3)=PBAR(nk2)+(PBAR(nk2)-PBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
+!      THBAR(nk3)=THBAR(nk2)+(THBAR(nk2)-THBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
+!      QVBAR(nk3)=QVBAR(nk2)+(QVBAR(nk2)-QVBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
+!
+!      QVBAR=QVBAR*0.001
+!      PBAR=PBAR*100.
+!
+!      PIBAR=(PBAR/100000.)**(2./7.)
+!      RHO=PBAR/(rgas*THBAR*PIBAR)
+!      DO k=1,nk2
+!        RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
+!      ENDDO
+!      RHOZ(nk3)=RHOZ(nk2)+(RHOZ(nk2)-RHOZ(nk1))/(ZZ(nk2)-ZZ(nk1))*(ZZ(nk3)-ZZ(nk2))
+!
+!      IF (my_task == 0) THEN
+!      WRITE(*,*) "initial profiles"
+!      DO k=1,nk3
+!        WRITE(*,256) pbar(k)/100.,pibar(k),thbar(k),qvbar(k)*1000.,rho(k),rhoz(k)
+!        256 FORMAT(6F15.5)
+!      ENDDO
+!      ENDIF
+
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
@@ -121,8 +162,8 @@ CONTAINS
       PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) * 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-04
+      T1(K) =  T1(K) !* 1.E-01 + 273.16
+      QV1(K)= QV1(K) !* 1.E-04
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -132,7 +173,7 @@ CONTAINS
 
 !     *** MIXED LAYER PROFILE ***
 
-      T1(3) = PI1(3) * T1(2) / PI1(2)
+!      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
@@ -391,14 +432,14 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      !IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2&
-      !        !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
-      !        +((ZT(K)-3200.)/2000.)**2)<=1)THEN
-      !  TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
-      !                sqrt(((real(mi1*ni_sbdm+I)-mi_glob/2)*DX/4000.)**2+ &
-      !         !            ((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
-      !                     ((ZT(K)-3200.)/2000.)**2)))**2
-      !ENDIF
+      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2&
+              !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
+              +((ZT(K)-6000.)/2000.)**2)<=1)THEN
+        TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
+                      sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2+ &
+                           !((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
+                           ((ZT(K)-6000.)/2000.)**2)))**2
+      ENDIF
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -412,6 +453,12 @@ CONTAINS
 #else
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.
+#endif
+#if defined (HEATING)
+      L_dep(I,J,K) = 0.
+      L_con(I,J,K) = 0.
+      L_fre(I,J,K) = 0.
+      L_met(I,J,K) = 0.
 #endif
   500 CONTINUE
 
@@ -494,11 +541,13 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
-               uras_landsea_1800.L.Thermodynamic-000192.nc"
+      thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
+              &tcvvm_qobs_large_uras.L.Thermodynamic-000030.nc"
 
-      dynamic_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
-               uras_landsea_1800.L.Dynamic-000192.nc" 
+      dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
+              &tcvvm_qobs_large_uras.L.Dynamic-000030.nc" 
+
+      write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
       CALL restart(trim(thermodynamic_file),.true.,.true.,trim(dynamic_file))
 

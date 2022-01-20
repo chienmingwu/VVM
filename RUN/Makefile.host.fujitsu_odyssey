@@ -49,39 +49,36 @@ OS := $(shell uname)
 # Linux Cluster, optimized for saddleback
 #-----------------------------------------------------------------------------
 
-spack_opt=/vol0004/apps/oss/spack/opt/spack/linux-rhel8-a64fx/fj-4.3.1/
+fj_opt=/work/opt/local/aarch64/apps/fj/1.2.31/
 
-opt_hdf5=hdf5-1.10.7-tezymjnw4jp5c5hxssbppdmoodlkobjr
-opt_netcdf=netcdf-c-4.7.4-b64cq4cc3leo23drfdmeyjsifn7dvguq
-opt_netcdff=netcdf-fortran-4.5.3-cliy7c2aoetmqmbfgin44jq53prrqs5z
-opt_pnetcdf=parallel-netcdf-1.12.1-rcnzuiw5br5gmxolsknsswiqidqhejmt
+opt_hdf5=hdf5/1.12.0
+opt_netcdf=netcdf/4.7.4
+opt_netcdff=netcdf-fortran/4.5.3
+opt_pnetcdf=fjmpi/1.2.31/pnetcdf/1.12.1
+opt_petsc=/work/01/gi55/i55076/.local
 
-include_hdf5=-I${spack_opt}${opt_hdf5}/include
-include_netcdf=-I${spack_opt}${opt_netcdf}/include
-include_netcdff=-I${spack_opt}${opt_netcdff}/include
-include_pnetcdf=-I${spack_opt}${opt_pnetcdf}/include
+include_hdf5=-I${fj_opt}${opt_hdf5}/include
+include_netcdf=-I${fj_opt}${opt_netcdf}/include
+include_netcdff=-I${fj_opt}${opt_netcdff}/include
+include_pnetcdf=-I${fj_opt}${opt_pnetcdf}/include
+include_petsc=-I${opt_petsc}/include
 
-link_hdf5=-L${spack_opt}${opt_hdf5}/lib -lhdf5 -lhdf5_hl
-link_netcdf=-L${spack_opt}${opt_netcdf}/lib -lnetcdf
-link_netcdff=-L${spack_opt}${opt_netcdff}/lib -lnetcdff
-link_pnetcdf=-L${spack_opt}${opt_pnetcdf}/lib -lpnetcdf
+link_hdf5=-L${fj_opt}${opt_hdf5}/lib -lhdf5 -lhdf5_hl -lhdf5_fortran -lhdf5hl_fortran
+link_netcdf=-L${fj_opt}${opt_netcdf}/lib -lnetcdf
+link_netcdff=-L${fj_opt}${opt_netcdff}/lib -lnetcdff
+link_pnetcdf=-L${fj_opt}${opt_pnetcdf}/lib -lpnetcdf
+link_petsc=-L${opt_petsc}/lib -lpetsc 
 
 CPP 	 = /usr/bin/cpp
-#CPPFLAGS = -P -traditional -I$(BINDIR) -I/opt/petsc360/include  
-CPPFLAGS = -P -traditional -I$(BINDIR) -I${HOME}/.local/include $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
-#CPPFLAGS = -P -traditional -I$(BINDIR) -I/opt/petsc-intel/include 
+CPPFLAGS = -P -traditional -I$(EXPDIR) $(include_petsc) $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
 
 SUF      = f
 
-#INC = -I/opt/netcdf4-intel/include -I$(CDECKS) -I/opt/hdf5-intel/include -I/opt/pnetcdf-intel/include -I/opt/petsc-intel/include
-
-INC = -I${HOME}/.local/include -I$(CDECKS) $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
-
+INC = -I$(CDECKS) -I$(EXPDIR) $(include_petsc) $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
 
 FC = mpifrtpx -Kfast -fw 
-#FC = ${FLINKER} -shared-intel -mcmodel=large
 
-LDLIBS = -L${HOME}/.local/lib -lpetsc $(link_netcdff) $(link_netcdf) $(link_pnetcdf) $(link_hdf5) -SSL2 -L/opt/FJSVxtclanga/tcsds-1.2.30a/lib64 -lfjprofmpi -lmpi_cxx -lfjc++ -lfjc++abi -lfjcrt -lfjdemgl 
+LDLIBS = $(link_petsc) $(link_netcdff) $(link_netcdf) $(link_pnetcdf) $(link_hdf5) -SSL2 -L/opt/FJSVxtclanga/tcsds-1.2.30a/lib64 -lfjprofmpi -lmpi_cxx -lfjc++ -lfjc++abi -lfjcrt -lfjdemgl 
 
 FFLAGS    = $(INC)
 FIXED     = -Fixed 

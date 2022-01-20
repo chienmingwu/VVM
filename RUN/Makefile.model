@@ -280,7 +280,7 @@ shr_kind_mod.o: shr_kind_mod.f90
 
 shr_orb_mod.o: shr_kind_mod.o
 
-cam_rad_parameterizations.o: shr_orb_mod.o
+cam_rad_parameterizations.o: shr_orb_mod.o PARMSLD.o
 
 cldefrint.o: rrtm_grid.o cam_rad_parameterizations.o
 
@@ -514,11 +514,11 @@ domain_decomposition.o: kinds.o PARMSLD.o
 
 ldrcalc.o: kinds.o workcom.o
 
-ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o output_nc.o ldoutput.o CLDINFO.o land_module.o
+ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o output_nc.o ldoutput.o CLDINFO.o land_module.o turb_3d_module.o
 
 output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
 
-new_ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o new_output_nc.o ldoutput.o CLDINFO.o land_module.o
+new_ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o new_output_nc.o ldoutput.o CLDINFO.o land_module.o turb_3d_module.o
 
 new_output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
 
@@ -551,7 +551,7 @@ utils.o: kinds.o domain_decomposition.o PARMSLD.o
 
 timer.o: kinds.o
 
-uvtop.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o elliptic.o
+uvtop.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o elliptic.o domain_decomposition.o
 
 vort_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o bound.o workcom.o damping.o
 

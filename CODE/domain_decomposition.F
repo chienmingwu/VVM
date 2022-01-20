@@ -80,7 +80,7 @@ MODULE domain_decomposition
    STOP
    ENDIF
 
-   IF (MOD(MI_GLOB,MI1) .NE. 0 .OR. MOD(MJ_GLOB,MJ1)) THEN
+   IF (MOD(MI_GLOB,MI1) .NE. 0 .OR. MOD(MJ_GLOB,MJ1) .NE. 0) THEN
    IF (MY_TASK .EQ. 0) THEN
    PRINT*, 'bad cores and grid for horizontal dimension.'
    PRINT*, 'Please check the vvm.setup'

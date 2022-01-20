@@ -8,8 +8,8 @@ set echo  # echoes the commands
 set expname = mount2d_full_flux0
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'intel_mogamd'
+set jobsys = 'slurm_mogamd'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -86,6 +86,8 @@ sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/35/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
@@ -105,7 +107,7 @@ cat INPUT
 cd ${expdir}'/compile_code'
 make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
 
-# make for topography
+## make for topography
 make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
 cd ${expdir}
 ./nc2fortranBinary > topo.log

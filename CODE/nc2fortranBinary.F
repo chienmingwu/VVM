@@ -14,7 +14,7 @@
       parameter (NX = 1024, NY = 1024)
       REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
-      REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB)
+      REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB), ZT1(NK3)
       LOGICAL TWTOPO 
       parameter(TWTOPO = .FALSE.)
 
@@ -27,11 +27,12 @@
 
       integer ncid, nvarid
       integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope, 
-     1        nsoil, nlon, nlat
+     1        nsoil, nlon, nlat, nlev, nmask
       integer i,j,k,ierr
 
       integer NLID(2)
-      integer idx,idy,nvaridx,nvaridy
+      integer NLID_3d(3)
+      integer idx,idy,idz,nvaridx,nvaridy
 
       REAL*8 DT,DX,DYNEW,DZ,DZ1,ALADV,ZB,TOP,TMP,WRXMU,UVTAU
       LOGICAL NOTURB,NOSFX,BUOY
@@ -46,9 +47,10 @@
      1  slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
-      REAL*8 ZZ(NK3)      
+      REAL*8 ZZ(NK3), ZT(NK3)   
 
-      REAL (KIND=int_kind) HX(MI_GLOB,MJ_GLOB)
+      REAL (KIND=int_kind) HX(MI_GLOB,MJ_GLOB), height(MI_GLOB,MJ_GLOB),
+     1                     mask(MI_GLOB,MJ_GLOB,NK2)
  
       R = 6378137.0
       ZB = 0. 
@@ -67,12 +69,16 @@
 
       DZTMP = MIN(DZ,DZ1)
       Zz(1) = ZB
+      ZT(1) = Zz(1)
+      ZT(2) = Zz(1) + DZ / 2.
       DO 50 K = 2, NK3
       Zz(K) = Zz(K-1) + DZ
+      IF (K>2) ZT(K) = ZT(K-1) + DZ
    50 CONTINUE
 
       DO 51 K = 1, NK3
       ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
+      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
    51 CONTINUE
 
 ! import INPUT FILE 
@@ -340,13 +346,17 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       IF (JI<1) JI=JI+MJ_GLOB
       IF (JE>MJ_GLOB) JE=JE-MJ_GLOB
       DO 800 I = 1,MI_GLOB
-      II = I-1
-      IE = I+1
-      IF (II<1) II=II+MI_GLOB
-      IF (IE>MI_GLOB) IE=IE-MI_GLOB
-      IF (HX(IE,J) .GT. HX(I,J) .AND. HX(II,J) .GT. HX(I,J) .AND.
-     1 HX(I,JE) .GT. HX(I,J) .AND. HX(I,JI) .GT. HX(I,J)) THEN
-      HX(I,J) =MIN(HX(IE,J),HX(II,J),HX(I,JE),HX(I,JI))
+      IP=I+1
+      JP=J+1
+      IE=I-1
+      JE=J-1
+      IF (IP>MI_GLOB) IP=IP-MI_GLOB
+      IF (JP>MJ_GLOB) JP=JP-MJ_GLOB
+      IF (IE<1) IE=IE+MI_GLOB 
+      IF (JE<1) JE=JE+MJ_GLOB 
+      IF (HX(IP,J) .GT. HX(I,J) .AND. HX(IE,J) .GT. HX(I,J) .AND.
+     1 HX(I,JP) .GT. HX(I,J) .AND. HX(I,JE) .GT. HX(I,J)) THEN
+      HX(I,J) =MIN(HX(IP,J),HX(IE,J),HX(I,JP),HX(I,JE))
       NP = NP +1
       ENDIF
   800 CONTINUE
@@ -384,21 +394,42 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_def_dim(ncid, "y", MJ_GLOB, idy)
-      ierr = nf_def_dim(ncid, "x", MI_GLOB, idx)
+      ierr = nf_def_dim(ncid, "lev", nk2, idz)
+      print*,'ERRor', nf_strerror(ierr)
+
+      nlid(1)=idz
+      nlid_3d(3)=idz
+
+      ierr = nf_def_var(ncid, "lev", NF_FLOAT, 1, nlid(1), nlev)
+      ierr = nf_put_att_text(ncid, nlev, 'axis',1, 'Z')
+      ierr = nf_put_att_text(ncid, nlev, 'long_name',8, 'altitude')
+      ierr = nf_put_att_text(ncid, nlev, 'standard_name',8, 'altitude')
+      ierr = nf_put_att_text(ncid, nlev, 'units',5, 'level')
+      ierr = nf_put_att_text(ncid, nlev, 'positive',2, 'up')
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_dim(ncid, "lat", MJ_GLOB, idy)
+      ierr = nf_def_dim(ncid, "lon", MI_GLOB, idx)
       print*,'ERRor', nf_strerror(ierr)
 
       nlid(2) = idy
       nlid(1) = idx
+      nlid_3d(2) = idy
+      nlid_3d(1) = idx
 
       ierr = nf_def_var(ncid, "lat", NF_FLOAT, 1, nlid(2), nlat)
-      ierr = nf_put_att_text(ncid, nlat, 'long_name',1 , 'y')
+      ierr = nf_put_att_text(ncid, nlat, 'axis',1, 'Y')
+      ierr = nf_put_att_text(ncid, nlat, 'long_name',8 , 'latitude')
       ierr = nf_put_att_text(ncid, nlat, 'units',13, 'degrees_north')
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_def_var(ncid, "lon", NF_FLOAT, 1, nlid(1), nlon)
-      ierr = nf_put_att_text(ncid, nlon, 'long_name',1, 'x')
+      ierr = nf_put_att_text(ncid, nlon, 'axis',1, 'X')
+      ierr = nf_put_att_text(ncid, nlon, 'long_name',9, 'longitude')
       ierr = nf_put_att_text(ncid, nlon, 'units',12, 'degrees_east')
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_def_var(ncid, "mask", NF_FLOAT, 3, nlid_3d, nmask)
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_def_var(ncid, "TOPO", NF_FLOAT, 2, nlid, ntopo)
@@ -431,14 +462,30 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_enddef(ncid)
       print*,'ERRor', nf_strerror(ierr)
 
+      yt=(yt-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
       ierr = nf_put_var_real(ncid, nlat, yt)
       print*,'ERRor', nf_strerror(ierr)
 
+      xt=(xt-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
       ierr = nf_put_var_real(ncid, nlon, xt)
       print*,'ERRor', nf_strerror(ierr)
 
+      zt1=zt/1000.
+      ierr = nf_put_var_real(ncid, nlev, zt1(1:nk2))
+      print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_put_var_real(ncid, ntopo, HX)
+      mask=1.
+      do j=1,mj_glob
+      do i=1,mi_glob
+        height(i,j)=zz(int(HX(i,j)))/1000.
+        mask(i,j,1:int(HX(i,j)))=0.
+      enddo
+      enddo
+!      ierr = nf_put_var_real(ncid, ntopo, HX)
+      ierr = nf_put_var_real(ncid, ntopo, height)
+      print*,'ERRor', nf_strerror(ierr)
+
+      ierr = nf_put_var_real(ncid, nmask, mask)
       print*,'ERRor', nf_strerror(ierr)
 
       ierr = nf_put_var_real(ncid, nalb, alb)

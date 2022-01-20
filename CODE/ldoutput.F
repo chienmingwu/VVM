@@ -580,7 +580,9 @@ CONTAINS
         c_8(40) = crad
         c_8(41) = scale
         c_8(42) = crad1
+#if !defined (BETA)
         c_8(54) = f
+#endif
         c_8(61) = dthmax
         c_8(62) = dtpert
         c_8(63) = z1pert

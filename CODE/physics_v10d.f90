@@ -79,6 +79,11 @@ REAL (KIND=dbl_kind) ::   &
        tendency_graupel(im,km),VTR_int(im,0:km),VTS_int(im,0:km),VTG_int(im,0:km),    & 
        Surface_rain(im), Surface_snow(im), Surface_graupel(im)
 
+#if defined (HEATING)
+REAL (KIND=dbl_kind) ::   &
+       lhdep(im,km),lhcon(im,km),lhfre(im,km),lhmet(im,km)
+#endif
+
 REAL (KIND=dbl_kind) :: tendency_sedimentation(im,km),VTSed_int(im,0:km)
 REAL (KIND=dbl_kind) :: latent_heating_rate(im,km)
 
@@ -1252,7 +1257,14 @@ IMPLICIT NONE
         tendency_rain    = 0.0              
         tendency_snow    = 0.0              
         tendency_graupel = 0.0 
-        
+
+#if defined (HEATING)
+        lhdep = 0.0_8
+        lhcon = 0.0_8
+        lhfre = 0.0_8
+        lhmet = 0.0_8
+#endif
+
         latent_heating_rate = 0.0_8
 
   do i=1,im
@@ -1280,6 +1292,14 @@ IMPLICIT NONE
         tendency_microphysics_QG(I,K)    = TSS(5)
         tendency_microphysics_QR(I,K)    = TSS(6)
         tendency_microphysics_theta(I,K) = TSS(7) / pil0(K)
+
+#if defined (HEATING)
+        lhdep(i,k) = - (PSS(21)+PSS(22))*CPLS
+        lhcon(i,k) = - PSS(9)*CPLC
+        lhfre(i,k) = (PSS(25)+PSS(4)+PSS(6)+PSS(11)+PSS(12)+PSS(13)+PSS(23)&
+                      -(PSS(3)+PSS(5)+PSS(7)+PSS(8)) )*CPLF
+        lhmet(i,k) = -(PSS(7)+PSS(8))*CPLF
+#endif
 
         VTS(K) = VTERMS
         VTG(K) = VTERMG
