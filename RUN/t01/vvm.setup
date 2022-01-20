@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = mount2d_full
+set expname = mount2d_full_flux0
 
 # set job system and compiler
 set compiler = 'intel_jet'
@@ -81,15 +81,15 @@ cat definesld.com
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
 sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/16/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/16/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_dimension/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/35/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=10800. /
+ &INPUT1 NEWRUN=T, ITTADD=7200. /
  &INPUT2 RLAT=0, RLON=0 /
  &INPUT3 DX=200.,DYNEW=200.,DZ=200.,DZ1=200.,DT=1.,NOTURB=T,NOSFX=T,NSFLUX=6,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)

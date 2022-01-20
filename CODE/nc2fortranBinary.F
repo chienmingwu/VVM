@@ -230,13 +230,14 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ! setup Chien and Wu 2016
       TMP=abs(real(i)-real(mi_glob)/2.)*DX
-      if (TMP<=5000.) then
-      TMP = 1200. 
-      elseif (TMP>5000. .and. TMP<=20000.) then
+      if (TMP<=15000.) then
+      !TMP = 1200. 
+      !elseif (TMP>5000. .and. TMP<=20000.) then
 !      if (TMP<=10000.) then
-      TMP = -0.08*(TMP-20000.)
+      !TMP = -0.08*(TMP-15000.)
+      TMP = 600.-0.006*(TMP-15000.)
       else 
-      TMP = 0.
+      TMP = 400.
       endif
       TOP=1
       DO 502 k=1,NK2
