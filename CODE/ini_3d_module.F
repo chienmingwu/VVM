@@ -101,100 +101,137 @@ CONTAINS
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
 ! synoptic winter condition (inversion at 2700m)
-!      DATA NU1/6/,NT1/19/,NQ1/19/
-!      REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
-!                             es1, alphaw, pbarmb
-!      REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-!          ,QCBAR(NK3),QVSBAR(NK3)
-!      REAL (KIND=dbl_kind) :: ZT1(19),PI1(19),TV1(19),PILOG1(19)
-!      REAL (KIND=dbl_kind) :: PQ1(19),P1(19),T1(19),QV1(19),QC1(19)
-!      REAL (KIND=dbl_kind) ::  PU1(19),WIND(19),DEG(19),U1(19),V1(19)
-!      DATA P1/1029.0,1000.0,925.0,850.0,700.0,500.0,400.0,300.0,250.0 &
-!             ,213.0,200.0,150.0,100.0,81.3,70.0,50.0,30.0,20.0,10.0/
-!      DATA T1/14.8,12.8,7.2,1.8,4.4,-8.7,-19.3,-33.9,-41.9,-49.5,-52.5 &
-!             ,-65.1,-73.9,-78.9,-75.1,-67.1,-57.3,-54.9,-41.5/
-!      DATA QV1/6.06,5.42,4.98,4.86,0.57,0.20,0.39,0.04,0.02,0.02,0.01 &
-!              ,8*0./
-!      DATA QC1/19*0./
-!
-!      REAL (KIND=dbl_kind) ::  Q1OBS(19),Q2OBS(19)
-!      DATA WIND/8.,19.,31.,31.,15*12./
-!      DATA DEG/80.,70.,70.,110.,15*275./
-!      !DATA DEG/50.,40.,40.,110.,15*275./
-!      !DATA DEG/20.,10.,10.,110.,15*275./
-!
-!      PU1=P1
-!      PQ1=P1
-!      T1=T1+273.
-!      QV1=QV1*1E-3
-!      U1 = WIND*cos((270-DEG)*PI/180._dbl_kind)/1.944
-!      V1 = WIND*sin((270-DEG)*PI/180._dbl_kind)/1.944
-!      Q1OBS=0.
-!      Q2OBS=0.
-
-! Stratocumulus case
-      DATA NU1/10000/,NT1/10000/,NQ1/10000/
+      DATA NU1/6/,NT1/19/,NQ1/19/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(10000),PI1(10000),TV1(10000),PILOG1(10000)
-      REAL (KIND=dbl_kind) :: PQ1(10000),P1(10000),T1(10000),QV1(10000),QC1(10000)
-      REAL (KIND=dbl_kind) :: Q1OBS(10000),Q2OBS(10000),wls1(10000),WIND(10000),DEG(10000)
-      REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),V1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
-      REAL (KIND=dbl_kind) :: thetal(nk3),qt(nk3),ql(nk3),xx,x1,qvs,tl,iterate
+      REAL (KIND=dbl_kind) :: ZT1(19),PI1(19),TV1(19),PILOG1(19)
+      REAL (KIND=dbl_kind) :: PQ1(19),P1(19),T1(19),QV1(19),QC1(19)
+      REAL (KIND=dbl_kind) ::  PU1(19),WIND(19),DEG(19),U1(19),V1(19)
+      DATA P1/1029.0,1000.0,925.0,850.0,700.0,500.0,400.0,300.0,250.0 &
+             ,213.0,200.0,150.0,100.0,81.3,70.0,50.0,30.0,20.0,10.0/
+      DATA T1/14.8,12.8,7.2,1.8,4.4,-8.7,-19.3,-33.9,-41.9,-49.5,-52.5 &
+             ,-65.1,-73.9,-78.9,-75.1,-67.1,-57.3,-54.9,-41.5/
+!      DATA QV1/6.06,5.42,4.98,4.86,0.57,0.20,0.39,0.04,0.02,0.02,0.01 &
+!              ,8*0./
 
-       DELZ=1.
-       sfcp=970.
-       DO K=1,NT1
-       HEIGHT(K)=(K-1)*DELZ
-       ENDDO
+      ! qv + 10%
+      DATA QV1/7.08,6.34,5.66,5.10,1.31,0.59,0.59,0.11,0.05,0.03,0.02 &
+              ,8*0./
 
-!************************************
-!* ishigawa  (2018.12.19 00z) case    *
-!************************************
+      ! qv + 20%
+!      DATA QV1/8.10,7.26,6.35,5.10,2.06,0.99,0.80,0.18,0.09,0.05,0.03 &
+!              ,8*0./
 
-        t1=0.
-        qv1=0.
-        qc1=0.
-        wls1=0.
-        t1=300.
+      ! qv + 30%
+!      DATA QV1/9.12,8.19,6.85,5.10,2.80,1.38,1.01,0.25,0.13,0.07,0.05 &
+!              ,8*0./
 
-        do k=1,NT1
-        qv1(k)=qv1(k)/1000.
-        enddo
+      ! global warming +1K
+!      DATA T1/15.8,13.8,8.2,2.8,5.4,-7.7,-18.3,-32.9,-40.9,-48.5,-51.5 &
+!             ,-64.1,-72.9,-77.9,-74.1,-66.1,-56.3,-53.9,-40.5/
+!      DATA QV1/6.46,5.78,5.33,5.21,0.61,0.21,0.42,0.04,0.02,0.02,0.01 &
+!              ,8*0./
 
-        do k=1,nt1
-        thv(k)=t1(k)*(1+0.608*qv1(k))
-        enddo
+      ! global warming +3K
+!      DATA T1/17.8,15.8,10.2,4.8,7.4,-5.7,-16.3,-30.9,-38.9,-46.5,-49.5 &
+!             ,-62.1,-70.9,-75.9,-72.1,-64.1,-54.3,-51.9,-38.5/
+!      DATA QV1/7.34,6.58,6.10,6.01,0.70,0.25,0.50,0.05,0.02,0.02,0.01 &
+!              ,8*0./
 
-       PI1(1)=(sfcp/1000.)**(rgas/CP)
-       DO K=2,NT1
-       THVAVG=0.5*(THV(K)+THV(K-1))
-       PI1(K)=PI1(K-1)-GRAV*DELZ/(CP*THVAVG)
-       ENDDO
+      ! global warming +5K
+!      DATA T1/19.8,17.8,12.2,6.8,9.4,-3.7,-14.3,-28.9,-36.9,-44.5,-47.5 &
+!             ,-60.1,-68.9,-73.9,-70.1,-62.1,-52.3,-49.9,-36.5/
+!      DATA QV1/8.33,7.48,6.97,6.90,0.80,0.29,0.59,0.06,0.03,0.03,0.01 &
+!              ,8*0./
 
-       DO K=1,nt1
-       p1(k)=exp(cp/rgas*log(pi1(K))+log(1000.))
-       PU1(K)=P1(K)
-       PQ1(K)=P1(K)
-       ENDDO
+      ! global warming +8K
+!      DATA T1/22.8,20.8,15.2,9.8,12.4,-0.7,-11.3,-25.9,-33.9,-41.5,-44.5 &
+!             ,-57.1,-65.9,-70.9,-67.1,-59.1,-49.3,-46.9,-33.5/
+!      DATA QV1/10.03,9.04,8.49,8.47,0.98,0.36,0.75,0.08,0.04,0.04,0.02 &
+!              ,8*0./
 
-       do k=1,nt1
-       t1(k)=t1(k)*pi1(k)
-       enddo
+      DATA QC1/19*0./
 
-!     DATA WIND/1500*10.,8500*2./
-!      DATA DEG /1500*110.,8500*285./
+      REAL (KIND=dbl_kind) ::  Q1OBS(19),Q2OBS(19)
+      DATA WIND/8.,19.,31.,31.,15*12./
+      DATA DEG/80.,70.,70.,110.,15*275./
+      !DATA DEG/50.,40.,40.,110.,15*275./
+      !DATA DEG/20.,10.,10.,110.,15*275./
 
       PU1=P1
       PQ1=P1
-!      U1 = WIND*cos((270-DEG)*PI/180._dbl_kind)/1.944
-!      V1 = WIND*sin((270-DEG)*PI/180._dbl_kind)/1.944
+      T1=T1+273.
+      QV1=QV1*1E-3
+      U1 = WIND*cos((270-DEG)*PI/180._dbl_kind)/1.944
+      V1 = WIND*sin((270-DEG)*PI/180._dbl_kind)/1.944
       Q1OBS=0.
       Q2OBS=0.
-      u1=0.
-      v1=0.
+
+! Stratocumulus case
+!      DATA NU1/10000/,NT1/10000/,NQ1/10000/
+!      REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
+!                             es1, alphaw, pbarmb
+!      REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
+!          ,QCBAR(NK3),QVSBAR(NK3)
+!      REAL (KIND=dbl_kind) :: ZT1(10000),PI1(10000),TV1(10000),PILOG1(10000)
+!      REAL (KIND=dbl_kind) :: PQ1(10000),P1(10000),T1(10000),QV1(10000),QC1(10000)
+!      REAL (KIND=dbl_kind) :: Q1OBS(10000),Q2OBS(10000),wls1(10000),WIND(10000),DEG(10000)
+!      REAL (KIND=dbl_kind) :: PU1(10000),U1(10000),V1(10000),HEIGHT(10000),sfcp,DELZ,THVAVG,THV(10000)
+!      REAL (KIND=dbl_kind) :: thetal(nk3),qt(nk3),ql(nk3),xx,x1,qvs,tl,iterate
+!
+!       DELZ=1.
+!       sfcp=970.
+!       DO K=1,NT1
+!       HEIGHT(K)=(K-1)*DELZ
+!       ENDDO
+!
+!!************************************
+!!* ishigawa  (2018.12.19 00z) case    *
+!!************************************
+!
+!        t1=0.
+!        qv1=0.
+!        qc1=0.
+!        wls1=0.
+!        t1=300.
+!
+!        do k=1,NT1
+!        qv1(k)=qv1(k)/1000.
+!        enddo
+!
+!        do k=1,nt1
+!        thv(k)=t1(k)*(1+0.608*qv1(k))
+!        enddo
+!
+!       PI1(1)=(sfcp/1000.)**(rgas/CP)
+!       DO K=2,NT1
+!       THVAVG=0.5*(THV(K)+THV(K-1))
+!       PI1(K)=PI1(K-1)-GRAV*DELZ/(CP*THVAVG)
+!       ENDDO
+!
+!       DO K=1,nt1
+!       p1(k)=exp(cp/rgas*log(pi1(K))+log(1000.))
+!       PU1(K)=P1(K)
+!       PQ1(K)=P1(K)
+!       ENDDO
+!
+!       do k=1,nt1
+!       t1(k)=t1(k)*pi1(k)
+!       enddo
+!
+!!     DATA WIND/1500*10.,8500*2./
+!!      DATA DEG /1500*110.,8500*285./
+!
+!      PU1=P1
+!      PQ1=P1
+!!      U1 = WIND*cos((270-DEG)*PI/180._dbl_kind)/1.944
+!!      V1 = WIND*sin((270-DEG)*PI/180._dbl_kind)/1.944
+!      Q1OBS=0.
+!      Q2OBS=0.
+!      u1=0.
+!      v1=0.
 
 
       casename= 'GATE_PHASE_III'
@@ -209,7 +246,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 288.5
+      SST = T1(1)
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
@@ -235,17 +272,17 @@ CONTAINS
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
 
-!      DO 120 K = 1, NT1
-!      T8  = T1(K)
-!      P8  = P1(K)
-!      QV8 = QV1(K)
-!      QC8 = 0.D0
-!      QI8 = 0.D0
-!      if (my_task .eq. 0) print*, T8,P8,QV8,K
-!      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-!      QV1(K) = QV8
-!      QC1(K) = 0.
-!  120 CONTINUE
+      DO 120 K = 1, NT1
+      T8  = T1(K)
+      P8  = P1(K)
+      QV8 = QV1(K)
+      QC8 = 0.D0
+      QI8 = 0.D0
+      if (my_task .eq. 0) print*, T8,P8,QV8,K
+      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+      QV1(K) = QV8
+      QC1(K) = 0.
+  120 CONTINUE
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
 !     UNITS ARE T : DEG K, QV : G/G.
@@ -418,60 +455,60 @@ CONTAINS
       VG(NK3) = VG(NK2)
 
 !ccwu applying new profiles here
-      do k=1,nk3
-      
-      !theta
-      if(zt(k) .le. 50.) then
-      thetal(k)=299.00+(301.50-299.00)*zt(k)/50.
-      elseif(zt(k) .gt. 50. .and. zt(k) .le. 350.) then
-      thetal(k)=301.50+(302.50-301.50)*(zt(k)-50.)/300.
-      elseif(zt(k) .gt. 350. .and. zt(k) .le. 650.) then
-      thetal(k)=302.50+(303.53-302.50)*(zt(k)-350.)/300.
-      elseif(zt(k) .gt. 650. .and. zt(k) .le. 700.) then
-      thetal(k)=303.53+(303.70-303.53)*(zt(k)-650.)/50.
-      elseif(zt(k) .gt. 700. .and. zt(k) .le. 1300.) then
-      thetal(k)=303.70+(307.13-303.70)*(zt(k)-700.)/600.
-      elseif(zt(k) .gt. 1300. .and. zt(k) .le. 2500.) then
-      thetal(k)=307.13+(314.00-307.13)*(zt(k)-1300.)/1200.
-      elseif(zt(k) .gt. 2500.) then
-      thetal(k)=314.00+(343.20-314.00)*(zt(k)-2500.)/3000.
-      endif
-
-      ! qt
-      if(zt(k) .le. 50.) then
-      qt(k)=15.20+(15.17-15.20)*zt(k)/50.
-      elseif(zt(k) .gt. 50. .and. zt(k) .le. 350.) then
-      qt(k)=15.17+(14.98-15.17)*(zt(k)-50.)/300.
-      elseif(zt(k) .gt. 350. .and. zt(k) .le. 650.) then
-      qt(k)=14.98+(14.80-14.98)*(zt(k)-350.)/300.
-      elseif(zt(k) .gt. 650. .and. zt(k) .le. 700.) then
-      qt(k)=14.80+(14.70-14.80)*(zt(k)-650.)/50.
-      elseif(zt(k) .gt. 700. .and. zt(k) .le. 1300.) then
-      qt(k)=14.70+(13.50-14.70)*(zt(k)-700.)/600.
-      elseif(zt(k) .gt. 1300. .and. zt(k) .le. 2500.) then
-      qt(k)=13.50+(3.00-13.50)*(zt(k)-1300.)/1200.
-      elseif(zt(k) .gt. 2500.) then
-      qt(k)=3.00
-      endif
-      ! qt (g/kg => kg/kg)
-      qt(k)= qt(k)*0.001
-       
-      if(qt(k) .le.0) then
-      qt(k)=0.
-      endif
-
-      enddo
-
-      do k=1,NK3
-      tl=thetal(k)*(pbar(k)/pzero)**(rgas/cp)
-      xx=tl
-      es1=es(xx)
-      qvs=es1*0.622/(pbar(k)-es1)
-      ql(k)=max(qt(k)-qvs,0.)
-      thbar(k)=thetal(k)
-      qvbar(k)=qt(k)-ql(k)
-      qcbar(k)=ql(k)
-      enddo
+!      do k=1,nk3
+!      
+!      !theta
+!      if(zt(k) .le. 50.) then
+!      thetal(k)=299.00+(301.50-299.00)*zt(k)/50.
+!      elseif(zt(k) .gt. 50. .and. zt(k) .le. 350.) then
+!      thetal(k)=301.50+(302.50-301.50)*(zt(k)-50.)/300.
+!      elseif(zt(k) .gt. 350. .and. zt(k) .le. 650.) then
+!      thetal(k)=302.50+(303.53-302.50)*(zt(k)-350.)/300.
+!      elseif(zt(k) .gt. 650. .and. zt(k) .le. 700.) then
+!      thetal(k)=303.53+(303.70-303.53)*(zt(k)-650.)/50.
+!      elseif(zt(k) .gt. 700. .and. zt(k) .le. 1300.) then
+!      thetal(k)=303.70+(307.13-303.70)*(zt(k)-700.)/600.
+!      elseif(zt(k) .gt. 1300. .and. zt(k) .le. 2500.) then
+!      thetal(k)=307.13+(314.00-307.13)*(zt(k)-1300.)/1200.
+!      elseif(zt(k) .gt. 2500.) then
+!      thetal(k)=314.00+(343.20-314.00)*(zt(k)-2500.)/3000.
+!      endif
+!
+!      ! qt
+!      if(zt(k) .le. 50.) then
+!      qt(k)=15.20+(15.17-15.20)*zt(k)/50.
+!      elseif(zt(k) .gt. 50. .and. zt(k) .le. 350.) then
+!      qt(k)=15.17+(14.98-15.17)*(zt(k)-50.)/300.
+!      elseif(zt(k) .gt. 350. .and. zt(k) .le. 650.) then
+!      qt(k)=14.98+(14.80-14.98)*(zt(k)-350.)/300.
+!      elseif(zt(k) .gt. 650. .and. zt(k) .le. 700.) then
+!      qt(k)=14.80+(14.70-14.80)*(zt(k)-650.)/50.
+!      elseif(zt(k) .gt. 700. .and. zt(k) .le. 1300.) then
+!      qt(k)=14.70+(13.50-14.70)*(zt(k)-700.)/600.
+!      elseif(zt(k) .gt. 1300. .and. zt(k) .le. 2500.) then
+!      qt(k)=13.50+(3.00-13.50)*(zt(k)-1300.)/1200.
+!      elseif(zt(k) .gt. 2500.) then
+!      qt(k)=3.00
+!      endif
+!      ! qt (g/kg => kg/kg)
+!      qt(k)= qt(k)*0.001
+!       
+!      if(qt(k) .le.0) then
+!      qt(k)=0.
+!      endif
+!
+!      enddo
+!
+!      do k=1,NK3
+!      tl=thetal(k)*(pbar(k)/pzero)**(rgas/cp)
+!      xx=tl
+!      es1=es(xx)
+!      qvs=es1*0.622/(pbar(k)-es1)
+!      ql(k)=max(qt(k)-qvs,0.)
+!      thbar(k)=thetal(k)
+!      qvbar(k)=qt(k)-ql(k)
+!      qcbar(k)=ql(k)
+!      enddo
 
 
 !     OCEAN POINTS
@@ -614,7 +651,7 @@ CONTAINS
       Z3DZ(I,J,K)=0.
 !      U3DX(I,J,K)=UG(K)
 !      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=10.
+      U3DX(I,J,K)=0.
       U3DY(I,J,K)=0.
   610 CONTINUE
 

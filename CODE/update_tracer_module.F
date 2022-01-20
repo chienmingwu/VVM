@@ -43,32 +43,39 @@ CONTAINS
       DO 888 K = 1,NK2
       DO 888 J = mjm,mjp
       DO 888 I = mim,mip
-!      ! chemical transport with mountain
-!        TC3D(I,J,K,1)=0.
-!        TC3D(I,J,K,2)=40.
-!        TC3D(I,J,K,3)=0.
-!        TC3D(I,J,K,4)=0.
-!        TC3D(I,J,K,5)=40.
-!        TC3D(I,J,K,6)=0.
-!        TC3D(I,J,K,7)=0.
+      ! chemical transport with mountain
+        TC3D(I,J,K,1)=0.
+        TC3D(I,J,K,2)=40.
+        TC3D(I,J,K,3)=0.
+        TC3D(I,J,K,4)=0.
+        TC3D(I,J,K,5)=40.
+        TC3D(I,J,K,6)=0.
+        TC3D(I,J,K,7)=0.
+        TC3D(I,J,K,8)=40.
+        TC3D(I,J,K,9)=0.
+        TC3D(I,J,K,10)=0.
+        TC3D(I,J,K,11)=40.
+        TC3D(I,J,K,12)=0.
+        TC3D(I,J,K,13)=0.
 
-      ! VFdA2005
-        if (zt(K) .lt. 350.) then
-          TC3D(I,J,K,1)=0.
-          TC3D(I,J,K,2)=20.
-          TC3D(I,J,K,3)=1.
-          TC3D(I,J,K,4)=2.
-        elseif (zt(K) .lt. 800. .and. zt(K) .gt. 350) then
-          TC3D(I,J,K,1)=0.
-          TC3D(I,J,K,2)=30.
-          TC3D(I,J,K,3)=0.
-          TC3D(I,J,K,4)=0.
-        else
-          TC3D(I,J,K,1)=0.
-          TC3D(I,J,K,2)=30.
-          TC3D(I,J,K,3)=0.
-          TC3D(I,J,K,4)=0.
-        endif
+
+!      ! VFdA2005
+!        if (zt(K) .lt. 350.) then
+!          TC3D(I,J,K,1)=0.
+!          TC3D(I,J,K,2)=20.
+!          TC3D(I,J,K,3)=1.
+!          TC3D(I,J,K,4)=2.
+!        elseif (zt(K) .lt. 800. .and. zt(K) .gt. 350) then
+!          TC3D(I,J,K,1)=0.
+!          TC3D(I,J,K,2)=30.
+!          TC3D(I,J,K,3)=0.
+!          TC3D(I,J,K,4)=0.
+!        else
+!          TC3D(I,J,K,1)=0.
+!          TC3D(I,J,K,2)=30.
+!          TC3D(I,J,K,3)=0.
+!          TC3D(I,J,K,4)=0.
+!        endif
 
   888 CONTINUE
 
@@ -115,40 +122,56 @@ CONTAINS
       sza = getth(xday,xlat,xlon,xhr)
       coszen = max(0.0,cos(sza)) !to avoid negative values
 
-!      DO 988 J = mjm,mjp
-!      DO 988 I = mim,mip
-!        tempim=mi1*ni_sbdm+i
-!        tempjm=mj1*nj_sbdm+j
-!      ! source
-!        IF (tempim .EQ. 513) THEN
-!          IF (tempjm .EQ. 32) THEN
-!            ! tracer
-!            TC3D(I,J,2,1)=TC3D(I,J,2,1)+80.55
-!          ENDIF
-!        ENDIF
-!        IF (tempim .EQ. 513) THEN
-!            ! industrail
-!            TC3D(I,J,2,3)=TC3D(I,J,2,3)+3.26
-!            TC3D(I,J,2,4)=TC3D(I,J,2,4)+0.36
-!        ENDIF
-!        IF (tempim .GT. 513 .AND. tempim .LT. 768) THEN
-!          IF (coszen .GT. 0.00) THEN
-!            ! traffic
-!            TC3D(I,J,2,6)=TC3D(I,J,2,6)+0.02217
-!            TC3D(I,J,2,7)=TC3D(I,J,2,7)+0.00246
-!          ENDIF
-!        ENDIF
-!       ! remove (boundary)
-!        IF (tempim .EQ. 199) THEN
-!           TC3D(I,J,:,:)=0
-!        ENDIF
-!        IF (tempim .EQ. 200) THEN
-!           TC3D(I,J,:,:)=0
-!        ENDIF
-!        IF (tempim .EQ. 201) THEN
-!           TC3D(I,J,:,:)=0
-!        ENDIF
-!  988 CONTINUE
+      DO 988 J = mjm,mjp
+      DO 988 I = mim,mip
+        tempim=mi1*ni_sbdm+i
+        tempjm=mj1*nj_sbdm+j
+      ! source
+        IF (tempim .EQ. 513) THEN
+          IF (tempjm .EQ. 32) THEN
+            ! tracer
+            TC3D(I,J,7,1)=TC3D(I,J,7,1)+81.54
+          ENDIF
+        ENDIF
+        IF (tempim .EQ. 513) THEN
+            ! industrail
+            TC3D(I,J,7,3)=TC3D(I,J,7,3)+1.744
+            TC3D(I,J,7,4)=TC3D(I,J,7,4)+0.194
+            TC3D(I,J,7,9)=TC3D(I,J,7,9)+1.744
+            TC3D(I,J,7,10)=TC3D(I,J,7,10)+0.194
+            TC3D(I,J,7,12)=TC3D(I,J,7,12)+1.744
+            TC3D(I,J,7,13)=TC3D(I,J,7,13)+0.194
+        ENDIF
+        IF (tempim .GT. 513 .AND. tempim .LT. 768) THEN
+          IF (coszen .GT. 0.00) THEN
+            ! traffic
+            TC3D(I,J,2,6)=TC3D(I,J,2,6)+0.01767
+            TC3D(I,J,2,7)=TC3D(I,J,2,7)+0.00196
+            TC3D(I,J,2,9)=TC3D(I,J,2,9)+0.01767
+            TC3D(I,J,2,10)=TC3D(I,J,2,10)+0.00196
+            TC3D(I,J,2,12)=TC3D(I,J,2,12)+0.01767
+            TC3D(I,J,2,13)=TC3D(I,J,2,13)+0.00196
+          ENDIF
+        ENDIF
+       ! boundary ozone
+        IF (tempjm .EQ. 0) THEN
+            TC3D(I,J,:,11)=40.
+        ENDIF
+        IF (tempjm .EQ. 32) THEN
+            TC3D(I,J,:,11)=40.
+        ENDIF
+
+       ! remove (boundary)
+        IF (tempim .EQ. 199) THEN
+           TC3D(I,J,:,:)=0
+        ENDIF
+        IF (tempim .EQ. 200) THEN
+           TC3D(I,J,:,:)=0
+        ENDIF
+        IF (tempim .EQ. 201) THEN
+           TC3D(I,J,:,:)=0
+        ENDIF
+  988 CONTINUE
 
    END SUBROUTINE update_tracer_source
 !c

@@ -86,16 +86,16 @@ CONTAINS
 !      imonth0 = 1
 !      iday0 = 1
 ! Chemcheck_VGdA2005
-      iyear0 = 1997
-      imonth0 = 6
-      iday0 = 21
-      hour0 = 11.5
+!      iyear0 = 1997
+!      imonth0 = 6
+!      iday0 = 21
+!      hour0 = 11.5
 ! Modchem (0Z 4 Jan 2020)
-!      iyear0 = 2020
-!      imonth0 = 1
-!      iday0 = 3
+      iyear0 = 2020
+      imonth0 = 1
+      iday0 = 3
 ! Specify hour in fractional UTC time (Greenwich)
-!      hour0 = 16.0
+      hour0 = 16.0
   END SELECT 
 
 !  Get Julian day

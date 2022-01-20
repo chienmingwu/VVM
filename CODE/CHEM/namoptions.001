@@ -12,11 +12,12 @@ randqt     =  2.5e-5
 nsv        =  20 
 timeav_glob= 60. 
 /
+
 &NAMCHEM
 lchem       = .true.
-tnor        = 2
+tnor        = 8
 firstchem   = 1
-lastchem    = 4
+lastchem    = 13
 ldiuvar     = .true. 
 lchconst    = .false.
 h_ref       = 0.

@@ -101,7 +101,7 @@ CONTAINS
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
 !      CRITMN=100.
 !      New Value for TWP-ICE
-      CRITMN=0._dbl_kind !ccwu for LES run
+      CRITMN=1._dbl_kind !ccwu for LES run
 
       RAMD0S=(0.23_dbl_kind*DELD)**2
 
@@ -336,40 +336,43 @@ CONTAINS
          DO 110 I=mim,mip
          UW(I,J)  = 0. !-u(2)/dz*fnz(2)*tau
          WV(I,J)  = 0. !-v(2)/dz*fnz(2)*tau
+         WTH(I,J) = 0.
+         WQV(I,J) = 0.
 
-         ! sensible heat flux
-         if (itt .le. 14400) then
-           WTH(I,J) = (-30.+120.*(float(itt)/14400.))
-         elseif (itt .gt. 14400 .and. itt .le. 23400) then
-           WTH(I,J) = (90.+50.*(float(itt-14400)/9000.))
-         elseif (itt .gt. 23400 .and. itt .le. 27000) then
-           WTH(I,J) = 140.
-         elseif (itt .gt. 27000 .and. itt .le. 36000) then
-           WTH(I,J) = (140.-40.*(float(itt-27000)/9000.))
-         elseif (itt .gt. 36000 .and. itt .le. 45000) then
-           WTH(I,J) = (100.-110.*(float(itt-36000)/9000.))
-         else
-           WTH(I,J) = -10.
-         endif
-         ! change into th
-         WTH(I,J) = WTH(I,J)/CP*((pzero/sufp)**(rgas/CP))
-
-         ! latent heat flux
-         if (itt .le. 14400) then
-           WQV(I,J) = (5.+245.*(float(itt)/14400.))
-         elseif (itt .gt. 14400 .and. itt .le. 23400) then
-           WQV(I,J) = (250.+200.*(float(itt-14400)/9000.))
-         elseif (itt .gt. 23400 .and. itt .le. 27000) then
-           WQV(I,J) = (450.+50.*(float(itt-23400)/3600.))
-         elseif (itt .gt. 27000 .and. itt .le. 36000) then
-           WQV(I,J) = (500.-80.*(float(itt-27000)/9000.))
-         elseif (itt .gt. 36000 .and. itt .le. 45000) then
-           WQV(I,J) = (420.-240.*(float(itt-36000)/9000.))
-         else
-           WQV(I,J) = (180.-180.*(float(itt-45000)/7200.))
-         endif
-         ! change into qv
-         WQV(I,J) = WQV(I,J)/lhv
+! shallow convection case
+!         ! sensible heat flux
+!         if (itt .le. 14400) then
+!           WTH(I,J) = (-30.+120.*(float(itt)/14400.))
+!         elseif (itt .gt. 14400 .and. itt .le. 23400) then
+!           WTH(I,J) = (90.+50.*(float(itt-14400)/9000.))
+!         elseif (itt .gt. 23400 .and. itt .le. 27000) then
+!           WTH(I,J) = 140.
+!         elseif (itt .gt. 27000 .and. itt .le. 36000) then
+!           WTH(I,J) = (140.-40.*(float(itt-27000)/9000.))
+!         elseif (itt .gt. 36000 .and. itt .le. 45000) then
+!           WTH(I,J) = (100.-110.*(float(itt-36000)/9000.))
+!         else
+!           WTH(I,J) = -10.
+!         endif
+!         ! change into th
+!         WTH(I,J) = WTH(I,J)/CP*((pzero/sufp)**(rgas/CP))
+!
+!         ! latent heat flux
+!         if (itt .le. 14400) then
+!           WQV(I,J) = (5.+245.*(float(itt)/14400.))
+!         elseif (itt .gt. 14400 .and. itt .le. 23400) then
+!           WQV(I,J) = (250.+200.*(float(itt-14400)/9000.))
+!         elseif (itt .gt. 23400 .and. itt .le. 27000) then
+!           WQV(I,J) = (450.+50.*(float(itt-23400)/3600.))
+!         elseif (itt .gt. 27000 .and. itt .le. 36000) then
+!           WQV(I,J) = (500.-80.*(float(itt-27000)/9000.))
+!         elseif (itt .gt. 36000 .and. itt .le. 45000) then
+!           WQV(I,J) = (420.-240.*(float(itt-36000)/9000.))
+!         else
+!           WQV(I,J) = (180.-180.*(float(itt-45000)/7200.))
+!         endif
+!         ! change into qv
+!         WQV(I,J) = WQV(I,J)/lhv
 
   110    CONTINUE
       ELSE
@@ -661,18 +664,18 @@ CONTAINS
   621 CONTINUE
 
 !chemical surface flux
-      DO 623 J=1,MJ1
-      DO 623 I=1,MI1
-
-      hxp=INT(hx(I,J))+1
-      if (nt .eq. 1) then
-      DDX(I,J,hxp) = DDX(I,J,hxp) + FNU(hxp)*0.1/(RHOU(hxp)*DZ)
-      elseif (nt .eq. 3) then
-      DDX(I,J,hxp) = DDX(I,J,hxp) + FNU(hxp)*0.05/(RHOU(hxp)*DZ)
-      elseif (nt .eq. 4) then
-      DDX(I,J,hxp) = DDX(I,J,hxp) + FNU(hxp)*0.1/(RHOU(hxp)*DZ)
-      endif
-  623 CONTINUE
+!      DO 623 J=1,MJ1
+!      DO 623 I=1,MI1
+!
+!      hxp=INT(hx(I,J))+1
+!      if (nt .eq. 1) then
+!      DDX(I,J,hxp) = DDX(I,J,hxp) + FNU(hxp)*0.1/(RHOU(hxp)*DZ)
+!      elseif (nt .eq. 3) then
+!      DDX(I,J,hxp) = DDX(I,J,hxp) + FNU(hxp)*0.05/(RHOU(hxp)*DZ)
+!      elseif (nt .eq. 4) then
+!      DDX(I,J,hxp) = DDX(I,J,hxp) + FNU(hxp)*0.1/(RHOU(hxp)*DZ)
+!      endif
+!  623 CONTINUE
 
       DO 631 J=1,MJ1
       DO 631 I=1,MI1
