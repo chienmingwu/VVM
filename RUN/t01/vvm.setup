@@ -8,8 +8,8 @@ set echo  # echoes the commands
 set expname = kuo_test
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'intel_mogamd'
+set jobsys = 'slurm_mogamd'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `

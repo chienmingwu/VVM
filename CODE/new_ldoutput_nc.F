@@ -718,9 +718,9 @@ CONTAINS
 #endif
       DO j=1,mj1
       DO i=1,mi1 
-      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2)<1 .and. j==3) &
-              write(*,*) DIAG3D(i,j,K,1), TH3D(i,j,K), thbar(k) &
-                                 ,DELTA, GRAV, QV3D(i,j,K)
+      !IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2)<1 .and. j==3) &
+      !        write(*,*) DIAG3D(i,j,K,1), TH3D(i,j,K), thbar(k) &
+      !                           ,DELTA, GRAV, QV3D(i,j,K)
         DIAG3D(i,j,k,2)=0.5*(z3dx(i,j,k)+z3dx(i,j-1,k))
         DIAG3D(i,j,k,3)=0.5*(z3dy(i,j,k)+z3dy(i-1,j,k))
         DIAG3D(i,j,k,4)=0.125*( z3dz(i  ,j  ,k)+z3dz(i  ,j  ,k+1) &
