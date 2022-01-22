@@ -16,7 +16,7 @@ set echo  # echoes the commands
 set expname = kuo_test
 
 # set job system and compiler
-set compiler = 'intel_mogamd'
+set compiler = 'aocc_mogamd'
 set jobsys = 'slurm_mogamd'
 
 # set paths
