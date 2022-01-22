@@ -432,14 +432,14 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2&
-              !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
-              +((ZT(K)-6000.)/2000.)**2)<=1)THEN
-        TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
-                      sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2+ &
-                           !((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
-                           ((ZT(K)-6000.)/2000.)**2)))**2
-      ENDIF
+      !IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2&
+      !        !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
+      !        +((ZT(K)-6000.)/2000.)**2)<=1)THEN
+      !  TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
+      !                sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2+ &
+      !                     !((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
+      !                     ((ZT(K)-6000.)/2000.)**2)))**2
+      !ENDIF
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.

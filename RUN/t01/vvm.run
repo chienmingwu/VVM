@@ -39,7 +39,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/total_cores/64/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-#qsub run.sh
+qsub run.sh
 
 exit
 
