@@ -236,21 +236,31 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ! setup Chien and Wu 2016
       TMP=abs(real(i)-real(mi_glob)/2.)*DX
-      if (TMP<=15000.) then
-      !TMP = 1200. 
-      !elseif (TMP>5000. .and. TMP<=20000.) then
+      if (TMP<=5000.) then
+      TMP = 1200. 
+      elseif (TMP>5000. .and. TMP<=20000.) then
 !      if (TMP<=10000.) then
-      !TMP = -0.08*(TMP-15000.)
-      TMP = 600.-0.006*(TMP-15000.)
+      TMP = -0.08*(TMP-20000.)
       else 
-      TMP = 400.
+      TMP = 0.
       endif
       TOP=1
-      DO 502 k=1,NK2
-      ! for full step 
-  502 IF (TMP >= ZZ(k)) TOP=K+INT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-      ! for partial step
-!  502 IF (TMP >= ZZ(k)) TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      DO k=1,NK2
+        if (.false.) then
+          ! for full step 
+          IF (TMP >= ZZ(k)) TOP=K+INT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+        else
+          ! for partial step
+          IF (TMP >= ZZ(k)) THEN
+            IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4) THEN
+              TOP=K+0.4
+            ELSE
+              TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+            ENDIF
+          ENDIF
+        endif
+      ENDDO
+
       hx(I,J)=TOP
 
 !      ENDDO
@@ -477,8 +487,9 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       mask=1.
       do j=1,mj_glob
       do i=1,mi_glob
-        height(i,j)=zz(int(HX(i,j)))/1000.
-        mask(i,j,1:int(HX(i,j)))=0.
+        k=int(HX(i,j))
+        height(i,j)=(zz(k)+(zz(k+1)-zz(k))*modulo(hx(i,j),1.))/1000.
+        mask(i,j,1:k)=0.
       enddo
       enddo
 !      ierr = nf_put_var_real(ncid, ntopo, HX)

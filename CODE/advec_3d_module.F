@@ -49,7 +49,6 @@ CONTAINS
       UEW(1,J,K) = UEW(1,J,K)*RHOU(K) ! use for u(-1,J,K) =uew(1,J,K)
       DO 320 I=mim,mip
       TEMPI(I,J,K)=U3DX(I,J,K)*RHOU(K)
-      IF (ITYPEU(I,J,K)/=1) TEMPI(I,J,K)=0.
   320 CONTINUE
 
       DO 330 K=2,NK2
@@ -107,7 +106,6 @@ CONTAINS
       VNS(I,1,K) = RHOU(K)*VNS(I,1,K)
       DO 420 J = mjm,mjp
       TEMPI(I,J,K)=U3DY(I,J,K)*RHOU(K)
-      IF (ITYPEV(I,J,K)/=1) TEMPI(I,J,K)=0.
   420 CONTINUE
 
       DO 430 K=2,NK2
@@ -167,7 +165,6 @@ CONTAINS
       DO 520 J=1,MJ1
       DO 520 I=1,MI1
       TEMPI(I,J,K)=W3D(I,J,K)*RHOZ(K)
-      IF (ITYPEW(I,J,K)/=1) TEMPI(I,J,K)=0.
   520 CONTINUE
 
       DO 530 K=1,NK1
@@ -232,18 +229,18 @@ CONTAINS
       terma(I,J,K)=terma(I,J,K)/RHOU(K)
   570 CONTINUE
 
-!!ccwut set flux convergence on topo to zero
-!
-!      DO K=2,maxtopo
-!      DO J=1,MJ1
-!      DO I=1,MI1
-!      IF(ITYPEW(I,J,K) .NE. 1) THEN
-!      terma(I,J,K)=0.
-!      ENDIF
-!      ENDDO
-!      ENDDO
-!      ENDDO
-!!ccwut
+!ccwut set flux convergence on topo to zero
+
+      DO K=2,maxtopo
+      DO J=1,MJ1
+      DO I=1,MI1
+      IF(ITYPEW(I,J,K) .NE. 1) THEN
+      terma(I,J,K)=0.
+      ENDIF
+      ENDDO
+      ENDDO
+      ENDDO
+!ccwut
  
  
    END SUBROUTINE advec_3d

@@ -331,13 +331,11 @@ CONTAINS
          DO 110 I=mim,mip
          UW(I,J)  = 0.
          WV(I,J)  = 0.
-         !WTH(I,J) = 0.
-         ! for partial step debugging
-         if (HX(I,J)>3.) WTH(I,J) = 0.5
+         WTH(I,J) = 0.
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D(ITT)
+         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
 !      CALL SFLUX_3D ! call sflux every time step 
@@ -563,10 +561,6 @@ CONTAINS
       DO 630 J=1,MJ1
       DO 630 I=1,MI1
       hxp=INT(hx(I,J))+1
-      !if (hx(I,J)-int(hx(I,J))>=0.5) then
-      !  hxp=hxp+1
-      !  !write(*,*) hx(I,J), int(hx(I,J)), hxp
-      !endif
       DDX(I,J,hxp)=DDX(I,J,hxp)                                     &
        +FNU(hxp)*WTH(I,J)/(RHOU(hxp)*DZ)
      
@@ -1090,7 +1084,7 @@ CONTAINS
 !-----7---------------------------------------------------------------72
 #if defined (DIFFUSION)
 
-   SUBROUTINE SFLUX_3D(ITT)
+   SUBROUTINE SFLUX_3D
 
 !     Case of TGSPEC=.TRUE.  
 !     Surface layer model: Businger et al. (1971) & Deardorff (1972)
@@ -1098,8 +1092,6 @@ CONTAINS
 !
 !     OUTPUT : UW,WV,WTH,WQV AT LOWER BOUNDARY
 !
-      INTEGER (KIND=int_kind), INTENT(IN) ::   &
-         ITT     ! time step count
 
 ! local variables
       REAL (KIND=dbl_kind) ::    &
@@ -1141,10 +1133,7 @@ CONTAINS
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
 !ccwu
       INTEGER (KIND=int_kind) ::   &
-         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo, tempim &    ! do loop indices for zonal, meridional and vertical dimensions
-        ,k, kp, kpp
-
-      REAL(kind=dbl_kind) :: DDZ,DELTA_Z,HTP,HXVN,HXVS,HXUE,HXUW
+         hxp, hx1, hxup, hxvp, hxu1, hxv1, topo, tempim       ! do loop indices for zonal, meridional and vertical dimensions
 
       CP = 1004.5
       pi = 4._8 * atan(1._8)
@@ -1157,55 +1146,8 @@ CONTAINS
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
 
-      IF (NXU(I,J) .EQ. hx1 .AND. HXU(I,J) .NE. DBLE(NXU(I,J))) THEN
-        K = NXU(I,J)
-        KP = K + 1
-        KPP = KP + 1
-        DDZ = DZ/FNZ(K)
-        HXUE = 0.
-        CALL INTERP1(U3DX(I,J,KP),U3DX(I,J,KPP),HXZ(I,J),DDZ,HXUE)
-      ELSE
-        HXUE = U3DX(I,J,hxp)
-      ENDIF
-
-      IF (NXU(I-1,J) .EQ. hx1 .AND. HXU(I-1,J) .NE. DBLE(NXU(I-1,J))) THEN
-        K = NXU(I-1,J)
-        KP = K + 1
-        KPP = KP + 1
-        DDZ = DZ/FNZ(K)
-        HXUW = 0.
-        CALL INTERP1(U3DX(I-1,J,KP),U3DX(I-1,J,KPP),HXZ(I-1,J),DDZ,HXUW)
-      ELSE
-        HXUW = U3DX(I-1,J,hxp)
-      ENDIF
-
-      IF (NXV(I,J) .EQ. hx1 .AND. HXV(I,J) .NE. DBLE(NXV(I,J))) THEN
-        K = NXV(I,J)
-        KP = K + 1
-        KPP = KP + 1
-        DDZ = DZ/FNZ(K)
-        HXVN = 0.
-        CALL INTERP1(U3DY(I,J,KP),U3DY(I,J,KPP),HYZ(I,J),DDZ,HXVN)
-      ELSE
-        HXVN = U3DY(I,J,hxp)
-      ENDIF
-
-      IF (NXV(I,J-1) .EQ. hx1 .AND. HXV(I,J-1) .NE. DBLE(NXV(I,J-1))) THEN
-        K = NXV(I,J-1)
-        KP = K + 1
-        KPP = KP + 1
-        DDZ = DZ/FNZ(K)
-        HXVS = 0.
-        CALL INTERP1(U3DY(I,J-1,KP),U3DY(I,J-1,KPP),HYZ(I,J-1),DDZ,HXVS)
-      ELSE
-        HXVS = U3DY(I,J-1,hxp)
-      ENDIF
-
-      IF (DELTA_Z==0.) DELTA_Z = .5*DZ/FNT(hxp)
-      SPEEDTP(I,J)=0.5*SQRT((HXUW+HXUE)**2  &
-                           +(HXVS+HXVN)**2)
-!      SPEEDTP(I,J)=0.5*SQRT((U3DX(I-1,J,hxp)+U3DX(I,J,hxp))**2  &
-!                           +(U3DY(I,J-1,hxp)+U3DY(I,J,hxp))**2)
+      SPEEDTP(I,J)=0.5*SQRT((U3DX(I-1,J,hxp)+U3DX(I,J,hxp))**2  &
+                           +(U3DY(I,J-1,hxp)+U3DY(I,J,hxp))**2)
 !      if(hx1 .ge. 2) then
 !      tg(i,j)=thbar(hx1)*pibar(hx1)   !specify the ground temp. at the corresponding level
 !      gwet(i,j)=0.8
@@ -1243,16 +1185,11 @@ CONTAINS
 #else
 !==========================================================
 
-      ! TG is T0+10*sin((t-6hr)*pi/12hr) (chris)
-      TG=273.15+27.+10.*sin((real(ITT)*PASS_BIG_DT/3600.)*3.14159265/12.)
-      IF (my_task == 0) write(*,*) ITT, TG(1,1)
-
       DO 110 J=1,MJ1
       DO 110 I=1,MI1
       hxp=INT(hx(I,J))+1
       hx1=INT(hx(I,J))
-!      ztmp = .5*DZ/FNT(hxp)
-      ztmp = DELTA_Z
+      ztmp = .5*DZ/FNT(hxp)
 
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( PBAR(hx1) - ES1 ) 
@@ -1264,7 +1201,7 @@ CONTAINS
              -(HLF+HLM)*QI3D(I,J,hxp)
 
       ZROUGH1 = ZROUGH(I,J)
-      SPEEDM  = SPEEDTP(I,J)
+      SPEEDM  = max(SPEEDTP(I,J),1.)
       THVSM   = TG(I,J)/pibar(hx1)-TH3D(I,J,hxp)                         &
                +ABS(GWET(I,J))*THBAR(hxp)*(DELTA*(QSFC-QV3D(I,J,hxp)))
 
@@ -1690,11 +1627,5 @@ SUBROUTINE TURB_3D_INI
 #endif
 
    END SUBROUTINE TURB_3D_INI
-
-   SUBROUTINE INTERP1(XA,XB,D,DX,X)
-   REAL(KIND=dbl_kind), intent(IN) :: XA,XB,D,DX
-   REAL(KIND=dbl_kind), intent(OUT) :: X
-   X=(XA*(DX-D)+XB*D)/DX
-   END SUBROUTINE INTERP1
 
 END MODULE turb_3d_module

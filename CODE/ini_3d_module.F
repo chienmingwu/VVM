@@ -116,7 +116,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 305.
+      SST = 308.
       
 !!     initialization for rcemip
 !      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
@@ -366,7 +366,7 @@ CONTAINS
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
-      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
+      !if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
  

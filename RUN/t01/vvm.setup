@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = mount2d_full_flux0
+set expname = mount2d_part
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -91,13 +91,13 @@ sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=18000. /
+ &INPUT1 NEWRUN=T, ITTADD=43200. /
  &INPUT2 RLAT=0, RLON=0 /
- &INPUT3 DX=200.,DYNEW=200.,DZ=200.,DZ1=200.,DT=1.,NOTURB=T,NOSFX=T,NSFLUX=6,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=200.,DYNEW=200.,DZ=200.,DZ1=200.,DT=1.,NOTURB=F,NOSFX=F,NSFLUX=5,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=100,NWR11=1,NFLPRT=1,NRESTART=100 /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0,DTHMAX=0.5,Z2PERT=100. /
+ &INPUT5 IX=3182073,ITINIT=0,ITSTOP=3600,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0,DTHMAX=0.5,Z2PERT=100. /
 #                                                              (s)
 'END6'
 cat INPUT
