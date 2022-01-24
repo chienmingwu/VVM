@@ -56,7 +56,7 @@ SUF      = f
 
 INC = -I/opt/libs-intel-oneapi/pnetcdf-1.12.2/include -I/opt/libs-intel-oneapi/netcdf-4.7.4/include -I/opt/libs-intel-oneapi/petsc-3.14.0/include -I$(CDECKS) -I$(EXPDIR)
 
-FC = mpiifort -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large -march=core-avx2 -ipo -no-prec-div -fp-model fast=2
+FC = mpiifort -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large #-march=core-avx2 -ipo -no-prec-div -fp-model fast=2
 
 LDLIBS = -L/opt/libs-intel-oneapi/pnetcdf-1.12.2/lib -lpnetcdf -L/opt/libs-intel-oneapi/netcdf-4.7.4/lib -lnetcdff -lnetcdf -L/opt/libs-intel-oneapi/petsc-3.14.0/lib -lpetsc -qmkl
 

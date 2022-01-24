@@ -116,7 +116,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 308.
+      SST = 300.
       
 !!     initialization for rcemip
 !      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
@@ -366,7 +366,7 @@ CONTAINS
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
-      !if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
+      if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
  
@@ -411,14 +411,14 @@ CONTAINS
 
 
       ! isentropic environment
-      do k=1,nk3
-        THBAR(k)=THBAR(2)+0.002*ZT(k)
-      enddo
-      RHO=1.
-      RHOZ=1.
-      RHOU=1.
-      RHOT=1.
-      RHOW=1.   
+      !do k=1,nk3
+      !  THBAR(k)=THBAR(2)+0.002*ZT(k)
+      !enddo
+      !RHO=1.
+      !RHOZ=1.
+      !RHOU=1.
+      !RHOT=1.
+      !RHOW=1.   
 
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)

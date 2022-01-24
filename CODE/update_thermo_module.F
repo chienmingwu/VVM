@@ -155,44 +155,22 @@ CONTAINS
 #endif
    70 CONTINUE
 
-!      if (ntracer > 0)then
-!
-!      DO 71 nt = 1,ntracer
-!      DO 71 K = 2, NK2
-!      DO 71 J = 1, MJ1
-!      DO 71 I = 1, MI1
-!
-!      TC3D(I,J,K,nt) = TC3D(I,J,K,nt)          &
-!                  + A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt)
-!     
-!   71 CONTINUE
-!
-!      endif
+      if (ntracer > 0)then
+
+      DO 71 nt = 1,ntracer
+      DO 71 K = 2, NK2
+      DO 71 J = 1, MJ1
+      DO 71 I = 1, MI1
+
+      TC3D(I,J,K,nt) = TC3D(I,J,K,nt)          &
+                  + A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt)
+     
+   71 CONTINUE
+
+      endif
 
 
 !ccwut set physics variables on topo to zero
-!      K=1
-!      DO J = 1, MJ1
-!      DO I = 1, MI1
-!      if (hx(I,J)-int(hx(I,J))>=0.5) then
-!      TH3D(I,J,int(hx(I,J))+K) = THBAR(int(hx(I,J)+K))
-!      QV3D(I,J,int(hx(I,J))+K) = 0.
-!      QC3D(I,J,int(hx(I,J))+K) = 0.
-!      QR3D(I,J,int(hx(I,J))+K) = 0.
-!#if defined (MICROP3)
-!      NC3D(I,J,int(hx(I,J))+K) = 0.
-!      NR3D(I,J,int(hx(I,J))+K) = 0.
-!      NI3D(I,J,int(hx(I,J))+K) = 0.
-!      QRIM3D(I,J,int(hx(I,J))+K) = 0.
-!      BRIM3D(I,J,int(hx(I,J))+K) = 0.
-!#else
-!      QS3D(I,J,int(hx(I,J))+K) = 0.
-!      QG3D(I,J,int(hx(I,J))+K) = 0.
-!#endif
-!      endif
-!      ENDDO
-!      ENDDO
-
       DO K = 2, maxtopo
       DO J = 1, MJ1
       DO I = 1, MI1

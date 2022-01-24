@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = mount2d_part
+set expname = taiwan_full
 
 # set job system and compiler
 set compiler = 'intel_mogamd'

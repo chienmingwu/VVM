@@ -62,24 +62,28 @@
       READ (15, INPUT3)
       CLOSE(15)
 
-      DOMAIN = 15000.
-
-      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
-      CZ1 = 1. - CZ2 * DOMAIN
-
-      DZTMP = MIN(DZ,DZ1)
       Zz(1) = ZB
-      ZT(1) = Zz(1)
-      ZT(2) = Zz(1) + DZ / 2.
       DO 50 K = 2, NK3
-      Zz(K) = Zz(K-1) + DZ
-      IF (K>2) ZT(K) = ZT(K-1) + DZ
+      Zz(K) = Zz(K-1) + DZ1
    50 CONTINUE
-
-      DO 51 K = 1, NK3
-      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
-      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
-   51 CONTINUE
+!      DOMAIN = 15000.
+!
+!      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
+!      CZ1 = 1. - CZ2 * DOMAIN
+!
+!      DZTMP = MIN(DZ,DZ1)
+!      Zz(1) = ZB
+!      ZT(1) = Zz(1)
+!      ZT(2) = Zz(1) + DZ / 2.
+!      DO 50 K = 2, NK3
+!      Zz(K) = Zz(K-1) + DZ
+!      IF (K>2) ZT(K) = ZT(K-1) + DZ
+!   50 CONTINUE
+!
+!      DO 51 K = 1, NK3
+!      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
+!      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
+!   51 CONTINUE
 
 ! import INPUT FILE 
       IF (TWTOPO) THEN
@@ -234,45 +238,45 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       xt(I) = I * DX
       yt(J) = J * DYNEW
 
-      ! setup Chien and Wu 2016
-      TMP=abs(real(i)-real(mi_glob)/2.)*DX
-      if (TMP<=5000.) then
-      TMP = 1200. 
-      elseif (TMP>5000. .and. TMP<=20000.) then
-!      if (TMP<=10000.) then
-      TMP = -0.08*(TMP-20000.)
-      else 
-      TMP = 0.
-      endif
-      TOP=1
-      DO k=1,NK2
-        if (.false.) then
-          ! for full step 
-          IF (TMP >= ZZ(k)) TOP=K+INT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-        else
-          ! for partial step
-          IF (TMP >= ZZ(k)) THEN
-            IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4) THEN
-              TOP=K+0.4
-            ELSE
-              TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-            ENDIF
-          ENDIF
-        endif
-      ENDDO
-
-      hx(I,J)=TOP
+!      ! setup Chien and Wu 2016
+!      TMP=abs(real(i)-real(mi_glob)/2.)*DX
+!      if (TMP<=5000.) then
+!      TMP = 1200. 
+!      elseif (TMP>5000. .and. TMP<=20000.) then
+!!      if (TMP<=10000.) then
+!      TMP = -0.08*(TMP-20000.)
+!      else 
+!      TMP = 0.
+!      endif
+!      TOP=1
+!      DO k=1,NK2
+!        if (.false.) then
+!          ! for full step 
+!          IF (TMP >= ZZ(k)) TOP=K+INT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!        else
+!          ! for partial step
+!          IF (TMP >= ZZ(k)) THEN
+!            IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4) THEN
+!              TOP=K+0.4
+!            ELSE
+!              TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!            ENDIF
+!          ENDIF
+!        endif
+!      ENDDO
+!
+!      hx(I,J)=TOP
 
 !      ENDDO
 
-      LU(I,J) = 16
-      alb(I,J) = 15.
-      grf(I,J) = 10.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 14
+!      LU(I,J) = 16
+!      alb(I,J) = 15.
+!      grf(I,J) = 10.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 14
 !      ! setup Wu and Chen 2021
 !      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
 !      !if (hx(I,J)<2) hx(I,J)=2
@@ -287,64 +291,37 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      endif
   500 CONTINUE
 
-! 5 large island in Maritime Continent
+      ! Taiwan vvm 
+      DO I=1,mi_glob
+      DO J=1,mj_glob
+      TMP=DBLE(hgt(I,J))
 
-!      OPEN(157,FILE="/home/der0318/global_topo/maritime_0.144.dat"
-!     1 ,ACCESS="direct",RECL=451*200*4)
-!      READ(157,REC=1) topo_mar
-!      CLOSE(157)
-!
-!      DO 501 j = 1,MJ_GLOB
-!      DO 501 i = 1,MI_GLOB
-!      IF (j>=157 .AND. j<=356 .AND. i<=451)THEN
-!      IF (topo_mar(i,j-156)/=-999)THEN
-!      IT=2
-!      DO 502 k=1,NK3
-!  502 IF (topo_mar(i,j-156) >= ZZ(k)) TOP=max(k,IT)
-!      hx(i,j)=TOP
-!      LU(I,J) = 13
-!      alb(I,J) = 11.
-!      grf(I,J) = 95.
-!      lai(I,J) = 4.
-!      SHDMAX(I,J) = 95.
-!      SHDMIN(I,J) = 95.
-!      SLOPE(I,J) = 1
-!      SOIL(I,J) = 1
-!      ENDIF
-!      ENDIF
-!  501 CONTINUE 
-!
-!      DO 503 j = 1,MJ_GLOB
-!      DO 503 i = 1,MI_GLOB
-!      topo_sur(1)=hx(i,j)
-!      topo_sur(2)=hx(i+1,j)
-!      topo_sur(3)=hx(i,j+1)
-!      topo_sur(4)=hx(i-1,j)
-!      topo_sur(5)=hx(i,j-1)
-!      IF (minloc(topo_sur,1)==1) hx(i,j)=minval(topo_sur(2:5))
-!  503 CONTINUE
+      ! for full step
+      IF (TMP .GT. 0.) HX(I,J) = 2.
+      DO K=2,NK1
+      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      ENDDO
+      IF(HX(I,J).LT.0)HX(I,J)=0
+       
+      !! for partial step
+      !IF (TMP .GT. 0.) HX(I,J) = 1.02 
+      !DO K=2,NK1
+      !IF (TMP >= ZZ(k)) THEN
+      !  IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.5) THEN
+      !    TOP=K+1.
+      !  ELSEIF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4 .AND. 
+     1!          (TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))<0.5) THEN
+      !    TOP=K+0.4
+      !  ELSE
+      !    TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      !  ENDIF
+      !  HX(I,J) = TOP
+      !ENDIF
+      !ENDDO
+      !IF(HX(I,J).LT.0)HX(I,J)=0
 
-
-!      DO 600 I = 1, MI_GLOB
-!  600 XT (I) = I*DX
-!
-!      DO 700 J = 1,MJ_GLOB
-!  700 YT (J) = J*DYNEW
-
-
-!      DO I=1,mi_glob
-!      DO J=1,mj_glob
-!      TMP=DBLE(hgt(I,J))
-!
-!      IF (TMP .GT. 0.) HX(I,J) = 2.
-!      DO K=2,NK1
-!      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-!
-!      ENDDO
-!      IF(HX(I,J).LT.0)HX(I,J)=0
-!
-!      ENDDO
-!      ENDDO
+      ENDDO
+      ENDDO
 
       ENDIF
 
