@@ -412,7 +412,7 @@ SUBROUTINE DIRECTIB
       ENDIF
  550  CONTINUE
 
-      DO 600 K = 1,NK2
+      DO 600 K = 1,NK2-1
       DO 600 J = 1,MJ1
       DO 600 I = 1,MI1
       IF (ITYPEV(I,J,K) .EQ. -1 .AND. NPV(I,J) .EQ. K) THEN
@@ -471,7 +471,7 @@ SUBROUTINE DIRECTIB
       ENDIF
   600 CONTINUE
 
-      DO 700 K = 1,NK2
+      DO 700 K = 1,NK2-1 
       DO 700 J = 1,MJ1
       DO 700 I = 1,MI1
       IF (ITYPEU(I,J,K) .EQ. -1 .AND. NPU(I,J) .EQ. K) THEN
