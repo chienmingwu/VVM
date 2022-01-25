@@ -857,8 +857,8 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
 !     if (RDLAI2D) then
 !        xlai = month_d(lai_monthly, nowdate)
 !     else
-!        xlai = badval
-        xlai = lai1
+        xlai = badval
+!        xlai = lai1
 !     endif
 
 !-----

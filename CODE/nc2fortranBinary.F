@@ -10,8 +10,8 @@
 
       character(23) FILENAME
 
-      integer NX, NY
-      parameter (NX = 1024, NY = 1024)
+      integer NX, NY, NX1, NY1
+      parameter (NX = 1024, NY = 1024, NX1=256, NY1=256)
       REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
       REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB), ZT1(NK3)
@@ -28,7 +28,7 @@
       integer ncid, nvarid
       integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope, 
      1        nsoil, nlon, nlat, nlev, nmask
-      integer i,j,k,ierr
+      integer i,j,k,ierr, jj, jjj, iii, kk
 
       integer NLID(2)
       integer NLID_3d(3)
@@ -40,11 +40,23 @@
 
       INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT
  
+      REAL alb(NX,NY),grf(NX,NY),hgt(NX,NY),lai(NX,NY),lu(NX,NY),
+     1 shdmax(NX,NY),shdmin(NX,NY),slope(NX,NY),soil(NX,NY)
 
-      REAL alb(MI_glob,MJ_glob), grf(MI_glob,MJ_glob),
-     1  hgt(MI_glob,MJ_glob), lai(MI_glob,MJ_glob), lu(MI_glob,MJ_glob),
-     1  shdmax(MI_glob,MJ_glob), shdmin(MI_glob,MJ_glob), 
-     1  slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
+      REAL alb_o(NX1,NY1), grf_o(NX1,NY1),
+     1 hgt_o(NX1,NY1), lai_o(NX1,NY1),
+     1 lu_o(NX1,NY1),
+     1 shdmax_o(NX1,NY1), shdmin_o(NX1,NY1),
+     1 slope_o(NX1,NY1), soil_o(NX1,NY1)
+
+      REAL hx_oo(MI_GLOB,MJ_GLOB),alb_oo(MI_GLOB,MJ_GLOB),
+     1 grf_oo(MI_GLOB,MJ_GLOB),
+     1 lai_oo(MI_GLOB,MJ_GLOB),
+     1 lu_oo(MI_GLOB,MJ_GLOB),
+     1 shdmax_oo(MI_GLOB,MJ_GLOB), shdmin_oo(MI_GLOB,MJ_GLOB),
+     1 slope_oo(MI_GLOB,MJ_GLOB), soil_oo(MI_GLOB,MJ_GLOB)
+
+      INTEGER, DIMENSION(NX/NX1*NY/NY1) :: tmp1
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
       REAL*8 ZZ(NK3), ZT(NK3)   
@@ -62,28 +74,28 @@
       READ (15, INPUT3)
       CLOSE(15)
 
-      Zz(1) = ZB
-      DO 50 K = 2, NK3
-      Zz(K) = Zz(K-1) + DZ1
-   50 CONTINUE
-!      DOMAIN = 15000.
-!
-!      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
-!      CZ1 = 1. - CZ2 * DOMAIN
-!
-!      DZTMP = MIN(DZ,DZ1)
 !      Zz(1) = ZB
-!      ZT(1) = Zz(1)
-!      ZT(2) = Zz(1) + DZ / 2.
 !      DO 50 K = 2, NK3
-!      Zz(K) = Zz(K-1) + DZ
-!      IF (K>2) ZT(K) = ZT(K-1) + DZ
+!      Zz(K) = Zz(K-1) + DZ1
 !   50 CONTINUE
-!
-!      DO 51 K = 1, NK3
-!      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
-!      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
-!   51 CONTINUE
+      DOMAIN = 15000.
+
+      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
+      CZ1 = 1. - CZ2 * DOMAIN
+
+      DZTMP = MIN(DZ,DZ1)
+      Zz(1) = ZB
+      ZT(1) = Zz(1)
+      ZT(2) = Zz(1) + DZ / 2.
+      DO 50 K = 2, NK3
+      Zz(K) = Zz(K-1) + DZ
+      IF (K>2) ZT(K) = ZT(K-1) + DZ
+   50 CONTINUE
+
+      DO 51 K = 1, NK3
+      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
+      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
+   51 CONTINUE
 
 ! import INPUT FILE 
       IF (TWTOPO) THEN
@@ -111,72 +123,72 @@
        
 ! Compute topography grid
 
-      RX = R* COSD(.5*(LAT(9000)+LAT(9001)))*2*PI/360.*(lon(2)-lon(1))
-      XM(IC) =  0.
-      DO 20 I = IC+1, NX 
-   20 XM (I) = XM(I-1) + RX 
-      DO 25 I = IC-1, 1, -1
-   25 XM (I) = XM(I+1) - RX
-
-      RY = R * 2 * PI *(lat(9001)-lat(9000))/360
-      YM(JC) =  0.
-      DO 30 J = JC+1, NY
-   30 YM (J) = YM(J-1) + RY 
-      DO 35 J = JC-1, 1,-1
-   35 YM (J) = YM(J+1) - RY
-
-
-      DO 40 J = 1,NY
-      DO 40 I = 1,NX
-      TMP = sqrt(dble(I*I)+dble((J-NY)*(J-NY)))
-   40 IF (TMP .LE. 4000) DATA(I,J) = 0.
-
-      DO 60 I = 1, MI_GLOB
-   60 XT (I) = (I-MIC)*DX 
-
-      DO 70 J = 1,MJ_GLOB
-   70 YT (J) = (J-MJC)*DYNEW
-
-      DO 100 J = 1,MJ_GLOB
-      IF ( YT(J)-.5*DYNEW.GE.YM(1) .AND.YT(J)+.5*DYNEW .LE. YM(NY))THEN
-      DO 101 I = 1,MI_GLOB
-      IF ( XT(I)-.5*DX .GE. XM(1) .AND. XT(I)+.5*DX .LE. XM(NX) ) THEN
-
-      DO 110 IP = 1,NX
-      IF (XM(IP) .LT. XT(I) -.5*DX ) II = IP
-  110 IF (XM(IP) .LT. XT(I) +.5*DX ) IE = IP       
-
-      DO 120 JP = 1,NY
-      IF (YM(JP) .LT. YT(J) -.5*DYNEW) JI = JP
-  120 IF (YM(JP) .LT. YT(J) +.5*DYNEW) JE = JP
-
-      TMP = 0.
-      DO 150  JP = JI,JE
-      DO 150  IP = II,IE
-      TMP = TMP + DATA(IP,JP)
-C      TMP = MAX(TMP,DATA(IP,JP))
-  150 CONTINUE
-      TMP = TMP / REAL(JE - JI + 1 ) / REAL(IE - II + 1)
-
-      IF ( TMP .GT. .5) THEN
-      IT = 2
-      DO 160 K = 1,NK3
-  160 IF (TMP .GT. ZZ(K)) TOP = MAX(K,IT)
-      HX(I,J) = TOP
-      ELSE
-      HX(I,J) = 0.
-      ENDIF
-      ELSE
-      HX(I,J) = 0.
-      ENDIF
-
-  101 CONTINUE
-      ELSE
-      DO 102 I = 1,MI_GLOB
-      HX(I,J) = 0.
-  102 CONTINUE
-      ENDIF
-  100 CONTINUE
+!      RX = R* COSD(.5*(LAT(9000)+LAT(9001)))*2*PI/360.*(lon(2)-lon(1))
+!      XM(IC) =  0.
+!      DO 20 I = IC+1, NX 
+!   20 XM (I) = XM(I-1) + RX 
+!      DO 25 I = IC-1, 1, -1
+!   25 XM (I) = XM(I+1) - RX
+!
+!      RY = R * 2 * PI *(lat(9001)-lat(9000))/360
+!      YM(JC) =  0.
+!      DO 30 J = JC+1, NY
+!   30 YM (J) = YM(J-1) + RY 
+!      DO 35 J = JC-1, 1,-1
+!   35 YM (J) = YM(J+1) - RY
+!
+!
+!      DO 40 J = 1,NY
+!      DO 40 I = 1,NX
+!      TMP = sqrt(dble(I*I)+dble((J-NY)*(J-NY)))
+!   40 IF (TMP .LE. 4000) DATA(I,J) = 0.
+!
+!      DO 60 I = 1, MI_GLOB
+!   60 XT (I) = (I-MIC)*DX 
+!
+!      DO 70 J = 1,MJ_GLOB
+!   70 YT (J) = (J-MJC)*DYNEW
+!
+!      DO 100 J = 1,MJ_GLOB
+!      IF ( YT(J)-.5*DYNEW.GE.YM(1) .AND.YT(J)+.5*DYNEW .LE. YM(NY))THEN
+!      DO 101 I = 1,MI_GLOB
+!      IF ( XT(I)-.5*DX .GE. XM(1) .AND. XT(I)+.5*DX .LE. XM(NX) ) THEN
+!
+!      DO 110 IP = 1,NX
+!      IF (XM(IP) .LT. XT(I) -.5*DX ) II = IP
+!  110 IF (XM(IP) .LT. XT(I) +.5*DX ) IE = IP       
+!
+!      DO 120 JP = 1,NY
+!      IF (YM(JP) .LT. YT(J) -.5*DYNEW) JI = JP
+!  120 IF (YM(JP) .LT. YT(J) +.5*DYNEW) JE = JP
+!
+!      TMP = 0.
+!      DO 150  JP = JI,JE
+!      DO 150  IP = II,IE
+!      TMP = TMP + DATA(IP,JP)
+!C      TMP = MAX(TMP,DATA(IP,JP))
+!  150 CONTINUE
+!      TMP = TMP / REAL(JE - JI + 1 ) / REAL(IE - II + 1)
+!
+!      IF ( TMP .GT. .5) THEN
+!      IT = 2
+!      DO 160 K = 1,NK3
+!  160 IF (TMP .GT. ZZ(K)) TOP = MAX(K,IT)
+!      HX(I,J) = TOP
+!      ELSE
+!      HX(I,J) = 0.
+!      ENDIF
+!      ELSE
+!      HX(I,J) = 0.
+!      ENDIF
+!
+!  101 CONTINUE
+!      ELSE
+!      DO 102 I = 1,MI_GLOB
+!      HX(I,J) = 0.
+!  102 CONTINUE
+!      ENDIF
+!  100 CONTINUE
 
       ELSE
 
@@ -230,6 +242,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ENDDO
       ENDDO
 
+      !where(slope==0) slope=1
 
       HX = 1
       DO 500 J = 1,MJ_GLOB
@@ -303,25 +316,105 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ENDDO
       IF(HX(I,J).LT.0)HX(I,J)=0
        
-      !! for partial step
-      !IF (TMP .GT. 0.) HX(I,J) = 1.02 
-      !DO K=2,NK1
-      !IF (TMP >= ZZ(k)) THEN
-      !  IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.5) THEN
-      !    TOP=K+1.
-      !  ELSEIF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4 .AND. 
-     1!          (TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))<0.5) THEN
-      !    TOP=K+0.4
-      !  ELSE
-      !    TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-      !  ENDIF
-      !  HX(I,J) = TOP
-      !ENDIF
-      !ENDDO
-      !IF(HX(I,J).LT.0)HX(I,J)=0
+!      ! for partial step
+!      IF (TMP .GT. 0.) HX(I,J) = 1.02 
+!      DO K=2,NK1
+!      IF (TMP >= ZZ(k)) THEN
+!        IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.5) THEN
+!          TOP=K+1.
+!        ELSEIF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4 .AND. 
+!     1          (TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))<0.5) THEN
+!          TOP=K+0.4
+!        ELSE
+!          TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!        ENDIF
+!        HX(I,J) = TOP
+!      ENDIF
+!      ENDDO
+!      IF(HX(I,J).LT.0)HX(I,J)=0
 
       ENDDO
       ENDDO
+
+      IF (.true.) THEN ! TaiwanVVMs
+        DO I=1,NX1
+        DO J=1,NY1
+        IF (NX/=NX1 .AND. NY/=NY1) THEN
+          II=NX/NX1
+          JJ=NY/NY1
+          TMP=SUM(SUM(DBLE(hgt(II*(I-1)+1:II*I,JJ*(J-1)+1:JJ*J)),2),1)
+     1   /DBLE(II*JJ)
+          alb_o(I,J)=SUM(SUM(DBLE(alb(II*(I-1)+1:II*I,JJ*(J-1)+1:JJ*J))
+     1   ,2),1)/DBLE(II*JJ)
+          grf_o(I,J)=SUM(SUM(DBLE(grf(II*(I-1)+1:II*I,JJ*(J-1)+1:JJ*J))
+     1   ,2),1)/DBLE(II*JJ)
+          lai_o(I,J)=SUM(SUM(DBLE(lai(II*(I-1)+1:II*I,JJ*(J-1)+1:JJ*J))
+     1   ,2),1)/DBLE(II*JJ)
+          SHDMAX_o(I,J)=SUM(SUM(DBLE(SHDMAX(II*(I-1)+1:II*I,
+     1   JJ*(J-1)+1:JJ*J)),2),1)/DBLE(II*JJ)
+          SHDMIN_o(I,J)=SUM(SUM(DBLE(SHDMIN(II*(I-1)+1:II*I,
+     1   JJ*(J-1)+1:JJ*J)),2),1)/DBLE(II*JJ)
+
+          kk=1
+          do jjj=1,jj
+          do iii=1,ii
+            tmp1(kk)=LU(II*(I-1)+iii,JJ*(J-1)+jjj)
+            kk=kk+1
+          enddo
+          enddo
+          kk=kk-1
+          call hashtable(tmp1,kk,0,30,K)
+          LU_o(I,J)=dble(K)
+
+          kk=1
+          do jjj=1,jj
+          do iii=1,ii
+            IF (LU_o(I,J)/=16. .and. 
+     1          LU(II*(I-1)+iii,JJ*(J-1)+jjj)/=16.) THEN
+              tmp1(kk)=SLOPE(II*(I-1)+iii,JJ*(J-1)+jjj)
+              kk=kk+1
+            ENDIF
+          enddo
+          enddo
+          kk=kk-1
+          call hashtable(tmp1,kk,0,30,K)
+          SLOPE_o(I,J)=dble(K)
+
+          kk=1
+          do jjj=1,jj
+          do iii=1,ii
+            IF (LU_o(I,J)/=16. .and. 
+     1          LU(II*(I-1)+iii,JJ*(J-1)+jjj)/=16.) THEN
+              tmp1(kk)=SOIL(II*(I-1)+iii,JJ*(J-1)+jjj)
+              kk=kk+1
+            ENDIF
+          enddo
+          enddo
+          kk=kk-1
+          call hashtable(tmp1,kk,0,30,K)
+          SOIL_o(I,J)=dble(K)
+        ELSE
+          TMP=DBLE(hgt(I,J))
+          LU_o(I,J) = LU(I,J)
+          alb_o(I,J) = alb(I,J)
+          grf_o(I,J) = grf(I,J)
+          lai_o(I,J) = lai(I,J)
+          SHDMAX_o(I,J) = SHDMAX(I,J)
+          SHDMIN_o(I,J) = SHDMIN(I,J)
+          SLOPE_o(I,J) = SLOPE(I,J)
+          SOIL_o(I,J) = SOIL(I,J)
+        ENDIF        
+
+        IF (TMP .GT. 0. .and. LU_o(I,J) /= 16) HX(I,J) = 2.
+        DO K=2,NK1
+        IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+
+        ENDDO
+        IF(HX(I,J).LT.0) HX(I,J)=1.
+
+        ENDDO
+        ENDDO
+      ENDIF
 
       ENDIF
 
@@ -353,6 +446,30 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      WRITE(16)HX 
 !      CLOSE(16)
 
+      alb_oo=8.
+      grf_oo=0.
+      lai_oo=0.
+      lu_oo=16
+      shdmax_oo=0.
+      shdmin_oo=0.
+      slope_oo=0
+      soil_oo=14
+      hx_oo=1
+
+      do j=1,NY1
+      do i=1,NX1
+      hx_oo(i+128,j+128)=hx(i,j)
+      alb_oo(i+128,j+128)=alb_o(i,j)
+      grf_oo(i+128,j+128)=grf_o(i,j)
+      lai_oo(i+128,j+128)=lai_o(i,j)
+      lu_oo(i+128,j+128)=lu_o(i,j)
+      shdmax_oo(i+128,j+128)=shdmax_o(i,j)
+      shdmin_oo(i+128,j+128)=shdmin_o(i,j)
+      slope_oo(i+128,j+128)=slope_o(i,j)
+      soil_oo(i+128,j+128)=soil_o(i,j)
+      enddo
+      enddo
+
       DO 900 JP = 1,nsbdm_y
       JI = (JP-1)*MJ1+1
       JE = (JP)*MJ1
@@ -362,19 +479,19 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)')
      1 'RUNDATA/TOPO',IP,'_',JP,'.dat'
       OPEN(unit=16,file=FILENAME,form='unformatted')
-      WRITE(16) ((DBLE(HX(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((DBLE(HX_oo(I,J)),I=II,IE),J=JI,JE)
       CLOSE(16) 
       WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)')
      1 'RUNDATA/LSM',IP,'_',JP,'.dat'
       OPEN(unit=16,file=FILENAME,form='unformatted')
-      WRITE(16) (((alb(I,J)),I=II,IE),J=JI,JE) 
-      WRITE(16) (((grf(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((lai(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((INT(lu(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((shdmax(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((shdmin(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((INT(slope(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((INT(soil(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((alb_oo(I,J)),I=II,IE),J=JI,JE) 
+      WRITE(16) (((grf_oo(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((lai_oo(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((INT(lu_oo(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((shdmax_oo(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) (((shdmin_oo(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((INT(slope_oo(I,J)),I=II,IE),J=JI,JE)
+      WRITE(16) ((INT(soil_oo(I,J)),I=II,IE),J=JI,JE)
       CLOSE(16)
   900 CONTINUE
 
@@ -464,8 +581,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       mask=1.
       do j=1,mj_glob
       do i=1,mi_glob
-        k=int(HX(i,j))
-        height(i,j)=(zz(k)+(zz(k+1)-zz(k))*modulo(hx(i,j),1.))/1000.
+        k=int(HX_oo(i,j))
+        height(i,j)=(zz(k)+(zz(k+1)-zz(k))*modulo(hx_oo(i,j),1.))/1000.
         mask(i,j,1:k)=0.
       enddo
       enddo
@@ -476,21 +593,21 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ierr = nf_put_var_real(ncid, nmask, mask)
       print*,'ERRor', nf_strerror(ierr)
 
-      ierr = nf_put_var_real(ncid, nalb, alb)
+      ierr = nf_put_var_real(ncid, nalb, alb_oo)
       print*,'ERRor', nf_strerror(ierr)
-      ierr = nf_put_var_real(ncid, ngrf, grf)
+      ierr = nf_put_var_real(ncid, ngrf, grf_oo)
       print*,'ERRor', nf_strerror(ierr)
-      ierr = nf_put_var_real(ncid, nlai, lai)
+      ierr = nf_put_var_real(ncid, nlai, lai_oo)
       print*,'ERRor', nf_strerror(ierr)
-      ierr = nf_put_var_real(ncid, nlu, lu)
+      ierr = nf_put_var_real(ncid, nlu, lu_oo)
       print*,'ERRor', nf_strerror(ierr)
-      ierr = nf_put_var_real(ncid, nshdmax, shdmax)
+      ierr = nf_put_var_real(ncid, nshdmax, shdmax_oo)
       print*,'ERRor', nf_strerror(ierr)
-      ierr = nf_put_var_real(ncid, nshdmin, shdmin)
+      ierr = nf_put_var_real(ncid, nshdmin, shdmin_oo)
       print*,'ERRor', nf_strerror(ierr)
-      ierr = nf_put_var_real(ncid, nslope, slope)
+      ierr = nf_put_var_real(ncid, nslope, slope_oo)
       print*,'ERRor', nf_strerror(ierr)
-      ierr = nf_put_var_real(ncid, nsoil, soil)
+      ierr = nf_put_var_real(ncid, nsoil, soil_oo)
       print*,'ERRor', nf_strerror(ierr)
 
 
@@ -498,3 +615,22 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       print*,'ERRor', nf_strerror(ierr)
 
       end
+
+      subroutine hashtable(Array,n,a,b,ans)
+
+      integer :: n, a, b
+      integer, dimension(n) :: Array
+      integer, dimension(a:b) :: H
+      integer :: ans, i
+
+      H=0
+      do i=1,n
+        H(Array(i))=H(Array(i))+1
+      enddo
+      ans=maxloc(H,1)-(1-a)
+
+!      write(*,666) Array(:), ans
+!  666 format(50I3)
+
+      end subroutine hashtable
+
