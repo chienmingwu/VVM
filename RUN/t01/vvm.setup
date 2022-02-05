@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = taiwanvvms_full
+set expname = taiwanvvms_part
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -85,8 +85,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/384/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/384/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
@@ -97,7 +97,7 @@ sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 # input data
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=8640. /
- &INPUT2 RLAT=0, RLON=0 /
+ &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /

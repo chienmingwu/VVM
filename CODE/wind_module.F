@@ -255,7 +255,7 @@ SUBROUTINE DIRECTIB
 
 
 
-      IF (.false.) THEN
+      IF (.true.) THEN
 
       DO 100 J=1,mj1
       DO 100 I=1,mi1

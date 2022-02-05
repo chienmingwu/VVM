@@ -405,16 +405,32 @@
           SOIL_o(I,J) = SOIL(I,J)
         ENDIF        
 
-        IF (TMP .GT. 0. .and. LU_o(I,J) /= 16) HX(I,J) = 2.
+!        IF (TMP .GT. 0. .and. LU_o(I,J) /= 16) HX(I,J) = 2.
+!        DO K=2,NK1
+!        IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!        ENDDO
+!        IF(HX(I,J).LT.0) HX(I,J)=1.
+
+        ! for partial step
+        IF (TMP .GT. 0. .and. LU_o(I,J)/=16) HX(I,J) = 1.001
         DO K=2,NK1
-        IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+        IF (TMP >= ZZ(k)) THEN
+          IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.5) THEN
+            TOP=K+1.
+          ELSEIF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4 .AND.
+     1            (TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))<0.5) THEN
+            TOP=K+0.4
+          ELSE
+            TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+          ENDIF
+          HX(I,J) = TOP
+        ENDIF
+        ENDDO
+        IF(HX(I,J).LT.0)HX(I,J)=1.
 
         ENDDO
-        IF(HX(I,J).LT.0) HX(I,J)=1.
-
         ENDDO
-        ENDDO
-      ENDIF
+      ENDIF ! TaiwanVVMs
 
       ENDIF
 
@@ -456,17 +472,19 @@
       soil_oo=14
       hx_oo=1
 
+      iii=64
+      jjj=64
       do j=1,NY1
       do i=1,NX1
-      hx_oo(i+128,j+128)=hx(i,j)
-      alb_oo(i+128,j+128)=alb_o(i,j)
-      grf_oo(i+128,j+128)=grf_o(i,j)
-      lai_oo(i+128,j+128)=lai_o(i,j)
-      lu_oo(i+128,j+128)=lu_o(i,j)
-      shdmax_oo(i+128,j+128)=shdmax_o(i,j)
-      shdmin_oo(i+128,j+128)=shdmin_o(i,j)
-      slope_oo(i+128,j+128)=slope_o(i,j)
-      soil_oo(i+128,j+128)=soil_o(i,j)
+      hx_oo(i+iii,j+jjj)=hx(i,j)
+      alb_oo(i+iii,j+jjj)=alb_o(i,j)
+      grf_oo(i+iii,j+jjj)=grf_o(i,j)
+      lai_oo(i+iii,j+jjj)=lai_o(i,j)
+      lu_oo(i+iii,j+jjj)=lu_o(i,j)
+      shdmax_oo(i+iii,j+jjj)=shdmax_o(i,j)
+      shdmin_oo(i+iii,j+jjj)=shdmin_o(i,j)
+      slope_oo(i+iii,j+jjj)=slope_o(i,j)
+      soil_oo(i+iii,j+jjj)=soil_o(i,j)
       enddo
       enddo
 
