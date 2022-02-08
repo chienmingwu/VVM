@@ -332,6 +332,7 @@ CONTAINS
          UW(I,J)  = 0.
          WV(I,J)  = 0.
          WTH(I,J) = 0.
+         IF (HX(I,J)>1.) WTH(I,J) = 0.5
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE

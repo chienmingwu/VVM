@@ -11,7 +11,7 @@
       character(23) FILENAME
 
       integer NX, NY, NX1, NY1
-      parameter (NX = 1024, NY = 1024, NX1=256, NY1=256)
+      parameter (NX = 1024, NY = 1024, NX1=256, NY1=4)
       REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
       REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB), ZT1(NK3)
@@ -242,8 +242,6 @@
       ENDDO
       ENDDO
 
-      !where(slope==0) slope=1
-
       HX = 1
       DO 500 J = 1,MJ_GLOB
       DO 500 I = 1,MI_GLOB
@@ -251,34 +249,38 @@
       xt(I) = I * DX
       yt(J) = J * DYNEW
 
-!      ! setup Chien and Wu 2016
-!      TMP=abs(real(i)-real(mi_glob)/2.)*DX
-!      if (TMP<=5000.) then
+      ! setup Chien and Wu 2016
+      TMP=abs(real(i)-real(mi_glob)/2.)*DX
+      if (TMP<=15000.) then
 !      TMP = 1200. 
 !      elseif (TMP>5000. .and. TMP<=20000.) then
-!!      if (TMP<=10000.) then
-!      TMP = -0.08*(TMP-20000.)
-!      else 
-!      TMP = 0.
-!      endif
-!      TOP=1
-!      DO k=1,NK2
-!        if (.false.) then
-!          ! for full step 
-!          IF (TMP >= ZZ(k)) TOP=K+INT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-!        else
-!          ! for partial step
-!          IF (TMP >= ZZ(k)) THEN
-!            IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4) THEN
-!              TOP=K+0.4
-!            ELSE
-!              TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-!            ENDIF
-!          ENDIF
-!        endif
-!      ENDDO
-!
-!      hx(I,J)=TOP
+!      if (TMP<=10000.) then
+      TMP = -0.08*(TMP-15001.)
+      else 
+      TMP = 0.
+      endif
+      TOP=1
+      DO k=1,NK2
+        if (.false.) then
+          ! for full step 
+          IF (TMP >= ZZ(k)) TOP=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+        else
+          ! for partial step
+          IF (TMP >= ZZ(k)) THEN
+            IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.5) THEN
+              TOP=K+1.
+            ELSEIF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4 .AND.
+     1              (TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))<0.5) THEN
+              TOP=K+0.4
+            ELSE
+              TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+            ENDIF
+            HX(I,J) = TOP
+          ENDIF
+        endif
+      ENDDO
+
+      hx(I,J)=TOP
 
 !      ENDDO
 
@@ -304,7 +306,7 @@
 !      endif
   500 CONTINUE
 
-      ! Taiwan vvm 
+      IF (.false.) THEN ! Taiwan vvm 
       DO I=1,mi_glob
       DO J=1,mj_glob
       TMP=DBLE(hgt(I,J))
@@ -335,8 +337,9 @@
 
       ENDDO
       ENDDO
+      ENDIF
 
-      IF (.true.) THEN ! TaiwanVVMs
+      IF (.false.) THEN ! TaiwanVVMs
         DO I=1,NX1
         DO J=1,NY1
         IF (NX/=NX1 .AND. NY/=NY1) THEN
@@ -472,8 +475,8 @@
       soil_oo=14
       hx_oo=1
 
-      iii=64
-      jjj=64
+      iii=0
+      jjj=0
       do j=1,NY1
       do i=1,NX1
       hx_oo(i+iii,j+jjj)=hx(i,j)
