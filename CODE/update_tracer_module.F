@@ -54,10 +54,6 @@ CONTAINS
         TC3D(I,J,K,8)=40.
         TC3D(I,J,K,9)=0.
         TC3D(I,J,K,10)=0.
-        TC3D(I,J,K,11)=40.
-        TC3D(I,J,K,12)=0.
-        TC3D(I,J,K,13)=0.
-
 
 !      ! VFdA2005
 !        if (zt(K) .lt. 350.) then
@@ -130,35 +126,24 @@ CONTAINS
         IF (tempim .EQ. 513) THEN
           IF (tempjm .EQ. 32) THEN
             ! tracer
-            TC3D(I,J,7,1)=TC3D(I,J,7,1)+81.54
+            TC3D(I,J,7,1)=TC3D(I,J,7,1)+79.91
           ENDIF
         ENDIF
         IF (tempim .EQ. 513) THEN
             ! industrail
-            TC3D(I,J,7,3)=TC3D(I,J,7,3)+1.744
-            TC3D(I,J,7,4)=TC3D(I,J,7,4)+0.194
-            TC3D(I,J,7,9)=TC3D(I,J,7,9)+1.744
-            TC3D(I,J,7,10)=TC3D(I,J,7,10)+0.194
-            TC3D(I,J,7,12)=TC3D(I,J,7,12)+1.744
-            TC3D(I,J,7,13)=TC3D(I,J,7,13)+0.194
+            TC3D(I,J,7,3)=TC3D(I,J,7,3)+1.709
+            TC3D(I,J,7,4)=TC3D(I,J,7,4)+0.190
+            TC3D(I,J,7,9)=TC3D(I,J,7,9)+1.709
+            TC3D(I,J,7,10)=TC3D(I,J,7,10)+0.190
         ENDIF
         IF (tempim .GT. 513 .AND. tempim .LT. 768) THEN
           IF (coszen .GT. 0.00) THEN
             ! traffic
-            TC3D(I,J,2,6)=TC3D(I,J,2,6)+0.01767
-            TC3D(I,J,2,7)=TC3D(I,J,2,7)+0.00196
-            TC3D(I,J,2,9)=TC3D(I,J,2,9)+0.01767
-            TC3D(I,J,2,10)=TC3D(I,J,2,10)+0.00196
-            TC3D(I,J,2,12)=TC3D(I,J,2,12)+0.01767
-            TC3D(I,J,2,13)=TC3D(I,J,2,13)+0.00196
+            TC3D(I,J,2,6)=TC3D(I,J,2,6)+0.01732
+            TC3D(I,J,2,7)=TC3D(I,J,2,7)+0.00192
+            TC3D(I,J,2,9)=TC3D(I,J,2,9)+0.01732
+            TC3D(I,J,2,10)=TC3D(I,J,2,10)+0.00192
           ENDIF
-        ENDIF
-       ! boundary ozone
-        IF (tempjm .EQ. 0) THEN
-            TC3D(I,J,:,11)=40.
-        ENDIF
-        IF (tempjm .EQ. 32) THEN
-            TC3D(I,J,:,11)=40.
         ENDIF
 
        ! remove (boundary)

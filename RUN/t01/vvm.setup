@@ -5,11 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = Mount_300t0_rh10
+set expname = Mount_ctl
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'intel_mogamd'
+set jobsys = 'slurm_mogamd'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -93,7 +93,7 @@ sed -i 's/merid_dimension/64/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/100/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/13/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/10/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'

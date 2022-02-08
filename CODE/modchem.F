@@ -277,8 +277,8 @@ SUBROUTINE initchem
   dtchmovie= 60
   idtchmovie = dtchmovie/tres
   firstchem= 1
-  lastchem = 13
-  nchsp    = 13
+  lastchem = 10
+  nchsp    = 10
   lcloudKconst  = .false.
   lsegr    = .false.
 
