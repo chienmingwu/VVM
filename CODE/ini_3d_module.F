@@ -454,15 +454,15 @@ CONTAINS
       endif
 
 
-      ! isentropic environment
-      do k=1,nk3
-        THBAR(k)=THBAR(2)+0.003*ZT(k)
-      enddo
-      RHO=1.
-      RHOZ=1.
-      RHOU=1.
-      RHOT=1.
-      RHOW=1.   
+      !! isentropic environment
+      !do k=1,nk3
+      !  THBAR(k)=THBAR(2)+0.003*ZT(k)
+      !enddo
+      !RHO=1.
+      !RHOZ=1.
+      !RHOU=1.
+      !RHOT=1.
+      !RHOW=1.   
 
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
