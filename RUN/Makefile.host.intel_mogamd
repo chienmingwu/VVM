@@ -56,8 +56,8 @@ SUF      = f
 
 INC = -I/opt/libs-intel-oneapi/pnetcdf-1.12.2/include -I/opt/libs-intel-oneapi/netcdf-4.7.4/include -I/opt/libs-intel-oneapi/petsc-3.14.0/include -I$(CDECKS) -I$(EXPDIR)
 
-CH = -g -traceback -check bounds -debug all
-#CH = #-g -traceback 
+#CH = -g -traceback -check all nostack -debug all
+CH = -g -traceback -BC
 
 FC = mpiifort -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large $(DEBUG) #-march=core-avx2 -ipo -no-prec-div -fp-model fast=2
 
