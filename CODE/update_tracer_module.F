@@ -1,3 +1,4 @@
+#include "definesld.com"
 MODULE update_tracer_module
 
 ! This is default code for no tracers. Other cases should be saved with
@@ -13,6 +14,9 @@ USE parmsld
 USE constld
 USE const3d
 USE domain_decomposition
+#if defined (CHEM)
+  USE modchem
+#endif
 
 IMPLICIT NONE
 PRIVATE
@@ -30,40 +34,50 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
+#if defined (CHEM)
+      ! initiation of chemistry module
+      call initchem
+#endif
+
 !  Initialize tracer
-      DO 888 nt = 1,ntracer
-      DO 888 K = 1, NK3
-      DO 888 J = mjm,mjp 
-      DO 888 I = mim,mip 
-      TC3D(I,J,K,nt)=0.
+      DO 888 K = 1,NK2
+      DO 888 J = mjm,mjp
+      DO 888 I = mim,mip
+      ! chemical transport with mountain
+        TC3D(I,J,K,1)=0.
+        TC3D(I,J,K,2)=40.
+        TC3D(I,J,K,3)=0.
+        TC3D(I,J,K,4)=0.
+        TC3D(I,J,K,5)=40.
+        TC3D(I,J,K,6)=0.
+        TC3D(I,J,K,7)=0.
+        TC3D(I,J,K,8)=40.
+        TC3D(I,J,K,9)=0.
+        TC3D(I,J,K,10)=0.
+
+!      ! VFdA2005
+!        if (zt(K) .lt. 350.) then
+!          TC3D(I,J,K,1)=0.
+!          TC3D(I,J,K,2)=20.
+!          TC3D(I,J,K,3)=1.
+!          TC3D(I,J,K,4)=2.
+!        elseif (zt(K) .lt. 800. .and. zt(K) .gt. 350) then
+!          TC3D(I,J,K,1)=0.
+!          TC3D(I,J,K,2)=30.
+!          TC3D(I,J,K,3)=0.
+!          TC3D(I,J,K,4)=0.
+!        else
+!          TC3D(I,J,K,1)=0.
+!          TC3D(I,J,K,2)=30.
+!          TC3D(I,J,K,3)=0.
+!          TC3D(I,J,K,4)=0.
+!        endif
+
   888 CONTINUE
-  
-!  SELECT CASE (TRIM(casename))
-!  CASE ('GATE_PHASE_III')
-!! This is to set up test tracers for the GATE PHASE III case. Their only
-!!  purpose is for testing and debugging.
-!! Tracer 1 is initialized to 3x3 square columns set inside each corner of the domain.
-!! Tracer 2 is initialized to fill the 2km to 4km layer
-!! The tracers are advected without sources or sinks
-!      tc3d(3:5,3:5,:,1) = 1.                ! SW corner column
-!      tc3d(3:5,mj1-2:mj1,:,1) = 1.          ! NW corner column
-!      tc3d(mi1-2:mi1,mj1-2:mj1,:,1) = 1.    ! NE corner column
-!      tc3d(mi1-2:mi1,3:5,:,1) = 1.          ! SE corner column
-!      
-!      DO 123 K = 1, NK3
-!      DO 123 J = mjm,mjp
-!      DO 123 I = mim,mip
-!      IF ((ZT(K) .GE. 2000.) .AND. (ZT(K) .LE. 4000.)) THEN
-!      TC3D(I,J,K,2)=1.
-!      END IF
-!  123 CONTINUE
-!  CASE ('TWP-ICE')
-!! the twp-ice case has a specified source function
-!      call update_tracer_source      
-!  END SELECT
+
+!       call update_tracer
 
    END SUBROUTINE update_tracer_init
-
 
 !=======================================================================
    SUBROUTINE UPDATE_TRACER
@@ -72,52 +86,101 @@ CONTAINS
 !  Default is no source or sink
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
-      LOGICAL (KIND=log_kind) :: decay_loc
-
-      !call update_tracer_source      
 
 
-!  SELECT CASE (TRIM(casename))
-!  CASE ('TWP-ICE')
-!!   Universal tracer decay with 6-hour e-folding time (TWP-ICE)
-!      DO 301 nt=1,ntracer
-!      DO 301 K=1,NK3
-!      DO 301 J=mjm,mjp
-!      DO 301 I=mim,mip
-!      TC3D(I,J,K,nt)=TC3D(I,J,K,nt) - DT*(TC3D(I,J,K,nt)/21600.)
-!  301 CONTINUE
-!  
-!! the twp-ice case has a specified source function
-!      call update_tracer_source      
-!  END SELECT
-  
+      call update_tracer_source
+
+#if defined (CHEM)
+      ! chemical reactions
+      IF (my_task==0) WRITE(*,*) "update chemistry"
+      call twostep()
+      IF (my_task==0) WRITE(*,*) "chemistry update successfully"
+#endif
+
    END SUBROUTINE update_tracer
 
-!=======================================================================
    SUBROUTINE UPDATE_TRACER_source
-!  Here the TWP-ICE specified source layers of the tracer are set to 1.0
-!  TRACER1: 00000-00250 m
-!  TRACER2: 02000-04000 m
-!  TRACER3: 04000-06000 m
-!  TRACER4: 14000-17000 m
-!=======================================================================
+
+      use timeinfo, only : rjday, utc_time
+      use constld, only : rlon, rlat
 
       INTEGER (KIND=int_kind) ::   &
-         i, j, k, tempim, tempjm ! do loop indices for zonal, meridional and vertical dimensions
+         i, j, k ,nt, tempim, tempjm   
+      ! do loop indices for zonal, meridional and vertical dimensions
+      REAL xday, xhr, xlon, xlat, sza, coszen
+      
+      ! current time
+      xday = rjday
+      xhr = utc_time
+      xlon = rlon
+      xlat = rlat
 
-      if(my_task == 0) WRITE(6,*) 'Updating Tracer...'
-      !DO 123 K = 1, NK3
-!      DO 123 J = mjm,mjp
-!      DO 123 I = mim,mip
-!        tempim=mi1*ni_sbdm+i
-!        tempjm=mj1*nj_sbdm+j
-!        IF (tempjm==mj_glob/2 .or. tempjm==mj_glob/4 .or. tempjm==mj_glob*3/4) THEN
-!        IF (tempim==mi_glob/3) THEN
-!          TC3D(I,J,1:2,1)=1.
-!        ENDIF
-!        ENDIF
-!  123 CONTINUE
-  
+      sza = getth(xday,xlat,xlon,xhr)
+      coszen = max(0.0,cos(sza)) !to avoid negative values
+
+      DO 988 J = mjm,mjp
+      DO 988 I = mim,mip
+        tempim=mi1*ni_sbdm+i
+        tempjm=mj1*nj_sbdm+j
+      ! source
+        IF (tempim .EQ. 256) THEN
+          IF (tempjm .EQ. 32) THEN
+            ! tracer
+            TC3D(I,J,7,1)=TC3D(I,J,7,1)+79.91
+          ENDIF
+        ENDIF
+        IF (tempim .EQ. 256) THEN
+            ! industrail
+            TC3D(I,J,7,3)=TC3D(I,J,7,3)+1.709
+            TC3D(I,J,7,4)=TC3D(I,J,7,4)+0.190
+            TC3D(I,J,7,9)=TC3D(I,J,7,9)+1.709
+            TC3D(I,J,7,10)=TC3D(I,J,7,10)+0.190
+        ENDIF
+        IF (tempim .GT. 256 .AND. tempim .LT. 384) THEN
+          IF (coszen .GT. 0.00) THEN
+            ! traffic
+            TC3D(I,J,2,6)=TC3D(I,J,2,6)+0.01732
+            TC3D(I,J,2,7)=TC3D(I,J,2,7)+0.00192
+            TC3D(I,J,2,9)=TC3D(I,J,2,9)+0.01732
+            TC3D(I,J,2,10)=TC3D(I,J,2,10)+0.00192
+          ENDIF
+        ENDIF
+
+       ! remove (boundary)
+        IF (tempim .EQ. 512) THEN
+           TC3D(I,J,:,:)=0
+        ENDIF
+        IF (tempim .EQ. 1) THEN
+           TC3D(I,J,:,:)=0
+        ENDIF
+        IF (tempim .EQ. 0) THEN
+           TC3D(I,J,:,:)=0
+        ENDIF
+  988 CONTINUE
+
    END SUBROUTINE update_tracer_source
+!c
+!c ---- Function to calculate solar zenith angle
+!c
+real function getth(daynr,lat,lon,xhr)
+implicit none
+  real daynr, lat, lon, xhr
+  real  houra
+  real  obliq,deday,delta,lonr,latr
+  real  piby,pi
+
+  pi = acos(-1.)
+  piby = pi/ 180.
+  lonr = lon*piby
+  latr = lat*piby
+  obliq = 23.45 * piby
+  deday = 4.88 + 2*pi/365  * daynr
+  delta = asin(sin(obliq)*sin(deday))
+  houra = lonr - pi + xhr * (2.*pi/24.)
+  getth = acos(sin(delta)*sin(latr) + cos(delta)*cos(latr)*cos(houra))
+
+  return
+end function getth
 
 END MODULE update_tracer_module
+

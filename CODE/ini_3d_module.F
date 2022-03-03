@@ -404,6 +404,63 @@ CONTAINS
       VG(1)   = VG(2)
       VG(NK3) = VG(NK2)
 
+!ccwu applying new profiles here
+!      do k=1,nk3
+!      
+!      !theta
+!      if(zt(k) .le. 50.) then
+!      thetal(k)=299.00+(301.50-299.00)*zt(k)/50.
+!      elseif(zt(k) .gt. 50. .and. zt(k) .le. 350.) then
+!      thetal(k)=301.50+(302.50-301.50)*(zt(k)-50.)/300.
+!      elseif(zt(k) .gt. 350. .and. zt(k) .le. 650.) then
+!      thetal(k)=302.50+(303.53-302.50)*(zt(k)-350.)/300.
+!      elseif(zt(k) .gt. 650. .and. zt(k) .le. 700.) then
+!      thetal(k)=303.53+(303.70-303.53)*(zt(k)-650.)/50.
+!      elseif(zt(k) .gt. 700. .and. zt(k) .le. 1300.) then
+!      thetal(k)=303.70+(307.13-303.70)*(zt(k)-700.)/600.
+!      elseif(zt(k) .gt. 1300. .and. zt(k) .le. 2500.) then
+!      thetal(k)=307.13+(314.00-307.13)*(zt(k)-1300.)/1200.
+!      elseif(zt(k) .gt. 2500.) then
+!      thetal(k)=314.00+(343.20-314.00)*(zt(k)-2500.)/3000.
+!      endif
+!
+!      ! qt
+!      if(zt(k) .le. 50.) then
+!      qt(k)=15.20+(15.17-15.20)*zt(k)/50.
+!      elseif(zt(k) .gt. 50. .and. zt(k) .le. 350.) then
+!      qt(k)=15.17+(14.98-15.17)*(zt(k)-50.)/300.
+!      elseif(zt(k) .gt. 350. .and. zt(k) .le. 650.) then
+!      qt(k)=14.98+(14.80-14.98)*(zt(k)-350.)/300.
+!      elseif(zt(k) .gt. 650. .and. zt(k) .le. 700.) then
+!      qt(k)=14.80+(14.70-14.80)*(zt(k)-650.)/50.
+!      elseif(zt(k) .gt. 700. .and. zt(k) .le. 1300.) then
+!      qt(k)=14.70+(13.50-14.70)*(zt(k)-700.)/600.
+!      elseif(zt(k) .gt. 1300. .and. zt(k) .le. 2500.) then
+!      qt(k)=13.50+(3.00-13.50)*(zt(k)-1300.)/1200.
+!      elseif(zt(k) .gt. 2500.) then
+!      qt(k)=3.00
+!      endif
+!      ! qt (g/kg => kg/kg)
+!      qt(k)= qt(k)*0.001
+!       
+!      if(qt(k) .le.0) then
+!      qt(k)=0.
+!      endif
+!
+!      enddo
+!
+!      do k=1,NK3
+!      tl=thetal(k)*(pbar(k)/pzero)**(rgas/cp)
+!      xx=tl
+!      es1=es(xx)
+!      qvs=es1*0.622/(pbar(k)-es1)
+!      ql(k)=max(qt(k)-qvs,0.)
+!      thbar(k)=thetal(k)
+!      qvbar(k)=qt(k)-ql(k)
+!      qcbar(k)=ql(k)
+!      enddo
+
+
 !     OCEAN POINTS
 
       DO 300 J = mjm,mjp

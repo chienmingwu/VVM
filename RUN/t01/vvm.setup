@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = land_model_debug
+set expname = taiwanvvms_test
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -65,6 +65,9 @@ cp ${vvmdir}/CODE/LSM/VEGPARM.TBL .
 # for P3 scheme
 cp ${vvmdir}/CODE/p3_lookup_table_* .
 
+# for chemical scheme
+cp -r ${vvmdir}/CODE/CHEM/* .
+
 # create CPP list
 cat > definesld.com << 'END1'
 #define MPI
@@ -76,7 +79,8 @@ cat > definesld.com << 'END1'
 #define MICROP3
 #define RADCODE
 #define LSM
-#define AREAMN
+#define CHEM
+#define TOPOGRAPHY
 'END1'
 cat definesld.com
 
@@ -90,7 +94,7 @@ sed -i 's/merid_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/10/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 

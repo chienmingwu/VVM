@@ -22,15 +22,12 @@ module load petsc/3.14.0 pnetcdf/1.12.2
 #
 #export export LD_PRELOAD=libfakeintel.so
 #export LD_LIBRARY_PATH=$(pwd)
-
 export I_MPI_FABRICS=shm
 
 export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
-
 mpirun -np total_cores ./vvm < INPUT | tee OUTPUT 
-
 date >> runtime
 
 

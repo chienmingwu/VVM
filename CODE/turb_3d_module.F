@@ -75,6 +75,12 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k,  & ! do loop indices for zonal, meridional and vertical dimensions
          itype       !
+      REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04
+      REAL (KIND=dbl_kind), PARAMETER :: lhv = 2500000.
+      REAL (KIND=dbl_kind) :: sufp = 970._dbl_kind
+      REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind
+
+
 
       DATA ITYPE/3/ !ccwu for topography we don't know how to deal with turbulence yet
       DATA RNU/100._dbl_kind/,RKD/0.21_dbl_kind/,RKB/0.7_dbl_kind/
@@ -95,7 +101,7 @@ CONTAINS
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
 !      CRITMN=100.
 !      New Value for TWP-ICE
-      CRITMN=1._dbl_kind !ccwu for LES run
+      CRITMN=10._dbl_kind !ccwu for LES run
 !      CRITMN=100._dbl_kind !ccwu for TCVVM
 
       RAMD0S=(0.23_dbl_kind*DELD)**2
@@ -329,11 +335,47 @@ CONTAINS
       IF(NOSFX) THEN
          DO 110 J=mjm,mjp
          DO 110 I=mim,mip
-         UW(I,J)  = 0.
-         WV(I,J)  = 0.
+         UW(I,J)  = 0. !-u(2)/dz*fnz(2)*tau
+         WV(I,J)  = 0. !-v(2)/dz*fnz(2)*tau
          WTH(I,J) = 0.
          IF (HX(I,J)>1.) WTH(I,J) = 0.5
          WQV(I,J) = 0.
+
+! shallow convection case
+!         ! sensible heat flux
+!         if (itt .le. 14400) then
+!           WTH(I,J) = (-30.+120.*(float(itt)/14400.))
+!         elseif (itt .gt. 14400 .and. itt .le. 23400) then
+!           WTH(I,J) = (90.+50.*(float(itt-14400)/9000.))
+!         elseif (itt .gt. 23400 .and. itt .le. 27000) then
+!           WTH(I,J) = 140.
+!         elseif (itt .gt. 27000 .and. itt .le. 36000) then
+!           WTH(I,J) = (140.-40.*(float(itt-27000)/9000.))
+!         elseif (itt .gt. 36000 .and. itt .le. 45000) then
+!           WTH(I,J) = (100.-110.*(float(itt-36000)/9000.))
+!         else
+!           WTH(I,J) = -10.
+!         endif
+!         ! change into th
+!         WTH(I,J) = WTH(I,J)/CP*((pzero/sufp)**(rgas/CP))
+!
+!         ! latent heat flux
+!         if (itt .le. 14400) then
+!           WQV(I,J) = (5.+245.*(float(itt)/14400.))
+!         elseif (itt .gt. 14400 .and. itt .le. 23400) then
+!           WQV(I,J) = (250.+200.*(float(itt-14400)/9000.))
+!         elseif (itt .gt. 23400 .and. itt .le. 27000) then
+!           WQV(I,J) = (450.+50.*(float(itt-23400)/3600.))
+!         elseif (itt .gt. 27000 .and. itt .le. 36000) then
+!           WQV(I,J) = (500.-80.*(float(itt-27000)/9000.))
+!         elseif (itt .gt. 36000 .and. itt .le. 45000) then
+!           WQV(I,J) = (420.-240.*(float(itt-36000)/9000.))
+!         else
+!           WQV(I,J) = (180.-180.*(float(itt-45000)/7200.))
+!         endif
+!         ! change into qv
+!         WQV(I,J) = WQV(I,J)/lhv
+
   110    CONTINUE
       ELSE
          IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
@@ -618,10 +660,24 @@ CONTAINS
       DO 621 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                       &
        +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))      &
-                   *(TC3D(I,J,K+1,nt)-TC3D(I,J,K,nt))*DHWW1(I,J,K)                 &
+                   *(TC3D(I,J,K+1,nt)-TC3D(I,J,K,nt))*DHWW1(I,J,K) &
                    -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1))  &
                    *(TC3D(I,J,K,nt)-TC3D(I,J,K-1,nt))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
   621 CONTINUE
+
+!chemical surface flux
+!      DO 623 J=1,MJ1
+!      DO 623 I=1,MI1
+!
+!      hxp=INT(hx(I,J))+1
+!      if (nt .eq. 1) then
+!      DDX(I,J,hxp) = DDX(I,J,hxp) + FNU(hxp)*0.1/(RHOU(hxp)*DZ)
+!      elseif (nt .eq. 3) then
+!      DDX(I,J,hxp) = DDX(I,J,hxp) + FNU(hxp)*0.05/(RHOU(hxp)*DZ)
+!      elseif (nt .eq. 4) then
+!      DDX(I,J,hxp) = DDX(I,J,hxp) + FNU(hxp)*0.1/(RHOU(hxp)*DZ)
+!      endif
+!  623 CONTINUE
 
       DO 631 J=1,MJ1
       DO 631 I=1,MI1

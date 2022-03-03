@@ -435,6 +435,20 @@
         ENDDO
       ENDIF ! TaiwanVVMs
 
+!      DO I=1,mi_glob
+!      DO J=1,mj_glob
+!      TMP=DBLE(hgt(I,J))
+!
+!      IF (TMP .GT. 0.) HX(I,J) = 2.
+!      DO K=2,NK1
+!      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!
+!      ENDDO
+!      IF(HX(I,J).LT.0)HX(I,J)=0
+!
+!      ENDDO
+!      ENDDO
+!
       ENDIF
 
       NP = 0
@@ -475,8 +489,8 @@
       soil_oo=1
       hx_oo=1
 
-      iii=0
-      jjj=0
+      iii=128
+      jjj=128
       do j=1,NY1
       do i=1,NX1
       hx_oo(i+iii,j+jjj)=hx(i,j)
