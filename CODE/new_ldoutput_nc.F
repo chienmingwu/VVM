@@ -932,7 +932,7 @@ CONTAINS
       time_start(1) =  1
      
       if(my_task == 0) then
-        print *,' L, R, C file output this timestep'
+        print *,' L, R, C file output this timestep, '
 #if defined (OUTPUTGRIDA)
         print *," A-grid output (regrid)"
 #else

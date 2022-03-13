@@ -264,7 +264,7 @@ SUBROUTINE initchem
 
   write(cexpnr,'(i3.3)') iexpnr
 
-  itermin  = 1.e-6
+  itermin  = 1.e-1
 
   lchem    =.false.
   ldiuvar  = .false.

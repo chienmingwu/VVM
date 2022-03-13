@@ -59,91 +59,59 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
-      CHARACTER (60) FILENAME
-
       integer nu1, nt1, nq1, k1, k2, it
       logical lf
-      DATA NU1/6/,NT1/71/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
-                             es1, alphaw, pbarmb
+                             es1, alphaw, pbarmb,THVAVG
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(71),PI1(71),TV1(71),PILOG1(71)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(71),T1(71),QV1(71),QC1(71)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA ZT1/0.00,50.00,150.00,250.00,350.00,450.00,550.00,650.00,750.00,850.00,&
-               950.00,1050.00,1150.00,1250.00,1350.00,1450.00,1550.00,1650.00,1750.00,&
-               1850.00,1950.00,2050.00,2150.00,2250.00,2350.00,2450.00,2550.00,2650.00,&
-               2750.00,2850.00,2950.00,3050.00,3150.00,3250.00,3350.00,3450.00,3550.00,&
-               3650.00,3750.00,3850.00,3960.34,4101.72,4270.68,4467.24,4691.37,4943.10,&
-               5222.41,5529.31,5863.79,6225.86,6615.51,7032.75,7477.58,7950.00,8450.00,&
-               8977.58,9532.75,10115.51,10725.86,11363.79,12029.31,12722.41,13443.10,&
-               14191.37,14967.24,15770.68,16601.72,17460.34,18346.55,19260.34,20201.72/
-      DATA P1/1010.10,1005.62,994.41,983.46,972.51,961.56,950.62,939.67,928.72,&
-              918.23,907.99,897.74,887.50,877.25,867.00,856.76,846.69,836.96,&
-              827.23,817.51,808.19,799.09,789.98,780.87,771.77,762.66,753.55,&
-              744.45,735.34,726.76,718.21,709.66,701.11,693.19,685.36,677.53,&
-              669.71,661.88,654.05,646.23,637.62,626.51,613.28,597.94,581.08,&
-              563.29,543.92,523.73,501.70,479.55,455.82,432.22,407.45,382.77,&
-              357.58,333.12,308.33,290.67,276.31,261.29,245.63,229.32,212.34,&
-              194.73,176.46,157.53,137.97,117.76,96.88,75.39,53.21/
-      DATA T1/298.79,298.72,298.86,299.30,299.74,300.20,300.66,301.14,301.63,302.05,302.44,&
-              302.85,303.26,303.69,304.13,304.58,305.07,305.62,306.18,306.75,307.39,308.05,&
-              308.73,309.43,310.13,310.85,311.58,312.33,313.09,313.39,313.67,313.96,314.26,&
-              314.58,314.92,315.26,315.62,315.98,316.36,316.75,317.20,317.79,318.53,319.44,&
-              320.75,322.64,324.63,326.20,328.07,329.37,330.90,332.49,334.39,335.92,338.70,&
-              339.38,341.01,343.83,343.56,343.47,343.63,344.11,345.02,346.50,348.75,361.88,&
-              378.06,397.92,423.34,457.67,508.85/
-      DATA QV1/0.187E-01,0.185E-01,0.180E-01,0.176E-01,0.173E-01,0.169E-01,0.165E-01,0.162E-01,0.158E-01,&
-               0.155E-01,0.153E-01,0.151E-01,0.149E-01,0.146E-01,0.144E-01,0.142E-01,0.139E-01,0.133E-01,&
-               0.128E-01,0.123E-01,0.118E-01,0.114E-01,0.110E-01,0.106E-01,0.102E-01,0.975E-02,0.934E-02,&
-               0.893E-02,0.852E-02,0.826E-02,0.800E-02,0.775E-02,0.750E-02,0.736E-02,0.723E-02,0.711E-02,&
-               0.699E-02,0.686E-02,0.674E-02,0.662E-02,0.648E-02,0.631E-02,0.610E-02,0.586E-02,0.534E-02,&
-               0.435E-02,0.343E-02,0.305E-02,0.263E-02,0.240E-02,0.217E-02,0.187E-02,0.155E-02,0.126E-02,&
-               0.105E-02,0.727E-03,0.510E-03,0.439E-03,0.439E-03,0.352E-03,0.244E-03,0.164E-03,0.107E-03,&
-               0.668E-04,0.404E-04,0.512E-04,0.686E-04,0.942E-04,0.134E-03,0.201E-03,0.326E-03/
-      DATA QC1/71*0./
+          ,QCBAR(NK3),QVSBAR(NK3),UG(NK3),VG(NK3),qv1(NK3),p1(NK3)
+      REAL (KIND=dbl_kind) :: Q1OBS(NK3),Q2OBS(NK3),wls1(NK3)
+      REAL (KIND=real_kind) ::  RHO_s(NK3),RHOZ_s(NK2),THBAR_s(NK3),  &
+             QVBAR_s(NK3),PBAR_s(NK3),PIBAR_s(NK3)
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
 
-      REAL (KIND=dbl_kind) ::  PU1(71),U1(71),V1(71)
-      DATA PU1/1010.10,1005.62,994.41,983.46,972.51,961.56,950.62,939.67,928.72,&
-               918.23,907.99,897.74,887.50,877.25,867.00,856.76,846.69,836.96,&
-               827.23,817.51,808.19,799.09,789.98,780.87,771.77,762.66,753.55,&
-               744.45,735.34,726.76,718.21,709.66,701.11,693.19,685.36,677.53,&
-               669.71,661.88,654.05,646.23,637.62,626.51,613.28,597.94,581.08,&
-               563.29,543.92,523.73,501.70,479.55,455.82,432.22,407.45,382.77,&
-               357.58,333.12,308.33,290.67,276.31,261.29,245.63,229.32,212.34,&
-               194.73,176.46,157.53,137.97,117.76,96.88,75.39,53.21/
-      DATA U1/-0.113157,-0.113157,-0.306903,0.266037,0.838977,1.41192,1.98486,2.5578,&
-              3.13074,3.1333,2.84203,2.55075,2.25948,1.96821,1.67694,1.38567,&
-              1.18383,1.15559,1.12735,1.09911,0.965074,0.778923,0.592772,0.40662,&
-              0.220469,0.0343181,-0.151833,-0.337984,-0.524135,-0.52708,-0.518331,-0.509582,&
-              -0.500833,-0.551356,-0.610735,-0.670115,-0.729495,-0.788874,-0.848254,-0.907634,&
-              -0.972951,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,&
-              -0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,&
-              -0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,&
-              -0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297,-0.997297/
-      DATA V1/0.827442,0.827442,0.974612,1.07672,1.17883,1.28093,1.38304,1.48515,&
-              1.58726,1.48704,1.28259,1.07815,0.873704,0.669258,0.464813,0.260368,&
-              0.258002,0.647908,1.03781,1.42772,1.48257,1.37239,1.26221,1.15203,&
-              1.04185,0.931667,0.821487,0.711307,0.601127,0.461238,0.319452,0.177667,&
-              0.0358818,-0.311888,-0.690437,-1.06899,-1.44753,-1.82608,-2.20463,-2.58318,&
-              -2.99959,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,&
-              -3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,&
-              -3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,&
-              -3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479,-3.15479/
+      CHARACTER(len=8) :: dateStr = '20120328'
+      CHARACTER(len=5) :: stno = '47918'
+      !CHARACTER(len=5) :: stno = '46692'
+      CHARACTER(len=80) :: fname
+      LOGICAL(kind=2) :: noWind = .FALSE.
+
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
+
+!     get data from dat file
+      fname='/home/der0318/47918.20080327.taiwania.dat'
+      open(unit=88,file=fname,form='unformatted',status='old',access='direct',recl=NK3*2)
+      read(88,rec=1) UG(:)
+      read(88,rec=2) VG(:)
+      read(88,rec=3) T(:)
+      read(88,rec=4) qv1(:)
+      read(88,rec=5) p1(:)
+      !print *, 'read data in u:',UG(1),UG(NK3)
+      !print *, 'read data in v:',VG(1),VG(NK3)
+      !print *, 'read data in t:',T(1),T(NK3)
+      !print *, 'read data in qv:',qv1(1),qv1(NK3)
+      !print *, 'read data in p:',p1(1),p1(NK3)
+
+      write(*,*) "TaiwanVVMs initial profile" 
+      do k=1,nk3
+        write(*,723) k, UG(k), VG(k), T(k), qv1(k), p1(k)
+        723 format(I2.2,5F10.4)
+      enddo
+
+      if (noWind) then
+        do k=1,NK3
+          UG(k)=0.
+          VG(k)=0.
+        enddo
+      end if
+
+      wls1=0.
+
+      do k=1,NK3
+        QVBAR(k)=qv1(k)/1000.
+        PBAR(k)=p1(k)*100.0
+      enddo
 
       casename= 'GATE_PHASE_III'
 
@@ -157,168 +125,46 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T1(1)*(P1(1)/PZERO)**(2./7.)
-      
-!!     initialization for rcemip
-!      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
-!      OPEN(939,FILE=trim(filename))
-!      READ(939,*)
-!      DO k=1,nk2
-!        READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1)
-!        111 FORMAT(32X,3F16.4)
-!      ENDDO
-!      CLOSE(939)
-!
-!      PBAR(1)=PBAR(2)
-!      THBAR(1)=THBAR(2)
-!      QVBAR(1)=QVBAR(2)
-!
-!      PBAR(nk3)=PBAR(nk2)+(PBAR(nk2)-PBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-!      THBAR(nk3)=THBAR(nk2)+(THBAR(nk2)-THBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-!      QVBAR(nk3)=QVBAR(nk2)+(QVBAR(nk2)-QVBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-!
-!      QVBAR=QVBAR*0.001
-!      PBAR=PBAR*100.
-!
-!      PIBAR=(PBAR/100000.)**(2./7.)
-!      RHO=PBAR/(rgas*THBAR*PIBAR)
-!      DO k=1,nk2
-!        RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
-!      ENDDO
-!      RHOZ(nk3)=RHOZ(nk2)+(RHOZ(nk2)-RHOZ(nk1))/(ZZ(nk2)-ZZ(nk1))*(ZZ(nk3)-ZZ(nk2))
-!
-!      IF (my_task == 0) THEN
-!      WRITE(*,*) "initial profiles"
-!      DO k=1,nk3
-!        WRITE(*,256) pbar(k)/100.,pibar(k),thbar(k),qvbar(k)*1000.,rho(k),rhoz(k)
-!        256 FORMAT(6F15.5)
-!      ENDDO
-!      ENDIF
-
-!     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
-!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
-!     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
-!     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
-
+      SST = T(1)
       PSFC = P1(1)
 
-      DO 100 K = 1, NT1
-      !T1(K) =  T1(K)*(P1(K)/PZERO)**(2./7.) !* 1.E-01 + 273.16
-      QV1(K)= QV1(K) !* 1.E-04
-  100 CONTINUE
-
       RBCP = RGAS / CP
-      DO 110 K = 1, NT1
-      PI1(K) = ( P1(K) / PZERO ) ** RBCP
+      PZERO=PZERO*100.0
+      PSFC=PSFC*100.0
+
+      DO 110 K = 1, NK3
+      PIBAR(K) = ( PBAR(K) / PZERO ) ** RBCP
   110 CONTINUE
 
-!     *** MIXED LAYER PROFILE ***
 
-!      T1(3) = PI1(3) * T1(2) / PI1(2)
-
-!     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
-
-
-      DO 120 K = 1, NT1
-      T8  = T1(K)*PI1(K)
-      P8  = P1(K)
-      QV8 = QV1(K)
+      DO 120 K = 1, NK3
+      T8  = T(K)
+      P8  = PBAR(K)
+      QV8 = QVBAR(K)
       QC8 = 0.D0
       QI8 = 0.D0
       if (my_task .eq. 0) print*, T8,P8,QV8,K
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      QV1(K) = QV8
-      QC1(K) = 0.
+      QVBAR(K) = QV8
+      QCBAR(K) = 0.
   120 CONTINUE
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
 !     UNITS ARE T : DEG K, QV : G/G.
 
-      DO 130 K = 1, NT1
-      PILOG1(K) = LOG ( PI1(K) )
-      TV1(K) = T1(K)*PI1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
+      DO 130 K = 1, NK3
+      PILOG(K) = LOG ( PIBAR(K) )
+      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K))
   130 CONTINUE
 
-
-!      ZT1(1) = Zz(1)
-!
-!      DO 140 K = 2, NT1
-!      ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
-!              *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
-!  140 CONTINUE
-
-!     LOCATE J = 1 T-LEVEL AT ZW(1).
-
-      ZT(1)    = Zz(1)
-      T(1)     = T1(1)
-      QVBAR(1) = QV1(1)
-      QCBAR(1) = QC1(1)
-
-!     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
-!     FOR K = 2, NK3
-
-      DO 150 K = 2, NK3
-      K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
-      K2 = K1 + 1
-      T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
-      PILOG(K) = FINTRP ( 1, ZT(K), ZT1(K1), PILOG1(K1), ZT1(K2), PILOG1(K2) )
-      T(K) = T(K)*exp(PILOG(K))
-      QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
-      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
-  150 CONTINUE
-
-!     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
-
-      GDZBCP = 2. * GRAV * DZ / CP
-      CPBR = CP / RGAS
-      RBCP = 1. / CPBR
-
-!     CONVERT PRESSURES TO PASCALS
-
-      PSFC  = PSFC * 100.
-      PZERO = PZERO * 100.
-
-      PISFC = ( PSFC / PZERO ) ** RBCP
-
-      PBAR(1)  = PSFC
-      PIBAR(1) = PISFC
-      PILOG(1) = LOG ( PIBAR(1) )
-
-      DO 160 IT = 1, 3
-
-      DO 162 K = 1, NK3
-      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) )
-  162 CONTINUE
-
-!      PILOG(2)=PILOG(1)-GDZBCP/(TV(1)+TV(2))     &
-!              *(ZT(2)-Zz(1))/DZ
-!      DO 164 K = 3, NK3
-!      PILOG(K)=PILOG(K-1)-GDZBCP/(TV(K-1)+TV(K))/FNZ(K-1)
-!  164 CONTINUE
-
-      DO 166 K = 2, NK3
-      PIBAR(K)= EXP ( PILOG(K) )
-      PBAR(K) = PZERO * PIBAR(K) ** CPBR
-  166 CONTINUE
-
 !     ADJUST T, QVBAR AND QCBAR.
-
       DO 168 K = 1, NK3
-      T8 = T(K)
-      P8 = PBAR(K) * 0.01
-      QV8 = QVBAR(K)
-      QC8 = 0.D0
-      QI8 = 0.D0
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      QVBAR(K) = QV8
       ES1 = ES ( T(K) )
       QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
       THBAR(K) = T(K) / PIBAR(K)
       H(K) = QVBAR(K) / QVSBAR(K)
-      QCBAR(K) = 0.
   168 CONTINUE
 
-  160 CONTINUE
 
       IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
 
@@ -363,17 +209,9 @@ CONTAINS
   102 CONTINUE
 
       DO 200 K = 2, NK3
-      IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
-      K2 = K1 + 1
-      Q1LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
-      Q2LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
-      ELSE
       Q1LS (K) = 0.0
       Q2LS (K) = 0.0
-      END IF
+      WLS(K) = 0.0
   200 CONTINUE
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
@@ -392,74 +230,10 @@ CONTAINS
   212 CONTINUE
 #endif
 
-      DO 220 K = 2, NK2
-      PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
-      K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-  220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)
       VG(NK3) = VG(NK2)
-
-!ccwu applying new profiles here
-!      do k=1,nk3
-!      
-!      !theta
-!      if(zt(k) .le. 50.) then
-!      thetal(k)=299.00+(301.50-299.00)*zt(k)/50.
-!      elseif(zt(k) .gt. 50. .and. zt(k) .le. 350.) then
-!      thetal(k)=301.50+(302.50-301.50)*(zt(k)-50.)/300.
-!      elseif(zt(k) .gt. 350. .and. zt(k) .le. 650.) then
-!      thetal(k)=302.50+(303.53-302.50)*(zt(k)-350.)/300.
-!      elseif(zt(k) .gt. 650. .and. zt(k) .le. 700.) then
-!      thetal(k)=303.53+(303.70-303.53)*(zt(k)-650.)/50.
-!      elseif(zt(k) .gt. 700. .and. zt(k) .le. 1300.) then
-!      thetal(k)=303.70+(307.13-303.70)*(zt(k)-700.)/600.
-!      elseif(zt(k) .gt. 1300. .and. zt(k) .le. 2500.) then
-!      thetal(k)=307.13+(314.00-307.13)*(zt(k)-1300.)/1200.
-!      elseif(zt(k) .gt. 2500.) then
-!      thetal(k)=314.00+(343.20-314.00)*(zt(k)-2500.)/3000.
-!      endif
-!
-!      ! qt
-!      if(zt(k) .le. 50.) then
-!      qt(k)=15.20+(15.17-15.20)*zt(k)/50.
-!      elseif(zt(k) .gt. 50. .and. zt(k) .le. 350.) then
-!      qt(k)=15.17+(14.98-15.17)*(zt(k)-50.)/300.
-!      elseif(zt(k) .gt. 350. .and. zt(k) .le. 650.) then
-!      qt(k)=14.98+(14.80-14.98)*(zt(k)-350.)/300.
-!      elseif(zt(k) .gt. 650. .and. zt(k) .le. 700.) then
-!      qt(k)=14.80+(14.70-14.80)*(zt(k)-650.)/50.
-!      elseif(zt(k) .gt. 700. .and. zt(k) .le. 1300.) then
-!      qt(k)=14.70+(13.50-14.70)*(zt(k)-700.)/600.
-!      elseif(zt(k) .gt. 1300. .and. zt(k) .le. 2500.) then
-!      qt(k)=13.50+(3.00-13.50)*(zt(k)-1300.)/1200.
-!      elseif(zt(k) .gt. 2500.) then
-!      qt(k)=3.00
-!      endif
-!      ! qt (g/kg => kg/kg)
-!      qt(k)= qt(k)*0.001
-!       
-!      if(qt(k) .le.0) then
-!      qt(k)=0.
-!      endif
-!
-!      enddo
-!
-!      do k=1,NK3
-!      tl=thetal(k)*(pbar(k)/pzero)**(rgas/cp)
-!      xx=tl
-!      es1=es(xx)
-!      qvs=es1*0.622/(pbar(k)-es1)
-!      ql(k)=max(qt(k)-qvs,0.)
-!      thbar(k)=thetal(k)
-!      qvbar(k)=qt(k)-ql(k)
-!      qcbar(k)=ql(k)
-!      enddo
-
 
 !     OCEAN POINTS
 
@@ -511,16 +285,6 @@ CONTAINS
       endif
 
 
-      !! isentropic environment
-      !do k=1,nk3
-      !  THBAR(k)=THBAR(2)+0.003*ZT(k)
-      !enddo
-      !RHO=1.
-      !RHOZ=1.
-      !RHOU=1.
-      !RHOT=1.
-      !RHOW=1.   
-
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
 
@@ -533,14 +297,6 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      !IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2&
-      !        !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
-      !        +((ZT(K)-6000.)/2000.)**2)<=1)THEN
-      !  TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
-      !                sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2+ &
-      !                     !((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
-      !                     ((ZT(K)-6000.)/2000.)**2)))**2
-      !ENDIF
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -612,10 +368,10 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-!      U3DX(I,J,K)=UG(K)
-!      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=0.
-      U3DY(I,J,K)=0.
+      U3DX(I,J,K)=UG(K)
+      U3DY(I,J,K)=VG(K)
+      !U3DX(I,J,K)=0.
+      !U3DY(I,J,K)=0.
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -628,6 +384,8 @@ CONTAINS
   660 CONTINUE
 
       CALL petsc_solver_initialize(petsc_cr)
+      ! 2020.12.16 move to here by miles hsieh
+      IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
 
       restart_read: IF (.false.)THEN
 
@@ -697,7 +455,6 @@ CONTAINS
       UTMN0 = UTMN
       VTMN0 = VTMN
       
-      IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
       albdo = 0.30
@@ -750,93 +507,48 @@ CONTAINS
 
       call bound_arb(1,HX)
 
-      DO J=mjm,MJ1
-      DO I=mim,MI1
-!      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
-!      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
-
-      HXU(I,J) = MAX(HX(I,J),HX(I+1,J))
-      HXV(I,J) = MAX(HX(I,J),HX(I,J+1))
-      ENDDO
-      ENDDO
-
-      call bound_arb(1,HXU)
-      call bound_arb(1,HXV)
-
-      DO J=mjm,mjp
-      DO I=mim,mip
-
-      NHX(I,J) = INT(HX(I,J))
-      NXU(I,J) = INT(HXU(I,J))
-      NXV(I,J) = INT(HXV(I,J))
+      DO J=MJM,MJ1
+      DO I=MIM,MI1
+      if(hx(i+1,j)-hx(i,j) .gt. 0) hxu(i,j)=hx(i+1,j)
+      if(hx(i,j+1)-hx(i,j) .gt. 0) hxv(i,j)=hx(i,j+1)
       ENDDO
       ENDDO
 
       DO J=1,MJ1
       DO I=1,MI1
-        DO K=1,NHX(I,J)
-        ITYPEW(I,J,K)=0
-        ENDDO
-
-        DO K=1,NXU(I,J)-1
-        ITYPEU(I,J,K)=0
-        ENDDO
-        IF (NXU(I,J) .GE. 1) ITYPEU(I,J,NXU(I,J)) = -1
-        IF (NXU(I,J) .EQ. 0) ITYPEU(I,J,1) = -1
-
-        DO K=1,NXV(I,J)-1
-        ITYPEV(I,J,K)=0
-        ENDDO
-        IF (NXV(I,J) .GE. 1) ITYPEV(I,J,NXV(I,J)) = -1
-        IF (NXV(I,J) .EQ. 0) ITYPEV(I,J,1) = -1
+      NN=INT(HX(I,J))
+      IF(NN .NE. 0) THEN
+      DO K=2,NN
+      ITYPEU(I,J,K)=0
+      ITYPEV(I,J,K)=0
+      ITYPEW(I,J,K)=0
+      ENDDO
+      ENDIF
       ENDDO
       ENDDO
 
       call bound_int_arb(NK2,ITYPEW)
 
-      DO K=2,maxtopo
-      DO J=1,mj1
-      DO I=1,mi1
-      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I-1,J,K) .EQ. 1) THEN
-!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I+1,J,K) ) THEN
-      ITYPEU(I-1,J,K) = -1
-!      ITYPEV(I-1,J,K) = -1
-      ENDIF
-      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I+1,J,K) .EQ. 1 ) THEN
-!      IF (ITYPEW(I-1,J,K) .GT. ITYPEW(I,J,K) ) THEN
-      ITYPEU(I,J,K) = -1
-      ITYPEV(I,J,K) = -1
-      ENDIF
-      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J-1,K) .EQ. 1 ) THEN
-!      IF (ITYPEW(I,J,K) .GT. ITYPEW(I,J+1,K) ) THEN
-!      ITYPEU(I,J-1,K) = -1
-      ITYPEV(I,J-1,K) = -1
-      ENDIF
-      IF (ITYPEW(I,J,K) .EQ. 0 .AND. ITYPEW(I,J+1,K) .EQ. 1 ) THEN
-!      IF (ITYPEW(I,J-1,K) .GT. ITYPEW(I,J,K) ) THEN
-      ITYPEU(I,J,K) = -1
-      ITYPEV(I,J,K) = -1
-      ENDIF
-
-      ENDDO
-      ENDDO
-      ENDDO
-
+      DO K=2,NK2
       DO J=1,mjp
       DO I=1,mip
-
-      IF (ITYPEU(I,J,2) .NE. 1 ) THEN
-      ITYPEU(I,J,1) = 0
+      NN=ITYPEW(I,J,K)
+      IF(NN .EQ. 0) THEN
+      ITYPEU(I-1,J,K)=0
+      ITYPEV(I,J-1,K)=0
       ENDIF
-      IF (ITYPEV(I,J,2) .NE. 1 ) THEN
-      ITYPEU(I,J,1) = 0
-      ENDIF
-
+      ENDDO
       ENDDO
       ENDDO
 
       call bound_int_arb(NK2,ITYPEU)
       call bound_int_arb(NK2,ITYPEV)
+
+      DO J=mjm,mjp
+      DO I=mim,mip
+      IF(HX(I,J) .EQ. 0.) HX(I,J)=1.
+      ENDDO
+      ENDDO
 
 #else
       hx=1

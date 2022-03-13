@@ -32,7 +32,7 @@ CONTAINS
 ! Argument list variables
 
 ! local variables
-      REAL (KIND=dbl_kind) ::  ytem(mi1,mj1,nk2-1)
+      REAL (KIND=dbl_kind) ::  ytem(mi1,mj1,nk2-2)
       INTEGER (KIND=int_kind)  ::     &
          i, j, k   ! do loop indices for zonal, meridional and vertical dimensions
          
@@ -40,13 +40,13 @@ CONTAINS
 !
 !     GENERATE RIGHT SIDE OF EQUATION
 !
-      DO 120 K = 1, Nk2-1
+      DO 120 K = 1, Nk2-2
       DO 120 J = 1, Mj1
       DO 120 I = 1, mi1
 !ccwut      YTEM(I,J,K)=(Z3DY(I,J,K+1)-Z3DY(I-1,J,K+1))*RHOZ(K+1)/DX  &
 !        + (Z3DX(I,J,K+1)-Z3DX(I,J-1,K+1))*RHOZ(K+1)/DYNEW
-      YTEM(I,J,K)=(Z3DYT(I,J,K)-Z3DYT(I-1,J,K))*RHOZ(K)/DX  &
-        + (Z3DXT(I,J,K)-Z3DXT(I,J-1,K))*RHOZ(K)/DYNEW
+      YTEM(I,J,K)=(Z3DYT(I,J,K+1)-Z3DYT(I-1,J,K+1))*RHOZ(K+1)/DX  &
+        + (Z3DXT(I,J,K+1)-Z3DXT(I,J-1,K+1))*RHOZ(K+1)/DYNEW
 
   120 CONTINUE
 
@@ -56,7 +56,7 @@ CONTAINS
 
       DO 150 J = mjm,mjp
       DO 150 I = mim,mip
-      !W3D(I,J,  1) = 0. 
+      W3D(I,J,  1) = 0. 
       W3D(I,J,NK2) = 0. 
   150 CONTINUE
 

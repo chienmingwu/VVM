@@ -195,25 +195,6 @@ CONTAINS
       ENDDO
 !ccwut
 
-      DO J = 1, MJ1
-      DO I = 1, MI1
-        TH3D(I,J,1) = TH3D(I,J,2)
-        QV3D(I,J,1) = QV3D(I,J,2)
-        QC3D(I,J,1) = QC3D(I,J,2)
-        QI3D(I,J,1) = QI3D(I,J,2)
-        QR3D(I,J,1) = QR3D(I,J,2)
-#if defined (MICROP3)
-        NC3D(I,J,1) = NC3D(I,J,2)
-        NR3D(I,J,1) = NR3D(I,J,2)
-        NI3D(I,J,1) = NI3D(I,J,2)
-        QRIM3D(I,J,1) = QRIM3D(I,J,2)
-        BRIM3D(I,J,1) = BRIM3D(I,J,2)
-#else
-        QS3D(I,J,1) = QS3D(I,J,2)
-        QG3D(I,J,1) = QG3D(I,J,2)
-#endif
-      ENDDO
-      ENDDO
 
 #endif
       CALL BOUND_3D

@@ -55,7 +55,7 @@ CONTAINS
       LOGICAL (KIND=log_kind) :: FIRST
       DATA FIRST/.TRUE./
 
-      SAVE ISTEP,NSTEP,TEM,K1,K2, RAND
+      SAVE ISTEP,NSTEP,TEM,K1,K2, RAND, PERT
       
    SELECT CASE(TRIM(casename))
    

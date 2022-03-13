@@ -493,6 +493,7 @@
       jjj=128
       do j=1,NY1
       do i=1,NX1
+      if (lu_o(i,j)/=16) then
       hx_oo(i+iii,j+jjj)=hx(i,j)
       alb_oo(i+iii,j+jjj)=alb_o(i,j)
       grf_oo(i+iii,j+jjj)=grf_o(i,j)
@@ -502,6 +503,7 @@
       shdmin_oo(i+iii,j+jjj)=shdmin_o(i,j)
       slope_oo(i+iii,j+jjj)=slope_o(i,j)
       soil_oo(i+iii,j+jjj)=soil_o(i,j)
+      endif
       enddo
       enddo
 

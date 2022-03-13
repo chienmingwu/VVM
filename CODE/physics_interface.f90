@@ -444,7 +444,7 @@
 
       dt_p3=DT
       itt_p3=ITT
- 
+
       call p3_main(qc_p3,nc,qr_p3,nr,th_old_p3,theta_p3,qv_old_p3,qv_p3, &
                    dt_p3,qi_p3,qrim,ni,brim,ssat,w_p3,                   &
                    p_p3,dz_p3,itt_p3,pcprt_liq,pcprt_sol,                &
