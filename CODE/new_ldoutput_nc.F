@@ -68,6 +68,10 @@ PRIVATE
 #if defined (HEATING)
          STD_TM55(mi1,mj1,nk2,4),       &
 #endif
+#if defined (DIAG)
+         STD_TMD2(mi1,mj1,ndiag_2d),    &
+         STD_TMD3(mi1,mj1,nk2,ndiag_3d),&
+#endif
          STD_RAD(mi1,mj1,nk2,8)
 #if defined (RAS)
       REAL (KIND=tm_kind) ::            &
@@ -685,6 +689,25 @@ CONTAINS
 
 #endif
 
+#if defined (DIAG)
+      if (ndiag_2d>0) then
+      DO 1987 NT=1,ndiag_2d
+      DO 1987 J=1,mj1
+      DO 1987 I=1,mi1
+      STD_TMD2(I,J,NT)=STD_TMD2(I,J,NT) + DIAG2D(I,J,NT) * dtfac 
+ 1987 CONTINUE
+      endif
+
+      if (ndiag_3d>0) then
+      DO 1988 NT=1,ndiag_3d
+      DO 1988 K=1,nk2
+      DO 1988 J=1,mj1
+      DO 1988 I=1,mi1
+      STD_TMD3(I,J,K,NT)=STD_TMD3(I,J,K,NT) + DIAG3D(I,J,K,NT) * dtfac 
+ 1988 CONTINUE
+      endif
+#endif
+
 #if defined (RAS)
       DO 1231 J=1,mj1
       DO 1231 I=1,mi1
@@ -836,6 +859,10 @@ CONTAINS
       std_tm5 = std_tm5 * fac
 #if defined (HEATING)
       std_tm55 = std_tm55 * fac
+#endif
+#if defined (DIAG)
+      if(ndiag_2d > 0) std_tmd2 = std_tmd2 * fac
+      if(ndiag_3d > 0) std_tmd3 = std_tmd3 * fac
 #endif
       out_tm9 = out_tm9 * fac
 #if defined (RAS)
@@ -1054,6 +1081,23 @@ CONTAINS
         enddo
       endif
 
+#if defined (DIAG)
+      if(ndiag_2d > 0) then
+        do nt = 1,ndiag_2d
+          write(unit=trnum,fmt='(i2.2)')nt
+          call pCDF_WRITE_xy(ncid_diag, 'ds'//trnum, TIME_C, time_start, std_tmd2(:,:,nt) )
+        enddo
+      endif
+
+      if(ndiag_3d > 0) then
+        do nt = 1,ndiag_3d
+          write(unit=trnum,fmt='(i2.2)')nt
+          call pCDF_WRITE_4D(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,:,nt), nk2 )
+        enddo
+      endif
+#endif
+
+
 #if defined (PHYSICS)
 
         call pCDF_WRITE_xy(ncid_phys, 'uw', TIME_C, time_start, std_tm5(:,:,1) )
@@ -1213,6 +1257,10 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
+#if defined (DIAG)
+      if(ndiag_2d > 0) std_tmd2 = 0.0
+      if(ndiag_3d > 0) std_tmd3 = 0.0
+#endif
 #if defined (RAS)
       std_tm91= 0.0
       std_tm92= 0.0

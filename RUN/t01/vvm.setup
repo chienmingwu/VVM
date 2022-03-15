@@ -5,12 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tcvvm_qobs_large_north
+set expname = tcvvm_test
 
 # set job system and compiler
-set compiler = 'intel_taiwania3'
-set jobsys = 'slurm_taiwania3'
-set debug_opt = ''#'-g -traceback -check all -debug all'
+set compiler = 'fujitsu_cwb'
+set jobsys = 'pjm_cwb'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -92,14 +91,16 @@ sed -i 's/zonal_decomposition/48/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/26/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=432000 /
  &INPUT2 RLAT=0, RLON=0 /
- &INPUT3 DX=16000.,DYNEW=16000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=3600. /
+ &INPUT3 DX=16000.,DYNEW=16000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=8640,NWR11=1,NFLPRT=1,NRESTART=8640 /
+ &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=1200,SCALE=6.,Q1Q2=F,DTRAD=1200.,petsc_cr=0 /
 #                                                              (s)
@@ -112,9 +113,17 @@ cd ${expdir}'/compile_code'
 make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
 
 ## make for topography
-make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} DEBUG="${debug_opt}" -f ${rundir}/makefile topography
+make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
 cd ${expdir}
-./nc2fortranBinary > topo.log
+# use pjsub to generate topo file on CWB fx1000
+#./nc2fortranBinary > topo.log
+pjsub -L "node=1" -L "elapse=00:20:00" -L "rscgrp=CWB" -N topo ./nc2fortranBinary
+unset echo 
+echo '###################################################################'
+echo '###################################################################'
+echo '### Please execute vvm.run after the job topo has been finished ###'
+echo '###################################################################'
+echo '###################################################################'
 
 exit
 

@@ -519,7 +519,7 @@ CONTAINS
 
      ! qobs SST
      dum1=(tempjm-dble(mj_glob)/2.-0.5)*DYNEW/6.37E6+0.5*DYNEW/6.37E6
-     dum2=pi/12.
+     dum2=0.
      dum1=dum1-dum2
      dum2=pi/4.
 

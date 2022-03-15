@@ -36,6 +36,9 @@ PRIVATE
           ncid_ras, &                        ! RAS output ID
           ncid_z3dx, &                       ! dynamic variables output ID
           ncid_tc, &                         ! tracers output ID
+#if defined (DIAG)
+          ncid_diag, &                       ! diagnostics output ID
+#endif
           ncid_rad, ncid_phys                ! radiation and surface variables output ID
 
 !===hchun
@@ -237,10 +240,10 @@ CONTAINS
         yz(i) = yt(i) + dynew/2.
       enddo
 
-      lonc=(xt-0.5*(dx*mi_glob))/6.37E6
-      lonz=(xz-0.5*(dx*mi_glob))/6.37E6
-      latc=(yt-0.5*(dynew*mj_glob))/6.37E6
-      latz=(yz-0.5*(dynew*mj_glob))/6.37E6
+      lonc=(xt-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
+      lonz=(xz-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
+      latc=(yt-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
+      latz=(yz-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
       levc=zt(1:nk2)/1000.
 
 !      yt(:) = xt(:)
@@ -337,6 +340,7 @@ CONTAINS
       CALL pCDF_INI_4DVAR (ncid_th, 'qg', 'graupel mixing ratio', &
                           'graupel_mixing_ratio', 'kg kg-1', &
                           'zt', 'yt', 'xt')
+#endif
 
 #if defined (HEATING)
 ! QS3D
@@ -360,7 +364,9 @@ CONTAINS
                           'zt', 'yt', 'xt')
 #endif
 
-#endif
+      nc_err = nfmpi_enddef(ncid_th)
+      call put_3d_coord(ncid_th,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
 
 ! RAS cumulus parameterization
 #if defined (RAS)
@@ -383,6 +389,10 @@ CONTAINS
                           'precipitation', 'm/s', &
                           'yt', 'xt')
 #endif
+
+      nc_err = nfmpi_enddef(ncid_ras)
+      call put_3d_coord(ncid_ras,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
 
 #endif
 
@@ -426,6 +436,10 @@ CONTAINS
                           'vertical_velocity', 'm s-1', &
                           'zt', 'yt', 'xt')
 
+      nc_err = nfmpi_enddef(ncid_z3dx)
+      call put_3d_coord(ncid_z3dx,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
+
 #if defined (PHYSICS)
 #if defined (RADCODE)
 ! Radiation diagnostics -------------------------------------------------------
@@ -467,6 +481,10 @@ CONTAINS
       CALL pCDF_INI_XY_VAR (ncid_rad, 'fulwtoa', 'Upward flux of longwave radiation at TOA', &
                           'upward_flux_longwave_radiation_toa', 'W/m**2', &
                           'yt', 'xt')
+
+      nc_err = nfmpi_enddef(ncid_rad)
+      call put_3d_coord(ncid_rad,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
 #endif
 #endif
 
@@ -485,7 +503,48 @@ CONTAINS
                           'tracer_mixing_ratio '//trnum, 'kg kg-1', &
                           'zt', 'yt', 'xt')
         enddo
+
+      nc_err = nfmpi_enddef(ncid_tc)
+      call put_3d_coord(ncid_tc,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
       endif
+
+#if defined (DIAG)
+! Tracers ---------------------------------------------------------------------
+      if (ndiag_2d > 0 .or. ndiag_3d > 0) then
+      call fname_nc(itp1, EXPHDR, 'Diag', ITT_OUTPUT, filnam_nc)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_diag)
+      CALL pCDF_INI_THERMO (ncid_diag, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      if (ndiag_2d > 0) then
+        do nt = 1,ndiag_2d
+          write(unit=trnum,fmt='(i2.2)')nt
+          CALL pCDF_INI_XY_VAR (ncid_diag, 'ds'//trnum, &
+                          'single-level diagnostic variable '//trnum, &
+                          'single_level_diagnostic_variable '//trnum, ' ', &
+                          'yt', 'xt')
+        enddo
+      endif
+
+      if (ndiag_3d > 0) then
+        do nt = 1,ndiag_3d
+          write(unit=trnum,fmt='(i2.2)')nt
+          CALL pCDF_INI_4DVAR (ncid_diag, 'dm'//trnum, &
+                          'multi-level diagnostic variable '//trnum, &
+                          'multi_level_diagnostic_variable '//trnum, ' ', &
+                          'zt', 'yt', 'xt')
+        enddo
+      endif
+
+      nc_err = nfmpi_enddef(ncid_diag)
+      call put_3d_coord(ncid_diag,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
+      endif
+#endif
+
 
 #if defined (PHYSICS)
 ! Dataset C (time-averaged physics fields) ------------------------------------
@@ -517,6 +576,10 @@ CONTAINS
       CALL pCDF_INI_XY_VAR(ncid_phys, 'olr', 'Outgoing longwave radiation', &
                           'outgoing_longwave_radiation', 'W m-2', &
                           'yt','xt')
+
+      nc_err = nfmpi_enddef(ncid_phys)
+      call put_2d_coord(ncid_phys,mj_glob,mi_glob,&
+                        yt(1:mj_glob),xt(1:mi_glob))
 #endif
 
 !===hchun
@@ -714,6 +777,10 @@ CONTAINS
       CALL pCDF_INI_XY_VAR(ncid_lsm, 'smcmax', 'porosity', &
                           'porosity', 'm3 m-3', &
                           'yt','xt')
+
+      nc_err = nfmpi_enddef(ncid_lsm)
+      call put_2d_coord(ncid_lsm,mj_glob,mi_glob,&
+                        yt(1:mj_glob),xt(1:mi_glob))
 #endif
 
 #endif
@@ -782,6 +849,10 @@ CONTAINS
     if (ntracer > 0) then
       nc_err = nfmpi_close(ncid_tc)
     endif
+
+#if defined (DIAG)
+     nc_err = nfmpi_close(ncid_diag)
+#endif
 
 #if defined (PHYSICS)
 #if defined (RADCODE)
@@ -1125,7 +1196,7 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 !------------------------------------------------------------------------------
@@ -1446,7 +1517,7 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 !------------------------------------------------------------------------------
@@ -1736,8 +1807,85 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+!!------------------------------------------------------------------------------
+!! store zc
+!        temlen=zc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'zc', zc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
+!      nc_err = nfmpi_inq_varid(ncid, 'zb', zb_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, zb_id, (/1_mpi_offset_kind/), (/temlen/), zb)
+!      nc_err = nfmpi_inq_varid(ncid, 'lev', zc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), levc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store yc
+!        temlen=yc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'yc', yc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
+!      nc_err = nfmpi_inq_varid(ncid, 'lat', yc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), latc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store xc
+!        temlen=xc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'xc', xc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
+!      nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+#endif
+
+!==============================================================================
+      END SUBROUTINE pCDF_INI_RAD
+!==============================================================================
+
+!==============================================================================
+      SUBROUTINE put_3d_coord(ncid,zc_len,yc_len,xc_len,zc,yc,xc)
+!==============================================================================
+
+! Input
+
+      integer (KIND=int_kind), intent(in) :: &
+          ncid      ! netCDF id
+
+! dimension length
+      integer (KIND=int_kind), intent(in) :: &
+          zc_len, &    ! vertical height (model layer position)
+          yc_len, &    ! meridional coordinate (column centers)
+          xc_len       ! zonal coordinate (column centers)
+
+! data variables
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
+          zc  ! vertical height (model layer position; m)
+
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
+          yc  ! meridional coordinates (column centers; m)
+      
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
+          xc  ! zonal coordinates (column centers; m)
+
+!------------------------------------------------------------------------------
+! Local
+
+! variable len copy
+      integer (kind=mpi_offset_kind) :: temlen
+
+! dimension id
+      integer (KIND=int_kind) :: &
+          zc_dim, &     ! vertical height (model layer position)
+          yc_dim, &     ! meridional coordinate (column centers)
+          xc_dim        ! zonal coordinate (column centers)
+
+! variable id
+      integer (KIND=int_kind) :: &
+          zc_id, &     ! vertical height (model layer position)
+          yc_id, &     ! meridional coordinate (column centers)
+          xc_id        ! zonal coordinate (column centers)
 
 !------------------------------------------------------------------------------
 ! store zc
@@ -1745,8 +1893,6 @@ CONTAINS
         if (my_task /= 0) temlen=0
       nc_err = nfmpi_inq_varid(ncid, 'zc', zc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
-      nc_err = nfmpi_inq_varid(ncid, 'zb', zb_id)
-      nc_err = nfmpi_put_vara_double_all(ncid, zb_id, (/1_mpi_offset_kind/), (/temlen/), zb)
       nc_err = nfmpi_inq_varid(ncid, 'lev', zc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), levc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
@@ -1766,11 +1912,9 @@ CONTAINS
       nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-#endif
 
 !==============================================================================
-      END SUBROUTINE pCDF_INI_RAD
+      END SUBROUTINE put_3d_coord
 !==============================================================================
 
 
@@ -2011,8 +2155,79 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+!!------------------------------------------------------------------------------
+!!! store yb
+!!        temlen=yb_len
+!!        if (my_task /= 0) temlen=0
+!!      nc_err = nfmpi_put_vara_double_all(ncid, yb_id, (/1_mpi_offset_kind/), (/temlen/), yb)
+!!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store yc
+!        temlen=yc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'yc', yc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
+!      nc_err = nfmpi_inq_varid(ncid, 'lat', yc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), latc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!!! store xb
+!!        temlen=xb_len
+!!        if (my_task /= 0) temlen=0
+!!      nc_err = nfmpi_put_vara_double_all(ncid, xb_id, (/1_mpi_offset_kind/), (/temlen/), xb)
+!!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store xc
+!        temlen=xc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'xc', xc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
+!      nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+!==============================================================================
+      END SUBROUTINE pCDF_INI_XY
+!==============================================================================
+
+
+!==============================================================================
+      SUBROUTINE put_2d_coord(ncid,yc_len,xc_len,yc,xc)
+!==============================================================================
+
+!------------------------------------------------------------------------------
+! Input
+
+      integer (KIND=int_kind), intent(in) :: &
+          ncid      ! netCDF id
+
+! dimension length
+      integer (KIND=int_kind), intent(in) :: &
+          yc_len, &    ! meridional coordinate (column centers)
+          xc_len       ! zonal coordinate (column centers)
+
+! data variables
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
+          yc  ! meridional coordinates (column centers; m)
+      
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
+          xc  ! zonal coordinates (column centers; m)
+
+!------------------------------------------------------------------------------
+! Local
+
+! variable len copy
+      integer (kind=mpi_offset_kind) :: temlen
+
+! dimension id
+      integer (KIND=int_kind) :: &
+          yc_dim, &     ! meridional coordinate (column centers)
+          xc_dim        ! zonal coordinate (column centers)
+
+! variable id
+      integer (KIND=int_kind) :: &
+          yc_id, &     ! meridional coordinate (column centers)
+          xc_id        ! zonal coordinate (column centers)
 
 !------------------------------------------------------------------------------
 !! store yb
@@ -2043,8 +2258,9 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !==============================================================================
-      END SUBROUTINE pCDF_INI_XY
+      END SUBROUTINE put_2d_coord
 !==============================================================================
+
 
 !==============================================================================
       SUBROUTINE pCDF_INI_4DVAR (ncid, var_nc, var_long_name, var_std_name, &
@@ -2129,7 +2345,7 @@ CONTAINS
       var_dims(1) = xc_dim
 
 ! Enter define mode
-      nc_err = nfmpi_redef(ncid)
+      !nc_err = nfmpi_redef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 ! define variable      
@@ -2156,7 +2372,7 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !==============================================================================
@@ -2238,7 +2454,7 @@ CONTAINS
       var_dims(1) = xc_dim
       
 ! Enter define mode
-      nc_err = nfmpi_redef(ncid)
+      !nc_err = nfmpi_redef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 ! define variable      
@@ -2265,7 +2481,7 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !==============================================================================

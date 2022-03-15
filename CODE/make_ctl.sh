@@ -50,6 +50,12 @@ else
   set ras      =  nan
 endif
 
+if( -f *.L.Diag-000000* ) then
+  set diag     =  ` ls *.L.Diag-000000* `
+else
+  set diag     =  nan
+endif
+
 if( -f p3_diagnostic-000000* ) then
   set p3   =  true
 else
@@ -186,62 +192,101 @@ echo "get variable informations"
 set dum1    =  ` ncdump -h ${thermo} | grep float `
 set n = 2
 set condition = true
-set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 4 `
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum4} == ${dum3} )then
+  set prelev = ${nz}
+else
+  set prelev = '1 '
+endif
 set prevar  =  ${dum3}
 
 while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 7 `
-if( ${dum3} == "" )then
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum3} == ";" )then
   set condition = false
 else
   set prevar = ` echo ${prevar} ${dum3} `
+endif
+if( ${dum4} == ${dum3} )then
+  set prelev = ` echo ${prelev} ${nz} `
+else
+  set prelev = ` echo ${prelev} 1 `
 endif
 end
 
 set thermovarname = ( `echo ${prevar}` )
+set thermovarlev = (`echo ${prelev}` )
 # =================dynamic========================
 set dum1    =  ` ncdump -h ${dynamic} | grep float `
 set n = 2
 set condition = true
-set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 4 `
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum4} == ${dum3} )then
+  set prelev = ${nz}
+else
+  set prelev = '1 '
+endif
 set prevar  =  ${dum3}
 
 while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 7 `
-if( ${dum3} == "" )then
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum3} == ";" )then
   set condition = false
 else
   set prevar = ` echo ${prevar} ${dum3} `
+endif
+if( ${dum4} == ${dum3} )then
+  set prelev = ` echo ${prelev} ${nz} `
+else
+  set prelev = ` echo ${prelev} 1 `
 endif
 end
 
 set dynamicvarname = ( `echo ${prevar}` )
+set dynamicvarlev = (`echo ${prelev}` )
 # =================surface========================
 set dum1    =  ` ncdump -h ${surface} | grep float `
 set n = 2
 set condition = true
-set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 4 `
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum4} == ${dum3} )then
+  set prelev = ${nz}
+else
+  set prelev = '1 '
+endif
 set prevar  =  ${dum3}
 
 while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 6 `
-if( ${dum3} == "" )then
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum3} == ";" )then
   set condition = false
 else
   set prevar = ` echo ${prevar} ${dum3} `
 endif
+if( ${dum4} == ${dum3} )then
+  set prelev = ` echo ${prelev} ${nz} `
+else
+  set prelev = ` echo ${prelev} 1 `
+endif
 end
 
 set surfacevarname = ( `echo ${prevar}` )
+set surfacevarlev = (`echo ${prelev}` )
 # =================land===========================
 if( ${land} == "nan" )then
   set landn = ${surface}
@@ -252,22 +297,35 @@ endif
 set dum1    =  ` ncdump -h ${landn} | grep float `
 set n = 2
 set condition = true
-set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 4 `
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum4} == ${dum3} )then
+  set prelev = ${nz}
+else
+  set prelev = '1 '
+endif
 set prevar  =  ${dum3}
 
 while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 6 `
-if( ${dum3} == "" )then
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum3} == ";" )then
   set condition = false
 else
   set prevar = ` echo ${prevar} ${dum3} `
 endif
+if( ${dum4} == ${dum3} )then
+  set prelev = ` echo ${prelev} ${nz} `
+else
+  set prelev = ` echo ${prelev} 1 `
+endif
 end
 
 set landvarname = ( `echo ${prevar}` )
+set landvarlev = (`echo ${prelev}` )
 # =================radiation======================
 if( ${rad} == "nan" )then
   set radn  = ${surface}
@@ -278,22 +336,35 @@ endif
 set dum1    =  ` ncdump -h ${radn} | grep float `
 set n = 2
 set condition = true
-set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 4 `
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum4} == ${dum3} )then
+  set prelev = ${nz}
+else
+  set prelev = '1 '
+endif
 set prevar  =  ${dum3}
 
 while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 7 `
-if( ${dum3} == "" )then
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum3} == ";" )then
   set condition = false
 else
   set prevar = ` echo ${prevar} ${dum3} `
 endif
+if( ${dum4} == ${dum3} )then
+  set prelev = ` echo ${prelev} ${nz} `
+else
+  set prelev = ` echo ${prelev} 1 `
+endif
 end
 
 set radvarname = ( `echo ${prevar}` )
+set radvarlev = (`echo ${prelev}` )
 # =================tracer=========================
 if( ${tracer} == "nan" )then
   set tra  = ${surface}
@@ -304,48 +375,113 @@ endif
 set dum1    =  ` ncdump -h ${tra} | grep float `
 set n = 2
 set condition = true
-set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 4 `
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum4} == ${dum3} )then
+  set prelev = ${nz}
+else
+  set prelev = '1 '
+endif
 set prevar  =  ${dum3}
 
 while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 7 `
-if( ${dum3} == "" )then
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum3} == ";" )then
   set condition = false
 else
   set prevar = ` echo ${prevar} ${dum3} `
+endif
+if( ${dum4} == ${dum3} )then
+  set prelev = ` echo ${prelev} ${nz} `
+else
+  set prelev = ` echo ${prelev} 1 `
 endif
 end
 
 set tracervarname = ( `echo ${prevar}` )
+set tracervarlev = (`echo ${prelev}` )
 # =================RAS============================
 if( ${ras} == "nan" )then
-  set tra  = ${surface}
+  set rasn  = ${surface}
 else
-  set tra  = ${ras}
+  set rasn  = ${ras}
 endif
 
-set dum1    =  ` ncdump -h ${tra} | grep float `
+set dum1    =  ` ncdump -h ${rasn} | grep float `
 set n = 2
 set condition = true
-set dum2    =  ` echo ${dum1} | cut -d"(" -f 2 `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 4 `
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum4} == ${dum3} )then
+  set prelev = ${nz}
+else
+  set prelev = '1 '
+endif
 set prevar  =  ${dum3}
 
 while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
-set dum3    =  ` echo ${dum2} | cut -d" " -f 7 `
-if( ${dum3} == "" )then
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum3} == ";" )then
   set condition = false
 else
   set prevar = ` echo ${prevar} ${dum3} `
 endif
+if( ${dum4} == ${dum3} )then
+  set prelev = ` echo ${prelev} ${nz} `
+else
+  set prelev = ` echo ${prelev} 1 `
+endif
 end
 
 set rasvarname = ( `echo ${prevar}` )
+set rasvarlev = (`echo ${prelev}` )
+# =================DIAG===========================
+if( ${diag} == "nan" )then
+  set diagn  = ${surface}
+else
+  set diagn  = ${diag}
+endif
+
+set dum1    =  ` ncdump -h ${diagn} | grep float `
+set n = 2
+set condition = true
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum4} == ${dum3} )then
+  set prelev = ${nz}
+else
+  set prelev = '1 '
+endif
+set prevar  =  ${dum3}
+
+while ( ${condition} == "true" )
+@ n++
+set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
+set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+if( ${dum3} == ";" )then
+  set condition = false
+else
+  set prevar = ` echo ${prevar} ${dum3} `
+endif
+if( ${dum4} == ${dum3} )then
+  set prelev = ` echo ${prelev} ${nz} `
+else
+  set prelev = ` echo ${prelev} 1 `
+endif
+end
+
+set diagvarname = ( `echo ${prevar}` )
+set diagvarlev = (`echo ${prelev}` )
 # ================================================
 
 
@@ -376,7 +512,7 @@ VARS '$#thermovarname >> thermodynamic.ctl
 set n = 0
 while ( ${n} < $#thermovarname )
 @ n++
-echo ${thermovarname[${n}]}'=>'${thermovarname[${n}]}' '${nz}' t,z,y,x '${expname} >> thermodynamic.ctl
+echo ${thermovarname[${n}]}'=>'${thermovarname[${n}]}' '${thermovarlev[${n}]}' t,z,y,x '${expname} >> thermodynamic.ctl
 end
 echo 'ENDVARS' >> thermodynamic.ctl
 # =================p3_diagnostic==================================
@@ -429,7 +565,7 @@ VARS '$#dynamicvarname >> dynamic.ctl
 set n = 0
 while ( ${n} < $#dynamicvarname )
 @ n++
-echo ${dynamicvarname[${n}]}'=>'${dynamicvarname[${n}]}' '${nz}' t,z,y,x '${expname} >> dynamic.ctl
+echo ${dynamicvarname[${n}]}'=>'${dynamicvarname[${n}]}' '${dynamicvarlev[${n}]}' t,z,y,x '${expname} >> dynamic.ctl
 end
 echo 'ENDVARS' >> dynamic.ctl
 else
@@ -564,7 +700,7 @@ VARS '$#surfacevarname > surface.ctl
 set n = 0
 while ( ${n} < $#surfacevarname )
 @ n++
-echo ${surfacevarname[${n}]}'=>'${surfacevarname[${n}]}' 1 t,y,x '${expname} >> surface.ctl
+echo ${surfacevarname[${n}]}'=>'${surfacevarname[${n}]}' '${surfacevarlev[${n}]}' t,y,x '${expname} >> surface.ctl
 end
 echo 'ENDVARS' >> surface.ctl
 # =================Surface==================================
@@ -600,7 +736,7 @@ VARS '$#landvarname > land.ctl
 set n = 0
 while ( ${n} < $#landvarname )
 @ n++
-echo ${landvarname[${n}]}'=>'${landvarname[${n}]}' 1 t,y,x '${expname} >> land.ctl
+echo ${landvarname[${n}]}'=>'${landvarname[${n}]}' '${landvarlev[${n}]}' t,y,x '${expname} >> land.ctl
 end
 echo 'ENDVARS' >> land.ctl
 endif
@@ -628,7 +764,7 @@ VARS '$#radvarname >> radiation.ctl
 set n = 0
 while ( ${n} < $#radvarname )
 @ n++
-echo ${radvarname[${n}]}'=>'${radvarname[${n}]}' '${nz}' t,z,y,x '${expname} >> radiation.ctl
+echo ${radvarname[${n}]}'=>'${radvarname[${n}]}' '${radvarlev[${n}]}' t,z,y,x '${expname} >> radiation.ctl
 end
 echo 'ENDVARS' >> radiation.ctl
 endif
@@ -656,7 +792,7 @@ VARS '$#tracervarname >> tracer.ctl
 set n = 0
 while ( ${n} < $#tracervarname )
 @ n++
-echo ${tracervarname[${n}]}'=>'${tracervarname[${n}]}' '${nz}' t,z,y,x '${expname} >> tracer.ctl
+echo ${tracervarname[${n}]}'=>'${tracervarname[${n}]}' '${tracervarlev[${n}]}' t,z,y,x '${expname} >> tracer.ctl
 end
 echo 'ENDVARS' >> tracer.ctl
 endif
@@ -684,14 +820,37 @@ VARS '$#rasvarname >> ras.ctl
 set n = 0
 while ( ${n} < $#rasvarname )
 @ n++
-if (${rasvarname[${n}]} != "prec")then
-echo ${rasvarname[${n}]}'=>'${rasvarname[${n}]}' '${nz}' t,z,y,x '${expname} >> ras.ctl
-endif
-if (${rasvarname[${n}]} == "prec")then 
-echo ${rasvarname[${n}]}'=>'${rasvarname[${n}]}' 1 t,y,x '${expname} >> ras.ctl
-endif
+echo ${rasvarname[${n}]}'=>'${rasvarname[${n}]}' '${rasvarlev[${n}]}' t,z,y,x '${expname} >> ras.ctl
 end
 echo 'ENDVARS' >> ras.ctl
+endif
+# =================RAS======================================
+if( ${diag} != "nan" )then
+echo 'DSET ^../archive/'${expname}'.L.Diag-%tm6'${tail}' \
+DTYPE netcdf \
+OPTIONS template \
+TITLE tracers \
+UNDEF 9.96921e+36 \
+CACHESIZE 10000000 \
+XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
+YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
+ZDEF '${nz}' LEVELS ' > diag.ctl
+
+set n = 0
+while ( ${n} < $#zc )
+@ n++
+echo ${zc[${n}]} >> diag.ctl
+end
+
+echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
+VARS '$#diagvarname >> diag.ctl
+
+set n = 0
+while ( ${n} < $#diagvarname )
+@ n++
+echo ${diagvarname[${n}]}'=>'${diagvarname[${n}]}' '${diagvarlev[${n}]}' t,z,y,x '${expname} >> diag.ctl
+end
+echo 'ENDVARS' >> diag.ctl
 endif
 # =================topography===============================
 if( ${topo} == "true" )then
