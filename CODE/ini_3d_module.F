@@ -80,7 +80,7 @@ CONTAINS
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
 !     get data from dat file
-      fname='/home/der0318/47918.20080327.taiwania.dat'
+      fname='/home/der0318/47918.20120328.taiwania.dat'
       open(unit=88,file=fname,form='unformatted',status='old',access='direct',recl=NK3*2)
       read(88,rec=1) UG(:)
       read(88,rec=2) VG(:)
@@ -139,7 +139,7 @@ CONTAINS
 
       DO 120 K = 1, NK3
       T8  = T(K)
-      P8  = PBAR(K)
+      P8  = PBAR(K)*0.01
       QV8 = QVBAR(K)
       QC8 = 0.D0
       QI8 = 0.D0
@@ -413,9 +413,6 @@ CONTAINS
       ELSE
       CALL BOUND_3D_XY 
       ENDIF restart_read
-
-
-      CALL DIRECTIB_ini
 
 #if defined (AREAMN)
 !-------------------

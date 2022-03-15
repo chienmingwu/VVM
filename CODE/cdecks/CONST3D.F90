@@ -259,21 +259,10 @@ PRIVATE
    INTEGER (KIND=int_kind), PUBLIC ::           &
       maxtopo  ! maximum topo height
 
-   INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::       &
-      nhx, & ! Floor of topography at t-point
-      nxu, & ! Floor of topography at u-coor, directly replace hxu
-      nxv, & ! Florr of topography at v-coor, directly replace hxv
-      nup, & ! Indicate the partial cell in u point
-      nvp    ! Indicate the partial cell in v point
-
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::       &
+!   INTEGER (KIND=int_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::       &
       hx,  & ! location of topography at t-point
       hxu, & ! location of west cornor  topography 
       hxv    ! location of south cornor topography
-
-   REAL(kind=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::HXZ,HYZ,HXDIJ,HYDIJ
-
-   INTEGER(kind=int_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC :: NPU,NPV
-
 
 END MODULE const3d

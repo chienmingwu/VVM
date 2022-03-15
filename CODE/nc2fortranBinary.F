@@ -408,28 +408,28 @@
           SOIL_o(I,J) = SOIL(I,J)
         ENDIF        
 
-!        IF (TMP .GT. 0. .and. LU_o(I,J) /= 16) HX(I,J) = 2.
-!        DO K=2,NK1
-!        IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-!        ENDDO
-!        IF(HX(I,J).LT.0) HX(I,J)=1.
-
-        ! for partial step
-        IF (TMP .GT. 0. .and. LU_o(I,J)/=16) HX(I,J) = 1.001
+        IF (TMP .GT. 0. .and. LU_o(I,J) /= 16) HX(I,J) = 2.
         DO K=2,NK1
-        IF (TMP >= ZZ(k)) THEN
-          IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.5) THEN
-            TOP=K+1.
-          ELSEIF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4 .AND.
-     1            (TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))<0.5) THEN
-            TOP=K+0.4
-          ELSE
-            TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-          ENDIF
-          HX(I,J) = TOP
-        ENDIF
+        IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
         ENDDO
-        IF(HX(I,J).LT.0)HX(I,J)=1.
+        IF(HX(I,J).LT.0) HX(I,J)=1.
+
+!        ! for partial step
+!        IF (TMP .GT. 0. .and. LU_o(I,J)/=16) HX(I,J) = 1.001
+!        DO K=2,NK1
+!        IF (TMP >= ZZ(k)) THEN
+!          IF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.5) THEN
+!            TOP=K+1.
+!          ELSEIF ((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))>=0.4 .AND.
+!     1            (TMP-ZZ(K))/(ZZ(K+1)-ZZ(K))<0.5) THEN
+!            TOP=K+0.4
+!          ELSE
+!            TOP=K+((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+!          ENDIF
+!          HX(I,J) = TOP
+!        ENDIF
+!        ENDDO
+!        IF(HX(I,J).LT.0)HX(I,J)=1.
 
         ENDDO
         ENDDO
