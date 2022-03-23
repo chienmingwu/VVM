@@ -16,8 +16,8 @@ set echo  # echoes the commands
 set expname = kpp_test
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'intel_mogamd'
+set jobsys = 'slurm_mogamd_intel'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -32,8 +32,8 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/np_nodes/4/g' \
-    -e 's/np_threads/16/g' \
+    -e 's/np_nodes/1/g' \
+    -e 's/np_threads/64/g' \
     -e 's/total_cores/64/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}

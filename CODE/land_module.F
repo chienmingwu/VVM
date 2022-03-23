@@ -13,7 +13,6 @@ USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
 #if defined (KPP)
 USE kpp_module ! KPP (Der)
-USE const3d, only: TC3D
 #endif
 
 IMPLICIT NONE
@@ -56,13 +55,15 @@ PRIVATE
 #endif
 
 #if defined (KPP)
-  INTEGER, parameter :: olev=24, nsolarpen=12 
+  INTEGER, parameter, public :: olev=24, nsolarpen=12 
  
-  REAL, dimension(MI1,MJ1,olev) :: To, Uo, Vo &
+  REAL, dimension(MI1,MJ1,olev), PUBLIC :: To, Uo, Vo &
                                  ,rNu, rKappa, rGamma
-  REAL, dimension(MI1,MJ1) :: taux, tauy, Qsol, Qtot, bldpth
+  REAL, dimension(MI1,MJ1) :: taux, tauy, Qsol, Qtot
+  REAL, dimension(MI1,MJ1), public ::bldpth
 
   REAL, dimension(olev) :: Tin, Hin, kappa, nu
+  REAL(KIND=dbl_kind), dimension(olev), public :: depth
   DATA Tin   / 1.0000, 0.9999, 0.9998, 0.9998, 0.9997, &
                0.9997, 0.9995, 0.9992, 0.9987, 0.9965, &
                0.9906, 0.9738, 0.9352, 0.8636, 0.7355, &
@@ -75,6 +76,11 @@ PRIVATE
               40.00, 40.00, 50.00, 50.00/
   DATA kappa /olev*1.0e-5/
   DATA nu    /olev*1.0e-4/
+  DATA depth / 0.50,  1.00,  1.50,  2.00,  3.00, &
+               4.00,  6.00, 10.00, 15.00, 20.00, &
+              30.00, 40.00, 55.00, 70.00, 90.00, &
+             110.00,135.00,160.00,190.00,220.00, &
+             260.00,300.00,350.00,400.00/
   
   real, parameter :: Tbot=10.
   integer :: k
@@ -218,10 +224,6 @@ CONTAINS
                       ", V_s: ", Vo(i,j,1)
       194 format(4(A,F10.5))
 
-      TC3D(1:mi1,1:mj1,1:24,1)=To(:,:,1:24)
-      TC3D(1:mi1,1:mj1,1:24,2)=Uo(:,:,1:24)
-      TC3D(1:mi1,1:mj1,1:24,3)=Vo(:,:,1:24)
-      TC3D(1:mi1,1:mj1,2,4)=bldpth(:,:)
 #endif
 
       ES1  = ES ( TG(I,J) )

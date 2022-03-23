@@ -24,7 +24,7 @@ USE ldoutput
 #if defined (DIFFUSION)
 USE TURB_3D_module
 #if defined (LSM)
-USE land_module
+USE land_module, Tocean=>To, Uocean=>Uo, Vocean=>Vo 
 #endif
 #endif
 USE petscsys
@@ -75,6 +75,10 @@ PRIVATE
 #if defined (DIFFUSION) 
 #if defined (LSM)
       REAL (KIND=tm_kind) :: STD_LSM(mi1,mj1,IVAR10)
+#if defined (KPP)
+      REAL (KIND=tm_kind) :: STD_KPP(mi1,mj1,olev,3), &
+                             STD_KPP_2d(mi1,mj1,1)
+#endif
 #endif
 #endif
 
@@ -761,6 +765,24 @@ CONTAINS
       ENDIF
  1227 CONTINUE
 
+!#if defined (KPP)
+!      DO k=1,olev
+!      DO J=1,mj1
+!      DO I=1,mi1
+!      STD_KPP(I,J,K,1)=STD_KPP(I,J,K,1) + To(I,J,K) *  dtfac
+!      STD_KPP(I,J,K,2)=STD_KPP(I,J,K,2) + Uo(I,J,K) *  dtfac
+!      STD_KPP(I,J,K,3)=STD_KPP(I,J,K,3) + Vo(I,J,K) *  dtfac
+!      ENDDO
+!      ENDDO
+!      ENDDO
+!
+!      DO J=1,mj1
+!      DO I=1,mi1
+!      STD_KPP_2d(I,J,1)=STD_KPP_2d(I,J,1) + bldpth(I,J) *  dtfac
+!      ENDDO
+!      ENDDO
+!#endif
+
 #endif
 #endif
 
@@ -1099,6 +1121,18 @@ CONTAINS
         call pCDF_WRITE_xy(ncid_lsm, 'smcdry', TIME_C, time_start, std_lsm(:,:,60) )
         call pCDF_WRITE_xy(ncid_lsm, 'smcref', TIME_C, time_start, std_lsm(:,:,61) )
         call pCDF_WRITE_xy(ncid_lsm, 'smcmax', TIME_C, time_start, std_lsm(:,:,62) )
+
+
+#if defined (KPP)
+      OUT_tm1(:,:,1:olev) = Tocean
+      call pCDF_WRITE_4D(ncid_kpp, 't', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+
+      OUT_tm1(:,:,1:olev) = Uocean
+      call pCDF_WRITE_4D(ncid_kpp, 'u', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+
+      OUT_tm1(:,:,1:olev) = Vocean
+      call pCDF_WRITE_4D(ncid_kpp, 'v', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+#endif
 
 #endif
 #endif

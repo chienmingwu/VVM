@@ -13,6 +13,7 @@ USE workcom
 USE domain_decomposition
 USE petscsys
 USE pnetcdf
+use land_module, only: olev, depth
 
       
 IMPLICIT NONE
@@ -43,6 +44,11 @@ PRIVATE
 #if defined (LSM)
       integer (KIND=int_kind), public :: &
           ncid_lsm                           ! LSM variables output ID
+
+#if defined (KPP)
+      integer (KIND=int_kind), public :: &
+          ncid_kpp                           ! LSM variables output ID
+#endif
 #endif
 #endif
 !========
@@ -674,6 +680,34 @@ CONTAINS
       CALL pCDF_INI_XY_VAR(ncid_lsm, 'smcmax', 'porosity', &
                           'porosity', 'm3 m-3', &
                           'yt','xt')
+
+            
+            
+#if defined (KPP)            
+      call fname_nc(itp1, EXPHDR, 'Ocean', ITT_OUTPUT, filnam_nc)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_kpp)
+      CALL pCDF_INI_THERMO (ncid_kpp, time_len, &
+                           olev, mj_glob, mi_glob, depth, &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL pCDF_INI_4DVAR (ncid_kpp, 't', 'ocean temperature', &
+                          'ocean_temperature', 'K', &
+                          'zt', 'yt', 'xt')
+
+      CALL pCDF_INI_4DVAR (ncid_kpp, 'u', 'zonal velocity', &
+                          'zonal_velocity', 'm s-1', &
+                          'zt', 'yt', 'xt')
+
+      CALL pCDF_INI_4DVAR (ncid_kpp, 'v', 'meridional velocity', &
+                          'meridional_velocity', 'm s-1', &
+                          'zt', 'yt', 'xt')
+
+      CALL pCDF_INI_XY_VAR(ncid_kpp, 'mld', 'mixed-layer depth', &
+                          'mixed_layer_depth', 'm', &
+                          'yt','xt')
+#endif
+
 #endif
 
 #endif
@@ -719,6 +753,9 @@ CONTAINS
 ! Land surface variables
       nc_err = nfmpi_sync(ncid_lsm)
 
+#if defined (KPP)
+      nc_err = nfmpi_sync(ncid_kpp)
+#endif
 #endif
 #endif
 
@@ -762,6 +799,9 @@ CONTAINS
 ! Land surface variables
       nc_err = nfmpi_close(ncid_lsm)
 
+#if defined (KPP)
+      nc_err = nfmpi_close(ncid_kpp)
+#endif
 #endif
 #endif
 
