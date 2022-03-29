@@ -24,7 +24,11 @@ USE ldoutput
 #if defined (DIFFUSION)
 USE TURB_3D_module
 #if defined (LSM)
+#if defined (KPP)
 USE land_module, Tocean=>To, Uocean=>Uo, Vocean=>Vo 
+#else
+USE land_module 
+#endif
 #endif
 #endif
 USE petscsys

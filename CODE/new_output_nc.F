@@ -13,8 +13,9 @@ USE workcom
 USE domain_decomposition
 USE petscsys
 USE pnetcdf
+#if defined (KPP)
 use land_module, only: olev, depth
-
+#endif
       
 IMPLICIT NONE
 PRIVATE

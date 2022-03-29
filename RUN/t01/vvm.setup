@@ -5,11 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = kpp_test
+set expname = HW21_P3_1p5K_2p0m
 
 # set job system and compiler
-set compiler = 'intel_mogamd'
-set jobsys = 'slurm_mogamd_intel'
+set compiler = 'fujitsu_cwb'
+set jobsys = 'pjm_cwb'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -73,9 +73,10 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define MICROP3
-#define LSM
-#define KPP
 #define RADCODE
+#define LSM
+#define SLAB
+#define AREAMN
 'END1'
 cat definesld.com
 
@@ -84,22 +85,22 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/16/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=360 /
+ &INPUT1 NEWRUN=T, ITTADD=432000 /
  &INPUT2 RLAT=0, RLON=120 /
- &INPUT3 DX=1000.,DYNEW=1000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=30,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=86400. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60. /
+ &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360. /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=10,ITSTOP=360,SCALE=6.,Q1Q2=F,DTRAD=300.,petsc_cr=0 /
+ &INPUT5 IX=3182073,ITINIT=10,ITSTOP=1200,SCALE=6.,Q1Q2=F,DTRAD=300.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT
@@ -109,10 +110,18 @@ cat INPUT
 cd ${expdir}'/compile_code'
 make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
 
-# make for topography
+## make for topography
 make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
 cd ${expdir}
-./nc2fortranBinary > topo.log
+# use pjsub to generate topo file on CWB fx1000
+#./nc2fortranBinary > topo.log
+pjsub -L "node=1" -L "elapse=00:20:00" -L "rscgrp=CWB" -N topo ./nc2fortranBinary
+unset echo
+echo '###################################################################'
+echo '###################################################################'
+echo '### Please execute vvm.run after the job topo has been finished ###'
+echo '###################################################################'
+echo '###################################################################'
 
 exit
 

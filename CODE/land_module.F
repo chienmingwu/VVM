@@ -602,10 +602,7 @@ CONTAINS
    IF (hx1 .eq. 1) THEN
       tempim=dble(mi1*ni_sbdm+i)
       pi = 4._8 * atan(1._8)
-!      TG(i,j)=300.-1.5*cos(2*pi*tempim/512.)   !512 points in x direction
-!      TG(i,j)=297.-6.0*cos(2*pi*tempim/512.)   !512 points in x direction
-      TG(i,j)=300.
-      TG(i,j)=SST
+      TG(i,j)=300.-1.5*cos(2*pi*tempim/512.)   !512 points in x direction
    ELSE
    TG(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
@@ -632,7 +629,7 @@ CONTAINS
 ! 1. Set up constants
 
         rhoh2o = 1024.75         !density of water [kg/m**3]
-        zdmix=100._dbl_kind       ! constant depth of mixed layer
+        zdmix=2.0_dbl_kind       ! constant depth of mixed layer
         zcpwater=4218._dbl_kind  ! watar heat capacity
         zmixcap=rhoh2o*zcpwater*zdmix  !Cw ocean heat capacity
         zmcapdt=nsflux*dt/zmixcap       !1/cw*dt

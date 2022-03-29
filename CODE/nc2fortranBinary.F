@@ -97,7 +97,8 @@
       TOP = DATA(I,J)
       IC = I
       JC = J
-   10 ENDIF
+      ENDIF
+   10 CONTINUE
        
 ! Compute topography grid
 
