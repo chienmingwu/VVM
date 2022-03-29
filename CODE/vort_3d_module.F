@@ -1314,11 +1314,11 @@ CONTAINS
       Z3DX(I,J,K) = Z3DX(I,J,K) + DT*FZXTB(I,J,K)
 #if defined (NSWALL)
       IF (nj_sbdm==0) THEN
-        Z3DX(I,J,K) = Z3DX(I,J,K) - DT*wall_damp*Z3DX(I,J,K)*dble(J)/dble(MJ1)
-        if (ni_sbdm==0) write(*,*) j, dble(J)/dble(MJ1)
-      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
         Z3DX(I,J,K) = Z3DX(I,J,K) - DT*wall_damp*Z3DX(I,J,K)*dble(-J+33)/dble(MJ1)
-        if (ni_sbdm==0) write(*,*) j, dble(-J+33)/dble(MJ1)
+        !if (ni_sbdm==0) write(*,*) j, dble(J)/dble(MJ1)
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        Z3DX(I,J,K) = Z3DX(I,J,K) - DT*wall_damp*Z3DX(I,J,K)*dble(J)/dble(MJ1)
+        !if (ni_sbdm==0) write(*,*) j, dble(-J+33)/dble(MJ1)
       ENDIF
 #endif
   100 CONTINUE

@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tcvvm_test
+set expname = aquaplanet_300K
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -96,11 +96,11 @@ sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=432000 /
+ &INPUT1 NEWRUN=T, ITTADD=864000 /
  &INPUT2 RLAT=0, RLON=0 /
  &INPUT3 DX=16000.,DYNEW=16000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
+ &INPUT4 NXS=1,NXSAVG=2160,NWR11=1,NFLPRT=1,NRESTART=2160 /
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=1200,SCALE=6.,Q1Q2=F,DTRAD=1200.,petsc_cr=0 /
 #                                                              (s)
