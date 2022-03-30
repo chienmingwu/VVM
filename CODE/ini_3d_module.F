@@ -70,7 +70,7 @@ CONTAINS
              QVBAR_s(NK3),PBAR_s(NK3),PIBAR_s(NK3)
 
 
-      CHARACTER(len=8) :: dateStr = '20120328'
+      CHARACTER(len=8) :: dateStr = '20061007'
       CHARACTER(len=5) :: stno = '47918'
       !CHARACTER(len=5) :: stno = '46692'
       CHARACTER(len=80) :: fname
@@ -78,9 +78,8 @@ CONTAINS
 
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
-
 !     get data from dat file
-      fname='/home/der0318/47918.20120328.taiwania.dat'
+      fname='/home/mileshsieh/semirealistic_IC/'//stno//'.'//dateStr//'.taiwania.dat'
       open(unit=88,file=fname,form='unformatted',status='old',access='direct',recl=NK3*2)
       read(88,rec=1) UG(:)
       read(88,rec=2) VG(:)
