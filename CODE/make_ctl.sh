@@ -98,12 +98,12 @@ end
 echo "get dimension informations"
 
 # get information of 3D coordinate  
-set dum1    =  ` ncdump -v xc ${dynamic} `
+set dum1    =  ` ncdump -v lon ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 5 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set nx      =  ` echo ${dum2} | cut -d" " -f 1 `
 
-set dum1    =  ` ncdump -v yc ${dynamic} `
+set dum1    =  ` ncdump -v lat ${dynamic} `
 set dum2    =  ` echo ${dum1} | cut -d"=" -f 4 `
 set dum3    =  ` echo ${dum1} | cut -d"=" -f 56 `
 set ny      =  ` echo ${dum2} | cut -d" " -f 1 `
@@ -200,7 +200,7 @@ set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum4} == ${dum3} )then
   set prelev = ${nz}
 else
@@ -212,7 +212,7 @@ while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum3} == ";" )then
   set condition = false
 else
@@ -233,7 +233,7 @@ set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum4} == ${dum3} )then
   set prelev = ${nz}
 else
@@ -245,7 +245,7 @@ while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum3} == ";" )then
   set condition = false
 else
@@ -266,7 +266,7 @@ set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum4} == ${dum3} )then
   set prelev = ${nz}
 else
@@ -278,7 +278,7 @@ while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum3} == ";" )then
   set condition = false
 else
@@ -305,7 +305,7 @@ set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum4} == ${dum3} )then
   set prelev = ${nz}
 else
@@ -317,7 +317,7 @@ while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum3} == ";" )then
   set condition = false
 else
@@ -344,7 +344,7 @@ set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum4} == ${dum3} )then
   set prelev = ${nz}
 else
@@ -356,7 +356,7 @@ while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum3} == ";" )then
   set condition = false
 else
@@ -383,7 +383,7 @@ set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum4} == ${dum3} )then
   set prelev = ${nz}
 else
@@ -395,7 +395,7 @@ while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum3} == ";" )then
   set condition = false
 else
@@ -422,7 +422,7 @@ set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum4} == ${dum3} )then
   set prelev = ${nz}
 else
@@ -434,7 +434,7 @@ while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum3} == ";" )then
   set condition = false
 else
@@ -504,7 +504,7 @@ set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum4} == ${dum3} )then
   set prelev = ${nz}
 else
@@ -516,7 +516,7 @@ while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum3} == ";" )then
   set condition = false
 else
@@ -920,6 +920,34 @@ end
 echo 'ENDVARS' >> kpp.ctl
 endif
 # =================DIAG=====================================
+if( ${diag} != "nan" )then
+echo 'DSET ^../archive/'${expname}'.L.Diag-%tm6'${tail}' \
+DTYPE netcdf \
+OPTIONS template \
+TITLE tracers \
+UNDEF 9.96921e+36 \
+CACHESIZE 10000000 \
+XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
+YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
+ZDEF '${nz}' LEVELS ' > diag.ctl
+
+set n = 0
+while ( ${n} < $#zc )
+@ n++
+echo ${zc[${n}]} >> diag.ctl
+end
+
+echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
+VARS '$#diagvarname >> diag.ctl
+
+set n = 0
+while ( ${n} < $#diagvarname )
+@ n++
+echo ${diagvarname[${n}]}'=>'${diagvarname[${n}]}' '${diagvarlev[${n}]}' t,z,y,x '${expname} >> diag.ctl
+end
+echo 'ENDVARS' >> diag.ctl
+endif
+# =================RAS======================================
 if( ${diag} != "nan" )then
 echo 'DSET ^../archive/'${expname}'.L.Diag-%tm6'${tail}' \
 DTYPE netcdf \

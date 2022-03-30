@@ -106,7 +106,7 @@ CONTAINS
          i, j, k, tempim, tempjm ! do loop indices for zonal, meridional and vertical dimensions
 
 !      if(my_task == 0) WRITE(6,*) 'Updating Tracer...'
-!      !DO 123 K = 1, NK3
+!      DO 123 K = 1, NK3
 !      DO 123 J = mjm,mjp
 !      DO 123 I = mim,mip
 !        tempim=mi1*ni_sbdm+i

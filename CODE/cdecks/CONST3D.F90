@@ -30,10 +30,23 @@ PRIVATE
       QRIM3D,  &  ! riming cloud ice mass mixing ratio (kg/kg)
       BRIM3D,  &  ! riming cloud ice volume mixing ratio (m^3/kg)
 #endif
+#if defined (HEATING)
+      L_dep,   &  ! latent heat due to deposition
+      L_con,   &  ! latent heat deu to condensation
+      L_fre,   &  ! latent heat due to freeze
+      L_met,   &  ! latent heat due to melt
+#endif
       QS3D,    &  ! snow mixing ratio (kg/kg)
       QG3D        ! graupel mixing ratio (kg/kg)
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3,ntracer), PUBLIC ::       &
       TC3D        ! passive tracer mixing ratio (kg/kg)
+
+#if defined (DIAG)
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,ndiag_2d), PUBLIC ::       &
+      DIAG2D        ! 2-D diagnostic array
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3,ndiag_3d), PUBLIC ::       &
+      DIAG3D        ! 3-D diagnostic array
+#endif
 
 !*****************************
 ! Prognostic dynamical variables

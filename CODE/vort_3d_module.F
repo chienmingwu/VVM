@@ -97,6 +97,20 @@ CONTAINS
       CALL BOUND_3D_XY
 
 !  Updating the vertical component of vorticity.
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        Z3DX(:,0:1,:) = 0.
+        Z3DY(:,1,:) = Z3DY(:,2,:)
+        Z3DY(:,0,:) = Z3DY(:,2,:)
+        FZTOP(:,1,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        Z3DX(:,mj1-1:mj1+1,:) = 0.
+        Z3DY(:,mj1,:) = Z3DY(:,mj1-1,:)
+        Z3DY(:,mj1+1,:) = Z3DY(:,mj1-1,:)
+        FZTOP(:,mj1-1:mj1,:) = 0.
+      ENDIF
+#endif
+
       DO 100 J=1,MJ1
       DO 100 I=1,MI1
       Z3DZ(I,J,NK2)=Z3DZ(I,J,NK2)+A*FZTOP(I,J,N2)+B*FZTOP(I,J,N1)
@@ -133,6 +147,14 @@ CONTAINS
 
 #if defined (DIFFUSION)
       CALL ABM_3D_TURB
+
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        FZTOPB(:,1) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZTOPB(:,mj1-1:mj1) = 0.
+      ENDIF
+#endif
 
       DO 200 J=1,MJ1
       DO 200 I=1,MI1
@@ -196,6 +218,17 @@ CONTAINS
 #endif
 
       CALL BOUND_3D_XY
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        Z3DX(:,0:1,:) = 0.
+        Z3DY(:,1,:) = Z3DY(:,2,:)
+        Z3DY(:,0,:) = Z3DY(:,2,:)
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        Z3DX(:,mj1-1:mj1+1,:) = 0.
+        Z3DY(:,mj1,:) = Z3DY(:,mj1-1,:)
+        Z3DY(:,mj1+1,:) = Z3DY(:,mj1-1,:)
+      ENDIF
+#endif
 
       DO 500 K=NK1,1,-1
       DO 500 J=1,MJ1
@@ -435,7 +468,29 @@ CONTAINS
 #endif
 #endif
 
-
+#if defined (BETA)
+!====================================
+!     Coriolis Force with Beta Effect
+!====================================
+      DO 600 K = 2,NK1
+      DO 600 J = 1,MJ1
+      DO 600 I = 1,MI1
+      FZX(I,J,K,L)=FZX(I,J,K,L)                                &
+                  +0.25*F(J)*FNZ(K)/DZ                            &
+                         *(U3DX(I-1,J  ,K+1)-U3DX(I-1,J  ,K)   &
+                          +U3DX(I  ,J  ,K+1)-U3DX(I  ,J  ,K)   &
+                          +U3DX(I  ,J+1,K+1)-U3DX(I  ,J+1,K)   &
+                          +U3DX(I-1,J+1,K+1)-U3DX(I-1,J+1,K))
+  600 CONTINUE
+#if defined (SETWIND)
+      DO 650 K = 2,NK1
+      DO 650 J = 1,MJ1
+      DO 650 I = 1,MI1
+      FZX(I,J,K,L)=FZX(I,J,K,L)                &
+                  -F(J)*FNZ(K)*(UG(K+1)-UG(K))/DZ
+  650 CONTINUE
+#endif
+#endif
 
 !ccwut set source term of zx on the topo to zero
 
@@ -667,6 +722,30 @@ CONTAINS
       DO 650 I = 1,MI1
       FZY(I,J,K,L)=FZY(I,J,K,L)                &
                   +F*FNZ(K)*(VG(K+1)-VG(K))/DZ
+  650 CONTINUE
+#endif
+#endif
+
+#if defined (BETA)
+!====================================
+!     Coriolis Force with Beta Effect
+!====================================
+      DO 600 K = 2,NK1
+      DO 600 J = 1,MJ1
+      DO 600 I = 1,MI1
+      FZY(I,J,K,L)=FZY(I,J,K,L)                               &
+                  -0.25*0.5*(F(J)+F(J-1))*FNZ(K)/DZ           &
+                         *(U3DY(I+1,J  ,K+1)-U3DY(I+1,J  ,K)  &
+                          +U3DY(I  ,J  ,K+1)-U3DY(I  ,J  ,K)  &
+                          +U3DY(I  ,J-1,K+1)-U3DY(I  ,J-1,K)  &
+                          +U3DY(I+1,J-1,K+1)-U3DY(I+1,J-1,K))
+  600 CONTINUE
+#if defined (SETWIND)
+      DO 650 K = 2,NK1
+      DO 650 J = 1,MJ1
+      DO 650 I = 1,MI1
+      FZY(I,J,K,L)=FZY(I,J,K,L)                &
+                  +F(J)*FNZ(K)*(VG(K+1)-VG(K))/DZ
   650 CONTINUE
 #endif
 #endif
@@ -939,6 +1018,21 @@ CONTAINS
  1000 CONTINUE
 #endif
 
+#if defined (BETA)
+!====================================
+!     Coriolis Force with Beta Effect
+!====================================
+      DO 1000 J = 1,MJ1
+      DO 1000 I = 1,MI1
+      FZTOP(I,J,L)=FZTOP(I,J,L)                                      &
+                  -0.25*F(J)*(U3DX(I+1,J  ,NK2)-U3DX(I-1,J  ,NK2)       &
+                          +U3DX(I+1,J+1,NK2)-U3DX(I-1,J+1,NK2))/DX   &
+                  -0.25*F(J)*(U3DY(I  ,J+1,NK2)-U3DY(I  ,J-1,NK2)       &
+                          +U3DY(I+1,J+1,NK2)-U3DY(I+1,J-1,NK2))/DYNEW&
+                  -0.5*FCOS(J)/6.37E6*(U3DY(I , J ,NK2)+U3DY(I+1 , J ,NK2))
+ 1000 CONTINUE
+#endif
+
    END SUBROUTINE zeta_3d
       
    SUBROUTINE VADVEC_1HX (WINDV,QVAL,QEW,DGRID,FINAL)
@@ -1150,6 +1244,15 @@ CONTAINS
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
 
 ! JH  Applying free-slip condition at the surface.
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        FZXBU(:,1,:) = 0.
+        FZX(:,1,:,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZXBU(:,mj1-1:mj1,:) = 0.
+        FZX(:,mj1-1:mj1,:,:) = 0.
+      ENDIF
+#endif
 
       DO 10 K = 2,NK1
       DO 10 J = 1,MJ1
@@ -1164,6 +1267,16 @@ CONTAINS
       Z3DX(I,J, 1) = 0.
       Z3DX(I,J,NK2) = 0.
    20 CONTINUE
+
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        FZYBU(:,1,:) = 0.
+        FZY(:,1,:,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZYBU(:,mj1,:) = 0.
+        FZY(:,mj1,:,:) = 0.
+      ENDIF
+#endif
 
       DO 30 K = 2,NK1
       DO 30 J = 1,MJ1
@@ -1185,10 +1298,29 @@ CONTAINS
    
       INTEGER (KIND=int_kind) :: i, j, k   ! loop indices
 
+#if defined (NSWALL)
+      REAL (KIND=dbl_kind), PARAMETER :: wall_damp=1./86400.
+  
+      IF (nj_sbdm==0) THEN
+        FZXTB(:,1,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZXTB(:,mj1-1:mj1,:) = 0.
+      ENDIF
+#endif
+
       DO 100 K = 2,NK1
       DO 100 J = 1,MJ1
       DO 100 I = 1,MI1
       Z3DX(I,J,K) = Z3DX(I,J,K) + DT*FZXTB(I,J,K)
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        Z3DX(I,J,K) = Z3DX(I,J,K) - DT*wall_damp*Z3DX(I,J,K)*dble(-J+33)/dble(MJ1)
+        !if (ni_sbdm==0) write(*,*) j, dble(J)/dble(MJ1)
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        Z3DX(I,J,K) = Z3DX(I,J,K) - DT*wall_damp*Z3DX(I,J,K)*dble(J)/dble(MJ1)
+        !if (ni_sbdm==0) write(*,*) j, dble(-J+33)/dble(MJ1)
+      ENDIF
+#endif
   100 CONTINUE
 
       DO 200 J = 1,MJ1
@@ -1196,6 +1328,14 @@ CONTAINS
       Z3DX(I,J, 1) = 0.
       Z3DX(I,J,NK2) = 0.
   200 CONTINUE
+
+#if defined (NSWALL)
+      IF (nj_sbdm==0) THEN
+        FZYTB(:,1,:) = 0.
+      ELSEIF (nj_sbdm==nsbdm_y-1) THEN
+        FZYTB(:,mj1,:) = 0.
+      ENDIF
+#endif
 
       DO 300 K = 2,NK1
       DO 300 J = 1,MJ1

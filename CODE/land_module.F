@@ -473,7 +473,7 @@ CONTAINS
    INTEGER (KIND=int_kind):: i,j,itmp,jtmp
    CHARACTER(50):: FILENAME
    INTEGER (KIND=int_kind) :: hxp, hx1
-   REAL (KIND=dbl_kind) :: CP,tempim
+   REAL (KIND=dbl_kind) :: CP,tempim, tempjm, dum1, dum2
 
    CP = 1004.5
 

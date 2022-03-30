@@ -42,15 +42,15 @@ PRIVATE
       INTEGER (KIND=int_kind), PARAMETER :: tm_kind = real_kind
 !      INTEGER (KIND=int_kind), PARAMETER :: tm_kind = dbl_kind
 
-#if defined (PARALLELIO)
+!#if defined (PARALLELIO)
    REAL (KIND=dbl_kind), PUBLIC ::  iobuffh
    REAL (KIND=dbl_kind), PUBLIC ::  iobuff
-#else
-   REAL (KIND=dbl_kind), PUBLIC ::  &
-      iobuffh(1-nhalo:mi_glob+nhalo,1-nhalo:mj_glob+nhalo,nk3)  ! halo
-   REAL (KIND=dbl_kind), PUBLIC ::  &
-      iobuff(mi_glob,mj_glob,nk2,2) ! no halo
-#endif
+!#else
+!   REAL (KIND=dbl_kind), PUBLIC ::  &
+!      iobuffh(1-nhalo:mi_glob+nhalo,1-nhalo:mj_glob+nhalo,nk3)  ! halo
+!   REAL (KIND=dbl_kind), PUBLIC ::  &
+!      iobuff(mi_glob,mj_glob,nk2,2) ! no halo
+!#endif
 
 ! public member functions
 
@@ -580,7 +580,9 @@ CONTAINS
         c_8(40) = crad
         c_8(41) = scale
         c_8(42) = crad1
+#if !defined (BETA)
         c_8(54) = f
+#endif
         c_8(61) = dthmax
         c_8(62) = dtpert
         c_8(63) = z1pert

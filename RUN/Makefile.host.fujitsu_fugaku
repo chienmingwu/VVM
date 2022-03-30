@@ -67,19 +67,13 @@ link_netcdff=-L${spack_opt}${opt_netcdff}/lib -lnetcdff
 link_pnetcdf=-L${spack_opt}${opt_pnetcdf}/lib -lpnetcdf
 
 CPP 	 = /usr/bin/cpp
-#CPPFLAGS = -P -traditional -I$(BINDIR) -I/opt/petsc360/include  
-CPPFLAGS = -P -traditional -I$(BINDIR) -I${HOME}/.local/include $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
-#CPPFLAGS = -P -traditional -I$(BINDIR) -I/opt/petsc-intel/include 
+CPPFLAGS = -P -traditional -I$(EXPDIR) -I${HOME}/.local/include $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
 
 SUF      = f
 
-#INC = -I/opt/netcdf4-intel/include -I$(CDECKS) -I/opt/hdf5-intel/include -I/opt/pnetcdf-intel/include -I/opt/petsc-intel/include
-
-INC = -I${HOME}/.local/include -I$(CDECKS) $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
-
+INC = -I$(CDECKS) -I$(EXPDIR) -I${HOME}/.local/include $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5)
 
 FC = mpifrtpx -Kfast -fw 
-#FC = ${FLINKER} -shared-intel -mcmodel=large
 
 LDLIBS = -L${HOME}/.local/lib -lpetsc $(link_netcdff) $(link_netcdf) $(link_pnetcdf) $(link_hdf5) -SSL2 -L/opt/FJSVxtclanga/tcsds-1.2.30a/lib64 -lfjprofmpi -lmpi_cxx -lfjc++ -lfjc++abi -lfjcrt -lfjdemgl 
 

@@ -91,6 +91,8 @@ sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
@@ -116,7 +118,7 @@ cd ${expdir}
 # use pjsub to generate topo file on CWB fx1000
 #./nc2fortranBinary > topo.log
 pjsub -L "node=1" -L "elapse=00:20:00" -L "rscgrp=CWB" -N topo ./nc2fortranBinary
-unset echo
+unset echo 
 echo '###################################################################'
 echo '###################################################################'
 echo '### Please execute vvm.run after the job topo has been finished ###'

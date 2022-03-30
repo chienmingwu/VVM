@@ -69,6 +69,13 @@ PRIVATE
 ! *** storage arrays for time-average physical output
       REAL (KIND=tm_kind) ::            &
          STD_TM5(mi1,mj1,IVAR5),        &
+#if defined (HEATING)
+         STD_TM55(mi1,mj1,nk2,4),       &
+#endif
+#if defined (DIAG)
+         STD_TMD2(mi1,mj1,ndiag_2d),    &
+         STD_TMD3(mi1,mj1,nk2,ndiag_3d),&
+#endif
          STD_RAD(mi1,mj1,nk2,8)
 #if defined (RAS)
       REAL (KIND=tm_kind) ::            &
@@ -678,6 +685,37 @@ CONTAINS
       STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       *  dtfac
  1226 CONTINUE
 
+#if defined (HEATING)
+      DO 1986 K=1,nk2
+      DO 1986 J=1,mj1
+      DO 1986 I=1,mi1
+      STD_TM55(I,J,K,1)=STD_TM55(I,J,K,1)+  L_dep(I,J,K)   *  dtfac
+      STD_TM55(I,J,K,2)=STD_TM55(I,J,K,2)+  L_con(I,J,K)   *  dtfac
+      STD_TM55(I,J,K,3)=STD_TM55(I,J,K,3)+  L_fre(I,J,K)   *  dtfac
+      STD_TM55(I,J,K,4)=STD_TM55(I,J,K,4)+  L_met(I,J,K)   *  dtfac
+ 1986 CONTINUE
+
+#endif
+
+#if defined (DIAG)
+      if (ndiag_2d>0) then
+      DO 1987 NT=1,ndiag_2d
+      DO 1987 J=1,mj1
+      DO 1987 I=1,mi1
+      STD_TMD2(I,J,NT)=STD_TMD2(I,J,NT) + DIAG2D(I,J,NT) * dtfac 
+ 1987 CONTINUE
+      endif
+
+      if (ndiag_3d>0) then
+      DO 1988 NT=1,ndiag_3d
+      DO 1988 K=1,nk2
+      DO 1988 J=1,mj1
+      DO 1988 I=1,mi1
+      STD_TMD3(I,J,K,NT)=STD_TMD3(I,J,K,NT) + DIAG3D(I,J,K,NT) * dtfac 
+ 1988 CONTINUE
+      endif
+#endif
+
 #if defined (RAS)
       DO 1231 J=1,mj1
       DO 1231 I=1,mi1
@@ -845,6 +883,13 @@ CONTAINS
 !      FAC = 1. / FLOAT ( isample )   ! Mars comment to test sprec
       std_rad = std_rad * fac
       std_tm5 = std_tm5 * fac
+#if defined (HEATING)
+      std_tm55 = std_tm55 * fac
+#endif
+#if defined (DIAG)
+      if(ndiag_2d > 0) std_tmd2 = std_tmd2 * fac
+      if(ndiag_3d > 0) std_tmd3 = std_tmd3 * fac
+#endif
       out_tm9 = out_tm9 * fac
 #if defined (RAS)
       std_tm91= std_tm91* fac
@@ -1030,6 +1075,19 @@ CONTAINS
 
 #endif
 
+#if defined (HEATING)
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,1)
+      call pCDF_WRITE_4D(ncid_th, 'ldep', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,2)
+      call pCDF_WRITE_4D(ncid_th, 'lcon', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,3)
+      call pCDF_WRITE_4D(ncid_th, 'lfre', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,4)
+      call pCDF_WRITE_4D(ncid_th, 'lmet', TIME_L, time_start, out_tm1, nk2 )
+#endif
 
 #if defined (RAS)
       call pCDF_WRITE_4D(ncid_ras, 'dth', TIME_C, time_start, std_tm91(:,:,1:nk2,1), nk2 )
@@ -1048,6 +1106,23 @@ CONTAINS
           call pCDF_WRITE_4D(ncid_tc, 'tr'//trnum, TIME_L, time_start, out_tm1, nk2 )
         enddo
       endif
+
+#if defined (DIAG)
+      if(ndiag_2d > 0) then
+        do nt = 1,ndiag_2d
+          write(unit=trnum,fmt='(i2.2)')nt
+          call pCDF_WRITE_xy(ncid_diag, 'ds'//trnum, TIME_C, time_start, std_tmd2(:,:,nt) )
+        enddo
+      endif
+
+      if(ndiag_3d > 0) then
+        do nt = 1,ndiag_3d
+          write(unit=trnum,fmt='(i2.2)')nt
+          call pCDF_WRITE_4D(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,:,nt), nk2 )
+        enddo
+      endif
+#endif
+
 
 #if defined (PHYSICS)
 
@@ -1220,6 +1295,10 @@ CONTAINS
       std_rad = 0.0
       std_tm5 = 0.0
       out_tm9 = 0.0
+#if defined (DIAG)
+      if(ndiag_2d > 0) std_tmd2 = 0.0
+      if(ndiag_3d > 0) std_tmd3 = 0.0
+#endif
 #if defined (RAS)
       std_tm91= 0.0
       std_tm92= 0.0

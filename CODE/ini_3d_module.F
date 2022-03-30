@@ -116,6 +116,42 @@ CONTAINS
 
       SST = 300.
       
+!!     initialization for rcemip
+!      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
+!      OPEN(939,FILE=trim(filename))
+!      READ(939,*)
+!      DO k=1,nk2
+!        READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1)
+!        111 FORMAT(32X,3F16.4)
+!      ENDDO
+!      CLOSE(939)
+!
+!      PBAR(1)=PBAR(2)
+!      THBAR(1)=THBAR(2)
+!      QVBAR(1)=QVBAR(2)
+!
+!      PBAR(nk3)=PBAR(nk2)+(PBAR(nk2)-PBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
+!      THBAR(nk3)=THBAR(nk2)+(THBAR(nk2)-THBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
+!      QVBAR(nk3)=QVBAR(nk2)+(QVBAR(nk2)-QVBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
+!
+!      QVBAR=QVBAR*0.001
+!      PBAR=PBAR*100.
+!
+!      PIBAR=(PBAR/100000.)**(2./7.)
+!      RHO=PBAR/(rgas*THBAR*PIBAR)
+!      DO k=1,nk2
+!        RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
+!      ENDDO
+!      RHOZ(nk3)=RHOZ(nk2)+(RHOZ(nk2)-RHOZ(nk1))/(ZZ(nk2)-ZZ(nk1))*(ZZ(nk3)-ZZ(nk2))
+!
+!      IF (my_task == 0) THEN
+!      WRITE(*,*) "initial profiles"
+!      DO k=1,nk3
+!        WRITE(*,256) pbar(k)/100.,pibar(k),thbar(k),qvbar(k)*1000.,rho(k),rhoz(k)
+!        256 FORMAT(6F15.5)
+!      ENDDO
+!      ENDIF
+
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
@@ -135,7 +171,7 @@ CONTAINS
 
 !     *** MIXED LAYER PROFILE ***
 
-      T1(3) = PI1(3) * T1(2) / PI1(2)
+!      T1(3) = PI1(3) * T1(2) / PI1(2)
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
@@ -398,6 +434,12 @@ CONTAINS
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.
 #endif
+#if defined (HEATING)
+      L_dep(I,J,K) = 0.
+      L_con(I,J,K) = 0.
+      L_fre(I,J,K) = 0.
+      L_met(I,J,K) = 0.
+#endif
   500 CONTINUE
 
       DO 515 K = 1, NK2
@@ -479,11 +521,13 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
-               uras_landsea_1800.L.Thermodynamic-000192.nc"
+      thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_north_2/archive/&
+              &tcvvm_qobs_large_north_2.L.Thermodynamic-000006.nc"
 
-      dynamic_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
-               uras_landsea_1800.L.Dynamic-000192.nc" 
+      dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_north_2/archive/&
+              &tcvvm_qobs_large_north_2.L.Dynamic-000006.nc" 
+
+      write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
       CALL restart(trim(thermodynamic_file),.true.,.true.,trim(dynamic_file))
 

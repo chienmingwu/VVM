@@ -1,0 +1,33 @@
+#! /bin/bash -x
+#PJM -g gi55
+#PJM -L rscgrp="regular-o"
+#PJM -L node=np_nodes
+#PJM -L elapse=walltime
+#PJM --mpi "max-proc-per-node=48"
+#PJM --mpi proc=np_threads
+#PJM -N expname 
+#PJM -j
+#PJM -s
+
+module purge
+module load fj/1.2.31
+module load fjmpi/1.2.31 hdf5/1.12.0 netcdf/4.7.4 netcdf-fortran/4.5.3
+module load pnetcdf/1.12.1
+
+export PARALLEL=1
+export OMP_NUM_THREADS=${PARALLEL}
+export FORT90L=-Wl,-T
+export PLE_MPI_STD_EMPTYFILE=off
+export OMP_WAIT_POLICY=active
+export FLIB_BARRIER=HARD
+
+source ~/.bashrc
+
+export LD_LIBRARY_PATH=/work/01/gi55/i55076/.local/lib:$LD_LIBRARY_PATH
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+mpiexec -n total_cores ./vvm 
+date >> runtime
+
+
