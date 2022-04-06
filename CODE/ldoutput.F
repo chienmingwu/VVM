@@ -451,7 +451,9 @@ CONTAINS
              UG_s(NK3),vG_s(NK3),Q1LS_s(NK3),Q2LS_s(NK3)
 
       if(my_task .ne. 0) RETURN
-      
+
+      open(98,file="fort.98")
+
       CALL fill_c_ic_lc
       c_s = c_8
       
@@ -512,6 +514,7 @@ CONTAINS
       RHOZ_s(i)=RHOZ(i)
       write(98,'(i3,2F12.3)') i,RHOZ_s(i)
       enddo
+      close(98)
 
       CALL FNAME_2D ( 1, LTPCON, EXPHDR, FILNAM )
       OPEN (LTPCON,FILE=FILNAM, STATUS='UNKNOWN',FORM='UNFORMATTED')

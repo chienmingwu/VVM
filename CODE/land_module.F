@@ -64,11 +64,20 @@ PRIVATE
 
   REAL, dimension(olev) :: Tin, Hin, kappa, nu
   REAL(KIND=dbl_kind), dimension(olev), public :: depth
-  DATA Tin   / 1.0000, 0.9999, 0.9998, 0.9998, 0.9997, &
-               0.9997, 0.9995, 0.9992, 0.9987, 0.9965, &
-               0.9906, 0.9738, 0.9352, 0.8636, 0.7355, &
-               0.5713, 0.4386, 0.3381, 0.2571, 0.1970, &
-               0.1488, 0.1113, 0.0812, 0.0561/
+!! 10m mld
+!  DATA Tin   / 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, &  
+!               1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, &  
+!               9.82186352e-01, 9.40712603e-01, 8.80298468e-01, 7.85451372e-01, &  
+!               7.40624872e-01, 6.77797988e-01, 5.81781058e-01, 4.83951261e-01, &  
+!               3.76990973e-01, 2.91566245e-01, 2.31321929e-01, 1.86005353e-01, &  
+!               1.41133379e-01, 9.44533213e-02, 4.25668535e-02, 2.09889465e-04/
+! 30m mld
+  DATA Tin   / 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, &  
+               1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, &  
+               1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 9.28267620e-01, &  
+               7.68150697e-01, 6.77914326e-01, 5.81880916e-01, 4.84034327e-01, &  
+               3.77055681e-01, 2.91616290e-01, 2.31361634e-01, 1.86037279e-01, &  
+               1.41157603e-01, 9.44695334e-02, 4.25741597e-02, 2.09925491e-04/
   DATA Hin   / 0.50,  0.50,  0.50,  0.50,  1.00, &
                1.00,  2.00,  4.00,  5.00,  5.00, &
               10.00, 10.00, 15.00, 15.00, 20.00, &
@@ -166,8 +175,8 @@ CONTAINS
 ! 2. Ocean temperature
 ! calculate net fluxes
         zfluxw=swD(I,J)-swU(I,J) +lwD(I,J)-lwU(I,J)   &
-              -CP*WT(I,J)-HLF*WQ(I,J)  !&                
-              !-100. ! ocean cooling 100 w/m2 from Romps 2012
+              -CP*WT(I,J)-HLF*WQ(I,J)  &                
+              -50. ! ocean cooling 100 w/m2 from Romps 2012
 !       Ocean temperature (tg)
         TG(I,J)=TG(i,j)+zmcapdt*zfluxw
 #endif
@@ -241,11 +250,11 @@ CONTAINS
       Q2i(I,J) = Q2(I,J)/(1+Q2(I,J))
   100 CONTINUE
 
-!      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
-!      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
-!      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
-!      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
-!      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
+      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
+      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
+      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
+      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
+      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
 
             
       SPRECi = real(SPREC)
@@ -288,11 +297,11 @@ CONTAINS
 
   200 CONTINUE
 
-!      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
-!      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
-!      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
-!      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
-!      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
+      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
+      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
+      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
+      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
+      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
 
 #endif
 
@@ -647,10 +656,16 @@ CONTAINS
    DO K=1,olev
    DO J=1,MJ1
    DO I=1,MI1
+     tempim=dble(mi1*ni_sbdm+i)
+     pi = 4._8 * atan(1._8)
+
      To(i,j,k) = (TG(i,j)-273.15)*Tin(k) + Tbot*(1.-Tin(k))
+     ! perturbation 2m depth and 1.5K
+     IF (sum(Hin(1:k))-0.5*Hin(k)<=2.0)  To(i,j,k) =  To(i,j,k) -1.5*cos(2*pi*tempim/512.)
    ENDDO
    ENDDO
    ENDDO
+   TG(1:mi1,1:mj1) = To(1:mi1,1:mj1,1) + 273.15
 #endif
 
 #endif

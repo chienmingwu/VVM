@@ -590,7 +590,7 @@ DO I=1,MI1
         ! snow/ice points.
         !
         ALB = ALBEDOMAXTBL(VEGTYP)
-        Z0BRD(I,K) = Z0MINTBL(VEGTYP)
+        Z0BRD(I,J) = Z0MINTBL(VEGTYP)
 
         !
         ! Call the Noah LSM routines for Glacial Ice points.

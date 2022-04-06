@@ -456,18 +456,14 @@ else
   set kppn  = ${kpp}
 endif
 
-set dum1    =  ` ncdump -v zc ${kppn} `
-set dum2    =  ` echo ${dum1} | cut -d"=" -f 3 `
-set onz      =  ` echo ${dum2} | cut -d" " -f 1 `
-
 set dum1    =  ` ncdump -h ${kppn} | grep float `
 set n = 2
 set condition = true
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum4} == ${dum3} )then
-  set prelev = ${onz}
+  set prelev = ${nz}
 else
   set prelev = '1 '
 endif
@@ -477,14 +473,14 @@ while ( ${condition} == "true" )
 @ n++
 set dum2    =  ` echo ${dum1} | cut -d"(" -f ${n} `
 set dum3    =  ` echo ${dum2} | rev |cut -d" " -f 1 | rev `
-set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i bottom_top | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
+set dum4    =  ` echo ${dum1} | cut -d")" -f ${n} | grep -i lev | cut -d"(" -f 1 | rev | cut -d" " -f 1 | rev `
 if( ${dum3} == ";" )then
   set condition = false
 else
   set prevar = ` echo ${prevar} ${dum3} `
 endif
 if( ${dum4} == ${dum3} )then
-  set prelev = ` echo ${prelev} ${onz} `
+  set prelev = ` echo ${prelev} ${nz} `
 else
   set prelev = ` echo ${prelev} 1 `
 endif

@@ -27,6 +27,9 @@ REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK3),PRIVATE :: &
 DHWU1,DHWV1,DHWW1,DHWU2,DHWV2,DHWW2
 
 #endif
+
+INTEGER (KIND=int_kind), SAVE :: ITT_LSM
+
 !public member functions
 PUBLIC ::      &
    turb_3d,    &
@@ -334,7 +337,11 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
+         IF ( (itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1) &
+              .AND. (ITT .NE. ITT_LSM) ) then
+            CALL SFLUX_3D
+            ITT_LSM = ITT
+         ENDIF
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
 !      CALL SFLUX_3D ! call sflux every time step 
@@ -1147,6 +1154,9 @@ CONTAINS
 
       SPEEDTP(I,J)=0.5*SQRT((U3DX(I-1,J,hxp)+U3DX(I,J,hxp))**2  &
                            +(U3DY(I,J-1,hxp)+U3DY(I,J,hxp))**2)
+!ccwu for rce case
+      SPEEDTP=max(SPEEDTP,1.)
+
 !      if(hx1 .ge. 2) then
 !      tg(i,j)=thbar(hx1)*pibar(hx1)   !specify the ground temp. at the corresponding level
 !      gwet(i,j)=0.8
@@ -1175,6 +1185,9 @@ CONTAINS
       QD(I,J) = QV3D(I,J,hxp)+QC3D(I,J,hxp)+QI3D(I,J,hxp)
       TD(I,J) = CP*TH3D(I,J,hxp)*PIBAR(hxp)-HLF*QC3D(I,J,hxp)+GRAV*ZT(hxp)    &
              -(HLF+HLM)*QI3D(I,J,hxp)
+
+      WQ(I,J) = WQV(I,J)
+      WT(I,J) = WTH(I,J)*PIBAR(hxp)
 
   105 CONTINUE
 
@@ -1460,6 +1473,8 @@ CONTAINS
 SUBROUTINE TURB_3D_INI
 #if defined (DIFFUSION)
       integer(KIND=int_kind ) :: i,j,k,nn
+
+      ITT_LSM=-1
 
       DHUU1=1.
       DHUV1=1.
