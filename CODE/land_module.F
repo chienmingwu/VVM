@@ -428,15 +428,24 @@ CONTAINS
          lST(I,J,2)       = lT1(I,J)
          lST(I,J,3)       = lT1(I,J)
          lST(I,J,4)       = lT1(I,J)
-         !climo of the month
-         lSM(I,J,1)       = 0.3054033
-         lSM(I,J,2)       = 0.3054033
-         lSM(I,J,3)       = 0.3054033
-         lSM(I,J,4)       = 0.3054033
-         lSL(I,J,1)       = 0.3054033
-         lSL(I,J,2)       = 0.3054033
-         lSL(I,J,3)       = 0.3054033
-         lSL(I,J,4)       = 0.3054033
+!         !climo of the month
+!         lSM(I,J,1)       = 0.3054033
+!         lSM(I,J,2)       = 0.3054033
+!         lSM(I,J,3)       = 0.3054033
+!         lSM(I,J,4)       = 0.3054033
+!         lSL(I,J,1)       = 0.3054033
+!         lSL(I,J,2)       = 0.3054033
+!         lSL(I,J,3)       = 0.3054033
+!         lSL(I,J,4)       = 0.3054033
+! climo of April(20090403) for idealized cases
+         lSM(I,J,1)       = 0.3130780
+         lSM(I,J,2)       = 0.3130780
+         lSM(I,J,3)       = 0.3130780
+         lSM(I,J,4)       = 0.3130780
+         lSL(I,J,1)       = 0.3130780
+         lSL(I,J,2)       = 0.3130780
+         lSL(I,J,3)       = 0.3130780
+         lSL(I,J,4)       = 0.3130780
 !         ST(I,J,1)       = ST1(I,J)
 !         ST(I,J,2)       = ST2(I,J)
 !         ST(I,J,3)       = ST3(I,J)
@@ -445,7 +454,7 @@ CONTAINS
 !         SM(I,J,2)       = SM2(I,J)
 !         SM(I,J,3)       = SM3(I,J)
 !         SM(I,J,4)       = SM4(I,J)
-!         SL(I,J,1)       = SM1(I,J)
+!
 !         SL(I,J,2)       = SM2(I,J)
 !         SL(I,J,3)       = SM3(I,J)
 !         SL(I,J,4)       = SM4(I,J)
