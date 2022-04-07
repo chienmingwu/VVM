@@ -29,8 +29,8 @@ CONTAINS
 !-------------------------
 !     Gravity Wave Damping (Rayleigh type)
 
-      DO 300 K = NK1-10, NK1
-      CGR =  CRAD*(ZZ(K)-ZT(NK2-11))/(ZT(NK2)-ZT(NK2-11))
+      DO 300 K = NK1-14, NK1
+      CGR =  CRAD*(ZZ(K)-ZT(NK2-15))/(ZT(NK2)-ZT(NK2-15))
 
       DO 310 J = 1, MJ1
       DO 310 I = 1, MI1
@@ -56,12 +56,12 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
 
-      !IF (.false.) THEN ! Der test for rcemip
-      IF (CRAD.NE.0.) THEN
+      IF (.false.) THEN ! Der test for rcemip
+      !IF (CRAD.NE.0.) THEN
 !     Gravity Wave Damping (Rayleigh type)
 !-----------------------------------------
-      DO 700 K = NK2-4, NK2
-      CGR =  CRAD*(ZT(K)-ZT(NK2-5))/(ZT(NK2)-ZT(NK2-5))
+      DO 700 K = NK2-14, NK2
+      CGR =  CRAD*(ZT(K)-ZT(NK2-15))/(ZT(NK2)-ZT(NK2-15))
 
       DO 702 J = 1, MJ1
       DO 702 I = 1, MI1
@@ -91,8 +91,8 @@ CONTAINS
 !-------------------------
       END IF
 
-      !IF (.false.) THEN ! Der test for rcemip
-      IF (CRAD1.NE.0.) THEN
+      IF (.false.) THEN ! Der test for rcemip
+      !IF (CRAD1.NE.0.) THEN
 !     Newtonian Cooling - Original Code plus thtd3d counter
 !------------------------------------------
 
@@ -112,6 +112,16 @@ CONTAINS
       THTD3D(I,J,K)=THTD3D(I,J,K)              &
                     -DT*CNT*(TH3D(I,J,K)-THBAR(K))
   810 CONTINUE
+
+
+      !! radaitive cooling (Wofsy and Kuang 2012)
+      !IF (ZT(K) .LT. 10.E3) THEN
+      !  TH3D(:,:,K)=TH3D(:,:,K)-1.3/PIBAR(K)*DT/86400.
+      !ELSEIF ( ZT(K) .GE. 15.E3) THEN
+      !  TH3D(:,:,K)=TH3D(:,:,K)-0./PIBAR(K)*DT/86400.
+      !ELSE
+      !  TH3D(:,:,K)=TH3D(:,:,K)-1.3/PIBAR(K)*DT/86400.*(15.E3-ZT(K))/(15.E3-10.E3)
+      !ENDIF
 
   800 CONTINUE
 !--------------------------------------------------------------

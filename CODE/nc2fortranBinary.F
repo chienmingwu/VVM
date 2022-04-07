@@ -221,12 +221,20 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ENDDO
 
 
-      HX = 1
+      HX = 1.
+      !LU = 16.
+      !alb = 15.
+      !grf = 10.
+      !lai = 4.
+      !SHDMAX = 10.
+      !SHDMIN = 10.
+      !SLOPE = 1.
+      !SOIL = 14.
       DO 500 J = 1,MJ_GLOB
       DO 500 I = 1,MI_GLOB
 
       xt(I) = I * DX
-      yt(I) = J * DYNEW
+      yt(J) = J * DYNEW
 
 !      ! setup Chien and Wu 2016
 !      TMP=abs(real(i)-real(mi_glob)/2.)*DX
@@ -242,15 +250,15 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
 !      hx(I,J)=TOP
 
-      hx(I,J)= 1
-      LU(I,J) = 16
+      hx(I,J)= 1.
+      LU(I,J) = 16.
       alb(I,J) = 15.
       grf(I,J) = 10.
       lai(I,J) = 4.
       SHDMAX(I,J) = 10.
       SHDMIN(I,J) = 10.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 14
+      SLOPE(I,J) = 1.
+      SOIL(I,J) = 14.
 !      ! setup Wu and Chen 2021
 !      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
 !      LU(I,J) = 7
@@ -329,9 +337,19 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       DO 800 J = 1,MJ_GLOB
       DO 800 I = 1,MI_GLOB
-      IF (HX(I+1,J) .GT. HX(I,J) .AND. HX(I-1,J) .GT. HX(I,J) .AND.
-     1 HX(I,J+1) .GT. HX(I,J) .AND. HX(I,J-1) .GT. HX(I,J)) THEN
-      HX(I,J) =MIN(HX(I+1,J),HX(I-1,J),HX(I,J+1),HX(I,J-1))
+      ii=i-1
+      ie=i+1
+      ji=j-1
+      je=j+1
+      if (ii<1) ii=ii+mi_glob
+      if (ji<1) ji=ji+mj_glob
+      if (ie>mi_glob) ie=ie-mi_glob
+      if (je>mj_glob) je=je-mj_glob
+      
+
+      IF (HX(ie,J) .GT. HX(I,J) .AND. HX(ii,J) .GT. HX(I,J) .AND.
+     1 HX(I,je) .GT. HX(I,J) .AND. HX(I,ji) .GT. HX(I,J)) THEN
+      HX(I,J) =MIN(HX(ie,J),HX(ii,J),HX(I,je),HX(I,ji))
       NP = NP +1
       ENDIF
   800 CONTINUE

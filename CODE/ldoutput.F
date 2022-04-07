@@ -456,6 +456,7 @@ CONTAINS
       c_s = c_8
       
 ! *** WRITE CONSTANTS FILE 
+      open(98,file='fort.98')
       write(98,*) '***************************************'
       write(98,*) 'PARAMETERS'
       write(98,*) '***************************************'
@@ -512,6 +513,7 @@ CONTAINS
       RHOZ_s(i)=RHOZ(i)
       write(98,'(i3,2F12.3)') i,RHOZ_s(i)
       enddo
+      close(98)
 
       CALL FNAME_2D ( 1, LTPCON, EXPHDR, FILNAM )
       OPEN (LTPCON,FILE=FILNAM, STATUS='UNKNOWN',FORM='UNFORMATTED')

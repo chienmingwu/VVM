@@ -96,7 +96,7 @@ CONTAINS
 !      CRITMN=100.
 !      New Value for TWP-ICE
 !      CRITMN=1._dbl_kind !ccwu for LES run
-      CRITMN=100._dbl_kind !ccwu for TCVVM
+      CRITMN=10._dbl_kind !ccwu for TCVVM
 
       RAMD0S=(0.23_dbl_kind*DELD)**2
 
