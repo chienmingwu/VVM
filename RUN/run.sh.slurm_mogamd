@@ -1,0 +1,33 @@
+#!/usr/bin/bash
+#SBATCH -J expname        # Job name
+###SBATCH -A MST109184      # Account number
+#SBATCH -p all          # job partition
+#SBATCH -N np_nodes       # Run all processes on a single node	
+#SBATCH -c 1              # cores per MPI rank
+#SBATCH -n total_cores    # Run a single task
+#SBATCH -o expname.out  # output file
+#SBATCH -e expname.err  # error file
+
+module purge
+
+module load Intel-oneAPI-2022.1
+module load compiler mpi mkl
+module load petsc/3.14.0 pnetcdf/1.12.2
+
+#echo 'int mkl_serv_intel_cpu_true() {
+#  return 1;
+#}' > fakeintel.c
+#
+#gcc -shared -fPIC -o libfakeintel.so fakeintel.c
+#
+#export export LD_PRELOAD=libfakeintel.so
+#export LD_LIBRARY_PATH=$(pwd)
+export I_MPI_FABRICS=shm
+
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+mpirun -np total_cores ./vvm < INPUT | tee OUTPUT 
+date >> runtime
+
+
