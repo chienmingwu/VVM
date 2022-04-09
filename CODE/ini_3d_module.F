@@ -98,10 +98,11 @@ CONTAINS
 !     PU1 (MB) , U1(M/S)
 
       REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
-      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
-      DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
-
+!      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
+      DATA PU1/1000.,750.,500.,100.,50.,10./
+!      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
+      DATA U1/0.,1.,2.,5.,0.,0./
+      DATA V1/6*0./
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
       casename= 'GATE_PHASE_III'
@@ -410,14 +411,6 @@ CONTAINS
       endif
 
 
-      ! isentropic environment
-      THBAR=THBAR(2)
-      RHO=1.
-      RHOZ=1.
-      RHOU=1.
-      RHOT=1.
-      RHOW=1.
-
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
 
@@ -430,14 +423,6 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2&
-              !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
-              +((ZT(K)-6000.)/2000.)**2)<=1)THEN
-        TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
-                      sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2+ &
-                           !((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
-                           ((ZT(K)-6000.)/2000.)**2)))**2
-      ENDIF
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -509,12 +494,10 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-!      U3DX(I,J,K)=UG(K)
-!      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=0.
-      U3DY(I,J,K)=0.
+      U3DX(I,J,K)=UG(K)
+      U3DY(I,J,K)=VG(K)
   610 CONTINUE
-
+       
       DO 660 K = 2, NK1
       DO 660 J = 1, MJ1
       DO 660 I = 1, MI1

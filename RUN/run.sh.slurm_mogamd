@@ -10,7 +10,7 @@
 
 module purge
 
-module load Intel-oneAPI
+module load Intel-oneAPI-2022.1
 module load compiler mpi mkl
 module load petsc/3.14.0 pnetcdf/1.12.2
 
