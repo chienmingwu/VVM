@@ -16,8 +16,8 @@ set echo  # echoes the commands
 set expname = kuo_test
 
 # set job system and compiler
-set compiler = 'aocc_mogamd'
-set jobsys = 'slurm_mogamd'
+set compiler = 'intel_mogamd'
+set jobsys = 'slurm_mogamd_intel'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -39,7 +39,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/total_cores/64/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-#qsub run.sh
+qsub run.sh
 
 exit
 
