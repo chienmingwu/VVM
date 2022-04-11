@@ -337,7 +337,7 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-         IF ( (itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1)
+         IF ( (itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1) &
               .AND. ITT .NE. ITT_LSM ) THEN
                  CALL SFLUX_3D
                  ITT_LSM=ITT
