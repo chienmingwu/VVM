@@ -80,7 +80,7 @@ CONTAINS
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 !     get data from dat file
 !     fname='/home/mileshsieh/semirealistic_IC/'//stno//'.'//dateStr//'.taiwania.dat'
-      fname='/home/mileshsieh/semirealistic_IC/SE_wd110.ws04.taiwania.dat'
+      fname='/home/mileshsieh/semirealistic_IC/SE_wd110.ws08.taiwania.dat'
       open(unit=88,file=fname,form='unformatted',status='old',access='direct',recl=NK3*2)
       read(88,rec=1) UG(:)
       read(88,rec=2) VG(:)

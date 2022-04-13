@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = SE_wd110_ws04_fix
+set expname = SE_wd110_ws08
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
