@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = mock_walker_16km_p3_4k_uras
+set expname = mock_walker_16km_p3_4k_uras_dcbase5
 
 # set job system and compiler
 set compiler = 'intel_mogamd'

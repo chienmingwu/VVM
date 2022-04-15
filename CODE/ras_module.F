@@ -232,6 +232,9 @@ CONTAINS
       TC3D(i,j,4+1,1)=wbarc(nn) 
       TC3D(i,j,5+1,1)=wc(nn) 
       TC3D(i,j,6+1,1)=rhoc(nn) 
+      TC3D(i,j,7+1,1)=ZT(nk3-kcbase(nn)) 
+      TC3D(i,j,8+1,1)=hbase(nn)
+      TC3D(i,j,9+1,1)=qbase(nn)
       endif
     
       !write(*,*) my_task,i,j,prec_cumulus(i,j),thad_cumulus(i,j,:),qvad_cumulus(i,j,:)
@@ -539,13 +542,18 @@ ENDDO!j
       do 10 i = 1, nxj
       kcbase(i)= 1
       hbase(i) = 0.0
-      qcl(i,lev)= ql(i,lev)
-      hcl(i,lev)= hl(i,lev)
+! let parcel lefting from level=5 (C-M Wu suggested)
+      qcl(i,lev-5)= ql(i,lev-5)
+      hcl(i,lev-5)= hl(i,lev-5)
+      !qcl(i,lev)= ql(i,lev)
+      !hcl(i,lev)= hl(i,lev)
    10 continue
 !
 ! --  assume cloud base can not be higher than lev/2
 !
-      do 30 l = lev-1, lev/2, -1
+! let parcel lefting from level=5 (C-M Wu suggested)
+      do 30 l = lev-1-5, lev/2, -1
+      !do 30 l = lev-1, lev/2, -1
       do 40 i = 1,nxj
       if (kcbase(i).eq.1) then
       tx= 1.0-zl2(i,l+1)/zl2(i,l)
