@@ -221,16 +221,16 @@ CONTAINS
         endif
       ENDDO
     
-      Uo(i,j,1) = Uo(i,j,1) + taux(i,j)/rhoh2o*dt_o
-      Vo(i,j,1) = Vo(i,j,1) + tauy(i,j)/rhoh2o*dt_o
+      Uo(i,j,1) = Uo(i,j,1) + taux(i,j)/(rhoh2o*Hin(k))*dt_o
+      Vo(i,j,1) = Vo(i,j,1) + tauy(i,j)/(rhoh2o*Hin(k))*dt_o
 
       TG(I,J) = To(I,J,1) + 273.15
  
-      if (my_task==0 .and. i==1 .and. j==1) &
+      if (my_task==0 .and. i==10 .and. (j== mj1-1 .or. j==mj1) ) &
          write(*,194) "  SST: ", TG(i,j), &
                       ", MLD: ", bldpth(i,j), &
                       ", U_s: ", Uo(i,j,1), &
-                      ", V_s: ", Vo(i,j,1)
+                      ", swD: ", swD(I,J)
       194 format(4(A,F10.5))
 
 #endif
@@ -660,8 +660,8 @@ CONTAINS
      pi = 4._8 * atan(1._8)
 
      To(i,j,k) = (TG(i,j)-273.15)*Tin(k) + Tbot*(1.-Tin(k))
-     ! perturbation 2m depth and 1.5K
-     IF (sum(Hin(1:k))-0.5*Hin(k)<=2.0)  To(i,j,k) =  To(i,j,k) -1.5*cos(2*pi*tempim/512.)
+     ! perturbation 2m depth and 1.0K
+     IF (sum(Hin(1:k))-0.5*Hin(k)<=2.0)  To(i,j,k) =  To(i,j,k) -1.0*cos(2*pi*tempim/512.)
    ENDDO
    ENDDO
    ENDDO

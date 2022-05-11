@@ -456,6 +456,10 @@ else
   set kppn  = ${kpp}
 endif
 
+set dum1    =  ` ncdump -v zc ${kppn} `
+set dum2    =  ` echo ${dum1} | cut -d"=" -f 3 `
+set onz      =  ` echo ${dum2} | cut -d" " -f 1 `
+
 set dum1    =  ` ncdump -h ${kppn} | grep float `
 set n = 2
 set condition = true

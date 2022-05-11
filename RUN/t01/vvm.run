@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = KPP_P3_1p5K_2p0m_30mld
+set expname = KPP_P3_1p0K_2p0m_30mld
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -39,7 +39,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/total_cores/256/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-#qsub run.sh
+pjsub run.sh
 
 exit
 

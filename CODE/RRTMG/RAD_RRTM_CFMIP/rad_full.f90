@@ -437,6 +437,7 @@
       
       latitude_slice(1) = latitude(i,j)
       longitude_slice(1) = longitude(i,j)
+      !write(*,'(A,2F10.4)') "rad_full:", longitude_slice, latitude_slice
       
       p_factor_slice(1) = p_factor_xy(i,j)
       p_coszrs_slice(1) = p_coszrs_xy(i,j)

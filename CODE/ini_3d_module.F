@@ -317,17 +317,17 @@ CONTAINS
   102 CONTINUE
 
       DO 200 K = 2, NK3
-      IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
-      K2 = K1 + 1
-      Q1LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
-      Q2LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
-      ELSE
+      !IF ( ZT(K) .LT. 15000. ) THEN
+      !K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
+      !K2 = K1 + 1
+      !Q1LS (K) =  &
+      !  FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
+      !Q2LS (K) =  &
+      !  FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
+      !ELSE
       Q1LS (K) = 0.0
       Q2LS (K) = 0.0
-      END IF
+      !END IF
   200 CONTINUE
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
