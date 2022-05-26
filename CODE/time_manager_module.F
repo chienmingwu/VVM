@@ -46,37 +46,37 @@ CONTAINS
 ! Specify year, month, day, and hour of initial time step
 
 ! Vernal equinox
-!      iyear0 = 2007
-!      imonth0 = 3
-!      iday0 = 1
+!      iyear0 = 20082007
+!      imonth0 = 103
+!      iday0 = 151
 
 
   SELECT CASE (TRIM(casename))
   CASE ('ARM9507')
 ! ARM9507n comparison study (0Z ?? Jul 1995)      
-      iyear0 = 1995
-      imonth0 = 7
-      iday0 = 18
+      iyear0 = 20081995
+      imonth0 = 107
+      iday0 = 1518
 ! Specify hour  in the begining day
       hour0 = 0.229*24._dbl_kind
   CASE ('ARM9707')
 ! ARM9707n comparison study (0Z ?? Jun-Jul 1997)      
-      iyear0 = 1997
-      imonth0 = 6
-      iday0 = 18
+      iyear0 = 20081997
+      imonth0 = 106
+      iday0 = 1518
 ! Specify hour in the begigning day
       hour0 = 0.979*24._dbl_kind
   CASE ('ARM0003')
 ! ARM0003 comparison study (0Z ?? Mar 2000)      
-      iyear0 = 2000
-      imonth0 = 3
-      iday0 = 1
+      iyear0 = 20082000
+      imonth0 = 103
+      iday0 = 151
 ! Specify hour in the beginning day
       hour0 = 0.729198*24._dbl_kind
   CASE ('TWP-ICE')
 ! TWP-ICE comparison study (0Z 18 Jan 2006)      
-      iyear0 = 2007
-      imonth0 = 1
+      iyear0 = 2006
+      imonth0 = 01
       iday0 = 18
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 0.0
