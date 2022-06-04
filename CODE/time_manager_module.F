@@ -45,18 +45,12 @@ CONTAINS
 !-----7---------------------------------------------------------------72
 ! Specify year, month, day, and hour of initial time step
 
-! Vernal equinox
-!      iyear0 = 20082007
-!      imonth0 = 113
-!      iday0 = 041
-
-
   SELECT CASE (TRIM(casename))
   CASE DEFAULT
 ! TWP-ICE comparison study (22Z 20080327)
-      iyear0 = 2008
-      imonth0 = 11
-      iday0 = 04
+      iyear0 = 2009
+      imonth0 = 04
+      iday0 = 02
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 22.0
   END SELECT 
