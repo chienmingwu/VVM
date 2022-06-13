@@ -813,7 +813,11 @@ VARS '$#radvarname >> radiation.ctl
 set n = 0
 while ( ${n} < $#radvarname )
 @ n++
+if ( ${radvarlev[${n}]} != 1 ) then
 echo ${radvarname[${n}]}'=>'${radvarname[${n}]}' '${radvarlev[${n}]}' t,z,y,x '${expname} >> radiation.ctl
+else
+echo ${radvarname[${n}]}'=>'${radvarname[${n}]}' '${radvarlev[${n}]}' t,y,x '${expname} >> radiation.ctl
+endif
 end
 echo 'ENDVARS' >> radiation.ctl
 endif
@@ -915,7 +919,11 @@ VARS '$#kppvarname >> kpp.ctl
 set n = 0
 while ( ${n} < $#kppvarname )
 @ n++
+if ( ${kppvarlev[${n}]} != 1 ) then 
 echo ${kppvarname[${n}]}'=>'${kppvarname[${n}]}' '${kppvarlev[${n}]}' t,z,y,x '${expname} >> kpp.ctl
+else
+echo ${kppvarname[${n}]}'=>'${kppvarname[${n}]}' '${kppvarlev[${n}]}' t,y,x '${expname} >> kpp.ctl
+endif
 end
 echo 'ENDVARS' >> kpp.ctl
 endif

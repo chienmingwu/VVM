@@ -1211,6 +1211,9 @@ CONTAINS
 
       OUT_tm1(:,:,1:olev) = Vocean
       call pCDF_WRITE_4D(ncid_kpp, 'v', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+
+      OUT_tm1(:,:,1)= bldpth 
+      call pCDF_WRITE_xy(ncid_kpp, 'mld', TIME_L, time_start, out_tm1(:,:,1) )
 #endif
 
 #endif
