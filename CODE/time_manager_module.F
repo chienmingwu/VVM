@@ -50,7 +50,7 @@ CONTAINS
 ! TWP-ICE comparison study (22Z 20080327)
       iyear0 = 2012
       imonth0 = 03
-      iday0 = 27
+      iday0 = 28
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 22.0
   END SELECT 
