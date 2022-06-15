@@ -48,9 +48,9 @@ CONTAINS
   SELECT CASE (TRIM(casename))
   CASE DEFAULT
 ! TWP-ICE comparison study (22Z 20080327)
-      iyear0 = 2012
-      imonth0 = 11
-      iday0 = 07
+      iyear0 = 2013
+      imonth0 = 01
+      iday0 = 19
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 22.0
   END SELECT 
