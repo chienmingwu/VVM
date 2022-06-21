@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = ish20140425s_chem
+set expname = ish20140426s_chem
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
