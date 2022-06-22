@@ -451,7 +451,7 @@ set rasvarname = ( `echo ${prevar}` )
 set rasvarlev = (`echo ${prelev}` )
 # =================KPP============================
 if( ${kpp} == "nan" )then
-  set kppn  = ${surface}
+  set kppn  = ${dynamic}
 else
   set kppn  = ${kpp}
 endif

@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = KPP_P3_0p5K_1p0m_10mld_per
+set expname = tpe20050723cln
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -33,10 +33,10 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/walltime/96:00:00/g' \
-    -e 's/np_nodes/6/g' \
+    -e 's/walltime/24:00:00/g' \
+    -e 's/np_nodes/22/g' \
     -e 's/np_threads/48/g' \
-    -e 's/total_cores/256/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/total_cores/1024/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
 pjsub run.sh

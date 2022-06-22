@@ -62,24 +62,16 @@
       READ (15, INPUT3)
       CLOSE(15)
 
-      DOMAIN = 15000.
-
-      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
-      CZ1 = 1. - CZ2 * DOMAIN
-
-      DZTMP = MIN(DZ,DZ1)
+!      DOMAIN = 15000.
+!
+!      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
+!      CZ1 = 1. - CZ2 * DOMAIN
+!
+!      DZTMP = MIN(DZ,DZ1)
       Zz(1) = ZB
-      ZT(1) = Zz(1)
-      ZT(2) = Zz(1) + DZ / 2.
       DO 50 K = 2, NK3
-      Zz(K) = Zz(K-1) + DZ
-      IF (K>2) ZT(K) = ZT(K-1) + DZ
+      Zz(K) = Zz(K-1) + DZ1
    50 CONTINUE
-
-      DO 51 K = 1, NK3
-      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
-      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
-   51 CONTINUE
 
 ! import INPUT FILE 
       IF (TWTOPO) THEN
@@ -177,48 +169,48 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
-      !OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
-      !READ(15,*) xt
-      !CLOSE(15)
-      !OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
-      !READ(15,*) yt
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
+      READ(15,*) xt
+      CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
+      READ(15,*) yt
+      CLOSE(15)
 
-      !OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
-      !READ(15,*) alb
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
+      READ(15,*) alb
+      CLOSE(15)
 
-      !OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
-      !READ(15,*) grf
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
+      READ(15,*) grf
+      CLOSE(15)
 
-      !OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
-      !READ(15,*) hgt
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
+      READ(15,*) hgt
+      CLOSE(15)
 
-      !OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
-      !READ(15,*) lai
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
+      READ(15,*) lai
+      CLOSE(15)
 
-      !OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
-      !READ(15,*) lu
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
+      READ(15,*) lu
+      CLOSE(15)
 
-      !OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
-      !READ(15,*) shdmax
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
+      READ(15,*) shdmax
+      CLOSE(15)
 
-      !OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
-      !READ(15,*) shdmin
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
+      READ(15,*) shdmin
+      CLOSE(15)
 
-      !OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
-      !READ(15,*) slope
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
+      READ(15,*) slope
+      CLOSE(15)
 
-      !OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
-      !READ(15,*) soil
-      !CLOSE(15)
+      OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
+      READ(15,*) soil
+      CLOSE(15)
       
       DO J=1,MJ_GLOB
       DO I=1,MI_GLOB
@@ -249,15 +241,15 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
 !      hx(I,J)=TOP
 
-      hx(I,J)= 1
-      LU(I,J) = 16
-      alb(I,J) = 15.
-      grf(I,J) = 10.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 14
+!      hx(I,J)= 1
+!      LU(I,J) = 16
+!      alb(I,J) = 15.
+!      grf(I,J) = 10.
+!      lai(I,J) = 4.
+!      SHDMAX(I,J) = 10.
+!      SHDMIN(I,J) = 10.
+!      SLOPE(I,J) = 1
+!      SOIL(I,J) = 14
 !      ! setup Wu and Chen 2021
 !      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
 !      LU(I,J) = 7
@@ -316,19 +308,19 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !  700 YT (J) = J*DYNEW
 !
 !
-!      DO I=1,mi_glob
-!      DO J=1,mj_glob
-!      TMP=DBLE(hgt(I,J))
-!
-!      IF (TMP .GT. 0.) HX(I,J) = 2.
-!      DO K=2,NK1
-!      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-!
-!      ENDDO
-!      IF(HX(I,J).LT.0)HX(I,J)=0
-!
-!      ENDDO
-!      ENDDO
+      DO I=1,mi_glob
+      DO J=1,mj_glob
+      TMP=DBLE(hgt(I,J))
+
+      IF (TMP .GT. 0.) HX(I,J) = 2.
+      DO K=2,NK1
+      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+
+      ENDDO
+      IF(HX(I,J).LT.0)HX(I,J)=0
+
+      ENDDO
+      ENDDO
 
       ENDIF
 

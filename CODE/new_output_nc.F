@@ -211,8 +211,10 @@ PUBLIC :: &
    pcdf_ini_rad, &
    pcdf_ini_xy, &
    pcdf_ini_4dvar, &
+   pcdf_write_xy_slice, &
    pcdf_write_xy, &
    pcdf_ini_xy_var, &
+   pcdf_write_4d_slice, &
    pcdf_write_4d
 
 CONTAINS
@@ -2612,6 +2614,130 @@ CONTAINS
       END SUBROUTINE pCDF_WRITE_4D
 !==============================================================================
 
+!==============================================================================
+      SUBROUTINE pCDF_WRITE_4D_slice (ncid, var_nc, time_l, time_start, &
+                               var_values, k)
+!==============================================================================
+
+! Write NetCDF data. Input data array is 3-dimensional (x,y,z).  Fourth
+! dimension in the NetCDF data represents time.
+
+      integer (KIND=int_kind), intent(in) :: &
+          ncid, k
+          
+      character (len=*), intent(in) :: &
+          var_nc
+
+      real (KIND=real_kind), intent(inout) :: &
+          time_l
+
+      real (KIND=real_kind), dimension(1) :: &
+          time_temp
+          
+      integer (KIND=int_kind), dimension(1), intent(in) :: &
+          time_start
+
+      real (KIND=tm_kind), dimension(mi1,mj1,k), intent(inout) :: &
+!      real (KIND=dbl_kind), dimension(mi1,mj1,k), intent(in) :: &
+          var_values
+
+      real (KIND=tm_kind), dimension(k,mj1,mi1) :: &
+          var_values_tmp
+
+      real (KIND=tm_kind), dimension(:,:,:), allocatable :: &
+          out_values_tmp, out_values
+
+      integer (KIND=int_kind) :: &
+          time_id, &
+          var_id
+          
+      character (len=20) :: name
+      integer (KIND=int_kind) :: ndims, j, i, ierr
+      integer (KIND=int_kind), dimension(3) :: var_shape
+      integer (kind=mpi_offset_kind), dimension(1) :: start1, count1
+      integer (kind=mpi_offset_kind), dimension(4) :: start4, count4
+      integer (kind=int_kind), dimension(ntasks) :: mpi_n, mpi_s
+
+      start4=1
+      count4=0 
+      mpi_n=0
+      mpi_s=0
+      if (ni_sbdm==0) then
+      ! indexes for NetCDF
+      start4(1) = 1
+      start4(2) = nj_sbdm*mj1 + 1
+      start4(3) = 1
+      start4(4) = time_start(1)
+      count4(1) = mi_glob
+      count4(2) = mj1
+      count4(3) = k
+      count4(4) = 1
+      ! indexes for MPI
+      do j=my_task+1,my_task+nsbdm_x
+      !write(*,*) "0 out:", j,my_task+1,my_task+nsbdm_x,ntasks
+      mpi_s(j)=(j-(my_task+1))*mi1*mj1*k!+1
+      enddo
+      allocate(out_values(mi_glob,mj1,k))
+      allocate(out_values_tmp(k,mj1,mi_glob))
+      else
+      allocate(out_values(1,1,1))
+      allocate(out_values_tmp(1,1,1))
+      endif
+      mpi_n(int(my_task/nsbdm_x)*nsbdm_x+1:int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x)=mi1*mj1*k
+      !write(*,*) "out if:", my_task,int(my_task/nsbdm_x)*nsbdm_x+1,int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x
+
+      var_values_tmp=reshape(var_values,(/k,mj1,mi1/),order=(/3,2,1/))
+      ! recive data from ni_sbdm/=0 to ni_sbdm==0
+      do j=0,nsbdm_y-1
+      i=0
+      if (int(my_task/nsbdm_x)==j) i=mpi_n(my_task+1) 
+      !write(*,*) "do loop",my_task, int(j*nsbdm_x),i
+      !if (my_task==int(j*nsbdm_x)) then
+      !        write(*,*) "mpi_s", mpi_s
+      !        write(*,*) "mpi_n", mpi_n
+      !endif
+      call mpi_gatherv(var_values_tmp,i,mpi_real,out_values_tmp,mpi_n,mpi_s,mpi_real,int(j*nsbdm_x),mpi_comm_world,ierr)
+      call mpi_barrier(mpi_comm_world,ierr)
+      enddo
+      if (ni_sbdm==0) out_values=reshape(out_values_tmp,(/mi_glob,mj1,k/),order=(/3,2,1/))
+
+! Inquire time id and store time
+      nc_err = nfmpi_inq_varid(ncid, 'time',time_id)
+!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      count1(1) = 1
+      start1 = time_start
+      time_temp = time_l
+      nc_err = nfmpi_put_vara_real_all(ncid, time_id, start1, count1, time_temp )
+!      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, time_id)
+
+! Inquire variable id
+      nc_err = nfmpi_inq_varid(ncid, var_nc, var_id)
+!      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
+      
+      nc_err = nfmpi_inq_varname(ncid, var_id, name)
+      nc_err = nfmpi_inq_varndims(ncid, var_id, ndims)
+      
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_4D: var_start = ',var_start 
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_4D: name = ',name
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_4D: ndims = ',ndims
+!      
+!      var_shape = SHAPE(var_values)
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_4D: var_shape = ',var_shape
+      
+! Store variable
+!      call transpose_x(var_values, var_t, k)
+!      nc_err = nfmpi_put_vara_double_all(ncid, var_id, start4, count4, var_values)
+      !if (my_task==0) write(*,*) "before output"
+      nc_err = nfmpi_put_vara_real_all(ncid, var_id, start4, count4, out_values)
+      if (ni_sbdm==0) deallocate(out_values,out_values_tmp)
+      !if (my_task==0) write(*,*) "after output"
+       
+      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
+
+!==============================================================================
+      END SUBROUTINE pCDF_WRITE_4D_slice
+!==============================================================================
 
 !==============================================================================
       SUBROUTINE pCDF_WRITE_XY (ncid, var_nc, time_l, time_start, &
@@ -2691,6 +2817,128 @@ CONTAINS
 !==============================================================================
       END SUBROUTINE pCDF_WRITE_XY
 !==============================================================================
+
+!==============================================================================
+      SUBROUTINE pCDF_WRITE_XY_slice (ncid, var_nc, time_l, time_start, &
+                               var_values)
+!==============================================================================
+
+! Write NetCDF data.  Input data array is 2-dimensional (x,y).  Third dimension
+! in the NetCDF data represents time.
+
+      integer (KIND=int_kind), intent(in) :: &
+          ncid
+          
+      character (len=*), intent(in) :: &
+          var_nc
+
+      real (KIND=real_kind), intent(inout) :: &
+          time_l
+
+      real (KIND=real_kind), dimension(1) :: &
+          time_temp
+          
+      integer (KIND=int_kind), dimension(1), intent(in) :: &
+          time_start
+
+!      real (KIND=dbl_kind), dimension(mi1,mj1,1), intent(in) :: &
+      real (KIND=tm_kind), dimension(mi1,mj1,1), intent(inout) :: &
+          var_values
+
+      real (KIND=tm_kind), dimension(1,mj1,mi1) :: &
+          var_values_tmp
+
+      real (KIND=tm_kind), dimension(:,:,:), allocatable :: &
+          out_values_tmp, out_values
+
+      integer (KIND=int_kind) :: &
+          time_id, &
+          var_id
+          
+      character (len=20) :: name
+      integer (KIND=int_kind) :: ndims, j, i, ierr
+      integer (KIND=int_kind), dimension(2) :: var_shape
+      integer (kind=mpi_offset_kind), dimension(1) :: start1, count1
+      integer (kind=mpi_offset_kind), dimension(3) :: start3, count3
+      integer (kind=int_kind), dimension(ntasks) :: mpi_n, mpi_s
+      
+      start3=1
+      count3=0
+      mpi_n=0
+      mpi_s=0
+      if (ni_sbdm==0) then
+      ! indexes for NetCDF
+      start3(1) = 1
+      start3(2) = nj_sbdm*mj1 + 1
+      start3(3) = time_start(1)
+      count3(1) = mi_glob
+      count3(2) = mj1
+      count3(3) = 1
+      ! indexes for MPI
+      do j=my_task+1,my_task+nsbdm_x
+      !write(*,*) "0 out:", j,my_task+1,my_task+nsbdm_x,ntasks
+      mpi_s(j)=(j-(my_task+1))*mi1*mj1!+1
+      enddo
+      allocate(out_values(mi_glob,mj1,1))
+      allocate(out_values_tmp(1,mj1,mi_glob))
+      else
+      allocate(out_values(1,1,1))
+      allocate(out_values_tmp(1,1,1))
+      endif
+      mpi_n(int(my_task/nsbdm_x)*nsbdm_x+1:int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x)=mi1*mj1
+      !write(*,*) "out if:", my_task,int(my_task/nsbdm_x)*nsbdm_x+1,int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x
+
+      ! recive data from ni_sbdm/=0 to ni_sbdm==0
+      var_values_tmp=reshape(var_values, (/1,mj1,mi1/), order=(/3,2,1/))
+      do j=0,nsbdm_y-1
+      i=0
+      if (int(my_task/nsbdm_x)==j) i=mpi_n(my_task+1)
+      !write(*,*) "do loop",my_task, int(j*nsbdm_x),i
+      !if (my_task==int(j*nsbdm_x)) then
+      !        write(*,*) "mpi_s", mpi_s
+      !        write(*,*) "mpi_n", mpi_n
+      !endif
+      call mpi_gatherv(var_values_tmp,i,mpi_real,out_values_tmp,mpi_n,mpi_s,mpi_real,int(j*nsbdm_x),mpi_comm_world,ierr)
+      call mpi_barrier(mpi_comm_world,ierr)
+      enddo
+      if (ni_sbdm==0) out_values=reshape(out_values_tmp,(/mi_glob,mj1,1/),order=(/3,2,1/))
+
+! Inquire time id and store time
+      nc_err = nfmpi_inq_varid(ncid, 'time',time_id)
+!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      count1(1) = 1
+      start1 = time_start
+      time_temp = time_l
+      nc_err = nfmpi_put_vara_real_all(ncid, time_id, start1, count1, time_temp )
+!      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, time_id)
+
+! Inquire variable id
+      nc_err = nfmpi_inq_varid(ncid, var_nc, var_id)
+!      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
+      
+      nc_err = nfmpi_inq_varname(ncid, var_id, name)
+      nc_err = nfmpi_inq_varndims(ncid, var_id, ndims)
+
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_XY: var_start = ',var_start 
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_XY: name = ',name
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_XY: ndims = ',ndims
+!      
+!      var_shape = SHAPE(var_values)
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_XY: var_shape = ',var_shape
+      
+! Store variable
+!      call transpose_x(var_values, var_t, 1)
+!      nc_err = nfmpi_put_vara_double_all(ncid, var_id, start3, count3, var_values)
+      nc_err = nfmpi_put_vara_real_all(ncid, var_id, start3, count3, out_values)
+      deallocate(out_values,out_values_tmp)
+
+      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
+
+!==============================================================================
+      END SUBROUTINE pCDF_WRITE_XY_slice
+!==============================================================================
+
 !==============================================================================
       SUBROUTINE pCDF_INI_RSTART (ncid, time_len, &
                                  zc_len, &

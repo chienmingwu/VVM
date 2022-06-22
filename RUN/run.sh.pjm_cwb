@@ -3,6 +3,7 @@
 #PJM -L elapse=walltime
 #PJM --mpi "max-proc-per-node=48"
 #PJM --mpi proc=np_threads
+#PJM -x PJM_CACHE_MODE=4
 #PJM -N expname 
 #PJM --no-stging
 #PJM -j

@@ -952,7 +952,7 @@ CONTAINS
 #else
       OUT_tm1(:,:,1:nk2) = z3dx(1:mi1,1:mj1,1:nk2)
 #endif
-      call pCDF_WRITE_4D(ncid_z3dx, 'xi', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'xi', TIME_L, time_start, out_tm1, nk2 )
 
 ! Eta
 #if defined (OUTPUTGRIDA)
@@ -970,7 +970,7 @@ CONTAINS
 #else
       OUT_tm1(:,:,1:nk2) = z3dy(1:mi1,1:mj1,1:nk2)
 #endif
-      call pCDF_WRITE_4D(ncid_z3dx, 'eta', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'eta', TIME_L, time_start, out_tm1, nk2 )
 
 ! Zeta
 #if defined (OUTPUTGRIDA)
@@ -984,7 +984,7 @@ CONTAINS
 #else
       OUT_tm1(:,:,1:nk2) = z3dz(1:mi1,1:mj1,1:nk2)
 #endif
-      call pCDF_WRITE_4D(ncid_z3dx, 'zeta', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'zeta', TIME_L, time_start, out_tm1, nk2 )
 
 ! Velocity vector
 
@@ -1000,7 +1000,7 @@ CONTAINS
 #else
       OUT_tm1(:,:,1:nk2) = u3dx(1:mi1,1:mj1,1:nk2)
 #endif
-      call pCDF_WRITE_4D(ncid_z3dx, 'u', TIME_L, time_start, out_tm1, nk2  )
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'u', TIME_L, time_start, out_tm1, nk2  )
 
 ! V
 #if defined (OUTPUTGRIDA)
@@ -1014,7 +1014,7 @@ CONTAINS
 #else
       OUT_tm1(:,:,1:nk2) = u3dy(1:mi1,1:mj1,1:nk2)
 #endif
-      call pCDF_WRITE_4D(ncid_z3dx, 'v', TIME_L, time_start, out_tm1, nk2  )
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'v', TIME_L, time_start, out_tm1, nk2  )
 
 ! W
 #if defined (OUTPUTGRIDA)
@@ -1030,71 +1030,71 @@ CONTAINS
 #else
       OUT_tm1(:,:,1:nk2) = w3d(1:mi1,1:mj1,1:nk2)
 #endif
-      call pCDF_WRITE_4D(ncid_z3dx, 'w', TIME_L, time_start, out_tm1, nk2  )
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'w', TIME_L, time_start, out_tm1, nk2  )
 
 ! Thermodynamic Variables
       OUT_tm1(:,:,1:nk2) = th3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'th', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'th', TIME_L, time_start, out_tm1, nk2 )
 
 #if defined (PHYSICS)
       OUT_tm1(:,:,1:nk2) = qv3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'qv', TIME_L, time_start, out_tm1, nk2  )
+      call pCDF_WRITE_4D_slice(ncid_th, 'qv', TIME_L, time_start, out_tm1, nk2  )
 
       OUT_tm1(:,:,1:nk2) = qc3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'qc', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'qc', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(:,:,1:nk2) = qr3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'qr', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'qr', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(:,:,1:nk2) = qi3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'qi', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'qi', TIME_L, time_start, out_tm1, nk2 )
 
 #if defined (MICROP3)
       OUT_tm1(:,:,1:nk2) = nc3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'nc', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'nc', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(:,:,1:nk2) = nr3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'nr', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'nr', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(:,:,1:nk2) = ni3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'ni', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'ni', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(:,:,1:nk2) = qrim3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'qrim', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'qrim', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(:,:,1:nk2) = brim3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'brim', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'brim', TIME_L, time_start, out_tm1, nk2 )
 
 #else
 ! QS and QG
       OUT_tm1(:,:,1:nk2) = qs3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'qs', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'qs', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(:,:,1:nk2) = qg3d(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_th, 'qg', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'qg', TIME_L, time_start, out_tm1, nk2 )
 
 #endif
 
 #if defined (HEATING)
       OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,1)
-      call pCDF_WRITE_4D(ncid_th, 'ldep', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'ldep', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,2)
-      call pCDF_WRITE_4D(ncid_th, 'lcon', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'lcon', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,3)
-      call pCDF_WRITE_4D(ncid_th, 'lfre', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'lfre', TIME_L, time_start, out_tm1, nk2 )
 
       OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,4)
-      call pCDF_WRITE_4D(ncid_th, 'lmet', TIME_L, time_start, out_tm1, nk2 )
+      call pCDF_WRITE_4D_slice(ncid_th, 'lmet', TIME_L, time_start, out_tm1, nk2 )
 #endif
 
 #if defined (RAS)
-      call pCDF_WRITE_4D(ncid_ras, 'dth', TIME_C, time_start, std_tm91(:,:,1:nk2,1), nk2 )
+      call pCDF_WRITE_4D_slice(ncid_ras, 'dth', TIME_C, time_start, std_tm91(:,:,1:nk2,1), nk2 )
 
-      call pCDF_WRITE_4D(ncid_ras, 'dqv', TIME_C, time_start, std_tm91(:,:,1:nk2,2), nk2 )
+      call pCDF_WRITE_4D_slice(ncid_ras, 'dqv', TIME_C, time_start, std_tm91(:,:,1:nk2,2), nk2 )
 
-      call pCDF_WRITE_xy(ncid_ras, 'prec', TIME_C, time_start, std_tm92(:,:) )
+      call pCDF_WRITE_xy_slice(ncid_ras, 'prec', TIME_C, time_start, std_tm92(:,:) )
 #endif
 
 #endif
@@ -1103,7 +1103,7 @@ CONTAINS
         do nt = 1,ntracer
           OUT_tm1(:,:,1:nk2) = tc3d(1:mi1,1:mj1,1:nk2,nt)
           write(unit=trnum,fmt='(i2.2)')nt
-          call pCDF_WRITE_4D(ncid_tc, 'tr'//trnum, TIME_L, time_start, out_tm1, nk2 )
+          call pCDF_WRITE_4D_slice(ncid_tc, 'tr'//trnum, TIME_L, time_start, out_tm1, nk2 )
         enddo
       endif
 
@@ -1111,14 +1111,14 @@ CONTAINS
       if(ndiag_2d > 0) then
         do nt = 1,ndiag_2d
           write(unit=trnum,fmt='(i2.2)')nt
-          call pCDF_WRITE_xy(ncid_diag, 'ds'//trnum, TIME_C, time_start, std_tmd2(:,:,nt) )
+          call pCDF_WRITE_xy_slice(ncid_diag, 'ds'//trnum, TIME_C, time_start, std_tmd2(:,:,nt) )
         enddo
       endif
 
       if(ndiag_3d > 0) then
         do nt = 1,ndiag_3d
           write(unit=trnum,fmt='(i2.2)')nt
-          call pCDF_WRITE_4D(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,:,nt), nk2 )
+          call pCDF_WRITE_4D_slice(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,:,nt), nk2 )
         enddo
       endif
 #endif
@@ -1126,94 +1126,94 @@ CONTAINS
 
 #if defined (PHYSICS)
 
-        call pCDF_WRITE_xy(ncid_phys, 'uw', TIME_C, time_start, std_tm5(:,:,1) )
-        call pCDF_WRITE_xy(ncid_phys, 'wv', TIME_C, time_start, std_tm5(:,:,2) )
-        call pCDF_WRITE_xy(ncid_phys, 'wth', TIME_C, time_start, std_tm5(:,:,3) )
-        call pCDF_WRITE_xy(ncid_phys, 'wqv', TIME_C, time_start, std_tm5(:,:,4) )
-        call pCDF_WRITE_xy(ncid_phys, 'sprec', TIME_C, time_start, std_tm5(:,:,5) )
-        call pCDF_WRITE_xy(ncid_phys, 'tg', TIME_C, time_start, std_tm5(:,:,6) )
-        call pCDF_WRITE_xy(ncid_phys, 'olr', TIME_C, time_start, std_tm5(:,:,7) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'uw', TIME_C, time_start, std_tm5(:,:,1) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'wv', TIME_C, time_start, std_tm5(:,:,2) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'wth', TIME_C, time_start, std_tm5(:,:,3) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'wqv', TIME_C, time_start, std_tm5(:,:,4) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'sprec', TIME_C, time_start, std_tm5(:,:,5) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'tg', TIME_C, time_start, std_tm5(:,:,6) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'olr', TIME_C, time_start, std_tm5(:,:,7) )
 
 !===hchun
 #if defined (DIFFUSION)
 #if defined (LSM)
         if (ITT==0 .or. ITT_OUTPUT==0 ) std_lsm=0.
-        call pCDF_WRITE_xy(ncid_lsm, 'emissi', TIME_C, time_start, std_lsm(:,:,1) )
-        call pCDF_WRITE_xy(ncid_lsm, 'cmc', TIME_C, time_start, std_lsm(:,:,2) )
-        call pCDF_WRITE_xy(ncid_lsm, 't1', TIME_C, time_start, std_lsm(:,:,3) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ST1', TIME_C, time_start, std_lsm(:,:,4) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ST2', TIME_C, time_start, std_lsm(:,:,5) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ST3', TIME_C, time_start, std_lsm(:,:,6) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ST4', TIME_C, time_start, std_lsm(:,:,7) )
-        call pCDF_WRITE_xy(ncid_lsm, 'SM1', TIME_C, time_start, std_lsm(:,:,8) )
-        call pCDF_WRITE_xy(ncid_lsm, 'SM2', TIME_C, time_start, std_lsm(:,:,9) )
-        call pCDF_WRITE_xy(ncid_lsm, 'SM3', TIME_C, time_start, std_lsm(:,:,10) )
-        call pCDF_WRITE_xy(ncid_lsm, 'SM4', TIME_C, time_start, std_lsm(:,:,11) )
-        call pCDF_WRITE_xy(ncid_lsm, 'SL1', TIME_C, time_start, std_lsm(:,:,12) )
-        call pCDF_WRITE_xy(ncid_lsm, 'SL2', TIME_C, time_start, std_lsm(:,:,13) )
-        call pCDF_WRITE_xy(ncid_lsm, 'SL3', TIME_C, time_start, std_lsm(:,:,14) )
-        call pCDF_WRITE_xy(ncid_lsm, 'SL4', TIME_C, time_start, std_lsm(:,:,15) )
-        call pCDF_WRITE_xy(ncid_lsm, 'snowh', TIME_C, time_start, std_lsm(:,:,16) )
-        call pCDF_WRITE_xy(ncid_lsm, 'sneqv', TIME_C, time_start, std_lsm(:,:,17) )
-        call pCDF_WRITE_xy(ncid_lsm, 'albedo', TIME_C, time_start, std_lsm(:,:,18) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ch', TIME_C, time_start, std_lsm(:,:,19) )
-        call pCDF_WRITE_xy(ncid_lsm, 'cm', TIME_C, time_start, std_lsm(:,:,20) )
-        call pCDF_WRITE_xy(ncid_lsm, 'eta', TIME_C, time_start, std_lsm(:,:,21) )
-        call pCDF_WRITE_xy(ncid_lsm, 'fdown', TIME_C, time_start, std_lsm(:,:,22) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ec', TIME_C, time_start, std_lsm(:,:,23) )
-        call pCDF_WRITE_xy(ncid_lsm, 'edir', TIME_C, time_start, std_lsm(:,:,24) )
-        call pCDF_WRITE_xy(ncid_lsm, 'et1', TIME_C, time_start, std_lsm(:,:,25) )
-        call pCDF_WRITE_xy(ncid_lsm, 'et2', TIME_C, time_start, std_lsm(:,:,26) )
-        call pCDF_WRITE_xy(ncid_lsm, 'et3', TIME_C, time_start, std_lsm(:,:,27) )
-        call pCDF_WRITE_xy(ncid_lsm, 'et4', TIME_C, time_start, std_lsm(:,:,28) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ett', TIME_C, time_start, std_lsm(:,:,29) )
-        call pCDF_WRITE_xy(ncid_lsm, 'esnow', TIME_C, time_start, std_lsm(:,:,30) )
-        call pCDF_WRITE_xy(ncid_lsm, 'drip', TIME_C, time_start, std_lsm(:,:,31) )
-        call pCDF_WRITE_xy(ncid_lsm, 'dew', TIME_C, time_start, std_lsm(:,:,32) )
-        call pCDF_WRITE_xy(ncid_lsm, 'beta', TIME_C, time_start, std_lsm(:,:,33) )
-        call pCDF_WRITE_xy(ncid_lsm, 'etp', TIME_C, time_start, std_lsm(:,:,34) )
-        call pCDF_WRITE_xy(ncid_lsm, 'ssoil', TIME_C, time_start, std_lsm(:,:,35) )
-        call pCDF_WRITE_xy(ncid_lsm, 'flx1', TIME_C, time_start, std_lsm(:,:,36) )
-        call pCDF_WRITE_xy(ncid_lsm, 'flx2', TIME_C, time_start, std_lsm(:,:,37) )
-        call pCDF_WRITE_xy(ncid_lsm, 'flx3', TIME_C, time_start, std_lsm(:,:,38) )
-        call pCDF_WRITE_xy(ncid_lsm, 'snomlt', TIME_C, time_start, std_lsm(:,:,39) )
-        call pCDF_WRITE_xy(ncid_lsm, 'sncovr', TIME_C, time_start, std_lsm(:,:,40) )
-        call pCDF_WRITE_xy(ncid_lsm, 'runoff1', TIME_C, time_start, std_lsm(:,:,41) )
-        call pCDF_WRITE_xy(ncid_lsm, 'runoff2', TIME_C, time_start, std_lsm(:,:,42) )
-        call pCDF_WRITE_xy(ncid_lsm, 'runoff3', TIME_C, time_start, std_lsm(:,:,43) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rc', TIME_C, time_start, std_lsm(:,:,44) )
-        call pCDF_WRITE_xy(ncid_lsm, 'pc', TIME_C, time_start, std_lsm(:,:,45) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rsmin', TIME_C, time_start, std_lsm(:,:,46) )
-        call pCDF_WRITE_xy(ncid_lsm, 'xlai', TIME_C, time_start, std_lsm(:,:,47) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rcs', TIME_C, time_start, std_lsm(:,:,48) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rct', TIME_C, time_start, std_lsm(:,:,49) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rcq', TIME_C, time_start, std_lsm(:,:,50) )
-        call pCDF_WRITE_xy(ncid_lsm, 'rcsoil', TIME_C, time_start, std_lsm(:,:,51) )
-        call pCDF_WRITE_xy(ncid_lsm, 'soilw', TIME_C, time_start, std_lsm(:,:,52) )
-        call pCDF_WRITE_xy(ncid_lsm, 'soilm', TIME_C, time_start, std_lsm(:,:,53) )
-        call pCDF_WRITE_xy(ncid_lsm, 'q1', TIME_C, time_start, std_lsm(:,:,54) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smav1', TIME_C, time_start, std_lsm(:,:,55) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smav2', TIME_C, time_start, std_lsm(:,:,56) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smav3', TIME_C, time_start, std_lsm(:,:,57) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smav4', TIME_C, time_start, std_lsm(:,:,58) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smcwlt', TIME_C, time_start, std_lsm(:,:,59) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smcdry', TIME_C, time_start, std_lsm(:,:,60) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smcref', TIME_C, time_start, std_lsm(:,:,61) )
-        call pCDF_WRITE_xy(ncid_lsm, 'smcmax', TIME_C, time_start, std_lsm(:,:,62) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'emissi', TIME_C, time_start, std_lsm(:,:,1) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'cmc', TIME_C, time_start, std_lsm(:,:,2) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 't1', TIME_C, time_start, std_lsm(:,:,3) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ST1', TIME_C, time_start, std_lsm(:,:,4) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ST2', TIME_C, time_start, std_lsm(:,:,5) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ST3', TIME_C, time_start, std_lsm(:,:,6) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ST4', TIME_C, time_start, std_lsm(:,:,7) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SM1', TIME_C, time_start, std_lsm(:,:,8) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SM2', TIME_C, time_start, std_lsm(:,:,9) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SM3', TIME_C, time_start, std_lsm(:,:,10) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SM4', TIME_C, time_start, std_lsm(:,:,11) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SL1', TIME_C, time_start, std_lsm(:,:,12) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SL2', TIME_C, time_start, std_lsm(:,:,13) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SL3', TIME_C, time_start, std_lsm(:,:,14) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SL4', TIME_C, time_start, std_lsm(:,:,15) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'snowh', TIME_C, time_start, std_lsm(:,:,16) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'sneqv', TIME_C, time_start, std_lsm(:,:,17) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'albedo', TIME_C, time_start, std_lsm(:,:,18) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ch', TIME_C, time_start, std_lsm(:,:,19) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'cm', TIME_C, time_start, std_lsm(:,:,20) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'eta', TIME_C, time_start, std_lsm(:,:,21) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'fdown', TIME_C, time_start, std_lsm(:,:,22) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ec', TIME_C, time_start, std_lsm(:,:,23) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'edir', TIME_C, time_start, std_lsm(:,:,24) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'et1', TIME_C, time_start, std_lsm(:,:,25) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'et2', TIME_C, time_start, std_lsm(:,:,26) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'et3', TIME_C, time_start, std_lsm(:,:,27) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'et4', TIME_C, time_start, std_lsm(:,:,28) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ett', TIME_C, time_start, std_lsm(:,:,29) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'esnow', TIME_C, time_start, std_lsm(:,:,30) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'drip', TIME_C, time_start, std_lsm(:,:,31) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'dew', TIME_C, time_start, std_lsm(:,:,32) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'beta', TIME_C, time_start, std_lsm(:,:,33) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'etp', TIME_C, time_start, std_lsm(:,:,34) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ssoil', TIME_C, time_start, std_lsm(:,:,35) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'flx1', TIME_C, time_start, std_lsm(:,:,36) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'flx2', TIME_C, time_start, std_lsm(:,:,37) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'flx3', TIME_C, time_start, std_lsm(:,:,38) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'snomlt', TIME_C, time_start, std_lsm(:,:,39) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'sncovr', TIME_C, time_start, std_lsm(:,:,40) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'runoff1', TIME_C, time_start, std_lsm(:,:,41) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'runoff2', TIME_C, time_start, std_lsm(:,:,42) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'runoff3', TIME_C, time_start, std_lsm(:,:,43) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rc', TIME_C, time_start, std_lsm(:,:,44) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'pc', TIME_C, time_start, std_lsm(:,:,45) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rsmin', TIME_C, time_start, std_lsm(:,:,46) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'xlai', TIME_C, time_start, std_lsm(:,:,47) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rcs', TIME_C, time_start, std_lsm(:,:,48) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rct', TIME_C, time_start, std_lsm(:,:,49) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rcq', TIME_C, time_start, std_lsm(:,:,50) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rcsoil', TIME_C, time_start, std_lsm(:,:,51) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'soilw', TIME_C, time_start, std_lsm(:,:,52) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'soilm', TIME_C, time_start, std_lsm(:,:,53) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'q1', TIME_C, time_start, std_lsm(:,:,54) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smav1', TIME_C, time_start, std_lsm(:,:,55) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smav2', TIME_C, time_start, std_lsm(:,:,56) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smav3', TIME_C, time_start, std_lsm(:,:,57) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smav4', TIME_C, time_start, std_lsm(:,:,58) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smcwlt', TIME_C, time_start, std_lsm(:,:,59) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smcdry', TIME_C, time_start, std_lsm(:,:,60) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smcref', TIME_C, time_start, std_lsm(:,:,61) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smcmax', TIME_C, time_start, std_lsm(:,:,62) )
 
 
 #if defined (KPP)
       OUT_tm1(:,:,1:olev) = Tocean
-      call pCDF_WRITE_4D(ncid_kpp, 't', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+      call pCDF_WRITE_4D_slice(ncid_kpp, 't', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
 
       OUT_tm1(:,:,1:olev) = Uocean
-      call pCDF_WRITE_4D(ncid_kpp, 'u', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+      call pCDF_WRITE_4D_slice(ncid_kpp, 'u', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
 
       OUT_tm1(:,:,1:olev) = Vocean
-      call pCDF_WRITE_4D(ncid_kpp, 'v', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+      call pCDF_WRITE_4D_slice(ncid_kpp, 'v', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
 
       OUT_tm1(:,:,1)= bldpth 
-      call pCDF_WRITE_xy(ncid_kpp, 'mld', TIME_L, time_start, out_tm1(:,:,1) )
+      call pCDF_WRITE_xy_slice(ncid_kpp, 'mld', TIME_L, time_start, out_tm1(:,:,1) )
 #endif
 
 #endif
@@ -1222,16 +1222,16 @@ CONTAINS
 
 
 #if defined (RADCODE)
-        call pCDF_WRITE_4D(ncid_rad, 'fusw', TIME_R, time_start, STD_RAD(:,:,1:nk2,1), nk2 )
-        call pCDF_WRITE_4D(ncid_rad, 'fdsw', TIME_R, time_start, STD_RAD(:,:,1:nk2,2), nk2 )
-        call pCDF_WRITE_4D(ncid_rad, 'fulw', TIME_R, time_start, STD_RAD(:,:,1:nk2,3), nk2 )
-        call pCDF_WRITE_4D(ncid_rad, 'fdlw', TIME_R, time_start, STD_RAD(:,:,1:nk2,4), nk2 )
-        call pCDF_WRITE_4D(ncid_rad, 'dtradsw', TIME_R, time_start, STD_RAD(:,:,1:nk2,5), nk2 )
-        call pCDF_WRITE_4D(ncid_rad, 'dtradlw', TIME_R, time_start, STD_RAD(:,:,1:nk2,6), nk2 )
-        call pCDF_WRITE_4D(ncid_rad, 'cldfrc', TIME_R, time_start, STD_RAD(:,:,1:nk2,7), nk2 )
-        call pCDF_WRITE_xy(ncid_rad, 'fuswtoa', TIME_R, time_start, STD_RAD(:,:,1,8) )
-        call pCDF_WRITE_xy(ncid_rad, 'fdswtoa', TIME_R, time_start, STD_RAD(:,:,2,8) )
-        call pCDF_WRITE_xy(ncid_rad, 'fulwtoa', TIME_R, time_start, STD_RAD(:,:,3,8) )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'fusw', TIME_R, time_start, STD_RAD(:,:,1:nk2,1), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'fdsw', TIME_R, time_start, STD_RAD(:,:,1:nk2,2), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'fulw', TIME_R, time_start, STD_RAD(:,:,1:nk2,3), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'fdlw', TIME_R, time_start, STD_RAD(:,:,1:nk2,4), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'dtradsw', TIME_R, time_start, STD_RAD(:,:,1:nk2,5), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'dtradlw', TIME_R, time_start, STD_RAD(:,:,1:nk2,6), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'cldfrc', TIME_R, time_start, STD_RAD(:,:,1:nk2,7), nk2 )
+        call pCDF_WRITE_xy_slice(ncid_rad, 'fuswtoa', TIME_R, time_start, STD_RAD(:,:,1,8) )
+        call pCDF_WRITE_xy_slice(ncid_rad, 'fdswtoa', TIME_R, time_start, STD_RAD(:,:,2,8) )
+        call pCDF_WRITE_xy_slice(ncid_rad, 'fulwtoa', TIME_R, time_start, STD_RAD(:,:,3,8) )
 #endif
 #endif
 
