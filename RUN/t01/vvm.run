@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = ish20141020s_chem
+set expname = ish20150125s_chem
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
