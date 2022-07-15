@@ -12,7 +12,8 @@ module purge
 
 module load Intel-oneAPI-2022.1
 module load compiler mpi mkl
-module load petsc/3.14.0 pnetcdf/1.12.2
+#module load petsc/3.14.0 pnetcdf/1.12.2
+module load petsc/3.17.3 pnetcdf/1.12.2
 
 #echo 'int mkl_serv_intel_cpu_true() {
 #  return 1;

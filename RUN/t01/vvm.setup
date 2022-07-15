@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = petsc_nomg
+set expname = petsc_mg
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -77,6 +77,7 @@ cat > definesld.com << 'END1'
 #define RADCODE
 #define LSM
 #define AREAMN
+#define PETSCMG
 'END1'
 cat definesld.com
 
@@ -85,8 +86,8 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/1536/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/1536/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
