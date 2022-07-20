@@ -30,7 +30,7 @@ export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
 
-mpirun -np total_cores ./vvm < INPUT | tee OUTPUT 
+mpirun -np total_cores ./vvm -matptap_via allatonce_merged -log_view < INPUT | tee OUTPUT 
 
 date >> runtime
 

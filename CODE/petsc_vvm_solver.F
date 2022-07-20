@@ -139,9 +139,9 @@ Vec, PRIVATE:: Rv
 
 #else
 PetscInt, PARAMETER, PRIVATE:: nlevel = 1, nlv = 0
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCEISENSTAT
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCEISENSTAT
-Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCEISENSTAT
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_conti = KSPCG, pc_type_Conti = PCBJACOBI!PCEISENSTAT
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_toppsi = KSPCG, pc_type_toppsi = PCBJACOBI!PCEISENSTAT
+Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi = PCBJACOBI!PCEISENSTAT
 !sub-ksp and respect pc for PCMG setting
 
 #endif
