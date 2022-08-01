@@ -71,7 +71,7 @@ CONTAINS
              QVBAR_s(NK3),PBAR_s(NK3),PIBAR_s(NK3)
 
 
-      CHARACTER(len=8) :: dateStr = '20110723'
+      CHARACTER(len=8) :: dateStr = '20070711'
       !CHARACTER(len=5) :: stno = '47918'
       CHARACTER(len=5) :: stno = '46692'
       CHARACTER(len=80) :: fname
@@ -79,7 +79,7 @@ CONTAINS
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file,topo_file
 
 !     get data from dat file
-      fname='/nwpr/gfs/xb136/taiwanvvm/test/'//stno//'.'//dateStr//'.taiwania.dat'
+      fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/'//stno//'.'//dateStr//'.taiwania.dat'
       if (my_task==0) write(*,*) "fname:", trim(fname) 
       open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NK3*dbl_kind)
       read(88,rec=1) UG(:)

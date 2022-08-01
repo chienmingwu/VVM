@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20110723cln
+set expname = tpe20070711cln
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -117,7 +117,7 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 cd ${expdir}
 # use pjsub to generate topo file on CWB fx1000
 #./nc2fortranBinary > topo.log
-pjsub -L "node=1" -L "elapse=00:10:00" -L "rscgrp=CWB" -N topo ./nc2fortranBinary
+pjsub -L "node=1" -L "elapse=00:10:00" -L "rscgrp=short" -N topo ./nc2fortranBinary
 unset echo 
 echo '###################################################################'
 echo '###################################################################'
