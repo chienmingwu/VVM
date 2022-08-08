@@ -71,7 +71,7 @@ CONTAINS
              QVBAR_s(NK3),PBAR_s(NK3),PIBAR_s(NK3)
 
 
-      CHARACTER(len=8) :: dateStr = '20120830'
+      CHARACTER(len=8) :: dateStr = '20150607'
       !CHARACTER(len=5) :: stno = '47918'
       CHARACTER(len=5) :: stno = '46692'
       CHARACTER(len=80) :: fname
