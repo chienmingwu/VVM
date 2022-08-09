@@ -81,10 +81,10 @@ CONTAINS
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 0.0
   CASE DEFAULT
-! TWP-ICE comparison study (16Z 20150606)
+! TWP-ICE comparison study (16Z 20150817)
       iyear0 = 2015
-      imonth0 = 6
-      iday0 = 6
+      imonth0 = 8
+      iday0 = 17
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 16.0
   END SELECT 
