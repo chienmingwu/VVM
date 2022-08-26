@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = held_93d_u10
+set expname = held_93d2_half2
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -82,9 +82,9 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/16/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/130/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
