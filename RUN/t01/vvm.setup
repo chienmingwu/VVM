@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = held_93d2_half2
+set expname = held_93d3_half2
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
