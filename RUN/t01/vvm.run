@@ -13,11 +13,11 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = isdac_zhang 
+set expname = isdac_zhang_large_loose 
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'intel_taiwania3'
+set jobsys = 'slurm_taiwania3'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -33,13 +33,13 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/walltime/00:30:00/g' \
-    -e 's/np_nodes/4/g' \
-    -e 's/np_threads/16/g' \
-    -e 's/total_cores/64/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/walltime/06:00:00/g' \
+    -e 's/np_nodes/15/g' \
+    -e 's/np_threads/40/g' \
+    -e 's/total_cores/576/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
-cd ${expdir}
-qsub run.sh
+#cd ${expdir}
+#qsub run.sh
 
 exit
 

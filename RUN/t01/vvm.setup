@@ -5,11 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = isdac_zhang
+set expname = isdac_zhang_large_loose
 
 # set job system and compiler
-set compiler = 'intel_jet'
-set jobsys = 'pbs_jet'
+set compiler = 'intel_taiwania3'
+set jobsys = 'slurm_taiwania3'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -82,10 +82,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/192/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/192/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/576/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/576/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/24/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/24/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/100/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
