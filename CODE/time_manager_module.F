@@ -49,8 +49,8 @@ CONTAINS
   CASE DEFAULT
 ! TWP-ICE comparison study (22Z 20080327)
       iyear0 = 2007
-      imonth0 = 11
-      iday0 = 14
+      imonth0 = 12
+      iday0 = 15
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 22.0
   END SELECT 
