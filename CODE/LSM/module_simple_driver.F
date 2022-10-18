@@ -590,7 +590,7 @@ DO I=1,MI1
         ! snow/ice points.
         !
         ALB = ALBEDOMAXTBL(VEGTYP)
-        Z0BRD(I,K) = Z0MINTBL(VEGTYP)
+        Z0BRD(I,J) = Z0MINTBL(VEGTYP)
 
         !
         ! Call the Noah LSM routines for Glacial Ice points.
@@ -858,7 +858,8 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
 !        xlai = month_d(lai_monthly, nowdate)
 !     else
 !        xlai = badval
-        xlai = lai1
+!        xlai = lai1
+        xlai = xlai
 !     endif
 
 !-----

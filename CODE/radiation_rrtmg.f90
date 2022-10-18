@@ -66,9 +66,9 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
           dlat, &      ! difference in latitude between grid points (radians)
           dlon         ! difference in longitude between grid points (radians)
 
-      REAL (KIND=dbl_kind),DIMENSION(0:MJ1) :: &
+      REAL (KIND=dbl_kind),DIMENSION(0:MJ1), SAVE :: &
           lat       ! latitudes of grid points (radians)
-      REAL (KIND=dbl_kind),DIMENSION(0:MI1) :: &
+      REAL (KIND=dbl_kind),DIMENSION(0:MI1), SAVE :: &
           lon       ! longitudes (radians)
 
       INTEGER (KIND=int_kind) :: &

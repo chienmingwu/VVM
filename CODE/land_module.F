@@ -5,11 +5,15 @@ USE kinds
 USE utils
 USE parmsld
 USE constld
+USE workcom, only: uw, wv
 USE domain_decomposition
 USE rrtm_vars, only: sstxy,albdo
 !===hchun=================================
 USE module_simple_driver, only:LSM_DRV, LSM_DRV_ini
 !=========================================
+#if defined (KPP)
+USE kpp_module ! KPP (Der)
+#endif
 
 IMPLICIT NONE
 PRIVATE
@@ -48,6 +52,53 @@ PRIVATE
          zmcapdt,       & ! 1/cw*dt
          sig,           & ! boltzman constant
          zfluxw           ! flux change across ocean surface
+#endif
+
+#if defined (KPP)
+  INTEGER, parameter, public :: olev=24, nsolarpen=12 
+ 
+  REAL, dimension(MI1,MJ1,olev), PUBLIC :: To, Uo, Vo &
+                                 ,rNu, rKappa, rGamma
+  REAL, dimension(MI1,MJ1) :: taux, tauy, Qsol, Qtot
+  REAL, dimension(MI1,MJ1), public ::bldpth
+
+  REAL, dimension(olev) :: Tin, Hin, kappa, nu, To0
+  REAL(KIND=dbl_kind), dimension(olev), public :: depth
+! 10m mld
+  DATA Tin   / 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, &  
+               1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, &  
+               9.82186352e-01, 9.40712603e-01, 8.80298468e-01, 7.85451372e-01, &  
+               7.40624872e-01, 6.77797988e-01, 5.81781058e-01, 4.83951261e-01, &  
+               3.76990973e-01, 2.91566245e-01, 2.31321929e-01, 1.86005353e-01, &  
+               1.41133379e-01, 9.44533213e-02, 4.25668535e-02, 2.09889465e-04/
+!! 30m mld
+!  DATA Tin   / 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, &  
+!               1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 1.00000000e+00, &  
+!               1.00000000e+00, 1.00000000e+00, 1.00000000e+00, 9.28267620e-01, &  
+!               7.68150697e-01, 6.77914326e-01, 5.81880916e-01, 4.84034327e-01, &  
+!               3.77055681e-01, 2.91616290e-01, 2.31361634e-01, 1.86037279e-01, &  
+!               1.41157603e-01, 9.44695334e-02, 4.25741597e-02, 2.09925491e-04/
+  DATA Hin   / 0.50,  0.50,  0.50,  0.50,  1.00, &
+               1.00,  2.00,  4.00,  5.00,  5.00, &
+              10.00, 10.00, 15.00, 15.00, 20.00, &
+              20.00, 25.00, 25.00, 30.00, 30.00, &
+              40.00, 40.00, 50.00, 50.00/
+  DATA kappa /olev*1.0e-5/
+  DATA nu    /olev*1.0e-4/
+  DATA depth / 0.50,  1.00,  1.50,  2.00,  3.00, &
+               4.00,  6.00, 10.00, 15.00, 20.00, &
+              30.00, 40.00, 55.00, 70.00, 90.00, &
+             110.00,135.00,160.00,190.00,220.00, &
+             260.00,300.00,350.00,400.00/
+  
+  real, parameter :: Tbot=10.
+  integer :: k
+  real :: dt_o, dum1, dum2, dum3
+
+  REAL(kind=dbl_kind), PRIVATE::  &
+   rhoh2o,        & ! density of water [kg/m**3]
+   zcpwater         ! watar heat capacity [J/K/kg]
+
 #endif
 
 !public member functions
@@ -124,7 +175,7 @@ CONTAINS
 ! 2. Ocean temperature
 ! calculate net fluxes
         zfluxw=swD(I,J)-swU(I,J) +lwD(I,J)-lwU(I,J)   &
-              -CP*WT(I,J)-HLF*WQ(I,J)  !&                
+              -CP*WT(I,J)-HLF*WQ(I,J) ! &                
               !-100. ! ocean cooling 100 w/m2 from Romps 2012
 !       Ocean temperature (tg)
         TG(I,J)=TG(i,j)+zmcapdt*zfluxw
@@ -139,7 +190,58 @@ CONTAINS
 !      TG(I,J)=300.+(tempim-384.)/383.*3.
 !      endif
 !ccwu
+
+#if defined (KPP)
+      taux(i,j) = -UW(i,j)
+      tauy(i,j) = -WV(i,j)
+  
+      Qsol(i,j) = swD(I,J)-swU(I,J)
+      Qtot(i,j) = swD(I,J)-swU(I,J)+lwD(I,J)-lwU(I,J)-CP*WT(I,J)-HLF*WQ(I,J)
+      
+      call kpp_coef(Uo(i,j,1:olev),Vo(i,j,1:olev),To(i,j,1:olev),Hin(1:olev) &
+                    ,taux(i,j),tauy(i,j),Qsol(i,j),Qtot(i,j) &
+                    ,1,1,olev,olev+1,Tbot,nu(1:olev),kappa(1:olev) &
+                    ,rNu(i,j,1:olev),rKappa(i,j,1:olev),rGamma(i,j,1:olev),bldpth(i,j))
+
+      call dRMIX(1,1,olev,Uo(i,j,1:olev),Vo(i,j,1:olev),To(i,j,1:olev),Hin(1:olev) &
+                ,rNU(i,j,1:olev),rKAPPA(i,j,1:olev),rGAMMA(i,j,1:olev),Tbot,dt_o)
+
+      ! solar radiative flux penetration
+      dum1=Qtot(i,j)
+      DO k=1,nsolarpen
+        dum2=sum(Hin(1:k))
+        dum3=Qsol(i,j)*solarpen(dum2,3)
+        dum2=dum1-dum3
+        dum1=dum3
+        To(i,j,k) = To(i,j,k) + dum2/(rhoh2o*zcpwater*Hin(k))*dt_o
+        !if (my_task==0) write(*,*) "solar:",k, dum1, dum2
+        if (dum1<0.) then
+          write(*,*) "solarpen negative"
+          stop
+        endif
+      ENDDO
+
+      ! nudging below MLD
+      do k=1,olev
+        if (sum(Hin(1:k))>bldpth(i,j)) To(i,j,k)=To(i,j,k)-(To(i,j,k)-To0(k))/(10.*86400.)*dt_o
+        !if (my_task==0 .and. i==10 .and. (j== mj1-1) ) &
+          !write(*,*) k,sum(Hin(1:k)), bldpth(i,j), To0(k)
+      enddo
+    
+      Uo(i,j,1) = Uo(i,j,1) + taux(i,j)/(rhoh2o*Hin(1))*dt_o
+      Vo(i,j,1) = Vo(i,j,1) + tauy(i,j)/(rhoh2o*Hin(1))*dt_o
+
+      TG(I,J) = To(I,J,1) + 273.15
  
+      if (my_task==0 .and. i==10 .and. (j== mj1-1) ) &
+         write(*,194) "  SST: ", TG(i,j), &
+                      ", MLD: ", bldpth(i,j), &
+                      ", U_s: ", Uo(i,j,1), &
+                      ", swD: ", swD(I,J)
+      194 format(4(A,F10.5))
+
+#endif
+
       ES1  = ES ( TG(I,J) )
       QSFC = ES1 * 0.622 / ( P1(I,J) - ES1 )
       TS   = CP * TG(I,J) + GRAV * ZL(I,J)
@@ -155,11 +257,11 @@ CONTAINS
       Q2i(I,J) = Q2(I,J)/(1+Q2(I,J))
   100 CONTINUE
 
-!      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
-!      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
-!      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
-!      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
-!      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
+      if (my_task .eq. 0 ) print*,'tg = ', tg(10,10)
+      if (my_task .eq. 0 ) print*,'short wave = ', swD(10,10)-swU(10,10)
+      if (my_task .eq. 0 ) print*,'long wave = ', lwD(10,10)-lwU(10,10)
+      if (my_task .eq. 0 ) print*,'sensible heat = ', CP*WT(10,10)
+      if (my_task .eq. 0 ) print*,'latent heat = ',HLF*WQ(10,10)
 
             
       SPRECi = real(SPREC)
@@ -202,11 +304,11 @@ CONTAINS
 
   200 CONTINUE
 
-!      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
-!      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
-!      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
-!      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
-!      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
+      if (my_task .eq. 0 ) print*,'TB = ', TB(10,10)
+      if (my_task .eq. 0 ) print*,'THVSMD = ', THVSMD(10,10)
+      if (my_task .eq. 0 ) print*,'speed = ', SFCSPD(10,10)
+      if (my_task .eq. 0 ) print*,'zd = ', ZD(10,10)
+      if (my_task .eq. 0 ) print*,'zrough = ',ZROUGH(10,10)
 
 #endif
 
@@ -514,15 +616,10 @@ CONTAINS
 ! determine surface temp of water body
    IF (LU(I,J) .eq. 16) THEN
    IF (hx1 .eq. 1) THEN
-     tempjm=dble(mj1*nj_sbdm+j)
-     pi = 4._8 * atan(1._8)
-
-     ! qobs SST
-     dum1=abs(tempjm-dble(mj_glob)/2.-0.5)*DYNEW/6.37E6+0.5*DYNEW/6.37E6
-     dum2=pi/3.
-
-     TG(i,j)= 273.15 + 27*(cos(dum1/dum2)**2 +cos(dum1/dum2)**4)/2.
-     !TG(i,j)=300.
+      tempim=dble(mi1*ni_sbdm+i)
+      pi = 4._8 * atan(1._8)
+      !TG(i,j)=300.-1.5*cos(2*pi*tempim/512.)   !512 points in x direction
+      TG(i,j)=SST
    ELSE
    TG(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
@@ -549,12 +646,35 @@ CONTAINS
 ! 1. Set up constants
 
         rhoh2o = 1024.75         !density of water [kg/m**3]
-        zdmix=100._dbl_kind       ! constant depth of mixed layer
+        zdmix=2.0_dbl_kind       ! constant depth of mixed layer
         zcpwater=4218._dbl_kind  ! watar heat capacity
         zmixcap=rhoh2o*zcpwater*zdmix  !Cw ocean heat capacity
         zmcapdt=nsflux*dt/zmixcap       !1/cw*dt
         sig= 5.66E-8             ! boltzman constant
 
+#endif
+
+
+#if defined (KPP)
+   dt_o=dt*nsflux
+   rhoh2o = 1024.75     
+   zcpwater = 4218.0
+   Uo = 0.
+   Vo = 0.
+   DO K=1,olev
+     To0(k) = (SST-273.15)*Tin(k) + Tbot*(1.-Tin(k))
+     DO J=1,MJ1
+     DO I=1,MI1
+       tempim=dble(mi1*ni_sbdm+i)
+       pi = 4._8 * atan(1._8)
+
+       To(i,j,k) = To0(k)
+       ! perturbation 1.0m depth and 1.0K
+       !IF (sum(Hin(1:k))-0.5*Hin(k)<=0.5)  To(i,j,k) =  To(i,j,k) -1.0*cos(2*pi*tempim/512.)
+     ENDDO
+     ENDDO
+   ENDDO
+   TG(1:mi1,1:mj1) = To(1:mi1,1:mj1,1) + 273.15
 #endif
 
 #endif

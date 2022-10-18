@@ -15,14 +15,14 @@ USE domain_decomposition
 USE gather_scatter
 USE timeinterp
 USE bound
-USE output_nc
+USE new_output_nc
 USE wind_module
 USE petscsys
 USE petsc_vvm_solver, only: petsc_solver_initialize
 
-#if defined (PARALLELIO)
+!#if defined (PARALLELIO)
  USE pnetcdf
-#endif
+!#endif
 
 IMPLICIT NONE
 PRIVATE
@@ -375,11 +375,11 @@ CONTAINS
          itime,    & !
          ioerr,    & ! io error return code
          iunit       ! logical unit number
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       integer (kind=mpi_offset_kind), dimension(5) :: sstart, count
       real (kind=dbl_kind) :: dtem(1)
       REAL (KIND=real_kind) :: rtem(1)
-#endif
+!#endif
 
 !     INI_EXP2: SHEAR=.FALSE.   INI_EXP3: SHEAR=.TRUE.
       LOGICAL (KIND=log_kind) :: SHEAR
@@ -581,15 +581,15 @@ CONTAINS
 !         restart_found = .false.
 !         return
 !      endif
-#if defined (PARALLELIO) 
-          CALL FNAME_nc ( 13, EXPHDR, 'rst1_'//timestamp_string, filnam_nc)
+!#if defined (PARALLELIO) 
+          CALL FNAME_nc ( 13, EXPHDR, 'rst1_'//timestamp_string, 0, filnam_nc)
           nc_err = nfmpi_open(mpi_comm_world, trim(FILNAM_nc), nf_nowrite, mpi_info_null, ncid)
-#else
-       if(my_task == 0) then
-          CALL FNAME_nc ( 13, EXPHDR, 'rst1_'//timestamp_string, filnam_nc)
-          status =  nf90_open( trim(FILNAM_nc), NF90_NOWRITE, ncid)
-       endif
-#endif
+!#else
+!       if(my_task == 0) then
+!          CALL FNAME_nc ( 13, EXPHDR, 'rst1_'//timestamp_string, 0, filnam_nc)
+!          status =  nf90_open( trim(FILNAM_nc), NF90_NOWRITE, ncid)
+!       endif
+!#endif
 !      if(my_task == 0) then
 !        READ(IUNIT) casename
 !        READ(IUNIT) HEADER
@@ -601,7 +601,7 @@ CONTAINS
 !      endif
 !!formerly    READ(IUNIT) TH3D,Z3DX,Z3DY,Z3DZ,U3DX,U3DY,W3D 
 !       if(my_task == 0) READ(IUNIT) iobuffh(:,:,:)
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
 !      sstart(1:3) = (/ mim_glob(my_task+1),mim_glob(my_task+1),1 /)
       sstart(1) = (ni_sbdm)*mi1 + 1
       sstart(2) = (nj_sbdm)*mj1 + 1
@@ -610,129 +610,129 @@ CONTAINS
       nc_err = nfmpi_inq_varid(ncid, 'th3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), th3d(1:mi1,1:mj1,1:nk2) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'th3d', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-      endif
-      call scatter_h(nk3, iobuffh(:,:,:), th3d)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'th3d', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!      endif
+!      call scatter_h(nk3, iobuffh(:,:,:), th3d)
+!#endif
 !      if(my_task == 0) READ(IUNIT) iobuffh(:,:,1:nk2)
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'z3dx',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), z3dx(1:mi1,1:mj1,1:nk2) )
-#else
-       if(my_task == 0) then
-          status = nf90_inq_varid(ncid,'z3dx', varid)
-          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-       endif
-      call scatter_h(nk2, iobuffh(:,:,1:nk2), z3dx)
-#endif
+!#else
+!       if(my_task == 0) then
+!          status = nf90_inq_varid(ncid,'z3dx', varid)
+!          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!       endif
+!      call scatter_h(nk2, iobuffh(:,:,1:nk2), z3dx)
+!#endif
 !      if(my_task == 0) READ(IUNIT) iobuffh(:,:,1:nk2)
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'z3dy',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), z3dy(1:mi1,1:mj1,1:nk2) )
-#else
-       if(my_task == 0) then
-          status = nf90_inq_varid(ncid,'z3dy', varid)
-          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-       endif
-      call scatter_h(nk2, iobuffh(:,:,1:nk2), z3dy)
-#endif
+!#else
+!       if(my_task == 0) then
+!          status = nf90_inq_varid(ncid,'z3dy', varid)
+!          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!       endif
+!      call scatter_h(nk2, iobuffh(:,:,1:nk2), z3dy)
+!#endif
 !      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:)
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'z3dz',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), z3dz(1:mi1,1:mj1,1:nk2) )
-#else
-       if(my_task == 0) then
-          status = nf90_inq_varid(ncid,'z3dz', varid)
-          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-       endif
-      call scatter_h(nk3, iobuffh(:,:,:), z3dz)
-#endif
+!#else
+!       if(my_task == 0) then
+!          status = nf90_inq_varid(ncid,'z3dz', varid)
+!          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!       endif
+!      call scatter_h(nk3, iobuffh(:,:,:), z3dz)
+!#endif
 
 #if defined (PHYSICS)
 ! formerly        READ(IUNIT) QV3D,QC3D,QR3D,QI3D,QS3D,QG3D 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'qv3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), qv3d(1:mi1,1:mj1,1:nk2) )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
-       if(my_task == 0) then
-          status = nf90_inq_varid(ncid,'qv3d', varid)
-          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-       endif
-      call scatter_h(nk3, iobuffh(:,:,:), qv3d)
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
+!       if(my_task == 0) then
+!          status = nf90_inq_varid(ncid,'qv3d', varid)
+!          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!       endif
+!      call scatter_h(nk3, iobuffh(:,:,:), qv3d)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'qc3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), qc3d(1:mi1,1:mj1,1:nk2) )
-#else
-!      if(my_task == 0)  READ(IUNIT) iobuffh(:,:,:) 
-       if(my_task == 0) then
-          status = nf90_inq_varid(ncid,'qc3d', varid)
-          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-       endif
-      call scatter_h(nk3, iobuffh(:,:,:), qc3d)
-#endif
+!#else
+!!      if(my_task == 0)  READ(IUNIT) iobuffh(:,:,:) 
+!       if(my_task == 0) then
+!          status = nf90_inq_varid(ncid,'qc3d', varid)
+!          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!       endif
+!      call scatter_h(nk3, iobuffh(:,:,:), qc3d)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'qr3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), qr3d(1:mi1,1:mj1,1:nk2) )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
-       if(my_task == 0) then
-          status = nf90_inq_varid(ncid,'qr3d', varid)
-          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-       endif
-      call scatter_h(nk3, iobuffh(:,:,:), qr3d)
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
+!       if(my_task == 0) then
+!          status = nf90_inq_varid(ncid,'qr3d', varid)
+!          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!       endif
+!      call scatter_h(nk3, iobuffh(:,:,:), qr3d)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'qi3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), qi3d(1:mi1,1:mj1,1:nk2) )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
-       if(my_task == 0) then
-          status = nf90_inq_varid(ncid,'qi3d', varid)
-          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-       endif
-      call scatter_h(nk3, iobuffh(:,:,:), qi3d)
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
+!       if(my_task == 0) then
+!          status = nf90_inq_varid(ncid,'qi3d', varid)
+!          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!       endif
+!      call scatter_h(nk3, iobuffh(:,:,:), qi3d)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'qs3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), qs3d(1:mi1,1:mj1,1:nk2) )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
-       if(my_task == 0) then
-          status = nf90_inq_varid(ncid,'qs3d', varid)
-          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-       endif
-      call scatter_h(nk3, iobuffh(:,:,:), qs3d)
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
+!       if(my_task == 0) then
+!          status = nf90_inq_varid(ncid,'qs3d', varid)
+!          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!       endif
+!      call scatter_h(nk3, iobuffh(:,:,:), qs3d)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'qg3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), qg3d(1:mi1,1:mj1,1:nk2) )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
-       if(my_task == 0) then
-          status = nf90_inq_varid(ncid,'qg3d', varid)
-          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
-       endif
-      call scatter_h(nk3, iobuffh(:,:,:), qg3d)
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuffh(:,:,:) 
+!       if(my_task == 0) then
+!          status = nf90_inq_varid(ncid,'qg3d', varid)
+!          status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2))
+!       endif
+!      call scatter_h(nk3, iobuffh(:,:,:), qg3d)
+!#endif
 
 #else
       QV3D=0.
@@ -744,24 +744,24 @@ CONTAINS
 #endif
 !
       if(ntracer > 0) then
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       sstart(4) = 1; count(4) = ntracer
       nc_err = nfmpi_inq_varid(ncid, 'tc3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), tc3d(1:mi1,1:mj1,1:nk2,1:ntracer) )
-#else
-        if(my_task == 0) status = nf90_inq_varid(ncid,'tc3d', varid)
-        do nt = 1,ntracer
-!          if(my_task == 0) READ(iunit)iobuffh(:,:,:) 
-          if(my_task == 0) status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2),&
-                                                 (/1,1,1,nt/), (/mi1,mj1,nk2,1/) )
-          call scatter_h(nk3, iobuffh(:,:,:), tc3d(:,:,:,nt))
-        enddo
-!formerly    READ(iunit)tc3d
-#endif
+!#else
+!        if(my_task == 0) status = nf90_inq_varid(ncid,'tc3d', varid)
+!        do nt = 1,ntracer
+!!          if(my_task == 0) READ(iunit)iobuffh(:,:,:) 
+!          if(my_task == 0) status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1:nk2),&
+!                                                 (/1,1,1,nt/), (/mi1,mj1,nk2,1/) )
+!          call scatter_h(nk3, iobuffh(:,:,:), tc3d(:,:,:,nt))
+!        enddo
+!!formerly    READ(iunit)tc3d
+!#endif
       endif
 !
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_get_att_text(ncid, NF_GLOBAL, 'VVM_casename',casename)
       nc_err = nfmpi_inq_varid(ncid, 'time',varid)
       nc_err = nfmpi_get_var_real_all(ncid, varid, rtem )
@@ -776,20 +776,20 @@ CONTAINS
       nc_err = nfmpi_inq_varid(ncid, 'vtmn',varid)
       nc_err = nfmpi_get_var_double_all(ncid, varid, dtem )
       vtmn = dtem(1)
-#else
-      if(my_task == 0) then
-         status = nf90_get_att(ncid,NF90_GLOBAL, 'VVM_casename',casename)
-         status = nf90_inq_varid(ncid,'iwrite', varid)
-         status = nf90_get_var(ncid,varid, iwrite)
-         status = nf90_inq_varid(ncid,'time', varid)
-         status = nf90_get_var(ncid,varid, time_l)
-         status = nf90_inq_varid(ncid,'ifile', varid)
-         status = nf90_get_var(ncid,varid, ifile)
-         status = nf90_inq_varid(ncid,'utmn', varid)
-         status = nf90_get_var(ncid,varid, utmn)
-         status = nf90_inq_varid(ncid,'vtmn', varid)
-         status = nf90_get_var(ncid,varid, vtmn)
-      endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_get_att(ncid,NF90_GLOBAL, 'VVM_casename',casename)
+!         status = nf90_inq_varid(ncid,'iwrite', varid)
+!         status = nf90_get_var(ncid,varid, iwrite)
+!         status = nf90_inq_varid(ncid,'time', varid)
+!         status = nf90_get_var(ncid,varid, time_l)
+!         status = nf90_inq_varid(ncid,'ifile', varid)
+!         status = nf90_get_var(ncid,varid, ifile)
+!         status = nf90_inq_varid(ncid,'utmn', varid)
+!         status = nf90_get_var(ncid,varid, utmn)
+!         status = nf90_inq_varid(ncid,'vtmn', varid)
+!         status = nf90_get_var(ncid,varid, vtmn)
+!      endif
 !      if(my_task == 0) READ(IUNIT) UTMN,VTMN
 #if defined (MPI)
       CALL MPI_BCAST( casename, 80, MPI_CHARACTER, 0, MPI_COMM_WORLD, mpierr)
@@ -800,7 +800,7 @@ CONTAINS
       CALL MPI_BCAST( vtmn, 1, mpi_dbl_kind, 0, MPI_COMM_WORLD, mpierr)
 #endif      
 
-#endif
+!#endif
 ! 
 #if defined (PHYSICS)
 !     The below is needed because "SFLUX_3D" is not called every time step.
@@ -815,127 +815,127 @@ CONTAINS
 !        write(6,*) HEADER
 !      endif
 !
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'uw',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), uw(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'uw', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1))
-      endif
-      call scatter_h(1, iobuffh(:,:,1:1), uw)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'uw', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,1:1), uw)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'wv',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), wv(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'wv', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,2))
-      endif
-      call scatter_h(1, iobuffh(:,:,2:2), wv)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'wv', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,2))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,2:2), wv)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'wth',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), wth(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'wth', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,3))
-      endif
-      call scatter_h(1, iobuffh(:,:,3:3), wth)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'wth', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,3))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,3:3), wth)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'wqv',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), wqv(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'wqv', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,4))
-      endif
-      call scatter_h(1, iobuffh(:,:,4:4), wqv)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'wqv', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,4))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,4:4), wqv)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'sprec',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), sprec(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'sprec', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,5))
-      endif
-      call scatter_h(1, iobuffh(:,:,5:5), sprec)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'sprec', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,5))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,5:5), sprec)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'prec25',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), prec25(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'prec25', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,6))
-      endif
-      call scatter_h(1, iobuffh(:,:,6:6), olr)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'prec25', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,6))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,6:6), olr)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'olr',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), olr(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'olr', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,7))
-      endif
-      call scatter_h(1, iobuffh(:,:,7:7), prec25)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'olr', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,7))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,7:7), prec25)
+!#endif
 
 #endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'tg',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), tg(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'tg', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1))
-      endif
-      call scatter_h(1, iobuffh(:,:,1:1), tg)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'tg', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,1))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,1:1), tg)
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'zrough',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), zrough(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'zrough', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,2))
-      endif
-      call scatter_h(1, iobuffh(:,:,2:2), zrough)
-#endif
-
-#if defined (PARALLELIO) 
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'zrough', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,2))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,2:2), zrough)
+!#endif
+!
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'gwet',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:2), count(1:2), gwet(1:mi1,1:mj1) )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'gwet', varid)
-         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,3))
-      endif
-      call scatter_h(1, iobuffh(:,:,3:3), gwet)
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'gwet', varid)
+!         status = nf90_get_var(ncid,varid, iobuffh(1:mi_glob,1:mj_glob,3))
+!      endif
+!      call scatter_h(1, iobuffh(:,:,3:3), gwet)
+!#endif
 
 ! TWP-ICE profiles and time interpolation arrays
      SELECT CASE (TRIM(casename))
@@ -948,7 +948,7 @@ CONTAINS
 !        READ(IUNIT) Z3DX0,Z3DY0
 !        READ(IUNIT) THINC,QVINC,WLSINC,Q1INC,Q2INC,DX0INC,DY0INC
 !      endif
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'rdhour',varid)
       nc_err = nfmpi_get_var_double_all(ncid, varid, dtem )
       rdhour = dtem(1)
@@ -980,40 +980,40 @@ CONTAINS
       nc_err = nfmpi_get_var_double_all(ncid, varid, dx0inc )
       nc_err = nfmpi_inq_varid(ncid, 'dy0inc',varid)
       nc_err = nfmpi_get_var_double_all(ncid, varid, dy0inc )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'rdhour', varid)
-         status = nf90_get_var(ncid,varid, rdhour)
-         status = nf90_inq_varid(ncid,'thbar', varid)
-         status = nf90_get_var(ncid,varid, thbar)
-         status = nf90_inq_varid(ncid,'qvbar', varid)
-         status = nf90_get_var(ncid,varid, qvbar)
-         status = nf90_inq_varid(ncid,'wls', varid)
-         status = nf90_get_var(ncid,varid, wls)
-         status = nf90_inq_varid(ncid,'q1ls', varid)
-         status = nf90_get_var(ncid,varid, q1ls)
-         status = nf90_inq_varid(ncid,'q2ls', varid)
-         status = nf90_get_var(ncid,varid, q2ls)
-         status = nf90_inq_varid(ncid,'z3dx0', varid)
-         status = nf90_get_var(ncid,varid, z3dx0)
-         status = nf90_inq_varid(ncid,'z3dy0', varid)
-         status = nf90_get_var(ncid,varid, z3dy0)
-         status = nf90_inq_varid(ncid,'thinc', varid)
-         status = nf90_get_var(ncid,varid, thinc)
-         status = nf90_inq_varid(ncid,'qvinc', varid)
-         status = nf90_get_var(ncid,varid, qvinc)
-         status = nf90_inq_varid(ncid,'wlsinc', varid)
-         status = nf90_get_var(ncid,varid, wlsinc)
-         status = nf90_inq_varid(ncid,'q1inc', varid)
-         status = nf90_get_var(ncid,varid, q1inc)
-         status = nf90_inq_varid(ncid,'q2inc', varid)
-         status = nf90_get_var(ncid,varid, q2inc)
-         status = nf90_inq_varid(ncid,'dx0inc', varid)
-         status = nf90_get_var(ncid,varid, dx0inc)
-         status = nf90_inq_varid(ncid,'dy0inc', varid)
-         status = nf90_get_var(ncid,varid, dy0inc)
-      endif
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'rdhour', varid)
+!         status = nf90_get_var(ncid,varid, rdhour)
+!         status = nf90_inq_varid(ncid,'thbar', varid)
+!         status = nf90_get_var(ncid,varid, thbar)
+!         status = nf90_inq_varid(ncid,'qvbar', varid)
+!         status = nf90_get_var(ncid,varid, qvbar)
+!         status = nf90_inq_varid(ncid,'wls', varid)
+!         status = nf90_get_var(ncid,varid, wls)
+!         status = nf90_inq_varid(ncid,'q1ls', varid)
+!         status = nf90_get_var(ncid,varid, q1ls)
+!         status = nf90_inq_varid(ncid,'q2ls', varid)
+!         status = nf90_get_var(ncid,varid, q2ls)
+!         status = nf90_inq_varid(ncid,'z3dx0', varid)
+!         status = nf90_get_var(ncid,varid, z3dx0)
+!         status = nf90_inq_varid(ncid,'z3dy0', varid)
+!         status = nf90_get_var(ncid,varid, z3dy0)
+!         status = nf90_inq_varid(ncid,'thinc', varid)
+!         status = nf90_get_var(ncid,varid, thinc)
+!         status = nf90_inq_varid(ncid,'qvinc', varid)
+!         status = nf90_get_var(ncid,varid, qvinc)
+!         status = nf90_inq_varid(ncid,'wlsinc', varid)
+!         status = nf90_get_var(ncid,varid, wlsinc)
+!         status = nf90_inq_varid(ncid,'q1inc', varid)
+!         status = nf90_get_var(ncid,varid, q1inc)
+!         status = nf90_inq_varid(ncid,'q2inc', varid)
+!         status = nf90_get_var(ncid,varid, q2inc)
+!         status = nf90_inq_varid(ncid,'dx0inc', varid)
+!         status = nf90_get_var(ncid,varid, dx0inc)
+!         status = nf90_inq_varid(ncid,'dy0inc', varid)
+!         status = nf90_get_var(ncid,varid, dy0inc)
+!      endif
+!#endif
 
 #if defined (MPI)
       CALL MPI_BCAST( header, 1, mpi_character, 0, MPI_COMM_WORLD, mpierr)
@@ -1034,167 +1034,167 @@ CONTAINS
       CALL MPI_BCAST( dy0inc, nk2, mpi_dbl_kind, 0, MPI_COMM_WORLD, mpierr)
 #endif
       END SELECT
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_close(ncid)
-#else
-      if(my_task == 0) status = nf90_close(ncid)
-#endif
+!#else
+!      if(my_task == 0) status = nf90_close(ncid)
+!#endif
 
-#if defined (PARALLELIO) 
-          CALL FNAME_nc ( 13, EXPHDR, 'rst2_'//timestamp_string, filnam_nc)
+!#if defined (PARALLELIO) 
+          CALL FNAME_nc ( 13, EXPHDR, 'rst2_'//timestamp_string, 0, filnam_nc)
           nc_err = nfmpi_open(mpi_comm_world, trim(FILNAM_nc), nf_nowrite, mpi_info_null, ncid)
-#else
-       if(my_task == 0) then
-          CALL FNAME_nc ( 13, EXPHDR, 'rst2_'//timestamp_string, filnam_nc)
-          status =  nf90_open( trim(FILNAM_nc), NF90_NOWRITE, ncid)
-       endif
-#endif
+!#else
+!       if(my_task == 0) then
+!          CALL FNAME_nc ( 13, EXPHDR, 'rst2_'//timestamp_string, 0, filnam_nc)
+!          status =  nf90_open( trim(FILNAM_nc), NF90_NOWRITE, ncid)
+!       endif
+!#endif
 !
 !! formerly        READ(IUNIT) FTH3D,FZX,FZY,FZTOP
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       sstart(4) = 1
       count(4) = 2
       nc_err = nfmpi_inq_varid(ncid, 'fth3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), fth3d )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fth3d', varid)
-         status = nf90_get_var(ncid,varid, iobuff)
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), fth3d(:,:,:,1))
-      call scatter(nk2, iobuff(:,:,:,2), fth3d(:,:,:,2))
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fth3d', varid)
+!         status = nf90_get_var(ncid,varid, iobuff)
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), fth3d(:,:,:,1))
+!      call scatter(nk2, iobuff(:,:,:,2), fth3d(:,:,:,2))
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'fzx',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), fzx )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fzx', varid)
-         status = nf90_get_var(ncid,varid, iobuff)
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), FZX(:,:,:,1))
-      call scatter(nk2, iobuff(:,:,:,2), FZX(:,:,:,2))
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fzx', varid)
+!         status = nf90_get_var(ncid,varid, iobuff)
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), FZX(:,:,:,1))
+!      call scatter(nk2, iobuff(:,:,:,2), FZX(:,:,:,2))
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'fzy',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), fzy )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fzy', varid)
-         status = nf90_get_var(ncid,varid, iobuff)
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), FZY(:,:,:,1))
-      call scatter(nk2, iobuff(:,:,:,2), FZY(:,:,:,2))
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fzy', varid)
+!         status = nf90_get_var(ncid,varid, iobuff)
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), FZY(:,:,:,1))
+!      call scatter(nk2, iobuff(:,:,:,2), FZY(:,:,:,2))
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       count(3) = 2
       nc_err = nfmpi_inq_varid(ncid, 'fztop',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), fztop )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuff(:,:,1,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fztop', varid)
-         status = nf90_get_var(ncid,varid, iobuff(:,:,1:2,1))
-      endif
-      call scatter(2, iobuff(:,:,1:2,1), fztop)
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuff(:,:,1,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fztop', varid)
+!         status = nf90_get_var(ncid,varid, iobuff(:,:,1:2,1))
+!      endif
+!      call scatter(2, iobuff(:,:,1:2,1), fztop)
+!#endif
 !
 #if defined (PHYSICS)
 !! formerly        READ(IUNIT) FQV3D,FQC3D,FQR3D,FQI3D,FQS3D,FQG3D
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       count(3) = nk2; count(4) = 2
       nc_err = nfmpi_inq_varid(ncid, 'fqv3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), fqv3d )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fqv3d', varid)
-         status = nf90_get_var(ncid,varid, iobuff)
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), fqv3d(:,:,:,1))
-      call scatter(nk2, iobuff(:,:,:,2), fqv3d(:,:,:,2))
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fqv3d', varid)
+!         status = nf90_get_var(ncid,varid, iobuff)
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), fqv3d(:,:,:,1))
+!      call scatter(nk2, iobuff(:,:,:,2), fqv3d(:,:,:,2))
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'fqc3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), fqc3d )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fqc3d', varid)
-         status = nf90_get_var(ncid,varid, iobuff)
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), fqc3d(:,:,:,1))
-      call scatter(nk2, iobuff(:,:,:,2), fqc3d(:,:,:,2))
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fqc3d', varid)
+!         status = nf90_get_var(ncid,varid, iobuff)
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), fqc3d(:,:,:,1))
+!      call scatter(nk2, iobuff(:,:,:,2), fqc3d(:,:,:,2))
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'fqr3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), fqr3d )
-#else
-!      if(my_task == 0)READ(IUNIT) iobuff(:,:,:,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fqr3d', varid)
-         status = nf90_get_var(ncid,varid, iobuff)
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), fqr3d(:,:,:,1))
-      call scatter(nk2, iobuff(:,:,:,2), fqr3d(:,:,:,2))
-#endif
+!#else
+!!      if(my_task == 0)READ(IUNIT) iobuff(:,:,:,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fqr3d', varid)
+!         status = nf90_get_var(ncid,varid, iobuff)
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), fqr3d(:,:,:,1))
+!      call scatter(nk2, iobuff(:,:,:,2), fqr3d(:,:,:,2))
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'fqi3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), fqi3d )
-#else
-!      if(my_task == 0)READ(IUNIT) iobuff(:,:,:,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fqi3d', varid)
-         status = nf90_get_var(ncid,varid, iobuff)
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), fqi3d(:,:,:,1))
-      call scatter(nk2, iobuff(:,:,:,2), fqi3d(:,:,:,2))
-#endif
+!#else
+!!      if(my_task == 0)READ(IUNIT) iobuff(:,:,:,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fqi3d', varid)
+!         status = nf90_get_var(ncid,varid, iobuff)
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), fqi3d(:,:,:,1))
+!      call scatter(nk2, iobuff(:,:,:,2), fqi3d(:,:,:,2))
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'fqs3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), fqs3d )
-#else
-!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fqs3d', varid)
-         status = nf90_get_var(ncid,varid, iobuff)
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), fqs3d(:,:,:,1))
-      call scatter(nk2, iobuff(:,:,:,2), fqs3d(:,:,:,2))
-#endif
+!#else
+!!      if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fqs3d', varid)
+!         status = nf90_get_var(ncid,varid, iobuff)
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), fqs3d(:,:,:,1))
+!      call scatter(nk2, iobuff(:,:,:,2), fqs3d(:,:,:,2))
+!#endif
 
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'fqg3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:4), count(1:4), fqg3d )
-#else
-!      if(my_task == 0)  READ(IUNIT) iobuff(:,:,:,:)
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fqg3d', varid)
-         status = nf90_get_var(ncid,varid, iobuff)
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), fqg3d(:,:,:,1))
-      call scatter(nk2, iobuff(:,:,:,2), fqg3d(:,:,:,2))
-#endif
+!#else
+!!      if(my_task == 0)  READ(IUNIT) iobuff(:,:,:,:)
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fqg3d', varid)
+!         status = nf90_get_var(ncid,varid, iobuff)
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), fqg3d(:,:,:,1))
+!      call scatter(nk2, iobuff(:,:,:,2), fqg3d(:,:,:,2))
+!#endif
 
 #else
       fQV3D=0.
@@ -1206,22 +1206,22 @@ CONTAINS
 #endif
 !
       if(ntracer > 0) then
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       sstart(5) = 1; count(5) = ntracer
       nc_err = nfmpi_inq_varid(ncid, 'ftc3d',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:5), count(1:5), ftc3d )
-#else
-!formerly           READ(IUNIT) FTC3D
-        if(my_task == 0) status = nf90_inq_varid(ncid,'ftc3d', varid)
-        do nt = 1,ntracer
-          if(my_task == 0) status = nf90_get_var(ncid,varid, iobuff,&
-                                                 (/1,1,1,1,nt/), (/mi1,mj1,nk2,2,1/) )
-!          if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
-          call scatter(nk2, iobuff(:,:,:,1), ftc3d(:,:,:,1,nt))
-          call scatter(nk2, iobuff(:,:,:,2), ftc3d(:,:,:,2,nt))
-        enddo
-#endif
+!#else
+!!formerly           READ(IUNIT) FTC3D
+!        if(my_task == 0) status = nf90_inq_varid(ncid,'ftc3d', varid)
+!        do nt = 1,ntracer
+!          if(my_task == 0) status = nf90_get_var(ncid,varid, iobuff,&
+!                                                 (/1,1,1,1,nt/), (/mi1,mj1,nk2,2,1/) )
+!!          if(my_task == 0) READ(IUNIT) iobuff(:,:,:,:)
+!          call scatter(nk2, iobuff(:,:,:,1), ftc3d(:,:,:,1,nt))
+!          call scatter(nk2, iobuff(:,:,:,2), ftc3d(:,:,:,2,nt))
+!        enddo
+!#endif
       endif
 !      if(my_task == 0) then
 !        READ(IUNIT) FUTMN,FVTMN
@@ -1230,30 +1230,30 @@ CONTAINS
 !! formerly        READ(IUNIT) FTHRAD
 !        READ(IUNIT) iobuff(:,:,1:nk2,1)
 !      endif
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_inq_varid(ncid, 'fthrad',varid)
       nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
                   sstart(1:3), count(1:3), fthrad )
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'fthrad', varid)
-         status = nf90_get_var(ncid,varid, iobuff(:,:,:,1))
-      endif
-      call scatter(nk2, iobuff(:,:,:,1), fthrad)
-#endif
-#if defined (PARALLELIO) 
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'fthrad', varid)
+!         status = nf90_get_var(ncid,varid, iobuff(:,:,:,1))
+!      endif
+!      call scatter(nk2, iobuff(:,:,:,1), fthrad)
+!#endif
+!#if defined (PARALLELIO) 
          status = nf90_inq_varid(ncid,'futmn', varid)
          status = nf90_get_var(ncid,varid, futmn)
          status = nf90_inq_varid(ncid,'fvtmn', varid)
          status = nf90_get_var(ncid,varid, fvtmn)
-#else
-      if(my_task == 0) then
-         status = nf90_inq_varid(ncid,'futmn', varid)
-         status = nf90_get_var(ncid,varid, futmn)
-         status = nf90_inq_varid(ncid,'fvtmn', varid)
-         status = nf90_get_var(ncid,varid, fvtmn)
-      endif
-#endif
+!#else
+!      if(my_task == 0) then
+!         status = nf90_inq_varid(ncid,'futmn', varid)
+!         status = nf90_get_var(ncid,varid, futmn)
+!         status = nf90_inq_varid(ncid,'fvtmn', varid)
+!         status = nf90_get_var(ncid,varid, fvtmn)
+!      endif
+!#endif
 #if defined (MPI)
       CALL MPI_BCAST( futmn, 2, mpi_dbl_kind, 0, MPI_COMM_WORLD, mpierr)
       CALL MPI_BCAST( fvtmn, 2, mpi_dbl_kind, 0, MPI_COMM_WORLD, mpierr)
@@ -1262,11 +1262,11 @@ CONTAINS
 
 !
 !      if(my_task == 0) CLOSE(IUNIT)
-#if defined (PARALLELIO) 
+!#if defined (PARALLELIO) 
       nc_err = nfmpi_close(ncid)
-#else
-      if(my_task == 0) status = nf90_close(ncid)
-#endif
+!#else
+!      if(my_task == 0) status = nf90_close(ncid)
+!#endif
       
       call bound_3d
       call bound_3d_xy

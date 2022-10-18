@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = held_93d_256_128
+set expname = held_93d_256_128_kpp_alb7_diurnal
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -74,6 +74,8 @@ cat > definesld.com << 'END1'
 #define MICROP3
 #define DIFFUSION
 #define RADCODE
+#define LSM
+#define KPP
 'END1'
 cat definesld.com
 

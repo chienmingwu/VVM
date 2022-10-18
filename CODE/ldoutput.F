@@ -42,15 +42,15 @@ PRIVATE
       INTEGER (KIND=int_kind), PARAMETER :: tm_kind = real_kind
 !      INTEGER (KIND=int_kind), PARAMETER :: tm_kind = dbl_kind
 
-#if defined (PARALLELIO)
+!#if defined (PARALLELIO)
    REAL (KIND=dbl_kind), PUBLIC ::  iobuffh
    REAL (KIND=dbl_kind), PUBLIC ::  iobuff
-#else
-   REAL (KIND=dbl_kind), PUBLIC ::  &
-      iobuffh(1-nhalo:mi_glob+nhalo,1-nhalo:mj_glob+nhalo,nk3)  ! halo
-   REAL (KIND=dbl_kind), PUBLIC ::  &
-      iobuff(mi_glob,mj_glob,nk2,2) ! no halo
-#endif
+!#else
+!   REAL (KIND=dbl_kind), PUBLIC ::  &
+!      iobuffh(1-nhalo:mi_glob+nhalo,1-nhalo:mj_glob+nhalo,nk3)  ! halo
+!   REAL (KIND=dbl_kind), PUBLIC ::  &
+!      iobuff(mi_glob,mj_glob,nk2,2) ! no halo
+!#endif
 
 ! public member functions
 
@@ -451,7 +451,9 @@ CONTAINS
              UG_s(NK3),vG_s(NK3),Q1LS_s(NK3),Q2LS_s(NK3)
 
       if(my_task .ne. 0) RETURN
-      
+
+      open(98,file="fort.98")
+
       CALL fill_c_ic_lc
       c_s = c_8
       
@@ -512,6 +514,7 @@ CONTAINS
       RHOZ_s(i)=RHOZ(i)
       write(98,'(i3,2F12.3)') i,RHOZ_s(i)
       enddo
+      close(98)
 
       CALL FNAME_2D ( 1, LTPCON, EXPHDR, FILNAM )
       OPEN (LTPCON,FILE=FILNAM, STATUS='UNKNOWN',FORM='UNFORMATTED')

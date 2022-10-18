@@ -24,7 +24,11 @@ USE ldoutput
 #if defined (DIFFUSION)
 USE TURB_3D_module
 #if defined (LSM)
-USE land_module
+#if defined (KPP)
+USE land_module, Tocean=>To, Uocean=>Uo, Vocean=>Vo 
+#else
+USE land_module 
+#endif
 #endif
 #endif
 USE petscsys
@@ -82,6 +86,10 @@ PRIVATE
 #if defined (DIFFUSION) 
 #if defined (LSM)
       REAL (KIND=tm_kind) :: STD_LSM(mi1,mj1,IVAR10)
+#if defined (KPP)
+      REAL (KIND=tm_kind) :: STD_KPP(mi1,mj1,olev,3), &
+                             STD_KPP_2d(mi1,mj1,1)
+#endif
 #endif
 #endif
 
@@ -698,43 +706,6 @@ CONTAINS
  1987 CONTINUE
       endif
 
-      ! diagnostics for YH kuo
-      DIAG3D=0.
-      DO k=2,nk2
-#if defined (MICROP3)
-        DIAG3D(:,:,K,1)=0.5*GRAV*( ((TH3D(:,:,K)-THBAR(K))/THBAR(K) &
-                                     +DELTA*QV3D(:,:,K)-QC3D(:,:,K) &
-                                          -QR3D(:,:,K)-QI3D(:,:,K)) &
-                            +((TH3D(:,:,K+1)-THBAR(K+1))/THBAR(K+1) &
-                                 +DELTA*QV3D(:,:,K+1)-QC3D(:,:,K+1) &
-                                      -QR3D(:,:,K+1)-QI3D(:,:,K+1)) ) 
-#else
-        DIAG3D(:,:,K,1)=0.5*GRAV*( ((TH3D(:,:,K)-THBAR(K))/THBAR(K) &
-                                     +DELTA*QV3D(:,:,K)-QC3D(:,:,K) &
-                  -QR3D(:,:,K)-QI3D(:,:,K)-QS3D(:,:,K)-QG3D(:,:,K)) &
-                            +((TH3D(:,:,K+1)-THBAR(K+1))/THBAR(K+1) &
-                                 +DELTA*QV3D(:,:,K+1)-QC3D(:,:,K+1) &
-          -QR3D(:,:,K+1)-QI3D(:,:,K+1)-QS3D(:,:,K+1)-QG3D(:,:,K+1)) )
-#endif
-      DO j=1,mj1
-      DO i=1,mi1 
-      !IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2)<1 .and. j==3) &
-      !        write(*,*) DIAG3D(i,j,K,1), TH3D(i,j,K), thbar(k) &
-      !                           ,DELTA, GRAV, QV3D(i,j,K)
-        DIAG3D(i,j,k,2)=0.5*(z3dx(i,j,k)+z3dx(i,j-1,k))
-        DIAG3D(i,j,k,3)=0.5*(z3dy(i,j,k)+z3dy(i-1,j,k))
-        DIAG3D(i,j,k,4)=0.125*( z3dz(i  ,j  ,k)+z3dz(i  ,j  ,k+1) &
-                               +z3dz(i-1,j  ,k)+z3dz(i-1,j  ,k+1) &
-                               +z3dz(i  ,j-1,k)+z3dz(i  ,j-1,k+1) &
-                               +z3dz(i-1,j-1,k)+z3dz(i-1,j-1,k+1) )
-        DIAG3D(i,j,k,5)=0.25*(z3dy(i  ,j,k)*(u3dx(i  ,j,k)+u3dx(i  ,j,k+1)) &
-                             +z3dy(i-1,j,k)*(u3dx(i-1,j,k)+u3dx(i-1,j,k+1))) &
-                       -0.25*(z3dx(i,j  ,k)*(u3dy(i,j  ,k)+u3dy(i,j  ,k+1)) &
-                             +z3dx(i,j-1,k)*(u3dy(i,j-1,k)+u3dy(i,j-1,k+1)))
-      ENDDO
-      ENDDO 
-      ENDDO
-
       if (ndiag_3d>0) then
       DO 1988 NT=1,ndiag_3d
       DO 1988 K=1,nk2
@@ -835,6 +806,24 @@ CONTAINS
 !========
       ENDIF
  1227 CONTINUE
+
+!#if defined (KPP)
+!      DO k=1,olev
+!      DO J=1,mj1
+!      DO I=1,mi1
+!      STD_KPP(I,J,K,1)=STD_KPP(I,J,K,1) + To(I,J,K) *  dtfac
+!      STD_KPP(I,J,K,2)=STD_KPP(I,J,K,2) + Uo(I,J,K) *  dtfac
+!      STD_KPP(I,J,K,3)=STD_KPP(I,J,K,3) + Vo(I,J,K) *  dtfac
+!      ENDDO
+!      ENDDO
+!      ENDDO
+!
+!      DO J=1,mj1
+!      DO I=1,mi1
+!      STD_KPP_2d(I,J,1)=STD_KPP_2d(I,J,1) + bldpth(I,J) *  dtfac
+!      ENDDO
+!      ENDDO
+!#endif
 
 #endif
 #endif
@@ -1211,6 +1200,21 @@ CONTAINS
         call pCDF_WRITE_xy(ncid_lsm, 'smcdry', TIME_C, time_start, std_lsm(:,:,60) )
         call pCDF_WRITE_xy(ncid_lsm, 'smcref', TIME_C, time_start, std_lsm(:,:,61) )
         call pCDF_WRITE_xy(ncid_lsm, 'smcmax', TIME_C, time_start, std_lsm(:,:,62) )
+
+
+#if defined (KPP)
+      OUT_tm1(:,:,1:olev) = Tocean
+      call pCDF_WRITE_4D(ncid_kpp, 't', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+
+      OUT_tm1(:,:,1:olev) = Uocean
+      call pCDF_WRITE_4D(ncid_kpp, 'u', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+
+      OUT_tm1(:,:,1:olev) = Vocean
+      call pCDF_WRITE_4D(ncid_kpp, 'v', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+
+      OUT_tm1(:,:,1)= bldpth 
+      call pCDF_WRITE_xy(ncid_kpp, 'mld', TIME_L, time_start, out_tm1(:,:,1) )
+#endif
 
 #endif
 #endif

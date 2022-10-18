@@ -250,7 +250,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
 !      hx(I,J)= 1
       LU(I,J) = 16
-      alb(I,J) = 15.
+      alb(I,J) = 7.
       grf(I,J) = 10.
       lai(I,J) = 4.
       SHDMAX(I,J) = 10.
