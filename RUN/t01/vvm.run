@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = held_93d_256_128_kpp_alb7_diurnal
+set expname = held_93d_256_128_kpp_alb7_diurnal_warm
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
