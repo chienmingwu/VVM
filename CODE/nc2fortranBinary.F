@@ -226,37 +226,64 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ENDDO
       ENDDO
 
+!     ocean points  hx(I,J)= 1
+      LU = 16
+      alb = 7.
+      grf = 10.
+      lai = 4.
+      SHDMAX = 10.
+      SHDMIN = 10.
+      SLOPE = 1
+      SOIL = 14
 
       HX = 1
-      DO 500 J = 1,MJ_GLOB
-      DO 500 I = 1,MI_GLOB
+      DO 500 J = 97,160
+      DO 500 I = MI_GLOB/2+1,MI_GLOB
 
       xt(I) = I * DX -0.5*DX
       yt(J) = J * DYNEW - 0.5*DYNEW
 
       ! setup Chien and Wu 2016
-      TMP=abs(real(i)-real(mi_glob)/2.)*DX
-      if (TMP<=5000.) then
-      TMP = 3600. 
-      elseif (TMP>5000. .and. TMP<=20000.) then
-      TMP = -0.24*(TMP-20000.)
-      else 
-      TMP = 0.
+!      TMP=abs(real(i)-real(mi_glob)/2.)*DX
+!      if (TMP<=5000.) then
+!      TMP = 3600. 
+!      elseif (TMP>5000. .and. TMP<=20000.) then
+!      TMP = -0.24*(TMP-20000.)
+!      else 
+!      TMP = 0.
+!      endif
+!      IT=1
+!      DO 502 k=1,NK3
+!  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
+!      hx(I,J)=TOP
+
+      if(I .lt. 320) then
+      tmp=(I-256)*2000./64.
+      else
+      tmp=2000.+(320-I)*2000./64.
       endif
-      IT=1
-      DO 502 k=1,NK3
-  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
-      hx(I,J)=TOP
+
+      DO K=2,NK1
+      IF(tmp .GE. ZZ(K)) THEN
+      HX(I,J)=K+NINT((tmp-ZZ(K))/(ZZ(K+1)-ZZ(K)))
+      ENDIF
+
+      IF(HX(I,J) .LT. 0) THEN
+      HX(I,J)=1
+      ENDIF
+      ENDDO
 
 !      hx(I,J)= 1
-      LU(I,J) = 16
-      alb(I,J) = 7.
-      grf(I,J) = 10.
+      if (hx(i,j) .ge. 2) then
+      LU(I,J) = 7
+      alb(I,J) = 19.
+      grf(I,J) = 80.
       lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
+      SHDMAX(I,J) = 80.
+      SHDMIN(I,J) = 80.
       SLOPE(I,J) = 1
-      SOIL(I,J) = 14
+      SOIL(I,J) = 13
+      endif
 !      ! setup Wu and Chen 2021
 !      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
 !      LU(I,J) = 7
