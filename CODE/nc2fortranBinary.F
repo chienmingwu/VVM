@@ -237,30 +237,18 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SOIL = 14
 
       HX = 1
-      DO 500 J = 97,160
-      DO 500 I = MI_GLOB/2+1,MI_GLOB
+      DO 500 J =156,356 
+      DO 500 I = 206,306
+
+      HX(I,J)=2
 
       xt(I) = I * DX -0.5*DX
       yt(J) = J * DYNEW - 0.5*DYNEW
 
-      ! setup Chien and Wu 2016
-!      TMP=abs(real(i)-real(mi_glob)/2.)*DX
-!      if (TMP<=5000.) then
-!      TMP = 3600. 
-!      elseif (TMP>5000. .and. TMP<=20000.) then
-!      TMP = -0.24*(TMP-20000.)
-!      else 
-!      TMP = 0.
-!      endif
-!      IT=1
-!      DO 502 k=1,NK3
-!  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
-!      hx(I,J)=TOP
-
-      if(I .lt. 320) then
-      tmp=(I-256)*2000./64.
+      if(I .lt. 281) then
+      tmp=(I-256)*2000./25.
       else
-      tmp=2000.+(320-I)*2000./64.
+      tmp=2000.+(281-I)*2000./25.
       endif
 
       DO K=2,NK1
@@ -269,9 +257,10 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       ENDIF
 
       IF(HX(I,J) .LT. 0) THEN
-      HX(I,J)=1
+      HX(I,J)=2
       ENDIF
       ENDDO
+
 
 !      hx(I,J)= 1
       if (hx(i,j) .ge. 2) then
@@ -341,20 +330,6 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 !      DO 700 J = 1,MJ_GLOB
 !  700 YT (J) = J*DYNEW
 
-
-      DO I=1,mi_glob
-      DO J=1,mj_glob
-      TMP=DBLE(hgt(I,J))
-
-      IF (TMP .GT. 0.) HX(I,J) = 2.
-      DO K=2,NK1
-      IF(TMP.GE.ZZ(K))HX(I,J)=K+NINT((TMP-ZZ(K))/(ZZ(K+1)-ZZ(K)))
-
-      ENDDO
-      IF(HX(I,J).LT.0)HX(I,J)=0
-
-      ENDDO
-      ENDDO
 
       ENDIF
 
