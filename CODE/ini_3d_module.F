@@ -651,8 +651,8 @@ CONTAINS
       call bound_int_arb(NK2,ITYPEW)
 
       DO K=2,NK2
-      DO J=mj1,mjp
-      DO I=mi1,mip
+      DO J=1,mjp
+      DO I=1,mip
       NN=ITYPEW(I,J,K)
       IF(NN .EQ. 0) THEN
       ITYPEU(I-1,J,K)=0
