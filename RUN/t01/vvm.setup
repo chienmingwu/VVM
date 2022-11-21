@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = taiwanvvm_i_u10
+set expname = taiwanvvm_i_u10_lsm
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -74,6 +74,7 @@ cat > definesld.com << 'END1'
 #define MICROP3
 #define DIFFUSION
 #define TOPOGRAPHY
+#define LSM
 'END1'
 cat definesld.com
 

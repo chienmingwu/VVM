@@ -234,7 +234,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMAX = 10.
       SHDMIN = 10.
       SLOPE = 1
-      SOIL = 14
+      SOIL = 1
 
       HX = 1
       DO 500 J =156,356 
@@ -271,7 +271,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       SHDMAX(I,J) = 80.
       SHDMIN(I,J) = 80.
       SLOPE(I,J) = 1
-      SOIL(I,J) = 13
+      SOIL(I,J) = 1
       endif
 !      ! setup Wu and Chen 2021
 !      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
