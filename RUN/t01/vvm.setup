@@ -85,7 +85,7 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/16/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90

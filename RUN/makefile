@@ -92,7 +92,7 @@ include $(MAKEFILE_MODEL)
 SRC_FREE_F	= $(filter %.F,$(SRC_FREE))
 SRC_FREE_F90  = $(filter %.F90,$(SRC_FREE))
 SRC_FREE_f90  = $(filter %.f90,$(SRC_FREE))
-SRC_FREE_NCH	= $(filter %.F,$(NOCHECK))
+SRC_FREE_NCH  = $(filter %.F,$(SRC_FREE_NCHECK))
 #SRC_FREE_f = $(SRC_FREE_F) $(SRC_FREE_F90) $(SRC_FREE_f90)
 #SRC_FIXED_F	= $(SRC_FIXED:.F=.$(SUF))
 
@@ -134,19 +134,19 @@ $(OBJS_FIXED)	: FORM = $(FIXED)
 
 $(OBJS_FIXED) : %.o: %.F 
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
-	$(FC) -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF)
+	$(FC) $(CH) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF)
 $(OBJS_FREE_F) : %.o: %.F 
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
-	$(FC) -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
+	$(FC) $(CH) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 $(OBJS_FREE_NCH) : %.o: %.F 
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
 	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 $(OBJS_FREE_F90) : %.o: %.F90 
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
-	$(FC) -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
+	$(FC) $(CH) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 $(OBJS_FREE_f90) : %.o: %.f90
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
-	$(FC) -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
+	$(FC) $(CH) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 
 #-----------------------------------------------------------------------------
 # Define the rule(s) for building the executable code
@@ -166,9 +166,9 @@ $(MAIN): $(OBJS_FREE_F90) $(OBJS_FREE_f90) $(OBJS_FREE_F) $(OBJS_FREE_NCH) $(OBJ
 clean :
 	rm -f *.o *.h *.mod *.f  
 topography :
-	${FC} -c $(FFLAGS) $(FREE) ${CODEDIR}/RRTMG/kinds.F
+	${FC} $(CH) -c $(FFLAGS) $(FREE) ${CODEDIR}/RRTMG/kinds.F
 	${CPP} -p -I$(EXPDIR) ${CODEDIR}/cdecks/PARMSLD.F90 > PARMSLD.f	
-	${FC} -c $(FFLAGS) $(FREE) PARMSLD.f 
+	${FC} $(CH) -c $(FFLAGS) $(FREE) PARMSLD.f 
 	${CPP} -p ${CODEDIR}/nc2fortranBinary.F > nc2fortranBinary.f $(FFLAGS)
-	${FC} -c $(FFLAGS) nc2fortranBinary.f 
-	${FC} -o $(EXPDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o $(LDLIBS) 
+	${FC} $(CH) -c $(FFLAGS) nc2fortranBinary.f 
+	${FC} $(CH) -o $(EXPDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o $(LDLIBS) 

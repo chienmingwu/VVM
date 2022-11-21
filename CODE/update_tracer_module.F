@@ -113,7 +113,7 @@ CONTAINS
         tempjm=mj1*nj_sbdm+j
         IF (tempjm==mj_glob/2 .or. tempjm==mj_glob/4 .or. tempjm==mj_glob*3/4) THEN
         IF (tempim==mi_glob/3) THEN
-          TC3D(I,J,1:2,1)=1.
+          !TC3D(I,J,1:2,1)=1.
         ENDIF
         ENDIF
   123 CONTINUE

@@ -107,14 +107,14 @@
        
 ! Compute topography grid
 
-      RX = R* COSD(.5*(LAT(9000)+LAT(9001)))*2*PI/360.*(lon(2)-lon(1))
+      !RX = R* COSD(.5*(LAT(9000)+LAT(9001)))*2*PI/360.*(lon(2)-lon(1))
       XM(IC) =  0.
       DO 20 I = IC+1, NX 
    20 XM (I) = XM(I-1) + RX 
       DO 25 I = IC-1, 1, -1
    25 XM (I) = XM(I+1) - RX
 
-      RY = R * 2 * PI *(lat(9001)-lat(9000))/360
+      !RY = R * 2 * PI *(lat(9001)-lat(9000))/360
       YM(JC) =  0.
       DO 30 J = JC+1, NY
    30 YM (J) = YM(J-1) + RY 
@@ -256,7 +256,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       HX(I,J)=K+NINT((tmp-ZZ(K))/(ZZ(K+1)-ZZ(K)))
       ENDIF
 
-      IF(HX(I,J) .LT. 0) THEN
+      IF(HX(I,J) .LT. 2) THEN
       HX(I,J)=2
       ENDIF
       ENDDO
