@@ -26,6 +26,8 @@ DHUU1,DHUV1,DHUW1,DHVU1,DHVV1,DHVW1,DHUU2,DHUV2,DHUW2,DHVU2,DHVV2,DHVW2
 REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK3),PRIVATE :: &
 DHWU1,DHWV1,DHWW1,DHWU2,DHWV2,DHWW2
 
+INTEGER (KIND=int_kind) :: ITT_LSM
+
 #endif
 !public member functions
 PUBLIC ::      &
@@ -335,7 +337,12 @@ CONTAINS
          WQV(I,J) = 0.
   110    CONTINUE
       ELSE
-         IF ( itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) CALL SFLUX_3D
+         IF ( (itt==1 .OR. MOD ( ITT,NSFLUX ) .EQ. 1 ) &
+               .AND. ITT/=ITT_LSM ) THEN
+                 CALL SFLUX_3D
+                 ITT_LSM=ITT
+         ENDIF
+
 !      print*,"before call sflux_3d"
 !      print*,"ITT = ",ITT
 !      CALL SFLUX_3D ! call sflux every time step 
@@ -1461,6 +1468,8 @@ CONTAINS
 SUBROUTINE TURB_3D_INI
 #if defined (DIFFUSION)
       integer(KIND=int_kind ) :: i,j,k,nn
+
+      ITT_LSM=-1
 
       DHUU1=1.
       DHUV1=1.
