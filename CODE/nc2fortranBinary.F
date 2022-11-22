@@ -34,7 +34,7 @@
       integer NLID_3d(3)
       integer idx,idy,idz,nvaridx,nvaridy
 
-      REAL*8 DT,DX,DYNEW,DZ,DZ1,ALADV,ZB,TOP,TMP,WRXMU,UVTAU
+      REAL*8 DT,DX,DYNEW,DZ,DZ1,ALADV,ZB,TOP,TMP,TMP1,TMP2,WRXMU,UVTAU
       LOGICAL NOTURB,NOSFX,BUOY
       INTEGER NSFLUX,NP,NOTHERM
 
@@ -246,10 +246,31 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       yt(J) = J * DYNEW - 0.5*DYNEW
 
       if(I .lt. 281) then
-      tmp=(I-256)*2000./25.
+      tmp1=(I-256)*2000./25.
       else
-      tmp=2000.+(281-I)*2000./25.
+      tmp1=2000.+(281-I)*2000./25.
       endif
+
+      tmp=tmp1
+
+      if(J .lt.166 .and. I .gt.256) then
+      tmp2=(J-156)*2000/10.
+      tmp=tmp2
+      if(tmp2 .gt. tmp1) then
+      tmp=tmp1
+      endif
+      endif
+
+      if(J .gt.346 .and. I .gt.256) then
+      tmp2=2000.+(346-J)*2000/10.
+      tmp=tmp2
+      if(tmp2 .gt. tmp1) then
+      tmp=tmp1
+      endif
+      endif
+
+      
+       
 
       DO K=2,NK1
       IF(tmp .GE. ZZ(K)) THEN

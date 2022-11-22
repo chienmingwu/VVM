@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = taiwanvvm_i_u10_lsm
+set expname = taiwanvvm_i_u10_lsm_t
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -96,7 +96,7 @@ sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 # input data
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=43200 /
- &INPUT2 RLAT=0, RLON=0 /
+ &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=1.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
