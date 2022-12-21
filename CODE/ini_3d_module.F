@@ -65,33 +65,44 @@ CONTAINS
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb,THVAVG
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3),UG(NK3),VG(NK3),qv1(NK3),p1(NK3)
+          ,QCBAR(NK3),QVSBAR(NK3),UG(NK3),VG(NK3),qv1(NK3),qc1(NK3),p1(NK3)
       REAL (KIND=dbl_kind) :: Q1OBS(NK3),Q2OBS(NK3),wls1(NK3)
       REAL (KIND=real_kind) ::  RHO_s(NK3),RHOZ_s(NK2),THBAR_s(NK3),  &
              QVBAR_s(NK3),PBAR_s(NK3),PIBAR_s(NK3)
 
 
-      CHARACTER(len=8) :: dateStr = '20160618'
-      !CHARACTER(len=5) :: stno = '47918'
-      CHARACTER(len=5) :: stno = '46692'
+      CHARACTER(len=8) :: dateStr = '20201124'
+      CHARACTER(len=5) :: stno = '47918'
+      !CHARACTER(len=5) :: stno = '46692'
       CHARACTER(len=80) :: fname
       LOGICAL(kind=2) :: noWind = .FALSE.
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file,topo_file
 
 !     get data from dat file
-      fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/'//stno//'.'//dateStr//'.taiwania.dat'
+      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.ideal.txt'
       if (my_task==0) write(*,*) "fname:", trim(fname) 
-      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NK3*dbl_kind)
-      read(88,rec=1) UG(:)
-      read(88,rec=2) VG(:)
-      read(88,rec=3) T(:)
-      read(88,rec=4) qv1(:)
-      read(88,rec=5) p1(:)
+!      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NK3*dbl_kind)
+!      read(88,rec=1) UG(:)
+!      read(88,rec=2) VG(:)
+!      read(88,rec=3) T(:)
+!      read(88,rec=4) qv1(:)
+!      read(88,rec=5) p1(:)
 !      print *, 'read data in u:',UG(1),UG(NK3)
 !      print *, 'read data in v:',VG(1),VG(NK3)
 !      print *, 'read data in t:',T(1),T(NK3)
 !      print *, 'read data in qv:',qv1(1),qv1(NK3)
 !      print *, 'read data in p:',p1(1),p1(NK3)
+
+      open(unit=88,file=fname,form='formatted',status='old')
+      DO i = 1, NK3
+      READ(88, 20000) P1(i), T(i), UG(i), VG(i), QV1(i), QC1(i)
+      QV1(i) = QV1(i)/1000.
+      QC1(i) = QC1(i)/100000.
+      T(i) = T(i) + 273.15
+      P1(i) = P1(i)*0.01
+      ENDDO
+      20000 format(6F11.2)
+      
 
       if (noWind) then
         do k=1,NK3
@@ -131,15 +142,17 @@ CONTAINS
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
       DO 120 K = 1, NK3
-      T8  = T(K)
-      P8  = PBAR(K)*0.01
-      QV8 = QVBAR(K)
-      QC8 = 0.D0
-      QI8 = 0.D0
-      if (my_task .eq. 0) print*, T8,P8,QV8,K
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      QVBAR(K) = QV8
-      QCBAR(K) = 0.
+      !T8  = T(K)
+      !P8  = PBAR(K)*0.01
+      !QV8 = QVBAR(K)
+      !QC8 = 0.D0
+      !QI8 = 0.D0
+      !if (my_task .eq. 0) print*, T8,P8,QV8,K
+      !CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+      !QVBAR(K) = QV8
+      !QCBAR(K) = 0.
+      QVBAR(K) = QV1(K)
+      QCBAR(K) = QC1(K)
   120 CONTINUE
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
@@ -299,7 +312,7 @@ CONTAINS
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
       QV3D(I,J,K) = QVBAR(K)
-      QC3D(I,J,K) = 0.
+      QC3D(I,J,K) = QCBAR(K)
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
 #if defined (MICROP3)
