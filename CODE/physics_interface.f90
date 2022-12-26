@@ -448,7 +448,7 @@
       call p3_main(qc_p3,nc,qr_p3,nr,th_old_p3,theta_p3,qv_old_p3,qv_p3, &
                    dt_p3,qi_p3,qrim,ni,brim,ssat,w_p3,                   &
                    p_p3,dz_p3,itt_p3,pcprt_liq,pcprt_sol,                &
-                   1,im,1,km,1,diag_ze,diag_effc,                        &
+                   1,im,1,km,1,diag_ze,diag_effc,                        & 
                    diag_effi,diag_vmi,diag_di,diag_rhoi,                 &
                    1,diag_2d, &
 #if defined (HEATING)
@@ -460,7 +460,7 @@
                    1.0,1.0,debug_on,scpf_on,scpf_pfrac,scpf_resfact,cldfrac)
 
       IF (global_status == -1 )THEN
-      WRITE(*,*) "microphysics stop", ni_sbdm, nj_sbdm 
+      WRITE(*,*) "microphysics stop", ni_sbdm, nj_sbdm,j
       STOP
       ENDIF
 

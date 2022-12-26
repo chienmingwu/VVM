@@ -56,7 +56,7 @@ SUF      = f
 
 INC = -I$(CDECKS) -I$(EXPDIR) -I${HOME}/vvmlibs/include -I${HOME}/pnetcdf/include
 
-FC = mpifrtpx -fw -KPIC -Kfast
+FC = mpifrtpx -fw -KPIC -O3 #-Kfast
 CH = #-Haefsu #-Ncheck_global -Haefs -Nline #-Haefosux -Nline #-Ecg -Haefosux 
 
 LDLIBS = -L${HOME}/pnetcdf/lib -lpnetcdf -L${HOME}/vvmlibs/lib -lpetsc -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lhdf5hl_fortran -lhdf5_fortran -lsz -L/opt/FJSVxtclanga/tcsds-1.2.33/lib64 -lfjlapack -lfjlapacksve -lfjprofmpi -lfjcrt -lmpi_cxx

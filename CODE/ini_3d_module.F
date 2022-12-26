@@ -87,6 +87,7 @@ CONTAINS
 !      read(88,rec=3) T(:)
 !      read(88,rec=4) qv1(:)
 !      read(88,rec=5) p1(:)
+!      close(88)
 !      print *, 'read data in u:',UG(1),UG(NK3)
 !      print *, 'read data in v:',VG(1),VG(NK3)
 !      print *, 'read data in t:',T(1),T(NK3)
@@ -101,6 +102,7 @@ CONTAINS
       T(i) = T(i) + 273.15
       P1(i) = P1(i)*0.01
       ENDDO
+      close(88)
       20000 format(6F11.2)
       
 
