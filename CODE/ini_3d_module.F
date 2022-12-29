@@ -120,6 +120,8 @@ CONTAINS
         PBAR(k)=p1(k)*100.0
       enddo
 
+      casename= 'GATE_PHASE_III'
+
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
 

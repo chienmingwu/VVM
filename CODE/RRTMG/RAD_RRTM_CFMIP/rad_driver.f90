@@ -520,7 +520,7 @@
         call shr_orb_decl (dayForSW, eccen, mvelpp, lambm0, obliqr, delta, eccf)
         solarZenithAngleCos(:) =  &
              zenith(dayForSW, pi * latitude(:)/180., pi * longitude(:)/180.)
-        !write(*,'(A,4F10.4)') "sw:",solarZenithAngleCos(:), dayForSW, longitude(:),latitude(:)
+        if (my_task==0) write(*,'(A,4F10.4)') "sw:",solarZenithAngleCos(:), dayForSW, longitude(:),latitude(:)
 
       end if
 

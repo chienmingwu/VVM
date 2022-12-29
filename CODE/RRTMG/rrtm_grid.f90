@@ -47,8 +47,8 @@
           masterproc = .TRUE.           ! true = MPI rank equals 0
 
       REAL (KIND=kind_rm), PARAMETER :: &
-          solar_constant = 551.58, &  ! Solar constant
-          zenith_angle = 42.05        ! Solar zenith angle (degrees)
+          solar_constant = 1367., &  ! Solar constant
+          zenith_angle = 60.        ! Solar zenith angle (degrees)
 
 ! case and caseid, used for identifying restart files
       CHARACTER (LEN=40) :: &

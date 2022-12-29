@@ -1,4 +1,4 @@
-#PJM -L rscgrp="large"
+#PJM -L rscgrp="small"
 #PJM -L "node=np_nodes:noncont"
 #PJM -L elapse=walltime
 #PJM --mpi "max-proc-per-node=48"
