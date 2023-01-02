@@ -111,6 +111,11 @@
       USE trace_gases, only: &
                        o3, co2, n2o, ch4, o2, cfc11, cfc12, cfc22, ccl4
       
+#if defined (MICROP3)
+      use cam_rad_parameterizations, only : ReI_p3, ReC_p3
+#endif
+
+
   !===========================================================================
   !================== END CHANGES REQUIRED HERE ==============================
   !===========================================================================
@@ -423,6 +428,10 @@
       qv_slice(1,1:nzt) = qv(i,j,k:nzm)
       qcl_slice(1,1:nzt) = qcl(i,j,k:nzm)
       qci_slice(1,1:nzt) = qci(i,j,k:nzm)
+#if defined (MICROP3)
+      liquidRe(1,1:nzt) = ReC_p3(i,j,k:nzm)*1.e6
+      iceRe(1,1:nzt) = ReI_p3(i,j,k:nzm)*1.e6
+#endif
       tg_slice(1) = sstxy(i,j)
       albedo_slice(1) = albdo(i,j)
       o3_slice(1:nzt) = o3(i,j,k:nzm)
@@ -468,11 +477,7 @@
            swHeatingRateClearSky, &
            lwHeatingRate, &
            lwHeatingRateClearSky, &
-           coszrs, &
-#if defined (MICROP3)
-           i,j, & ! i and j index for puuting ReC and ReI
-#endif
-           LWP, IWP, liquidRe, iceRe )
+           coszrs, LWP, IWP, liquidRe, iceRe )
 
 !------------------------------------------------------------------------------
 

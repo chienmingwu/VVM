@@ -260,5 +260,4 @@ PROGRAM ldmain
     CALL PETSCFINALIZE(mpierr)
 !-----------------------------------------------------------------------
 
-    STOP 100
 END PROGRAM ldmain

@@ -1,10 +1,3 @@
-# 1 "/IFS/nwpr/gfs/xb136/VVM/DATA/taiwanvvmL_20201124test/CODE/nc2fortranBinary.F"
-# 1 "<built-in>"
-# 1 "<command-line>"
-# 31 "<command-line>"
-# 1 "/usr/include/stdc-predef.h" 1 3 4
-# 32 "<command-line>" 2
-# 1 "/IFS/nwpr/gfs/xb136/VVM/DATA/taiwanvvmL_20201124test/CODE/nc2fortranBinary.F"
       program nc2fortranBinary
       USE kinds
       USE parmsld
@@ -46,7 +39,7 @@
       LOGICAL NOTURB,NOSFX,BUOY
       INTEGER NSFLUX,NP,NOTHERM
 
-      INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT
+      INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT,KK,KT,KT1
 
 
       REAL alb(MI_glob,MJ_glob), grf(MI_glob,MJ_glob),
@@ -59,7 +52,7 @@
      1 soil_s(nx,ny),xt_s(nx),yt_s(ny)   
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
-      REAL*8 ZZ(NK3), ZT(NK3)
+      REAL*8 ZZ(NK3), ZT(NK3), FNZ(NK3), FNT(NK3)
 
       REAL (KIND=int_kind) HX(MI_GLOB,MJ_GLOB), height(MI_GLOB,MJ_GLOB),
      1 mask(MI_GLOB,MJ_GLOB,NK2)
@@ -74,16 +67,61 @@
       READ (15, INPUT3)
       CLOSE(15)
 
-! DOMAIN = 15000.
-!
-! CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
-! CZ1 = 1. - CZ2 * DOMAIN
-!
+      DOMAIN = 15000.
+
+      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
+      CZ1 = 1. - CZ2 * DOMAIN
+
 ! DZTMP = MIN(DZ,DZ1)
       Zz(1) = ZB
-      DO 50 K = 2, NK3
-      Zz(K) = Zz(K-1) + DZ1
+      ZT(1) = ZZ(1)
+      Zz(2) = ZZ(1) + DZ
+      ZT(2) = ZZ(1) + 0.5*DZ
+      DO 50 K = 3, NK3
+      Zz(K) = Zz(K-1) + DZ
+      ZT(K) = ZT(K-1) + DZ
    50 CONTINUE
+
+      DO 411 K = 1, NK3
+      FNZ(K) = 1. / ( CZ1 + 2. * CZ2 * ZZ(K) )
+      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
+  411 CONTINUE
+
+      KT = INT((1-CZ1)/CZ2/2/DZ)
+      KT1 = INT(ZZ(KT)/DZ1+0.999)
+
+      PRINT*,KT,KT1,ZZ(KT)
+
+      ZZ(1) = ZB
+      FNZ(1) = DZ/DZ1
+
+      DO 412 K = 2,KT1-1
+      DO 413 KK = NK3,K+1,-1
+      FNZ(KK) = FNZ(KK-1)
+      ZZ(KK) = ZZ(KK-1) + DZ1
+  413 CONTINUE
+      FNZ(K) = DZ/DZ1
+      ZZ(K) = ZZ(K-1) + DZ1
+  412 CONTINUE
+
+      DO 414 K = 1, NK3
+      FNT(K) = 1. / ( CZ1 + 2. * CZ2 * ZT(K) )
+      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
+  414 CONTINUE
+
+      ZT(1) = ZB
+      FNT(1) = DZ/DZ1
+      ZT(2) = ZZ(1) + DZ1/2
+      FNT(2) = DZ/DZ1
+      DO 415 K = 3,KT1
+      DO 416 KK = NK3,K+1,-1
+      FNT(KK) = FNT(KK-1)
+      ZT(KK) = ZT(KK-1) +DZ1
+  416 CONTINUE
+      FNT(K) = DZ/DZ1
+      ZT(K) = ZT(K-1) + DZ1
+  415 CONTINUE
+      FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
 
 ! import INPUT FILE
       IF (TWTOPO) THEN

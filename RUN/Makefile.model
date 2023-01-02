@@ -92,6 +92,19 @@ SRC_FREE_LSM = \
 #==========================================
 
 SRC_FREE_RAD_RRTM = \
+	rrtmg_sw_setcoef.f90 \
+	rrtmg_sw_read_nc.f90 \
+	rrtmg_sw_cldprmc.f90 \
+	rrtmg_sw_cldprop.f90 \
+	rrtmg_sw_init.f90 \
+	rrtmg_sw_reftra.f90 \
+	rrtmg_sw_taumol.f90 \
+	rrtmg_sw_vrtqdr.f90 \
+	rrtmg_sw_spcvmc.f90 \
+	rrtmg_sw_spcvrt.f90 \
+	rrtmg_sw_rad.f90 \
+
+SRC_FREE_RAD_RRTM_OPT = \
 	parkind.f90 \
 	parrrtm.f90 \
 	rrlw_cld.f90 \
@@ -150,17 +163,6 @@ SRC_FREE_RAD_RRTM = \
 	rrsw_tbl.f90 \
 	rrsw_vsn.f90 \
 	rrsw_wvn.f90 \
-	rrtmg_sw_setcoef.f90 \
-	rrtmg_sw_read_nc.f90 \
-	rrtmg_sw_cldprmc.f90 \
-	rrtmg_sw_cldprop.f90 \
-	rrtmg_sw_init.f90 \
-	rrtmg_sw_reftra.f90 \
-	rrtmg_sw_taumol.f90 \
-	rrtmg_sw_vrtqdr.f90 \
-	rrtmg_sw_spcvmc.f90 \
-	rrtmg_sw_spcvrt.f90 \
-	rrtmg_sw_rad.f90 \
 	shr_kind_mod.f90 \
 	shr_orb_mod.f90 \
 	cam_rad_parameterizations.f90 \
@@ -169,6 +171,7 @@ SRC_FREE_RAD_RRTM = \
 	rad.f90 \
 	rad_driver.f90 \
 	rad_full.f90 
+	
 
 SRC_FREE_RRTMG = \
 	kinds.F \
@@ -236,8 +239,10 @@ NOCHECK = petsc_vvm_solver.F
 
 
 ####hchun###
-SRC_FREE = $(SRC_FREE_RAD_RRTM) $(SRC_FREE_RRTMG) $(SRC_FREE_CDECKS)  $(SRC_FREE_CODE) $(SRC_FREE_LSM)
+SRC_FREE = $(SRC_FREE_CDECKS) $(SRC_FREE_RRTMG) $(SRC_FREE_CODE) $(SRC_FREE_LSM) $(SRC_FREE_RAD_RRTM_OPT)
 ############
+
+SRC_OPT0 = $(SRC_FREE_RAD_RRTM)
 
 SRC_FIXED = $(SRC_FIXED_CODE)
 

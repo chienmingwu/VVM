@@ -48,7 +48,7 @@ CONTAINS
       KT = INT((1-CZ1)/CZ2/2/DZ)
       KT1 = INT(ZZ(KT)/DZ1+0.999)
 
-      PRINT*,KT,KT1,ZZ(KT)
+      !PRINT*,KT,KT1,ZZ(KT)
 
       ZZ(1) = ZB
       FNZ(1) = DZ/DZ1

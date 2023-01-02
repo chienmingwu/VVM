@@ -59,67 +59,43 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
-      integer nu1, nt1, k1, k2, it
+      CHARACTER (60) FILENAME
+
+      integer nu1, nt1, nq1, k1, k2, it
       logical lf
-
+      DATA NU1/6/,NT1/6/,NQ1/6/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
-                             es1, alphaw, pbarmb,THVAVG
+                             es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3),UG(NK3),VG(NK3),qv1(NK3),qc1(NK3),p1(NK3)
-      REAL (KIND=dbl_kind) :: Q1OBS(NK3),Q2OBS(NK3),wls1(NK3)
-      REAL (KIND=real_kind) ::  RHO_s(NK3),RHOZ_s(NK2),THBAR_s(NK3),  &
-             QVBAR_s(NK3),PBAR_s(NK3),PIBAR_s(NK3)
+          ,QCBAR(NK3),QVSBAR(NK3)
+      REAL (KIND=dbl_kind) :: ZT1(6),PI1(6),TV1(6),PILOG1(6)
+      REAL (KIND=dbl_kind) :: PQ1(6),P1(6),T1(6),QV1(6),QC1(6)
+      REAL (KIND=dbl_kind) ::  PU1(6),WIND(6),DEG(6),U1(6),V1(6)
+      DATA P1/1021.,905.,720.,600.,490.,285./
+      DATA T1/295.,295.,310.5,310.5,325.,340./
+      DATA QV1/12.,12.,2.5,2.5,0.,0./
+      DATA QC1/6*0./
+      DATA PU1/1021.,905.,800.,285.,250.,200./
+      DATA U1/-7.5,-7.5,0.,10.,10.,10./
+      DATA V1/-7.5,-7.5,0.,0.,0.,0./
 
+      REAL (KIND=dbl_kind) ::  Q1OBS(6),Q2OBS(6)
+      !DATA WIND/8.,19.,31.,31.,15*12./
+      !DATA DEG/140.,140.,140.,140.,15*275./
+      ! DATA DEG/110.,110.,110.,110.,15*275./
+      !DATA DEG/80.,80.,80.,100.,15*275./
+      !DATA DEG/50.,50.,50.,100.,15*275./
+      !DATA DEG/20.,20.,20.,100.,15*275./
+      CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, &
+                        tracer_file
 
-      CHARACTER(len=8) :: dateStr = '20201124'
-      CHARACTER(len=5) :: stno = '47918'
-      !CHARACTER(len=5) :: stno = '46692'
-      CHARACTER(len=80) :: fname
-      LOGICAL(kind=2) :: noWind = .FALSE.
-      CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file,topo_file
+      PQ1=P1
+      T1=T1*(p1/1000.)**(287./1004.)
+      QV1=QV1*1E-3
+      Q1OBS=0.
+      Q2OBS=0.
 
-!     get data from dat file
-      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.ideal.txt'
-      if (my_task==0) write(*,*) "fname:", trim(fname) 
-!      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NK3*dbl_kind)
-!      read(88,rec=1) UG(:)
-!      read(88,rec=2) VG(:)
-!      read(88,rec=3) T(:)
-!      read(88,rec=4) qv1(:)
-!      read(88,rec=5) p1(:)
-!      close(88)
-!      print *, 'read data in u:',UG(1),UG(NK3)
-!      print *, 'read data in v:',VG(1),VG(NK3)
-!      print *, 'read data in t:',T(1),T(NK3)
-!      print *, 'read data in qv:',qv1(1),qv1(NK3)
-!      print *, 'read data in p:',p1(1),p1(NK3)
-
-      open(unit=88,file=fname,form='formatted',status='old')
-      DO i = 1, NK3
-      READ(88, 20000) P1(i), T(i), UG(i), VG(i), QV1(i), QC1(i)
-      QV1(i) = QV1(i)/1000.
-      QC1(i) = QC1(i)/100000.
-      T(i) = T(i) + 273.15
-      P1(i) = P1(i)*0.01
-      ENDDO
-      close(88)
-      20000 format(6F11.2)
-      
-
-      if (noWind) then
-        do k=1,NK3
-          UG(k)=0.
-          VG(k)=0.
-        enddo
-      end if
-
-      wls1=0.
-
-      do k=1,NK3
-        QVBAR(k)=qv1(k)/1000.
-        PBAR(k)=p1(k)*100.0
-      enddo
-
+      !print *, t1
       casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
@@ -132,49 +108,124 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T(1)
+      SST = T1(1)
       PSFC = p1(1)
 
-      RBCP = RGAS / CP
-      PZERO=PZERO*100.0
-      PSFC=PSFC*100.0
+      DO 100 K = 1, NT1
+      T1(K) =  T1(K)
+      QV1(K)= QV1(K)
+  100 CONTINUE
 
-      DO 110 K = 1, NK3
-      PIBAR(K) = ( PBAR(K) / PZERO ) ** RBCP
+      RBCP = RGAS / CP
+      DO 110 K = 1, NT1
+      PI1(K) = ( P1(K) / PZERO ) ** RBCP
   110 CONTINUE
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
-      DO 120 K = 1, NK3
-      !T8  = T(K)
-      !P8  = PBAR(K)*0.01
-      !QV8 = QVBAR(K)
-      !QC8 = 0.D0
-      !QI8 = 0.D0
-      !if (my_task .eq. 0) print*, T8,P8,QV8,K
-      !CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      !QVBAR(K) = QV8
-      !QCBAR(K) = 0.
-      QVBAR(K) = QV1(K)
-      QCBAR(K) = QC1(K)
+      DO 120 K = 1, NT1
+      T8  = T1(K)
+      P8  = P1(K)
+      QV8 = QV1(K)
+      QC8 = QC1(K)
+      QI8 = 0.D0
+      if (my_task .eq. 0) print*, T8,P8,QV8,K
+      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+      QV1(K) = QV8
+      QC1(K) = QC8
   120 CONTINUE
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
 !     UNITS ARE T : DEG K, QV : G/G.
 
-      DO 130 K = 1, NK3
-      PILOG(K) = LOG ( PIBAR(K) )
-      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) - QCBAR(K) )
+      DO 130 K = 1, NT1
+      PILOG1(K) = LOG ( PI1(K) )
+      TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
   130 CONTINUE
+
+      ZT1(1) = Zz(1)
+
+      DO 140 K = 2, NT1
+      ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
+              *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
+  140 CONTINUE
+!     LOCATE J = 1 T-LEVEL AT ZW(1).
+
+      ZT(1)    = Zz(1)
+      T(1)     = T1(1)
+      QVBAR(1) = QV1(1)
+      QCBAR(1) = QC1(1)
+
+!     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
+!     FOR K = 2, NK3
+
+      DO 150 K = 2, NK3
+      K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
+      K2 = K1 + 1
+      T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
+      QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
+      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
+  150 CONTINUE
+
+      if (my_task==0) then
+        print *, 'initial profile'
+        print *, t
+        print *, qvbar
+      endif
+
+
+!     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
+
+      GDZBCP = 2. * GRAV * DZ / CP
+      CPBR = CP / RGAS
+      RBCP = 1. / CPBR
+
+!     CONVERT PRESSURES TO PASCALS
+
+      PSFC  = PSFC * 100.
+      PZERO = PZERO * 100.
+
+      PISFC = ( PSFC / PZERO ) ** RBCP
+
+      PBAR(1)  = PSFC
+      PIBAR(1) = PISFC
+      PILOG(1) = LOG ( PIBAR(1) )
+
+      DO 160 IT = 1, 3
+
+      DO 162 K = 1, NK3
+      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) )
+  162 CONTINUE
+
+      PILOG(2)=PILOG(1)-GDZBCP/(TV(1)+TV(2))     &
+              *(ZT(2)-Zz(1))/DZ
+      DO 164 K = 3, NK3
+      PILOG(K)=PILOG(K-1)-GDZBCP/(TV(K-1)+TV(K))/FNZ(K-1)
+  164 CONTINUE
+
+      DO 166 K = 2, NK3
+      PIBAR(K)= EXP ( PILOG(K) )
+      PBAR(K) = PZERO * PIBAR(K) ** CPBR
+  166 CONTINUE
 
 !     ADJUST T, QVBAR AND QCBAR.
 
       DO 168 K = 1, NK3
+      T8 = T(K)
+      P8 = PBAR(K) * 0.01
+      QV8 = QVBAR(K)
+      QC8 = QCBAR(K)
+      QI8 = 0.D0
+      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+      QVBAR(K) = QV8
+      QCBAR(K) = QC8
       ES1 = ES ( T(K) )
       QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
       THBAR(K) = T(K) / PIBAR(K)
       H(K) = QVBAR(K) / QVSBAR(K)
   168 CONTINUE
+
+  160 CONTINUE
 
       IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
 
@@ -479,7 +530,7 @@ CONTAINS
       TG_restart: IF (.false.)THEN
 
       tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
-                 uras_landsea_1800.C.Surface-000192.nc"
+                &uras_landsea_1800.C.Surface-000192.nc"
       topo_file = "TOPO.nc"
 
       call SST_RESTART(tg_file,topo_file)

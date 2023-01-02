@@ -26,9 +26,6 @@
       use shr_orb_mod, only: shr_orb_params
       use cam_rad_parameterizations, only : &
            computeRe_Liquid, computeRe_Ice &
-#if defined (MICROP3)
-           , ReC_p3, ReI_p3 &
-#endif
            , albedo
       use parkind, only : kind_rb   ! RRTM expects reals with this kind parameter 
                                     ! (8 byte reals) 
@@ -145,9 +142,6 @@
                                  lwHeatingRate, &
                                  lwHeatingRateClearSky, &
                                  coszrs, &
-#if defined (MICROP3)
-                                 x_p3,y_p3, &
-#endif
                                  LWP, IWP, liquidRe, iceRe)
 
 ! Astronomy module, for computing solar zenith angle
@@ -170,10 +164,6 @@
       integer, intent(in) :: &
           nx, &    ! number of columns for which radiation will be computed
           nzm, &   ! number of model levels in each column.
-#if defined (MICROP3)
-          x_p3, &
-          y_p3, &
-#endif
           lat      ! index of coordinate in y-direction (from 1 to ny).
       
       logical, intent(in) :: &
@@ -390,27 +380,25 @@
 !   where LWP>0 but IWP==0.
 
     cloudFrac(:, :) = 0.
+
+#if defined (MICROP3)
+    where(LWP(:, :) > 0.)
+      liquidRe(:, :) = MAX(2.5, MIN(60., liquidRe(:, :)))
+      cloudFrac(:, :) = 1.
+    else where
+      liquidRe(:, :) = 0.
+    end where
+
+    where(IWP(:, :) > 0.)
+      iceRe(:, :) = MAX(5., MIN(140., iceRe(:, :)))
+      cloudFrac(:, :) = 1.
+    else where
+      iceRe(:, :) = 0.
+    end where
+#else
     liquidRe(:, :) = 0.
     iceRe(:, :) = 0.
 
-#if defined (MICROP3)
-    where(LWP(1, 1:nzm) > 0.)
-      liquidRe(1, 1:nzm) = MAX(2.5, MIN(60., ReC_p3(x_p3,y_p3,1:nzm)*1e+6))
-      cloudFrac(1, 1:nzm) = 1.
-    end where
-
-    where(IWP(1, 1:nzm) > 0.)
-      iceRe(1, 1:nzm) = MAX(5., MIN(140., ReI_p3(x_p3,y_p3,1:nzm)*1e+6))
-      cloudFrac(1, 1:nzm) = 1.
-    end where
-   
-    !if (my_task == 0.) then
-    !  write(*,*) "in rad"
-    !  do k=1,nzm
-    !    if (liquidRe(1,k)>50.) write(*,*) k, LWP(1,k), liquidRe(1,k), ReC_p3(x_p3,y_p3,k)
-    !  enddo
-    !endif
-#else
     where(LWP(:, :) > 0.)
       liquidRe(:, :) = computeRe_Liquid(real(layerT), merge(0., 1., ocean))
       cloudFrac(:, :) = 1. 
@@ -520,7 +508,7 @@
         call shr_orb_decl (dayForSW, eccen, mvelpp, lambm0, obliqr, delta, eccf)
         solarZenithAngleCos(:) =  &
              zenith(dayForSW, pi * latitude(:)/180., pi * longitude(:)/180.)
-        if (my_task==0) write(*,'(A,4F10.4)') "sw:",solarZenithAngleCos(:), dayForSW, longitude(:),latitude(:)
+        !if (my_task==0) write(*,'(A,4F10.4)') "sw:", eccf, delta, eccen
 
       end if
 

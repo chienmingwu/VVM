@@ -83,10 +83,10 @@ CONTAINS
   CASE DEFAULT
 ! TWP-ICE comparison study (16Z 20160617)
       iyear0 = 2020
-      imonth0 = 6
+      imonth0 = 12
       iday0 = 24
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 4.0
+      hour0 = 22.0
   END SELECT 
 
 !  Get Julian day

@@ -93,6 +93,7 @@ SRC_FREE_F	= $(filter %.F,$(SRC_FREE))
 SRC_FREE_F90  = $(filter %.F90,$(SRC_FREE))
 SRC_FREE_f90  = $(filter %.f90,$(SRC_FREE))
 SRC_FREE_NCH	= $(filter %.F,$(NOCHECK))
+SRC_FREE_OPT0	= $(filter %.f90,$(SRC_OPT0))
 #SRC_FREE_f = $(SRC_FREE_F) $(SRC_FREE_F90) $(SRC_FREE_f90)
 #SRC_FIXED_F	= $(SRC_FIXED:.F=.$(SUF))
 
@@ -101,6 +102,7 @@ SRC_FREE_NCH	= $(filter %.F,$(NOCHECK))
 #-----------------------------------------------------------------------------
 OBJS_FREE_F	= $(SRC_FREE_F:.F=.o)
 OBJS_FREE_NCH	= $(SRC_FREE_NCH:.F=.o)
+OBJS_FREE_OPT0	= $(SRC_FREE_OPT0:.f90=.o)
 OBJS_FREE_F90    = $(SRC_FREE_F90:.F90=.o)
 OBJS_FREE_f90    = $(SRC_FREE_f90:.f90=.o)
 OBJS_FIXED	= $(SRC_FIXED:.F=.o)
@@ -112,6 +114,7 @@ OBJS		= $(OBJ_FREE*) $(OBJ_FIXED)
 
 $(OBJS_FREE_F)	: FORM = $(FREE)
 $(OBJS_FREE_NCH)	: FORM = $(FREE)
+$(OBJS_FREE_OPT0)	: FORM = $(FREE)
 $(OBJS_FREE_F90)	: FORM = $(FREE)
 $(OBJS_FREE_f90)	: FORM = $(FREE)
 $(OBJS_FIXED)	: FORM = $(FIXED)
@@ -141,6 +144,9 @@ $(OBJS_FREE_F) : %.o: %.F
 $(OBJS_FREE_NCH) : %.o: %.F 
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
 	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
+$(OBJS_FREE_OPT0) : %.o: %.f90 
+	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
+	$(FC) -O0 -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 $(OBJS_FREE_F90) : %.o: %.F90 
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
 	$(FC) -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
@@ -151,7 +157,7 @@ $(OBJS_FREE_f90) : %.o: %.f90
 #-----------------------------------------------------------------------------
 # Define the rule(s) for building the executable code
 #-----------------------------------------------------------------------------
-$(MAIN): $(OBJS_FREE_F90) $(OBJS_FREE_f90) $(OBJS_FREE_F) $(OBJS_FREE_NCH) $(OBJS_FIXED)
+$(MAIN): $(OBJS_FREE_F90) $(OBJS_FREE_f90) $(OBJS_FREE_F) $(OBJS_FREE_NCH) $(OBJS_FREE_OPT0) $(OBJS_FIXED)
 	$(LD) $(LDFLAGS) $^ -o $@ $(LDLIBS) 
 
 #-----------------------------------------------------------------------------
