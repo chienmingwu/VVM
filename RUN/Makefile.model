@@ -92,19 +92,19 @@ SRC_FREE_LSM = \
 #==========================================
 
 SRC_FREE_RAD_RRTM = \
+	rrtmg_sw_init.f90 \
 	rrtmg_sw_setcoef.f90 \
-	rrtmg_sw_read_nc.f90 \
 	rrtmg_sw_cldprmc.f90 \
 	rrtmg_sw_cldprop.f90 \
-	rrtmg_sw_init.f90 \
-	rrtmg_sw_reftra.f90 \
-	rrtmg_sw_taumol.f90 \
-	rrtmg_sw_vrtqdr.f90 \
-	rrtmg_sw_spcvmc.f90 \
 	rrtmg_sw_spcvrt.f90 \
 	rrtmg_sw_rad.f90 \
 
 SRC_FREE_RAD_RRTM_OPT = \
+	rrtmg_sw_read_nc.f90 \
+	rrtmg_sw_vrtqdr.f90 \
+	rrtmg_sw_reftra.f90 \
+	rrtmg_sw_taumol.f90 \
+	rrtmg_sw_spcvmc.f90 \
 	parkind.f90 \
 	parrrtm.f90 \
 	rrlw_cld.f90 \
