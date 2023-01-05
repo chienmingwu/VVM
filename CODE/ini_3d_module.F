@@ -101,7 +101,7 @@ CONTAINS
       DO i = 1, 6
       READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i)
       QV1(i) = QV1(i)
-      T(i) = T(i) + 273.15
+      T1(i) = T1(i) + 273.15
       ENDDO
       close(88)
       20000 format(6F11.2)
