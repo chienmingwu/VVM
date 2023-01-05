@@ -299,6 +299,13 @@ CONTAINS
   212 CONTINUE
 #endif
 
+      DO 220 K = 2, NK2
+      PBARMB = PBAR(K) * 0.01
+      K1 = INDEXR(PBARMB,NU1,PU1,LF)
+      K2 = K1 + 1
+      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
+      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
+  220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)

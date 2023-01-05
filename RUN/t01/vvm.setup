@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = taiwanvvmL_20201124_opt3_test
+set expname = taiwanvvmL_20201124_new
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -84,10 +84,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/2048/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/2048/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/60/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
