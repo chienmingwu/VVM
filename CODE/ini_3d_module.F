@@ -88,6 +88,24 @@ CONTAINS
       !DATA DEG/20.,20.,20.,100.,15*275./
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, &
                         tracer_file
+      CHARACTER(len=8) :: dateStr = '20160107'
+      CHARACTER(len=5) :: stno = '47918'
+      !CHARACTER(len=5) :: stno = '46692'
+      CHARACTER(len=80) :: fname
+
+      
+      ! Read ideal sounding (RAW) from file
+      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.RAW.txt'
+
+      open(unit=88,file=fname,form='formatted',status='old')
+      DO i = 1, 6
+      READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i)
+      QV1(i) = QV1(i)
+      T(i) = T(i) + 273.15
+      ENDDO
+      close(88)
+      20000 format(6F11.2)
+
 
       PQ1=P1
       T1=T1*(p1/1000.)**(287./1004.)
