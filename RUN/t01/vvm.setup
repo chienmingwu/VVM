@@ -55,6 +55,7 @@ cp ${vvmdir}/CODE/make_ctl.sh .
 cp ${vvmdir}/RUNDATA/fort.91 fort.91
 cp ${vvmdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 cp ${vvmdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+cp ${vvmdir}/RUNDATA/topolsm_TW.nc RUNDATA/topolsm_TW.nc
 
 # for NOAH LSM
 cp -r ${vvmdir}/RUNDATA/LSM RUNDATA/LSM

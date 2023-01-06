@@ -48,8 +48,9 @@
      1 slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
 
       REAL alb_s(nx,ny), grf_s(nx,ny),hgt_s(nx,ny),lai_s(nx,ny),
-     1 lu_s(nx,ny),shdmax_s(nx,ny),shdmin_s(nx,ny),slope_s(nx,ny),
-     1 soil_s(nx,ny),xt_s(nx),yt_s(ny)   
+     1 shdmax_s(nx,ny),shdmin_s(nx,ny),xt_s(nx),yt_s(ny)   
+
+      integer lu_s(nx,ny),slope_s(nx,ny),soil_s(nx,ny)
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
       REAL*8 ZZ(NK3), ZT(NK3), FNZ(NK3), FNT(NK3)
@@ -219,49 +220,74 @@ C TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
-      OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
-      READ(15,*) xt_s
-      CLOSE(15)
-      OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
-      READ(15,*) yt_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
+      !READ(15,*) xt_s
+      !CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
+      !READ(15,*) yt_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
-      READ(15,*) alb_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
+      !READ(15,*) alb_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
-      READ(15,*) grf_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
+      !READ(15,*) grf_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
-      READ(15,*) hgt_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
+      !READ(15,*) hgt_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
-      READ(15,*) lai_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
+      !READ(15,*) lai_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
-      READ(15,*) lu_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
+      !READ(15,*) lu_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
-      READ(15,*) shdmax_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
+      !READ(15,*) shdmax_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
-      READ(15,*) shdmin_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
+      !READ(15,*) shdmin_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
-      READ(15,*) slope_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
+      !READ(15,*) slope_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
-      READ(15,*) soil_s
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
+      !READ(15,*) soil_s
+      !CLOSE(15)
 
+
+      ierr = nf_open("./RUNDATA/topolsm_TW.nc", NF_NOWRITE, ncid)
+      ierr = nf_inq_varid(ncid, 'lat', nvarid)
+      ierr = nf_get_var(ncid, nvarid, yt_s)
+      ierr = nf_inq_varid(ncid, 'lon', nvarid)
+      ierr = nf_get_var(ncid, nvarid, xt_s)
+      ierr = nf_inq_varid(ncid, 'height', nvarid)
+      ierr = nf_get_var(ncid, nvarid, hgt_s)
+      ierr = nf_inq_varid(ncid, 'lu', nvarid)
+      ierr = nf_get_var(ncid, nvarid, lu_s)
+      ierr = nf_inq_varid(ncid, 'gvf', nvarid)
+      ierr = nf_get_var(ncid, nvarid, grf_s)
+      ierr = nf_inq_varid(ncid, 'albedo', nvarid)
+      ierr = nf_get_var(ncid, nvarid, alb_s)
+      ierr = nf_inq_varid(ncid, 'lai', nvarid)
+      ierr = nf_get_var(ncid, nvarid, lai_s)
+      ierr = nf_inq_varid(ncid, 'shdmax', nvarid)
+      ierr = nf_get_var(ncid, nvarid, shdmax_s)
+      ierr = nf_inq_varid(ncid, 'shdmin', nvarid)
+      ierr = nf_get_var(ncid, nvarid, shdmin_s)
+      ierr = nf_inq_varid(ncid, 'slope', nvarid)
+      ierr = nf_get_var(ncid, nvarid, slope_s)
+      ierr = nf_inq_varid(ncid, 'soil', nvarid)
+      ierr = nf_get_var(ncid, nvarid, soil_s)
+      ierr = nf_close(ncid)
 
 
       DO J=1,MJ_GLOB
@@ -421,30 +447,30 @@ C TMP = MAX(TMP,DATA(IP,JP))
 !=====
 
 
-      DO 900 JP = 1,nsbdm_y
-      JI = (JP-1)*MJ1+1
-      JE = (JP)*MJ1
-      DO 900 IP = 1,nsbdm_x
-      II = (IP-1)*MI1+1
-      IE = (IP)*MI1
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)')
-     1 'RUNDATA/TOPO',IP,'_',JP,'.dat'
-      OPEN(unit=16,file=FILENAME,form='unformatted')
-      WRITE(16) ((DBLE(HX(I,J)),I=II,IE),J=JI,JE)
-      CLOSE(16)
-      WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)')
-     1 'RUNDATA/LSM',IP,'_',JP,'.dat'
-      OPEN(unit=16,file=FILENAME,form='unformatted')
-      WRITE(16) (((alb(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((grf(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((lai(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((INT(lu(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((shdmax(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((shdmin(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((INT(slope(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((INT(soil(I,J)),I=II,IE),J=JI,JE)
-      CLOSE(16)
-  900 CONTINUE
+!      DO 900 JP = 1,nsbdm_y
+!      JI = (JP-1)*MJ1+1
+!      JE = (JP)*MJ1
+!      DO 900 IP = 1,nsbdm_x
+!      II = (IP-1)*MI1+1
+!      IE = (IP)*MI1
+!      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)')
+!     1 'RUNDATA/TOPO',IP,'_',JP,'.dat'
+!      OPEN(unit=16,file=FILENAME,form='unformatted')
+!      WRITE(16) ((DBLE(HX(I,J)),I=II,IE),J=JI,JE)
+!      CLOSE(16)
+!      WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)')
+!     1 'RUNDATA/LSM',IP,'_',JP,'.dat'
+!      OPEN(unit=16,file=FILENAME,form='unformatted')
+!      WRITE(16) (((alb(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) (((grf(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) (((lai(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) ((INT(lu(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) (((shdmax(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) (((shdmin(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) ((INT(slope(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) ((INT(soil(I,J)),I=II,IE),J=JI,JE)
+!      CLOSE(16)
+!  900 CONTINUE
 
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
