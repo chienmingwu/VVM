@@ -112,18 +112,20 @@ cat INPUT
 cd ${expdir}'/compile_code'
 make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
 
-## make for topography
-make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
-cd ${expdir}
-# use pjsub to generate topo file on CWB fx1000
-#./nc2fortranBinary > topo.log
-pjsub -L "node=1" -L "elapse=00:10:00" -L "rscgrp=debug" -N topo ./nc2fortranBinary
-unset echo 
-echo '###################################################################'
-echo '###################################################################'
-echo '### Please execute vvm.run after the job topo has been finished ###'
-echo '###################################################################'
-echo '###################################################################'
+### make for topography
+#make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
+#cd ${expdir}
+## use pjsub to generate topo file on CWB fx1000
+##./nc2fortranBinary > topo.log
+#pjsub -L "node=1" -L "elapse=00:10:00" -L "rscgrp=debug" -N topo ./nc2fortranBinary
+#unset echo 
+#echo '###################################################################'
+#echo '###################################################################'
+#echo '### Please execute vvm.run after the job topo has been finished ###'
+#echo '###################################################################'
+#echo '###################################################################'
+
+make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile newtopo
 
 exit
 

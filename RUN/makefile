@@ -177,4 +177,15 @@ topography :
 	${FC} -c $(FFLAGS) $(FREE) PARMSLD.f 
 	${CPP} -p ${CODEDIR}/nc2fortranBinary.F > nc2fortranBinary.f $(FFLAGS)
 	${FC} -c $(FFLAGS) nc2fortranBinary.f 
-	${FC} -o $(EXPDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o $(LDLIBS) 
+	${FC} -o $(EXPDIR)/nc2fortranBinary nc2fortranBinary.o PARMSLD.o kinds.o $(LDLIBS)
+
+newtopo : $(TOPO)
+
+TOPOOBJT = $(TOPODEP:.F=.o)
+TOPOOBJ = $(TOPOOBJT:.F90=.o)
+$(TOPO): $(TOPOOBJ)
+	$(LD) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+
+
+	
+		

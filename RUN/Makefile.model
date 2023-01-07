@@ -35,7 +35,8 @@ NAME = vvm
 BINDIR	= ../../DATA/${CASENAME}
 
 MAIN = $(EXPDIR)/$(NAME)
-.PHONY: all
+TOPO = $(EXPDIR)/create_topolsm
+.PHONY: all clean topography newtopo
 all : $(MAIN)
 
 #-----------------------------------------------------------------------------
@@ -237,9 +238,12 @@ SRC_FREE_CODE = \
 
 NOCHECK = petsc_vvm_solver.F
 
+# Der (7 Jan 2023)
+TOPOCODE = create_topolsm.F 
+TOPODEP = $(TOPOCODE) z_coord.F kinds.F PARMSLD.F90 CONSTLD.F90
 
 ####hchun###
-SRC_FREE = $(SRC_FREE_CDECKS) $(SRC_FREE_RRTMG) $(SRC_FREE_CODE) $(SRC_FREE_LSM) $(SRC_FREE_RAD_RRTM_OPT)
+SRC_FREE = $(SRC_FREE_CDECKS) $(SRC_FREE_RRTMG) $(SRC_FREE_CODE) $(SRC_FREE_LSM) $(SRC_FREE_RAD_RRTM_OPT) $(TOPOCODE)
 ############
 
 SRC_OPT0 = $(SRC_FREE_RAD_RRTM)
@@ -577,3 +581,7 @@ ras_module.o: ras_module.F kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decompos
 
 vertical_adaptive.o: CONST3D.o CONSTLD.o PARMSLD.o kinds.o domain_decomposition.o
 #-----------------------------------------------------------------------------
+# Der (7 Jan 2023)
+create_topolsm.o: CONSTLD.o PARMSLD.o kinds.o z_coord.o
+
+
