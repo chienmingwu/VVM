@@ -88,7 +88,7 @@
 
 !==================================================================================================!
 
- subroutine p3_init(lookup_file_dir,nCat,model,stat)
+ subroutine p3_init(lookup_file_dir,nCat,model,my_task,stat)
 
 !------------------------------------------------------------------------------------------!
 ! This subroutine initializes all physical constants and parameters needed by the P3       !
@@ -101,6 +101,7 @@
 ! Passed arguments:
  character*(*), intent(in)            :: lookup_file_dir            !directory of the lookup tables
  integer,       intent(in)            :: nCat                       !number of free ice categories
+ integer,       intent(in)            :: my_task                    !CPU rank
  integer,       intent(out), optional :: stat                       !return status of subprogram
  character(len=*), intent(in)         :: model                      !driving model
 
@@ -272,10 +273,12 @@
 !------------------------------------------------------------------------------------------!
 ! read in ice microphysics table
 
+ if (my_task==0) then
  print*
  print*, ' P3 microphysics: v',version_p3
  print*, '   P3_INIT (reading/creating look-up tables [v',trim(version_intended_table_1), &
          ', v',trim(version_intended_table_2),']) ...'
+ endif
 
  open(unit=951,file=lookup_file_1, status='old')
 
@@ -501,8 +504,10 @@
 
 !.......................................................................
 
+ if (my_task==0) then
  print*, '   P3_INIT DONE.'
  print*
+ endif
 
  end_status = STATUS_OK
  if (present(stat)) stat = end_status

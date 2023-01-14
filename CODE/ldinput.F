@@ -103,7 +103,7 @@ CONTAINS
       if(my_task == 0) write(6,*) 'ITT=',ITT,'ITTADD=',ITTADD
 
       if(.not.newrun) CALL INI_RESTART_3D (ITT, ittget, restart_found)
-      print *,'restart_found ',restart_found
+      if(my_task == 0) print *,'restart_found ',restart_found
       if(.not.restart_found) newrun = .true.
 
       IF ( NEWRUN ) ITTGET = 0

@@ -160,7 +160,7 @@
 ! Initialize physics related constants and parameters
 #if defined (MICROP3)
       ! initialize for p3 microphysics scheme
-      call p3_init('.',1,trim(model),stat)
+      call p3_init('.',1,trim(model),my_task,stat)
       IF (stat/=0)THEN
       WRITE(*,*) "Fail in P3 initialization"
       STOP

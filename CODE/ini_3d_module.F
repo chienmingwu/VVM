@@ -88,23 +88,23 @@ CONTAINS
       !DATA DEG/20.,20.,20.,100.,15*275./
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, &
                         tracer_file
-      CHARACTER(len=8) :: dateStr = '20160107'
-      CHARACTER(len=5) :: stno = '47918'
-      !CHARACTER(len=5) :: stno = '46692'
-      CHARACTER(len=80) :: fname
+      !CHARACTER(len=8) :: dateStr = '20201124'
+      !CHARACTER(len=5) :: stno = '47918'
+      !!CHARACTER(len=5) :: stno = '46692'
+      !CHARACTER(len=80) :: fname
 
-      
-      ! Read ideal sounding (RAW) from file
-      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.RAW.txt'
+      !
+      !! Read ideal sounding (RAW) from file
+      !fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.RAW.txt'
 
-      open(unit=88,file=fname,form='formatted',status='old')
-      DO i = 1, 6
-      READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i)
-      QV1(i) = QV1(i)
-      T1(i) = T1(i) + 273.15
-      ENDDO
-      close(88)
-      20000 format(6F11.2)
+      !open(unit=88,file=fname,form='formatted',status='old')
+      !DO i = 1, 6
+      !READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i)
+      !QV1(i) = QV1(i)
+      !T1(i) = T1(i) + 273.15
+      !ENDDO
+      !close(88)
+      !20000 format(6F11.2)
 
 
       PQ1=P1
@@ -317,13 +317,13 @@ CONTAINS
   212 CONTINUE
 #endif
 
-      DO 220 K = 2, NK2
-      PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
-      K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-  220 CONTINUE
+!      DO 220 K = 2, NK2
+!      PBARMB = PBAR(K) * 0.01
+!      K1 = INDEXR(PBARMB,NU1,PU1,LF)
+!      K2 = K1 + 1
+!      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
+!      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
+!  220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)
@@ -546,7 +546,7 @@ CONTAINS
       IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
-      albdo = 0.07
+      albdo = 0.19
 #endif    
 #if defined (DIFFUSION)
       call turb_3d_ini
@@ -570,9 +570,10 @@ CONTAINS
       height,L,H,HT,tmp
       integer(kind=int_kind) :: &
       i,j,k,NN,midi,midj
-      real(kind=int_kind) :: &
-      twtopo(mi_glob,mj_glob) 
       character(25) FILENAME
+      ! use for read topo from nc file (Der 14 Jan 2023)
+      integer(kind=int_kind) :: ierr,ncid,varid
+      INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart,readlen
 
       ITYPEU = 1
       ITYPEV = 1
@@ -580,15 +581,23 @@ CONTAINS
 
 #if defined (TOPOGRAPHY) 
 
-!      DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      ! read topo from TOPO.nc (Der 14 Jan 2023)
+      ierr = nfmpi_open(mpi_comm_world,"TOPO.nc",nf_nowrite,mpi_info_null,ncid)
+      IF (ierr/=0) stop "opentopo"
 
-      PRINT*,FILENAME
+      arraystart = (/ NI_SBDM*MI1+1, NJ_SBDM*MJ1+1, 1, 1 /)
+      readlen    = (/ MI1, MJ1, 1, 1 /)
+ 
+      ierr = nfmpi_inq_varid(ncid,'topo',varid)
+      IF (ierr/=0) stop "inqtopo"
+      ierr = nfmpi_get_vara_double_all(ncid,varid,arraystart,readlen,HX(1:MI1,1:MJ1))
+      IF (ierr/=0) stop "readtopo"
+     
+      ierr = nfmpi_close(ncid)
+      IF (ierr/=0) stop "closetopo"
 
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) ((HX(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
+      if (my_task==0) write(*,*) "successfully read topo from TOPO.nc"
+
 
       tmp = maxval(HX)
       CALL MPI_ALLREDUCE(tmp,H,1,MPI_dbl_kind, MPI_MAX, MPI_COMM_WORLD, mpierr)

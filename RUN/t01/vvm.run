@@ -40,10 +40,9 @@ else
   make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
 endif
 
-
 # compile both create_topolsm and vvm
 make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile newtopo
-#make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile -j8
+make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile -j8
 
 # Set walltime to large number instead of marking it if you don't need it.
 sed -e 's/expname.out/'${expname}'.out/g' \

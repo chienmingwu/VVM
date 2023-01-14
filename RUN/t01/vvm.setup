@@ -34,19 +34,6 @@ endif
 mkdir RUNDATA
 mkdir archive
 
-## prepare for compiling code
-#cd ${expdir}
-#if( ! -d ${codedir} ) then
-#  cp -r ${vvmdir}'/CODE' ${codedir}
-#else
-#  rm -rf ${codedir}
-#  cp -r ${vvmdir}'/CODE' ${codedir}
-#endif
-#
-#if( ! -d ${expdir}'/compile_code' ) then
-#  mkdir ${expdir}'/compile_code'
-#endif
-
 # prepare tables for model
 cp ${rundir}/t01/vvm.setup .
 cp ${vvmdir}/CODE/make_ctl.sh .
@@ -113,25 +100,6 @@ cat > INPUT << 'END6'
 'END6'
 cat INPUT
 #-------------------------------------------------------------------
-
-## clean previous compilation
-#cd ${expdir}'/compile_code'
-#make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
-
-### make for topography
-#make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
-#cd ${expdir}
-## use pjsub to generate topo file on CWB fx1000
-##./nc2fortranBinary > topo.log
-#pjsub -L "node=1" -L "elapse=00:10:00" -L "rscgrp=debug" -N topo ./nc2fortranBinary
-#unset echo 
-#echo '###################################################################'
-#echo '###################################################################'
-#echo '### Please execute vvm.run after the job topo has been finished ###'
-#echo '###################################################################'
-#echo '###################################################################'
-
-#make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile newtopo
 
 exit
 

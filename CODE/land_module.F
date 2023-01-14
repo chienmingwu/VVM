@@ -468,7 +468,8 @@ CONTAINS
 
 !-----7---------------------------------------------------------------72
    SUBROUTINE land_ini(hx,tg)
-
+   use pnetcdf
+   USE petscsys
 
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(IN) :: hx
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(INOUT) :: tg
@@ -480,28 +481,65 @@ CONTAINS
       ALBEDOM,GREENFRACM,LAIM,SHDMAX,SHDMIN 
 
    INTEGER (KIND=int_kind):: i,j,itmp,jtmp
+   ! use for read topo from nc file (Der 14 Jan 2023)
+   integer(kind=int_kind) :: ierr,ncid,varid
+   INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart,readlen 
+
    CHARACTER(50):: FILENAME
    INTEGER (KIND=int_kind) :: hxp, hx1
    REAL (KIND=dbl_kind) :: CP,tempim, tempjm, dum1, dum2
 
    CP = 1004.5
 
-! surface pressure
-      WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/LSM',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+   ! read land type (lu), albedo, etc. for Noah LSM from TOPO.nc (Der 14 Jan 2023)
+   ierr = nfmpi_open(mpi_comm_world,"TOPO.nc",nf_nowrite,mpi_info_null,ncid)
+   IF (ierr/=0) stop "opentopo2"
 
-      PRINT*,FILENAME
-      
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) ((ALBEDOM(I,J),I=1,MI1),J=1,MJ1)
-      READ(99) ((GREENFRACM(I,J),I=1,MI1),J=1,MJ1)
-      READ(99) ((LAIM(I,J),I=1,MI1),J=1,MJ1)
-      READ(99) ((LU(I,J),I=1,MI1),J=1,MJ1)
-      READ(99) ((SHDMAX(I,J),I=1,MI1),J=1,MJ1)
-      READ(99) ((SHDMIN(I,J),I=1,MI1),J=1,MJ1)
-      READ(99) ((SLOPE(I,J),I=1,MI1),J=1,MJ1)
-      READ(99) ((SOIL(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
+   arraystart = (/ NI_SBDM*MI1+1, NJ_SBDM*MJ1+1, 1, 1 /)
+   readlen    = (/ MI1, MJ1, 1, 1 /)
+
+   ! integer type
+   ierr = nfmpi_inq_varid(ncid,'lu',varid)
+   IF (ierr/=0) stop "inqlu"
+   ierr = nfmpi_get_vara_int_all(ncid,varid,arraystart,readlen,LU(1:MI1,1:MJ1))
+   IF (ierr/=0) stop "readlu"
+   ierr = nfmpi_inq_varid(ncid,'soil',varid)
+   IF (ierr/=0) stop "inqsoil"
+   ierr = nfmpi_get_vara_int_all(ncid,varid,arraystart,readlen,SOIL(1:MI1,1:MJ1))
+   IF (ierr/=0) stop "readsoil"
+   ierr = nfmpi_inq_varid(ncid,'slope',varid)
+   IF (ierr/=0) stop "inqslope"
+   ierr = nfmpi_get_vara_int_all(ncid,varid,arraystart,readlen,SLOPE(1:MI1,1:MJ1))
+   IF (ierr/=0) stop "readslope"
+
+   ! real type
+   ierr = nfmpi_inq_varid(ncid,'albedo',varid)
+   IF (ierr/=0) stop "inqalbedo"
+   ierr = nfmpi_get_vara_real_all(ncid,varid,arraystart,readlen,ALBEDOM(1:MI1,1:MJ1))
+   IF (ierr/=0) stop "readalbedo"
+   ierr = nfmpi_inq_varid(ncid,'gvf',varid)
+   IF (ierr/=0) stop "inqgvf"
+   ierr = nfmpi_get_vara_real_all(ncid,varid,arraystart,readlen,GREENFRACM(1:MI1,1:MJ1))
+   IF (ierr/=0) stop "readgvf"
+   ierr = nfmpi_inq_varid(ncid,'lai',varid)
+   IF (ierr/=0) stop "inqlai"
+   ierr = nfmpi_get_vara_real_all(ncid,varid,arraystart,readlen,LAIM(1:MI1,1:MJ1))
+   IF (ierr/=0) stop "readlai"
+   ierr = nfmpi_inq_varid(ncid,'shdmax',varid)
+   IF (ierr/=0) stop "inqshdmax"
+   ierr = nfmpi_get_vara_real_all(ncid,varid,arraystart,readlen,SHDMAX(1:MI1,1:MJ1))
+   IF (ierr/=0) stop "readshdmax"
+   ierr = nfmpi_inq_varid(ncid,'shdmin',varid)
+   IF (ierr/=0) stop "inqshdmin"
+   ierr = nfmpi_get_vara_real_all(ncid,varid,arraystart,readlen,SHDMIN(1:MI1,1:MJ1))
+   IF (ierr/=0) stop "readshdmin"
+
+   ierr = nfmpi_close(ncid)
+   IF (ierr/=0) stop "closetopo2"
+
+   if (my_task==0) write(*,*) "successfully read land informations from TOPO.nc"
+
+
 
       DO 100 J = 1,MJ1
       DO 100 I = 1,MI1
