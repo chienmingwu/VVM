@@ -9,7 +9,8 @@ integer :: i,j,k,m,n,o,ii,jj,kk,is,js
 real :: dum1
 real, parameter :: tripi=4.*atan(1.)
 real, dimension(:,:,:), allocatable :: routput,rtemp_tw,r_tw
-integer, dimension(:,:,:), allocatable :: ioutput,mask,itemp_tw,i_tw
+integer, dimension(:,:,:), allocatable :: ioutput,itemp_tw,i_tw
+integer*1, dimension(:,:,:), allocatable :: mask
 integer, dimension(:), allocatable :: tmp
 real, dimension(:), allocatable :: tlon_tw,tlat_tw,lon_tw,lat_tw,olon,olat
 integer :: ierr,ncid1,varid1,dimid1,dimid2,dimid3,dimid4,dim2d(3),dim3d(4),chunk(2)
@@ -24,10 +25,10 @@ integer :: f_coarse_taiwanvvm,xs_tw,ys_tw
 
 ! options for taiwanvvm
 taiwanvvm=.true.       ! read taiwanvvm information (500 m spatial resolution)
-f_coarse_taiwanvvm=4   ! The coarsening factor for taiwanvvm should be aliquot part of 1024
+f_coarse_taiwanvvm=1   ! The coarsening factor for taiwanvvm should be aliquot part of 1024
                        ! (1 is 0.5 km, 2 is 1 km, 4 is 2 km, and so on)
-xs_tw=512                ! displacement of taiwan in x direction (0: placing against west boundary)
-ys_tw=512                ! displacement of taiwan in y direction (0: placing against south boundary)
+xs_tw=1                ! displacement of taiwan in x direction (0: placing against west boundary)
+ys_tw=1                ! displacement of taiwan in y direction (0: placing against south boundary)
 
 
 if ((mi_glob<1024/f_coarse_taiwanvvm .or. &
@@ -253,146 +254,259 @@ do j=1,mj_glob
 do i=1,mi_glob
   k=int(routput(i,j,7))
   routput(i,j,1)=(zz(k)+(zz(k+1)-zz(k))*modulo(routput(i,j,7),1.))/1000.
-  mask(i,j,1:k)=0.
+  mask(i,j,1:k)=0
 enddo
 enddo
 
 ! output to ncfile for VVM initialization
 ierr = nf90_create("TOPO.nc",cmode=nf90_netcdf4,ncid=ncid1)
+if (ierr/=nf90_noerr) stop 111
 
 ierr = nf90_def_dim(ncid1, "lon", mi_glob, dimid1)
+if (ierr/=nf90_noerr) stop 112
 ierr = nf90_def_dim(ncid1, "lat", mj_glob, dimid2)
+if (ierr/=nf90_noerr) stop 113
 ierr = nf90_def_dim(ncid1, "lev", nk2, dimid3)
+if (ierr/=nf90_noerr) stop 114
 ierr = nf90_def_dim(ncid1, "time", 1, dimid4)
+if (ierr/=nf90_noerr) stop 115
 
 chunk=(/ mi_glob,mj_glob/)
 dim2d=(/ dimid1,dimid2,dimid4 /)
 dim3d=(/ dimid1,dimid2,dimid3,dimid4 /)
 
 ierr = nf90_def_var(ncid1, "lon", NF90_REAL, dimid1, varid1)
+if (ierr/=nf90_noerr) stop 116
 ierr = nf90_put_att(ncid1, varid1, 'axis', 'X')
+if (ierr/=nf90_noerr) stop 117
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'longitude')
+if (ierr/=nf90_noerr) stop 118
 ierr = nf90_put_att(ncid1, varid1, 'units', 'degrees_east')
+if (ierr/=nf90_noerr) stop 119
 
 ierr = nf90_def_var(ncid1, "lat", NF90_REAL, dimid2, varid1)
+if (ierr/=nf90_noerr) stop 120
 ierr = nf90_put_att(ncid1, varid1, 'axis', 'Y')
+if (ierr/=nf90_noerr) stop 121
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'latitude')
+if (ierr/=nf90_noerr) stop 122
 ierr = nf90_put_att(ncid1, varid1, 'units', 'degrees_north')
+if (ierr/=nf90_noerr) stop 123
 
 ierr = nf90_def_var(ncid1, "lev", NF90_REAL, dimid3, varid1)
+if (ierr/=nf90_noerr) stop 124
 ierr = nf90_put_att(ncid1, varid1, 'axis', 'Z')
+if (ierr/=nf90_noerr) stop 125
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'altitude (km)')
+if (ierr/=nf90_noerr) stop 126
 ierr = nf90_put_att(ncid1, varid1, 'units', 'level')
+if (ierr/=nf90_noerr) stop 127
 ierr = nf90_put_att(ncid1, varid1, 'positive', 'up')
+if (ierr/=nf90_noerr) stop 128
 
 ierr = nf90_def_var(ncid1, "time", NF90_REAL, dimid4, varid1)
+if (ierr/=nf90_noerr) stop 129
 ierr = nf90_put_att(ncid1, varid1, 'axis', 'T')
+if (ierr/=nf90_noerr) stop 130
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'time')
+if (ierr/=nf90_noerr) stop 131
 ierr = nf90_put_att(ncid1, varid1, 'standard_name', 'time')
+if (ierr/=nf90_noerr) stop 132
 ierr = nf90_put_att(ncid1, varid1, 'units', 'hours since 2000-01-01 00:00')
+if (ierr/=nf90_noerr) stop 133
 
-ierr = nf90_def_var(ncid1, "mask", NF90_INT, dim3d, varid1)
+ierr = nf90_def_var(ncid1, "mask", NF90_BYTE, dim3d, varid1)
+if (ierr/=nf90_noerr) stop 134
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'mask of thermodynamic variables')
+if (ierr/=nf90_noerr) stop 135
 ierr = nf90_put_att(ncid1, varid1, 'units', 'T/F')
-ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 136
+ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, (/mi_glob,mj_glob,1/))
+if (ierr/=nf90_noerr) stop 137
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 138
 
 ierr = nf90_def_var(ncid1, "topo", NF90_REAL, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 139
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'terrian height in VVM')
+if (ierr/=nf90_noerr) stop 140
 ierr = nf90_put_att(ncid1, varid1, 'units', 'grid')
+if (ierr/=nf90_noerr) stop 141
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 142
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 143
 
 ierr = nf90_def_var(ncid1, "height", NF90_REAL, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 144
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'terrian height')
+if (ierr/=nf90_noerr) stop 145
 ierr = nf90_put_att(ncid1, varid1, 'units', 'km')
+if (ierr/=nf90_noerr) stop 146
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 147
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 148
 
 ierr = nf90_def_var(ncid1, "albedo", NF90_REAL, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 149
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'surface albedo')
+if (ierr/=nf90_noerr) stop 150
 ierr = nf90_put_att(ncid1, varid1, 'units', '%')
+if (ierr/=nf90_noerr) stop 151
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 152
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 153
 
 ierr = nf90_def_var(ncid1, "gvf", NF90_REAL, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 154
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'green vegetation fraction')
+if (ierr/=nf90_noerr) stop 155
 ierr = nf90_put_att(ncid1, varid1, 'units', '%')
+if (ierr/=nf90_noerr) stop 156
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 157
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 158
 
 ierr = nf90_def_var(ncid1, "lai", NF90_REAL, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 159
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'leaf area index')
+if (ierr/=nf90_noerr) stop 160
 ierr = nf90_put_att(ncid1, varid1, 'units', 'm^2 m^-2')
+if (ierr/=nf90_noerr) stop 161
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 162
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 163
 
 ierr = nf90_def_var(ncid1, "lu", NF90_INT, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 164
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'land type')
+if (ierr/=nf90_noerr) stop 165
 ierr = nf90_put_att(ncid1, varid1, 'units', 'type')
+if (ierr/=nf90_noerr) stop 166
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 167
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 168
 
 ierr = nf90_def_var(ncid1, "shdmax", NF90_REAL, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 169
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'maximum vegetation fraction')
+if (ierr/=nf90_noerr) stop 170
 ierr = nf90_put_att(ncid1, varid1, 'units', '%')
+if (ierr/=nf90_noerr) stop 171
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 172
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 173
 
 ierr = nf90_def_var(ncid1, "shdmin", NF90_REAL, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 174
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'minimum vegetation fraction')
+if (ierr/=nf90_noerr) stop 175
 ierr = nf90_put_att(ncid1, varid1, 'units', '%')
+if (ierr/=nf90_noerr) stop 176
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 177
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 178
 
 ierr = nf90_def_var(ncid1, "slope", NF90_INT, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 179
 ierr = nf90_put_att(ncid1, varid1, 'long_name', ' surface slope type')
+if (ierr/=nf90_noerr) stop 180
 ierr = nf90_put_att(ncid1, varid1, 'units', 'type')
+if (ierr/=nf90_noerr) stop 181
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 182
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 183
 
 ierr = nf90_def_var(ncid1, "soil", NF90_INT, dim2d, varid1)
+if (ierr/=nf90_noerr) stop 184
 ierr = nf90_put_att(ncid1, varid1, 'long_name', 'land soil type')
+if (ierr/=nf90_noerr) stop 185
 ierr = nf90_put_att(ncid1, varid1, 'units', 'type')
+if (ierr/=nf90_noerr) stop 186
 ierr = nf90_def_var_chunking(ncid1, varid1, NF90_CHUNKED, chunk)
+if (ierr/=nf90_noerr) stop 187
 ierr = nf90_def_var_deflate(ncid1, varid1, shuffle = 1, deflate = 1, deflate_level = 2)
+if (ierr/=nf90_noerr) stop 188
 
 ierr = nf90_enddef(ncid1)
+if (ierr/=nf90_noerr) stop 189
 
 ierr = nf90_inq_varid(ncid1,"lon",varid1)
+if (ierr/=nf90_noerr) stop 190
 ierr = nf90_put_var(ncid1,varid1,olon)
+if (ierr/=nf90_noerr) stop 191
 ierr = nf90_inq_varid(ncid1,"lat",varid1)
+if (ierr/=nf90_noerr) stop 192
 ierr = nf90_put_var(ncid1,varid1,olat)
+if (ierr/=nf90_noerr) stop 193
 ierr = nf90_inq_varid(ncid1,"lev",varid1)
+if (ierr/=nf90_noerr) stop 194
 ierr = nf90_put_var(ncid1,varid1,zt(1:nk2)/1000.)
+if (ierr/=nf90_noerr) stop 195
 dum1=0.
 ierr = nf90_inq_varid(ncid1,"time",varid1)
+if (ierr/=nf90_noerr) stop 196
 ierr = nf90_put_var(ncid1,varid1,dum1)
+if (ierr/=nf90_noerr) stop 197
 
 ierr = nf90_inq_varid(ncid1,"mask",varid1)
+if (ierr/=nf90_noerr) stop 198
 ierr = nf90_put_var(ncid1,varid1,mask)
+if (ierr/=nf90_noerr) stop 199
 ierr = nf90_inq_varid(ncid1,"height",varid1)
+if (ierr/=nf90_noerr) stop 200
 ierr = nf90_put_var(ncid1,varid1,routput(:,:,1))
+if (ierr/=nf90_noerr) stop 201
 ierr = nf90_inq_varid(ncid1,"albedo",varid1)
+if (ierr/=nf90_noerr) stop 202
 ierr = nf90_put_var(ncid1,varid1,routput(:,:,2))
+if (ierr/=nf90_noerr) stop 203
 ierr = nf90_inq_varid(ncid1,"gvf",varid1)
+if (ierr/=nf90_noerr) stop 204
 ierr = nf90_put_var(ncid1,varid1,routput(:,:,3))
+if (ierr/=nf90_noerr) stop 205
 ierr = nf90_inq_varid(ncid1,"lai",varid1)
+if (ierr/=nf90_noerr) stop 206
 ierr = nf90_put_var(ncid1,varid1,routput(:,:,4))
+if (ierr/=nf90_noerr) stop 207
 ierr = nf90_inq_varid(ncid1,"shdmax",varid1)
+if (ierr/=nf90_noerr) stop 208
 ierr = nf90_put_var(ncid1,varid1,routput(:,:,5))
+if (ierr/=nf90_noerr) stop 209
 ierr = nf90_inq_varid(ncid1,"shdmin",varid1)
+if (ierr/=nf90_noerr) stop 210
 ierr = nf90_put_var(ncid1,varid1,routput(:,:,6))
+if (ierr/=nf90_noerr) stop 211
 ierr = nf90_inq_varid(ncid1,"topo",varid1)
+if (ierr/=nf90_noerr) stop 212
 ierr = nf90_put_var(ncid1,varid1,routput(:,:,7))
+if (ierr/=nf90_noerr) stop 213
 ierr = nf90_inq_varid(ncid1,"lu",varid1)
+if (ierr/=nf90_noerr) stop 214
 ierr = nf90_put_var(ncid1,varid1,ioutput(:,:,1))
+if (ierr/=nf90_noerr) stop 215
 ierr = nf90_inq_varid(ncid1,"slope",varid1)
+if (ierr/=nf90_noerr) stop 216
 ierr = nf90_put_var(ncid1,varid1,ioutput(:,:,2))
+if (ierr/=nf90_noerr) stop 217
 ierr = nf90_inq_varid(ncid1,"soil",varid1)
+if (ierr/=nf90_noerr) stop 218
 ierr = nf90_put_var(ncid1,varid1,ioutput(:,:,3))
+if (ierr/=nf90_noerr) stop 219
 
 ierr = nf90_close(ncid1)
+if (ierr/=nf90_noerr) stop 220
+
+write(*,*) "successfully create TOPO.nc file"
+write(*,*) "MI_glob=",mi_glob,",MJ_glob=",mj_glob
 
 end program create_topolsm
 

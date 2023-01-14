@@ -24,6 +24,7 @@ export LD_LIBRARY_PATH=$HOME/vvmlibs/lib:$LD_LIBRARY_PATH
 export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
+mpirun -np 1 ./create_topolsm
 mpirun -np total_cores ./vvm 
 date >> runtime
 

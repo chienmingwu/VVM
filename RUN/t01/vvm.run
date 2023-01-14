@@ -26,8 +26,24 @@ set rundir = ${vvmdir}'/RUN'
 set expdir = ${datadir}'/'${expname}
 set codedir = ${datadir}'/'${expname}'/CODE'
 
-cd ${expdir}'/compile_code'
-make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile -j8
+# prepare for compiling code
+cd ${expdir}
+rsync -av ${vvmdir}'/CODE' .
+csh DOMAIN
+
+if( ! -d ${expdir}'/compile_code' ) then
+  mkdir ${expdir}'/compile_code'
+  cd ${expdir}'/compile_code'
+else
+  # clean previous compilation
+  cd ${expdir}'/compile_code'
+  make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
+endif
+
+
+# compile both create_topolsm and vvm
+make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile newtopo
+#make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile -j8
 
 # Set walltime to large number instead of marking it if you don't need it.
 sed -e 's/expname.out/'${expname}'.out/g' \

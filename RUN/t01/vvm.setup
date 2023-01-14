@@ -34,18 +34,18 @@ endif
 mkdir RUNDATA
 mkdir archive
 
-# prepare for compiling code
-cd ${expdir}
-if( ! -d ${codedir} ) then
-  cp -r ${vvmdir}'/CODE' ${codedir}
-else
-  rm -rf ${codedir}
-  cp -r ${vvmdir}'/CODE' ${codedir}
-endif
-
-if( ! -d ${expdir}'/compile_code' ) then
-  mkdir ${expdir}'/compile_code'
-endif
+## prepare for compiling code
+#cd ${expdir}
+#if( ! -d ${codedir} ) then
+#  cp -r ${vvmdir}'/CODE' ${codedir}
+#else
+#  rm -rf ${codedir}
+#  cp -r ${vvmdir}'/CODE' ${codedir}
+#endif
+#
+#if( ! -d ${expdir}'/compile_code' ) then
+#  mkdir ${expdir}'/compile_code'
+#endif
 
 # prepare tables for model
 cp ${rundir}/t01/vvm.setup .
@@ -85,6 +85,10 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
+cat > DOMAIN << 'END3'
+#!/bin/csh
+set expdir = ` pwd `
+set codedir = ${expdir}'/CODE'
 sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
@@ -93,6 +97,8 @@ sed -i 's/vert_dimension/60/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+'END3'
+cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
@@ -108,9 +114,9 @@ cat > INPUT << 'END6'
 cat INPUT
 #-------------------------------------------------------------------
 
-# clean previous compilation
-cd ${expdir}'/compile_code'
-make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
+## clean previous compilation
+#cd ${expdir}'/compile_code'
+#make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
 
 ### make for topography
 #make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile topography
@@ -125,7 +131,7 @@ make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/make
 #echo '###################################################################'
 #echo '###################################################################'
 
-make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile newtopo
+#make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile newtopo
 
 exit
 
