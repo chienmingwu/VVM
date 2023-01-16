@@ -19,16 +19,112 @@ integer :: f_coarse_taiwanvvm,xs_tw,ys_tw
 
 !==============================================================================!
 ! This program generates nc file including topography and land type for
-! initialization in VVM. (Der 6JAN2023)
+! initialization in VVM. (Der 6 JAN 2023)
+!
+! Remove chunking and deflating during outputing data into ncfile, which 
+! is not supported by the parallell netcdf library (used in VVM). (14 JAN 2023)
+! 
+! Output Variables
+!
+! ioutput : integer-type variables
+!
+!  array:  short name, description
+!  (x,y,1): lu, land types from 1 to 24 (see table 1)
+!  (x,y,2): slope, slope types from 1 to 4 (see table 2)
+!  (x,y,3): soil, soil types from 1 to 16 (see table 3)
+! 
+! routput : floating-point variables
+! 
+!  array:  short name, description
+!  (x,y,1): height, topography elevation (m, will change to km in ncfile)
+!  (x,y,2): albedo, surface albedo (%) 
+!  (x,y,3): gvf, green vegetation fraction (%)
+!  (x,y,4): lai, leaf area index (m^2/m^2)
+!  (x,y,5): shdmax, maximum green vegetation fraction (%)
+!  (x,y,6): shdmin, minimum green vegetation fraction (%)
+!  (x,y,7): topo, grid box height in VVM is transfered from height according
+!                 model vertical coordinate.
+! 
+! 
+! Table 1. Land type of the Noah LSM
+! 
+! (D) means default value
+! class                        category   albedo % (D)   gvf % (D)   lai m^2/m^2 (D)
+!   1           Urban and built-up land         15          10                4
+!   2    Dryland, cropland, and pasture         19          80                4
+!   3    Irrigated cropland and pasture         15          80                4
+!   4             Mixed type of 2 and 3         17          80                4
+!   5         Cropland/Grassland Mosaic         19          80                4
+!   6          Cropland/Woodland Mosaic         19          80                4
+!   7                         Grassland         19          80                4
+!   8                         Shrubland         25          70                4
+!   9             Mixed type of 7 and 8         23          70                4
+!  10                           Savanna         20          50                4
+!  11        Deciduous broadleaf forest         12          80                4
+!  12       Deciduous needleleaf forest         11          70                4
+!  13        Evergreen broadleaf forest         11          95                4
+!  14       Evergreen needleleaf forest         10          70                4
+!  15                      Mixed forest         12          80                4
+!  16      Water bodies (ocean or lake)   !!! apply VVM own surface fluxes method !!!
+!  17                Herbaceous wetland         12          60                4
+!  18                    Wooded wetland         12          60                4
+!  19     Barren and sparsely vegetated         12           1                4
+!  20                 Herbaceous tundra         16          60                4
+!  21                     Wooded tundra         16          60                4
+!  22                      Mixed tundra         16          60                4
+!  23                Bare ground tundra         17          30                4
+!  24                       Snow or ice         70           0                4
+! 
+! 
+! 
+! Table 2. Slope type of the Noah LSM
+! 
+! class     land surface slope % 
+!   1                        0-8
+!   2                       8-30
+!   3                        >30
+!   4                       0-30
+!   5                  0-8 & >30
+!   6                 8-30 & >30
+!   7           0-8, 8-30, & >30
+!   8                   not used
+!   9                Glacial ice
+! 
+! !!! this parameter is used for runoff. !!!
+!
+!
+!
+! Table 3. Soil type of the Noah LSM
+!
+! class        category
+!   1              Sand
+!   2        Loamy sand
+!   3        Sandy loam
+!   4         Silt loam
+!   5              Silt
+!   6              Loam
+!   7   Sandy clay loam
+!   8   Silty clay loam
+!   9         Clay loam
+!  10        Sandy clay
+!  11        Silty clay
+!  12              Clay
+!  13  Organic material
+!  14          Not used
+!  15           Bedrock
+!  16          Land ice
+!
 !
 !==============================================================================!
+
+
 
 ! options for taiwanvvm
 taiwanvvm=.true.       ! read taiwanvvm information (500 m spatial resolution)
 f_coarse_taiwanvvm=1   ! The coarsening factor for taiwanvvm should be aliquot part of 1024
                        ! (1 is 0.5 km, 2 is 1 km, 4 is 2 km, and so on)
-xs_tw=0                ! displacement of taiwan in x direction (0: placing against west boundary)
-ys_tw=0                ! displacement of taiwan in y direction (0: placing against south boundary)
+xs_tw=0                ! displacement (grids) of taiwan in x direction (0: placing against west boundary)
+ys_tw=0                ! displacement (grids) of taiwan in y direction (0: placing against south boundary)
 
 
 if ((mi_glob<1024/f_coarse_taiwanvvm .or. &
