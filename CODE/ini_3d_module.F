@@ -88,23 +88,23 @@ CONTAINS
       !DATA DEG/20.,20.,20.,100.,15*275./
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, &
                         tracer_file
-      CHARACTER(len=8) :: dateStr = '20160107'
-      CHARACTER(len=5) :: stno = '47918'
-      !CHARACTER(len=5) :: stno = '46692'
-      CHARACTER(len=80) :: fname
+      !CHARACTER(len=8) :: dateStr = '20160107'
+      !CHARACTER(len=5) :: stno = '47918'
+      !!CHARACTER(len=5) :: stno = '46692'
+      !CHARACTER(len=80) :: fname
 
-      
-      ! Read ideal sounding (RAW) from file
-      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.RAW.txt'
+      !
+      !! Read ideal sounding (RAW) from file
+      !fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.RAW.txt'
 
-      open(unit=88,file=fname,form='formatted',status='old')
-      DO i = 1, 6
-      READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i)
-      QV1(i) = QV1(i)
-      T1(i) = T1(i) + 273.15
-      ENDDO
-      close(88)
-      20000 format(6F11.2)
+      !open(unit=88,file=fname,form='formatted',status='old')
+      !DO i = 1, 6
+      !READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i)
+      !QV1(i) = QV1(i)
+      !T1(i) = T1(i) + 273.15
+      !ENDDO
+      !close(88)
+      !20000 format(6F11.2)
 
 
       PQ1=P1
@@ -317,13 +317,13 @@ CONTAINS
   212 CONTINUE
 #endif
 
-      DO 220 K = 2, NK2
-      PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
-      K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-  220 CONTINUE
+!      DO 220 K = 2, NK2
+!      PBARMB = PBAR(K) * 0.01
+!      K1 = INDEXR(PBARMB,NU1,PU1,LF)
+!      K2 = K1 + 1
+!      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
+!      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
+!  220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)

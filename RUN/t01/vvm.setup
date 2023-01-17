@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = topolsm
+set expname = topolsm_cwb
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -57,6 +57,7 @@ cp ${vvmdir}/CODE/p3_lookup_table_* .
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
+#define DIFFUSION
 #define PHYSICS
 #define MICROCODE
 #define MICROP3

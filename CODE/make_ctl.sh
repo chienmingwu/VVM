@@ -1022,16 +1022,17 @@ XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
 YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
 ZDEF 1 LEVELS 0 \
 TDEF 1 LINEAR 00:00Z01JAN2000 1mn \
-VARS 9 \
-TOPO=>topo 1 y,x topo \
+VARS 10 \
+topo=>topo 1 y,x topo \
+height=>height 1 y,x topo \
 albedo=>albedo 1 y,x topo \
-GRF=>grf 1 y,x topo \
-LAI=>lai 1 y,x topo \
-LU=>lu 1 y,x topo \
-SHDMAX=>shdmax 1 y,x topo \
-SHDMIN=>shdmin 1 y,x topo \
-SLOPE=>slope 1 y,x topo\
-SOIL=>soil 1 y,x topo \
+gvf=>gvf 1 y,x topo \
+lai=>lai 1 y,x topo \
+lu=>lu 1 y,x topo \
+shdmax=>shdmax 1 y,x topo \
+shdmin=>shdmin 1 y,x topo \
+slope=>slope 1 y,x topo\
+soil=>soil 1 y,x topo \
 ENDVARS' > topo.ctl
 endif
 # ==========================================================
