@@ -146,7 +146,7 @@ $(OBJS_FREE_NCH) : %.o: %.F
 	$(FC) -c $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 $(OBJS_FREE_OPT0) : %.o: %.f90 
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
-	$(FC) -O0 -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
+	$(FC) -O3 -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 
 $(OBJS_FREE_F90) : %.o: %.F90 
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
 	$(FC) -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF) 

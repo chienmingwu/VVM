@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 #SBATCH -J expname        # Job name
-#SBATCH -A MST109184      # Account number
-#SBATCH -p ct2k          # job partition
+#SBATCH -A MST111213      # Account number
+#SBATCH -p t3atm_120      # job partition
 #SBATCH -N np_nodes       # Run all processes on a single node	
 #SBATCH -c 1              # cores per MPI rank
 #SBATCH -n total_cores    # Run a single task
@@ -20,12 +20,16 @@ export OMPI_MCA_pml="ucx"
 export KMP_AFFINITY="compact,noverbose"
 export UCX_NET_DEVICES=mlx5_0:1
 
-export LD_LIBRARY_PATH=/work/peter50504/vvmlibs/lib:/opt/ohpc/Taiwania3/pkg/intel/2021/mkl/2021.1.1/lib/intel64:$LD_LIBRARY_PATH
+export LANG=en_US.utf8
+export LC_ALL=en_US.utf8
+
+export LD_LIBRARY_PATH=/work/der0318zxc/vvmlibs/lib:/opt/ohpc/Taiwania3/pkg/intel/2021/mkl/2021.1.1/lib/intel64:$LD_LIBRARY_PATH
 
 export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
 
+mpirun -np 1 ./create_topolsm
 mpirun -np total_cores ./vvm < INPUT | tee OUTPUT  
 
 date >> runtime
