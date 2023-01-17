@@ -18,6 +18,8 @@ USE domain_decomposition
 
 IMPLICIT NONE
 
+PRIVATE
+
 PUBLIC  :: ras_interface
 PRIVATE :: qsatq,dcbase,linearpolation,ilsum,sigma_tab &
           ,uevpcup,ucem1,uancrt,ucup92
@@ -109,6 +111,9 @@ CONTAINS
     !Main loop of cumulus parameterization
 
     TC3D=0.
+    THAD_CUMULUS=0.
+    QVAD_CUMULUS=0.
+    PREC_CUMULUS=0.
 
     DO j = 1, jm     
      DO i = 1, im
@@ -163,7 +168,7 @@ CONTAINS
       ktopo=NK2-HX(i,j)
       cblimit=1
       DO k = ktopo, cthmax, -1
-       IF ( zl(nn,k)-zl(nn,ktopo) >= 5000.) then
+       IF ( zl(nn,k)-zl(nn,ktopo) >= 3000.) then
         cblimit=k
        exit
        endif
@@ -221,21 +226,16 @@ CONTAINS
       enddo
       PREC_CUMULUS(i,j)=rcup(nn)/PASS_SMALL_DT
 
-      else
-      THAD_CUMULUS(i,j,:)=0.
-      QVAD_CUMULUS(i,j,:)=0.
-      PREC_CUMULUS(i,j)=0.
+      TC3D(i,j,1+1,1)=sigmao(nn) 
+      TC3D(i,j,2+1,1)=xmb(nn) 
+      TC3D(i,j,3+1,1)=muc(nn) 
+      TC3D(i,j,4+1,1)=wbarc(nn) 
+      TC3D(i,j,5+1,1)=wc(nn) 
+      TC3D(i,j,6+1,1)=rhoc(nn) 
       endif
     
       !write(*,*) my_task,i,j,prec_cumulus(i,j),thad_cumulus(i,j,:),qvad_cumulus(i,j,:)
       !print *,sigmao(nn),xmb(nn),muc(nn),wbarc(nn),wc(nn),rhoc(nn)
-
-      !TC3D(i,j,1+1,1)=sigmao(nn) 
-      !TC3D(i,j,2+1,1)=xmb(nn) 
-      !TC3D(i,j,3+1,1)=muc(nn) 
-      !TC3D(i,j,4+1,1)=wbarc(nn) 
-      !TC3D(i,j,5+1,1)=wc(nn) 
-      !TC3D(i,j,6+1,1)=rhoc(nn) 
 
  ENDDO!i
 ENDDO!j
@@ -752,7 +752,7 @@ ENDDO!j
       rkmin = -0.02
       upa=1./3.
       upb=1.95
-      upt=1800.
+      upt=7200.
       relaxas = dt/upt
       sigmao=1.
 
@@ -778,10 +778,11 @@ ENDDO!j
       ohltm  = 1.0/hltm
       const1 = cp*p608*ohltm
       ccritl= pcon*critl
-!     rmfmax = (500./lev)/(dt/1800.)
-!     rmfmax = (500./lev)/(dt/1200.)
-!     rmfmax = (150./lev)/(dt/600.)
-      rmfmax = (200./lev)/(dt/600.)
+!      rmfmax = (500./lev)/(dt/1800.)
+!      rmfmax = (500./lev)/(dt/1200.)
+!      rmfmax = (150./lev)/(dt/600.)
+      rmfmax = (200./lev)/(dt/upt)
+!      rmfmax = (200./72)/(225./600.) ! VVM
 !
 !cc   linear instability requires: rmfmax*0.001*dt/dp < 1.0
 !     constant descriptions
@@ -832,6 +833,7 @@ ENDDO!j
       exist = .true.
       grain = 0.0
       buoc = 0.
+      cwork = 0.
 !
 !     no cloud exist above the deepest cloud
       do 4 k = 1, ktmin-1
@@ -844,7 +846,7 @@ ENDDO!j
       xmb1(i)    = 0.
       rcup(i)    = 0.
       doup(i)    = .true.
-      ktop(i)    = 0.
+      ktop(i)    = 0
       lambda(i)  = 0.
       zzx(i)     = 0.
       zzy(i)     = 0.
@@ -1034,6 +1036,20 @@ ENDDO!j
                    - hswo(i,l))+e(i,l)*buof2(i,l)*(hc(i,l)-hswo(i,l))
   122 continue
   120 continue
+
+      
+!      if (nj_sbdm==nsbdm_y/2 .and. ni_sbdm==0) then
+!        do l = lt, lev-1
+!        do i = 1, nn
+!!          write(*,241) &
+!          if (cwork(i,lt)>=6000.) write(*,241) &
+!                   cwork(i,lt),e(i,l-1),buof1(i,l),hc(i,l-1) &
+!                 , hswo(i,l), e(i,l),buof2(i,l),hc(i,l),hswo(i,l)
+!          241 format(9F15.6)
+!        enddo
+!        enddo
+!      endif
+
 !
 !  reference climotological work function
 !  (function of cloud top pressure) 
@@ -1222,6 +1238,9 @@ ENDDO!j
 !
       if (akernl(i,itype) .gt. rkmin)  then
         akernl(i,itype) = rkmin
+        ! turn off this cloud if it unstabilize the environment 
+        ! (CY Su and JD Huang)
+        exist(i,itype)=.false.
       endif
 !
       flxmas(i,itype) = -relaxas*aforce(i,itype)/akernl(i,itype)
@@ -1234,6 +1253,7 @@ ENDDO!j
   590 continue
 !
 !
+      
   510 continue
 !
 !  evaporation of cumulus precipitation
@@ -1272,11 +1292,30 @@ ENDDO!j
         rcup(i)= rcup(i) + flxmas(i,itype)* grain(i,itype)
   810 continue
 
+!      do l = ktmin, lev-1
+!        if (abs(cwork(i,l))>=6000. .or. cwork(i,l)/=cwork(i,l)) write(*,*) l, cwork(i,l)
+!      enddo
+!      if (nj_sbdm==nsbdm_y/2 .and. ni_sbdm==0) then
+!      do i = 1,nn
+!        if (rcup(i)/dt*3600.>=40.) then
+!          write(*,*) "rain = ", rcup(i)/dt*3600.
+!          do l = ktmin, lev-1
+!            write(*,*) l, cwork(i,l)
+!          enddo
+!          write(*,*) "grain = "
+!          do itype = ktmin, lev-1
+!            write(*,*) itype, flxmas(i,itype), grain(i,itype)/dt*3600.
+!          enddo
+!        endif
+!      enddo
+!      endif
+
 !--------interpolate to 3 km for UP------
 !------what if no cloud at 3 km altitude : sigma=0.9999
 !--------- (3 km is not cloud in the deepest cloud type)
 
       do i = 1, nn
+        if (ktop(i)/=0) then
           if (zl(i,kcbase(i)) .gt. 3000.) then !a
           sigmao(i)=0.0001
           endif
@@ -1346,6 +1385,9 @@ ENDDO!j
 
              zbase(i)=zl(i,kcbase(i))
              ztop(i)=zl(i,ktop(i))
+        else
+          sigmao(i)=0.0001
+        endif
       enddo
 !
 ! --- total cumulus contributions to temperature and moisture changes
@@ -1367,35 +1409,35 @@ ENDDO!j
 !     dq & dh cup1 is the tendency influenced by the first invoked cloud
 !     type
 
-      fcloud=0 
-      doup=.true.
-      do itype = ktmin, lev-1
-       do i = 1, nn
-        if (exist(i,itype) .and. doup(i)) then
-         fcloud(i)=itype
-         doup(i)=.false.
-        endif
-       enddo
-      enddo
-
-      do 855 i = 1, nn
-       if (fcloud(i) .gt. 0) then
-        xmb1(i) = flxmas(i,fcloud(i))
-       endif
-  855 continue
-
-      do 860 l = ktmin, lev-1
-      do 860 i = 1,nn
-          if (fcloud(i) .gt. 0) then
-          dqcup1(i,l)  = dqcup1(i,l) + xmb(i)*cqct(i,l,fcloud(i))
-          dhcup1(i,l)  = dhcup1(i,l) + xmb(i)*chct(i,l,fcloud(i))
-         endif
-  860   continue
-
-      do 870 i = 1, nn
-      dhcup1(i,ktmin)= dhcup1(i,ktmin)*ratio(i)
-      dqcup1(i,ktmin)= dqcup1(i,ktmin)*ratio(i)
-  870 continue
+!      fcloud=0 
+!      doup=.true.
+!      do itype = ktmin, lev-1
+!       do i = 1, nn
+!        if (exist(i,itype) .and. doup(i)) then
+!         fcloud(i)=itype
+!         doup(i)=.false.
+!        endif
+!       enddo
+!      enddo
+!
+!      do 855 i = 1, nn
+!       if (fcloud(i) .gt. 0) then
+!        xmb1(i) = flxmas(i,fcloud(i))
+!       endif
+!  855 continue
+!
+!      do 860 l = ktmin, lev-1
+!      do 860 i = 1,nn
+!          if (fcloud(i) .gt. 0) then
+!          dqcup1(i,l)  = dqcup1(i,l) + xmb(i)*cqct(i,l,fcloud(i))
+!          dhcup1(i,l)  = dhcup1(i,l) + xmb(i)*chct(i,l,fcloud(i))
+!         endif
+!  860   continue
+!
+!      do 870 i = 1, nn
+!      dhcup1(i,ktmin)= dhcup1(i,ktmin)*ratio(i)
+!      dqcup1(i,ktmin)= dqcup1(i,ktmin)*ratio(i)
+!  870 continue
 
 !     UP
 #if defined (URAS)

@@ -12,6 +12,7 @@
 
       integer NX, NY
       parameter (NX = 1024, NY = 1024)
+      !parameter (NX = 2048, NY = 2048)
       REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
       REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB), ZT1(NK3)
@@ -26,8 +27,8 @@
       parameter (MIC = MI_GLOB/2+ISH+1, MJC= MJ_GLOB/2+JSH+1)
 
       integer ncid, nvarid
-      integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope, 
-     1        nsoil, nlon, nlat, nlev, nmask
+      integer ntopo, nalb, ngrf, nlai, nlu, nshdmax, nshdmin, nslope,
+     1 nsoil, nlon, nlat, nlev, nmask
       integer i,j,k,ierr
 
       integer NLID(2)
@@ -38,25 +39,30 @@
       LOGICAL NOTURB,NOSFX,BUOY
       INTEGER NSFLUX,NP,NOTHERM
 
-      INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT
- 
+      INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT,KK,KT,KT1
+
 
       REAL alb(MI_glob,MJ_glob), grf(MI_glob,MJ_glob),
-     1  hgt(MI_glob,MJ_glob), lai(MI_glob,MJ_glob), lu(MI_glob,MJ_glob),
-     1  shdmax(MI_glob,MJ_glob), shdmin(MI_glob,MJ_glob), 
-     1  slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
+     1 hgt(MI_glob,MJ_glob), lai(MI_glob,MJ_glob), lu(MI_glob,MJ_glob),
+     1 shdmax(MI_glob,MJ_glob), shdmin(MI_glob,MJ_glob),
+     1 slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
+
+      REAL alb_s(nx,ny), grf_s(nx,ny),hgt_s(nx,ny),lai_s(nx,ny),
+     1 shdmax_s(nx,ny),shdmin_s(nx,ny),xt_s(nx),yt_s(ny)   
+
+      integer lu_s(nx,ny),slope_s(nx,ny),soil_s(nx,ny)
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
-      REAL*8 ZZ(NK3), ZT(NK3)   
+      REAL*8 ZZ(NK3), ZT(NK3), FNZ(NK3), FNT(NK3)
 
       REAL (KIND=int_kind) HX(MI_GLOB,MJ_GLOB), height(MI_GLOB,MJ_GLOB),
-     1                     mask(MI_GLOB,MJ_GLOB,NK2)
- 
+     1 mask(MI_GLOB,MJ_GLOB,NK2)
+
       R = 6378137.0
-      ZB = 0. 
-      PI = 3.14159265358979323846264338327 
-      NAMELIST /INPUT3/ DT,DX,DYNEW,DZ,DZ1,DOMAIN,ZB,NOTURB,NOSFX 
-     1                 ,NSFLUX,ALADV,UVTAU,BUOY,NOTHERM,WRXMU
+      ZB = 0.
+      PI = 3.14159265358979323846264338327
+      NAMELIST /INPUT3/ DT,DX,DYNEW,DZ,DZ1,DOMAIN,ZB,NOTURB,NOSFX
+     1 ,NSFLUX,ALADV,UVTAU,BUOY,NOTHERM,WRXMU
 
       OPEN(unit=15,file='INPUT',form='formatted')
       READ (15, INPUT3)
@@ -67,21 +73,58 @@
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
 
-      DZTMP = MIN(DZ,DZ1)
+! DZTMP = MIN(DZ,DZ1)
       Zz(1) = ZB
-      ZT(1) = Zz(1)
-      ZT(2) = Zz(1) + DZ / 2.
-      DO 50 K = 2, NK3
+      ZT(1) = ZZ(1)
+      Zz(2) = ZZ(1) + DZ
+      ZT(2) = ZZ(1) + 0.5*DZ
+      DO 50 K = 3, NK3
       Zz(K) = Zz(K-1) + DZ
-      IF (K>2) ZT(K) = ZT(K-1) + DZ
+      ZT(K) = ZT(K-1) + DZ
    50 CONTINUE
 
-      DO 51 K = 1, NK3
+      DO 411 K = 1, NK3
+      FNZ(K) = 1. / ( CZ1 + 2. * CZ2 * ZZ(K) )
       ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
-      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
-   51 CONTINUE
+  411 CONTINUE
 
-! import INPUT FILE 
+      KT = INT((1-CZ1)/CZ2/2/DZ)
+      KT1 = INT(ZZ(KT)/DZ1+0.999)
+
+      PRINT*,KT,KT1,ZZ(KT)
+
+      ZZ(1) = ZB
+      FNZ(1) = DZ/DZ1
+
+      DO 412 K = 2,KT1-1
+      DO 413 KK = NK3,K+1,-1
+      FNZ(KK) = FNZ(KK-1)
+      ZZ(KK) = ZZ(KK-1) + DZ1
+  413 CONTINUE
+      FNZ(K) = DZ/DZ1
+      ZZ(K) = ZZ(K-1) + DZ1
+  412 CONTINUE
+
+      DO 414 K = 1, NK3
+      FNT(K) = 1. / ( CZ1 + 2. * CZ2 * ZT(K) )
+      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
+  414 CONTINUE
+
+      ZT(1) = ZB
+      FNT(1) = DZ/DZ1
+      ZT(2) = ZZ(1) + DZ1/2
+      FNT(2) = DZ/DZ1
+      DO 415 K = 3,KT1
+      DO 416 KK = NK3,K+1,-1
+      FNT(KK) = FNT(KK-1)
+      ZT(KK) = ZT(KK-1) +DZ1
+  416 CONTINUE
+      FNT(K) = DZ/DZ1
+      ZT(K) = ZT(K-1) + DZ1
+  415 CONTINUE
+      FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
+
+! import INPUT FILE
       IF (TWTOPO) THEN
 ! IMPORT topography date
 
@@ -103,21 +146,22 @@
       TOP = DATA(I,J)
       IC = I
       JC = J
-   10 ENDIF
-       
+      ENDIF
+   10 CONTINUE
+
 ! Compute topography grid
 
       RX = R* COSD(.5*(LAT(9000)+LAT(9001)))*2*PI/360.*(lon(2)-lon(1))
-      XM(IC) =  0.
-      DO 20 I = IC+1, NX 
-   20 XM (I) = XM(I-1) + RX 
+      XM(IC) = 0.
+      DO 20 I = IC+1, NX
+   20 XM (I) = XM(I-1) + RX
       DO 25 I = IC-1, 1, -1
    25 XM (I) = XM(I+1) - RX
 
       RY = R * 2 * PI *(lat(9001)-lat(9000))/360
-      YM(JC) =  0.
+      YM(JC) = 0.
       DO 30 J = JC+1, NY
-   30 YM (J) = YM(J-1) + RY 
+   30 YM (J) = YM(J-1) + RY
       DO 35 J = JC-1, 1,-1
    35 YM (J) = YM(J+1) - RY
 
@@ -128,7 +172,7 @@
    40 IF (TMP .LE. 4000) DATA(I,J) = 0.
 
       DO 60 I = 1, MI_GLOB
-   60 XT (I) = (I-MIC)*DX 
+   60 XT (I) = (I-MIC)*DX
 
       DO 70 J = 1,MJ_GLOB
    70 YT (J) = (J-MJC)*DYNEW
@@ -140,17 +184,17 @@
 
       DO 110 IP = 1,NX
       IF (XM(IP) .LT. XT(I) -.5*DX ) II = IP
-  110 IF (XM(IP) .LT. XT(I) +.5*DX ) IE = IP       
+  110 IF (XM(IP) .LT. XT(I) +.5*DX ) IE = IP
 
       DO 120 JP = 1,NY
       IF (YM(JP) .LT. YT(J) -.5*DYNEW) JI = JP
   120 IF (YM(JP) .LT. YT(J) +.5*DYNEW) JE = JP
 
       TMP = 0.
-      DO 150  JP = JI,JE
-      DO 150  IP = II,IE
+      DO 150 JP = JI,JE
+      DO 150 IP = II,IE
       TMP = TMP + DATA(IP,JP)
-C      TMP = MAX(TMP,DATA(IP,JP))
+C TMP = MAX(TMP,DATA(IP,JP))
   150 CONTINUE
       TMP = TMP / REAL(JE - JI + 1 ) / REAL(IE - II + 1)
 
@@ -176,49 +220,76 @@ C      TMP = MAX(TMP,DATA(IP,JP))
 
       ELSE
 
-      OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
-      READ(15,*) xt
-      CLOSE(15)
-      OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
-      READ(15,*) yt
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
+      !READ(15,*) xt_s
+      !CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
+      !READ(15,*) yt_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
-      READ(15,*) alb
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
+      !READ(15,*) alb_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
-      READ(15,*) grf
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
+      !READ(15,*) grf_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
-      READ(15,*) hgt
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
+      !READ(15,*) hgt_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
-      READ(15,*) lai
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
+      !READ(15,*) lai_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
-      READ(15,*) lu
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
+      !READ(15,*) lu_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
-      READ(15,*) shdmax
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
+      !READ(15,*) shdmax_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
-      READ(15,*) shdmin
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
+      !READ(15,*) shdmin_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
-      READ(15,*) slope
-      CLOSE(15)
+      !OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
+      !READ(15,*) slope_s
+      !CLOSE(15)
 
-      OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
-      READ(15,*) soil
-      CLOSE(15)
-      
+      !OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
+      !READ(15,*) soil_s
+      !CLOSE(15)
+
+
+      ierr = nf_open("./RUNDATA/topolsm_TW.nc", NF_NOWRITE, ncid)
+      ierr = nf_inq_varid(ncid, 'lat', nvarid)
+      ierr = nf_get_var(ncid, nvarid, yt_s)
+      ierr = nf_inq_varid(ncid, 'lon', nvarid)
+      ierr = nf_get_var(ncid, nvarid, xt_s)
+      ierr = nf_inq_varid(ncid, 'height', nvarid)
+      ierr = nf_get_var(ncid, nvarid, hgt_s)
+      ierr = nf_inq_varid(ncid, 'lu', nvarid)
+      ierr = nf_get_var(ncid, nvarid, lu_s)
+      ierr = nf_inq_varid(ncid, 'gvf', nvarid)
+      ierr = nf_get_var(ncid, nvarid, grf_s)
+      ierr = nf_inq_varid(ncid, 'albedo', nvarid)
+      ierr = nf_get_var(ncid, nvarid, alb_s)
+      ierr = nf_inq_varid(ncid, 'lai', nvarid)
+      ierr = nf_get_var(ncid, nvarid, lai_s)
+      ierr = nf_inq_varid(ncid, 'shdmax', nvarid)
+      ierr = nf_get_var(ncid, nvarid, shdmax_s)
+      ierr = nf_inq_varid(ncid, 'shdmin', nvarid)
+      ierr = nf_get_var(ncid, nvarid, shdmin_s)
+      ierr = nf_inq_varid(ncid, 'slope', nvarid)
+      ierr = nf_get_var(ncid, nvarid, slope_s)
+      ierr = nf_inq_varid(ncid, 'soil', nvarid)
+      ierr = nf_get_var(ncid, nvarid, soil_s)
+      ierr = nf_close(ncid)
+
+
       DO J=1,MJ_GLOB
       DO I=1,MI_GLOB
       YM(J)=J
@@ -234,90 +305,92 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       xt(I) = I * DX -0.5*DX
       yt(J) = J * DYNEW - 0.5*DYNEW
 
-      ! setup Chien and Wu 2016
-      TMP=abs(real(i)-real(mi_glob)/2.)*DX
-      if (TMP<=5000.) then
-      TMP = 3600. 
-      elseif (TMP>5000. .and. TMP<=20000.) then
-      TMP = -0.24*(TMP-20000.)
-      else 
-      TMP = 0.
-      endif
-      IT=1
-      DO 502 k=1,NK3
-  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
-      hx(I,J)=TOP
+! ! setup Chien and Wu 2016
+! TMP=abs(real(i)-real(mi_glob)/2.)*DX
+! if (TMP<=5000.) then
+! TMP = 3600.
+! elseif (TMP>5000. .and. TMP<=20000.) then
+! TMP = -0.24*(TMP-20000.)
+! else
+! TMP = 0.
+! endif
+! IT=1
+! DO 502 k=1,NK3
+! 502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
+! hx(I,J)=TOP
 
-!      hx(I,J)= 1
-      LU(I,J) = 16
-      alb(I,J) = 15.
-      grf(I,J) = 10.
-      lai(I,J) = 4.
-      SHDMAX(I,J) = 10.
-      SHDMIN(I,J) = 10.
-      SLOPE(I,J) = 1
-      SOIL(I,J) = 14
-!      ! setup Wu and Chen 2021
-!      if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
-!      LU(I,J) = 7
-!      alb(I,J) = 19.
-!      grf(I,J) = 80.
-!      lai(I,J) = 4.
-!      SHDMAX(I,J) = 10.
-!      SHDMIN(I,J) = 10.
-!      SLOPE(I,J) = 1
-!      SOIL(I,J) = 1
-!      endif
+       hx(I,J)= 1
+       LU(I,J) = 16
+       alb(I,J) = 8.
+       grf(I,J) = 10.
+       lai(I,J) = 4.
+       SHDMAX(I,J) = 10.
+       SHDMIN(I,J) = 10.
+       SLOPE(I,J) = 1
+       SOIL(I,J) = 14
+! ! setup Wu and Chen 2021
+! if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
+! LU(I,J) = 7
+! alb(I,J) = 19.
+! grf(I,J) = 80.
+! lai(I,J) = 4.
+! SHDMAX(I,J) = 10.
+! SHDMIN(I,J) = 10.
+! SLOPE(I,J) = 1
+! SOIL(I,J) = 1
+! endif
   500 CONTINUE
 
 ! 5 large island in Maritime Continent
 
-!      OPEN(157,FILE="/home/der0318/global_topo/maritime_0.144.dat"
-!     1 ,ACCESS="direct",RECL=451*200*4)
-!      READ(157,REC=1) topo_mar
-!      CLOSE(157)
+! OPEN(157,FILE="/home/der0318/global_topo/maritime_0.144.dat"
+! 1 ,ACCESS="direct",RECL=451*200*4)
+! READ(157,REC=1) topo_mar
+! CLOSE(157)
 !
-!      DO 501 j = 1,MJ_GLOB
-!      DO 501 i = 1,MI_GLOB
-!      IF (j>=157 .AND. j<=356 .AND. i<=451)THEN
-!      IF (topo_mar(i,j-156)/=-999)THEN
-!      IT=2
-!      DO 502 k=1,NK3
-!  502 IF (topo_mar(i,j-156) >= ZZ(k)) TOP=max(k,IT)
-!      hx(i,j)=TOP
-!      LU(I,J) = 13
-!      alb(I,J) = 11.
-!      grf(I,J) = 95.
-!      lai(I,J) = 4.
-!      SHDMAX(I,J) = 95.
-!      SHDMIN(I,J) = 95.
-!      SLOPE(I,J) = 1
-!      SOIL(I,J) = 1
-!      ENDIF
-!      ENDIF
-!  501 CONTINUE 
+! DO 501 j = 1,MJ_GLOB
+! DO 501 i = 1,MI_GLOB
+! IF (j>=157 .AND. j<=356 .AND. i<=451)THEN
+! IF (topo_mar(i,j-156)/=-999)THEN
+! IT=2
+! DO 502 k=1,NK3
+! 502 IF (topo_mar(i,j-156) >= ZZ(k)) TOP=max(k,IT)
+! hx(i,j)=TOP
+! LU(I,J) = 13
+! alb(I,J) = 11.
+! grf(I,J) = 95.
+! lai(I,J) = 4.
+! SHDMAX(I,J) = 95.
+! SHDMIN(I,J) = 95.
+! SLOPE(I,J) = 1
+! SOIL(I,J) = 1
+! ENDIF
+! ENDIF
+! 501 CONTINUE
 !
-!      DO 503 j = 1,MJ_GLOB
-!      DO 503 i = 1,MI_GLOB
-!      topo_sur(1)=hx(i,j)
-!      topo_sur(2)=hx(i+1,j)
-!      topo_sur(3)=hx(i,j+1)
-!      topo_sur(4)=hx(i-1,j)
-!      topo_sur(5)=hx(i,j-1)
-!      IF (minloc(topo_sur,1)==1) hx(i,j)=minval(topo_sur(2:5))
-!  503 CONTINUE
+! DO 503 j = 1,MJ_GLOB
+! DO 503 i = 1,MI_GLOB
+! topo_sur(1)=hx(i,j)
+! topo_sur(2)=hx(i+1,j)
+! topo_sur(3)=hx(i,j+1)
+! topo_sur(4)=hx(i-1,j)
+! topo_sur(5)=hx(i,j-1)
+! IF (minloc(topo_sur,1)==1) hx(i,j)=minval(topo_sur(2:5))
+! 503 CONTINUE
 
 
-!      DO 600 I = 1, MI_GLOB
-!  600 XT (I) = I*DX
+! DO 600 I = 1, MI_GLOB
+! 600 XT (I) = I*DX
 !
-!      DO 700 J = 1,MJ_GLOB
-!  700 YT (J) = J*DYNEW
-
-
-      DO I=1,mi_glob
-      DO J=1,mj_glob
-      TMP=DBLE(hgt(I,J))
+! DO 700 J = 1,MJ_GLOB
+! 700 YT (J) = J*DYNEW
+!
+!
+! DO I=1,mi_glob
+! DO J=1,mj_glob
+      DO I=1,NX
+      DO J=1,NY
+      TMP=DBLE(hgt_s(I,J))
 
       IF (TMP .GT. 0.) HX(I,J) = 2.
       DO K=2,NK1
@@ -341,8 +414,8 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       JE=J-1
       IF (IP>MI_GLOB) IP=IP-MI_GLOB
       IF (JP>MJ_GLOB) JP=JP-MJ_GLOB
-      IF (IE<1) IE=IE+MI_GLOB 
-      IF (JE<1) JE=JE+MJ_GLOB 
+      IF (IE<1) IE=IE+MI_GLOB
+      IF (JE<1) JE=JE+MJ_GLOB
       IF (HX(IP,J) .GT. HX(I,J) .AND. HX(IE,J) .GT. HX(I,J) .AND.
      1 HX(I,JP) .GT. HX(I,J) .AND. HX(I,JE) .GT. HX(I,J)) THEN
       HX(I,J) =MIN(HX(IP,J),HX(IE,J),HX(I,JP),HX(I,JE))
@@ -351,34 +424,53 @@ C      TMP = MAX(TMP,DATA(IP,JP))
   800 CONTINUE
 
 
-!      OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
-!      WRITE(16)HX 
-!      CLOSE(16)
+! OPEN(unit=16,file='RUNDATA/TOPO.dat',form='unformatted')
+! WRITE(16)HX
+! CLOSE(16)
 
-      DO 900 JP = 1,nsbdm_y
-      JI = (JP-1)*MJ1+1
-      JE = (JP)*MJ1
-      DO 900 IP = 1,nsbdm_x
-      II = (IP-1)*MI1+1
-      IE = (IP)*MI1
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)')
-     1 'RUNDATA/TOPO',IP,'_',JP,'.dat'
-      OPEN(unit=16,file=FILENAME,form='unformatted')
-      WRITE(16) ((DBLE(HX(I,J)),I=II,IE),J=JI,JE)
-      CLOSE(16) 
-      WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)')
-     1 'RUNDATA/LSM',IP,'_',JP,'.dat'
-      OPEN(unit=16,file=FILENAME,form='unformatted')
-      WRITE(16) (((alb(I,J)),I=II,IE),J=JI,JE) 
-      WRITE(16) (((grf(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((lai(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((INT(lu(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((shdmax(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) (((shdmin(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((INT(slope(I,J)),I=II,IE),J=JI,JE)
-      WRITE(16) ((INT(soil(I,J)),I=II,IE),J=JI,JE)
-      CLOSE(16)
-  900 CONTINUE
+!= change 1024 grid to 2048
+      alb=8.
+      lu=16
+      soil=14
+      do i=1,nx
+      do j=1,ny
+      alb(i,j)=alb_s(i,j)
+      grf(i,j)=grf_s(i,j)
+      lai(i,j)=lai_s(i,j)
+      lu(i,j)=lu_s(i,j)
+      shdmax(i,j)=shdmax_s(i,j)
+      shdmin(i,j)=shdmin_s(i,j)
+      slope(i,j)=slope_s(i,j)
+      soil(i,j)=soil_s(i,j)
+      enddo
+      enddo
+!=====
+
+
+!      DO 900 JP = 1,nsbdm_y
+!      JI = (JP-1)*MJ1+1
+!      JE = (JP)*MJ1
+!      DO 900 IP = 1,nsbdm_x
+!      II = (IP-1)*MI1+1
+!      IE = (IP)*MI1
+!      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)')
+!     1 'RUNDATA/TOPO',IP,'_',JP,'.dat'
+!      OPEN(unit=16,file=FILENAME,form='unformatted')
+!      WRITE(16) ((DBLE(HX(I,J)),I=II,IE),J=JI,JE)
+!      CLOSE(16)
+!      WRITE(FILENAME,'(A11,I3.3,A1,I3.3,A4)')
+!     1 'RUNDATA/LSM',IP,'_',JP,'.dat'
+!      OPEN(unit=16,file=FILENAME,form='unformatted')
+!      WRITE(16) (((alb(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) (((grf(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) (((lai(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) ((INT(lu(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) (((shdmax(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) (((shdmin(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) ((INT(slope(I,J)),I=II,IE),J=JI,JE)
+!      WRITE(16) ((INT(soil(I,J)),I=II,IE),J=JI,JE)
+!      CLOSE(16)
+!  900 CONTINUE
 
       ierr = nf_create('TOPO.nc', NF_64BIT_OFFSET, ncid)
       print*,'ERRor', nf_strerror(ierr)
@@ -470,7 +562,7 @@ C      TMP = MAX(TMP,DATA(IP,JP))
         mask(i,j,1:int(HX(i,j)))=0.
       enddo
       enddo
-!      ierr = nf_put_var_real(ncid, ntopo, HX)
+! ierr = nf_put_var_real(ncid, ntopo, HX)
       ierr = nf_put_var_real(ncid, ntopo, height)
       print*,'ERRor', nf_strerror(ierr)
 

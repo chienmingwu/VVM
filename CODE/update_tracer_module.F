@@ -105,18 +105,18 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k, tempim, tempjm ! do loop indices for zonal, meridional and vertical dimensions
 
-      if(my_task == 0) WRITE(6,*) 'Updating Tracer...'
-      !DO 123 K = 1, NK3
-      DO 123 J = mjm,mjp
-      DO 123 I = mim,mip
-        tempim=mi1*ni_sbdm+i
-        tempjm=mj1*nj_sbdm+j
-        IF (tempjm==mj_glob/2 .or. tempjm==mj_glob/4 .or. tempjm==mj_glob*3/4) THEN
-        IF (tempim==mi_glob/3) THEN
-          TC3D(I,J,1:2,1)=1.
-        ENDIF
-        ENDIF
-  123 CONTINUE
+!      if(my_task == 0) WRITE(6,*) 'Updating Tracer...'
+!      DO 123 K = 1, NK3
+!      DO 123 J = mjm,mjp
+!      DO 123 I = mim,mip
+!        tempim=mi1*ni_sbdm+i
+!        tempjm=mj1*nj_sbdm+j
+!        IF (tempjm==mj_glob/2 .or. tempjm==mj_glob/4 .or. tempjm==mj_glob*3/4) THEN
+!        IF (tempim==mi_glob/3) THEN
+!          TC3D(I,J,1:2,1)=1.
+!        ENDIF
+!        ENDIF
+!  123 CONTINUE
   
    END SUBROUTINE update_tracer_source
 

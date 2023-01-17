@@ -35,7 +35,8 @@ NAME = vvm
 BINDIR	= ../../DATA/${CASENAME}
 
 MAIN = $(EXPDIR)/$(NAME)
-.PHONY: all
+TOPO = $(EXPDIR)/create_topolsm
+.PHONY: all clean topography newtopo
 all : $(MAIN)
 
 #-----------------------------------------------------------------------------
@@ -92,6 +93,19 @@ SRC_FREE_LSM = \
 #==========================================
 
 SRC_FREE_RAD_RRTM = \
+	rrtmg_sw_init.f90 \
+	rrtmg_sw_setcoef.f90 \
+	rrtmg_sw_cldprmc.f90 \
+	rrtmg_sw_cldprop.f90 \
+	rrtmg_sw_spcvrt.f90 \
+	rrtmg_sw_rad.f90 \
+
+SRC_FREE_RAD_RRTM_OPT = \
+	rrtmg_sw_read_nc.f90 \
+	rrtmg_sw_vrtqdr.f90 \
+	rrtmg_sw_reftra.f90 \
+	rrtmg_sw_taumol.f90 \
+	rrtmg_sw_spcvmc.f90 \
 	parkind.f90 \
 	parrrtm.f90 \
 	rrlw_cld.f90 \
@@ -150,17 +164,6 @@ SRC_FREE_RAD_RRTM = \
 	rrsw_tbl.f90 \
 	rrsw_vsn.f90 \
 	rrsw_wvn.f90 \
-	rrtmg_sw_setcoef.f90 \
-	rrtmg_sw_read_nc.f90 \
-	rrtmg_sw_cldprmc.f90 \
-	rrtmg_sw_cldprop.f90 \
-	rrtmg_sw_init.f90 \
-	rrtmg_sw_reftra.f90 \
-	rrtmg_sw_taumol.f90 \
-	rrtmg_sw_vrtqdr.f90 \
-	rrtmg_sw_spcvmc.f90 \
-	rrtmg_sw_spcvrt.f90 \
-	rrtmg_sw_rad.f90 \
 	shr_kind_mod.f90 \
 	shr_orb_mod.f90 \
 	cam_rad_parameterizations.f90 \
@@ -169,6 +172,7 @@ SRC_FREE_RAD_RRTM = \
 	rad.f90 \
 	rad_driver.f90 \
 	rad_full.f90 
+	
 
 SRC_FREE_RRTMG = \
 	kinds.F \
@@ -195,7 +199,6 @@ SRC_FREE_CODE = \
 	buoyf_module.F \
 	cloud_module.F \
 	elliptic.F \
-        petsc_vvm_solver.F \
 	force_3d_module.F \
 	gather_scatter.F \
 	ldinput.F \
@@ -214,6 +217,7 @@ SRC_FREE_CODE = \
 	time_interp_module.F \
 	time_manager_module.F \
         land_module.F \
+        kpp_module.F \
 	turb_3d_module.F \
 	turb_1d_module.F \
 	update_thermo_module.F \
@@ -225,16 +229,24 @@ SRC_FREE_CODE = \
 	wind_module.F \
 	domain_decomposition.F \
 	timer.F \
-	output_nc.F \
-	ldoutput_nc.F \
         new_output_nc.F \
         new_ldoutput_nc.F \
 	ldmain.F \
-	vertical_adaptive.F
+	vertical_adaptive.F \
+#	output_nc.F \
+	ldoutput_nc.F \
+
+NOCHECK = petsc_vvm_solver.F
+
+# Der (7 Jan 2023)
+TOPOCODE = create_topolsm.F 
+TOPODEP = $(TOPOCODE) z_coord.F kinds.F PARMSLD.F90 CONSTLD.F90
 
 ####hchun###
-SRC_FREE = $(SRC_FREE_RAD_RRTM) $(SRC_FREE_RRTMG) $(SRC_FREE_CDECKS)  $(SRC_FREE_CODE) $(SRC_FREE_LSM)
+SRC_FREE = $(SRC_FREE_CDECKS) $(SRC_FREE_RRTMG) $(SRC_FREE_CODE) $(SRC_FREE_LSM) $(SRC_FREE_RAD_RRTM_OPT)
 ############
+
+SRC_OPT0 = $(SRC_FREE_RAD_RRTM)
 
 SRC_FIXED = $(SRC_FIXED_CODE)
 
@@ -502,7 +514,7 @@ gather_scatter.o: kinds.o PARMSLD.o domain_decomposition.o
 
 z_coord.o: kinds.o PARMSLD.o CONSTLD.o 
 
-ldinput.o: kinds.o PARMSLD.o RADOUTLD.o CONSTLD.o CONST3D.o workcom.o ldoutput.o ini_3d_module.o gather_scatter.o domain_decomposition.o bound.o TIMEINTERP.o output_nc.o wind_module.o
+ldinput.o: kinds.o PARMSLD.o RADOUTLD.o CONSTLD.o CONST3D.o workcom.o ldoutput.o ini_3d_module.o gather_scatter.o domain_decomposition.o bound.o TIMEINTERP.o new_output_nc.o wind_module.o
 
 ini_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o TIMEINTERP.o bound.o time_interp_module.o update_tracer_module.o ldoutput.o z_coord.o domain_decomposition.o turb_1d_module.o turb_3d_module.o wind_module.o
 
@@ -512,9 +524,9 @@ domain_decomposition.o: kinds.o PARMSLD.o
 
 ldrcalc.o: kinds.o workcom.o
 
-ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o output_nc.o ldoutput.o CLDINFO.o land_module.o turb_3d_module.o
+#ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o output_nc.o ldoutput.o CLDINFO.o land_module.o turb_3d_module.o
 
-output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
+#output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
 
 new_ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o new_output_nc.o ldoutput.o CLDINFO.o land_module.o turb_3d_module.o
 
@@ -534,7 +546,9 @@ time_interp_module.o: kinds.o PARMSLD.o TIMEINTERP.o CONST3D.o CONSTLD.o workcom
 
 time_manager_module.o: kinds.o PARMSLD.o TIMEINFO.o CONSTLD.o ldinput.o TIMEINTERP.o CONST3D.o workcom.o domain_decomposition.o
 
-land_module.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o module_simple_driver.o
+land_module.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o module_simple_driver.o workcom.o kpp_module.o
+
+kpp_module.o: kpp_module.F
 
 #======hchun====================================
 turb_3d_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o workcom.o bound.o utils.o land_module.o
@@ -567,3 +581,7 @@ ras_module.o: ras_module.F kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decompos
 
 vertical_adaptive.o: CONST3D.o CONSTLD.o PARMSLD.o kinds.o domain_decomposition.o
 #-----------------------------------------------------------------------------
+# Der (7 Jan 2023)
+create_topolsm.o: CONSTLD.o PARMSLD.o kinds.o z_coord.o
+
+

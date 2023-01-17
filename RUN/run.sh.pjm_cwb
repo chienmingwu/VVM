@@ -1,0 +1,31 @@
+#PJM -L rscgrp="large"
+#PJM -L "node=np_nodes:noncont"
+#PJM -L elapse=walltime
+#PJM --mpi "max-proc-per-node=48"
+#PJM --mpi proc=np_threads
+#PJM -x PJM_CACHE_MODE=4
+#PJM -N expname 
+#PJM --no-stging
+#PJM -j
+#PJM -S
+
+export PARALLEL=1
+export OMP_NUM_THREADS=${PARALLEL}
+#export FORT90L=-Wl,-T
+#export PLE_MPI_STD_EMPTYFILE=off
+#export OMP_WAIT_POLICY=active
+#export FLIB_BARRIER=HARD
+
+source /users/xa09/sample/setup_mpi.fx1000
+
+export PATH=$HOME/vvmlibs/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/vvmlibs/lib:$LD_LIBRARY_PATH
+
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+mpirun -np 1 ./create_topolsm
+mpirun -np total_cores ./vvm 
+date >> runtime
+
+

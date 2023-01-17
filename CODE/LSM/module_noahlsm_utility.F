@@ -119,7 +119,7 @@ end subroutine wrf_dm_bcast_real
 
 subroutine wrf_dm_bcast_integer(ival1, ival2)
   implicit none
-  real, intent(in) :: ival1
+  integer, intent(in) :: ival1
   integer, intent(in) :: ival2
 end subroutine wrf_dm_bcast_integer
 

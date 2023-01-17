@@ -230,16 +230,17 @@ PROGRAM ldmain
         N2    = NSWAP
 
         
-        if ( my_task == 0 ) write(12345,'(A4,I6,A13,F10.4,A12,F10.4,A8,F15.12,A9,F10.6)')  &
-            & 'ITT=',ITT,', ElapseTime=',elapse_time ,', totalTime=' ,ttl_time,&
-              ' ,align=',(origin_dt-itt_align),' ,var_dt=',inner_dt
+        !if ( my_task == 0 ) write(12345,'(A4,I6,A13,F10.4,A12,F10.4,A8,F15.12,A9,F10.6)')  &
+        !    & 'ITT=',ITT,', ElapseTime=',elapse_time ,', totalTime=' ,ttl_time,&
+        !      ' ,align=',(origin_dt-itt_align),' ,var_dt=',inner_dt
+        if ( my_task == 0 ) write(*,'(A4,I8,A9,F10.6)') 'ITT=',ITT,' ,var_dt=',inner_dt
        
 
         lc35 = MOD ( ITT,   NXS ) .EQ. 0
 
         call timer_start('output')
         IF ( lc35 ) CALL XSEC_CDF ( ITT )
-        IF ( MOD ( ITT, NRESTART ) .EQ. 0 ) CALL rstart_nc ( ITT, 13 )  ! This is new addition.
+        !IF ( MOD ( ITT, NRESTART ) .EQ. 0 ) CALL rstart_nc ( ITT, 13 )  ! This is new addition.
 
         if ( abs ( ( NXSAVG  * origin_dt ) - elapse_time ) < 1E-9 ) then
             elapse_time = 0.
@@ -259,5 +260,4 @@ PROGRAM ldmain
     CALL PETSCFINALIZE(mpierr)
 !-----------------------------------------------------------------------
 
-    STOP 100
 END PROGRAM ldmain

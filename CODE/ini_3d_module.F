@@ -63,47 +63,57 @@ CONTAINS
 
       integer nu1, nt1, nq1, k1, k2, it
       logical lf
-      DATA NU1/6/,NT1/29/,NQ1/20/
+      DATA NU1/6/,NT1/6/,NQ1/6/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(29),PI1(29),TV1(29),PILOG1(29)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(29),T1(29),QV1(29),QC1(29)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0,775.0 &
-             ,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0,350.0 &
-             ,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0,70.0 &
-             ,50./
-      DATA T1/301.246,299.169,297.515,296.35,295.014,293.752,292.521,291.309,290.106 &
-             ,288.867,287.545,284.466,280.821,276.82,272.996,268.835,263.996,258.415 &
-             ,251.848,243.709,233.844,228.075,221.699,214.639,206.84,198.676,191.745 &
-             ,194.587,206.771/
-      DATA QV1/0.0179026,0.0174521,0.0164586,0.0150866,0.013841,0.0124337,0.0110566 &
-              ,0.00974031,0.00858361,0.00759569,0.00676534,0.00555704,0.00457475,0.00363432 &
-              ,0.00280347,0.00208696,0.00147428,0.000984061,0.000624419,0.000359956,0.000167552 &
-              ,0.000100977,5.50747e-05,2.7595e-05,1.2715e-05,5.39508e-06,2.6389e-06,2.24212e-06 &
-              ,2.29645e-06/
-      DATA QC1/29*0./
+      REAL (KIND=dbl_kind) :: ZT1(6),PI1(6),TV1(6),PILOG1(6)
+      REAL (KIND=dbl_kind) :: PQ1(6),P1(6),T1(6),QV1(6),QC1(6)
+      REAL (KIND=dbl_kind) ::  PU1(6),WIND(6),DEG(6),U1(6),V1(6)
+      DATA P1/1021.,905.,720.,600.,490.,285./
+      DATA T1/295.,295.,310.5,310.5,325.,340./
+      DATA QV1/12.,12.,2.5,2.5,0.,0./
+      DATA QC1/6*0./
+      DATA PU1/1021.,905.,800.,285.,250.,200./
+      DATA U1/-7.5,-7.5,0.,10.,10.,10./
+      DATA V1/-7.5,-7.5,0.,0.,0.,0./
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
+      REAL (KIND=dbl_kind) ::  Q1OBS(6),Q2OBS(6)
+      !DATA WIND/8.,19.,31.,31.,15*12./
+      !DATA DEG/140.,140.,140.,140.,15*275./
+      ! DATA DEG/110.,110.,110.,110.,15*275./
+      !DATA DEG/80.,80.,80.,100.,15*275./
+      !DATA DEG/50.,50.,50.,100.,15*275./
+      !DATA DEG/20.,20.,20.,100.,15*275./
+      CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, &
+                        tracer_file
+      CHARACTER(len=8) :: dateStr = '20160107'
+      CHARACTER(len=5) :: stno = '47918'
+      !CHARACTER(len=5) :: stno = '46692'
+      CHARACTER(len=80) :: fname
 
-      REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
-      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
-      DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
+      
+      ! Read ideal sounding (RAW) from file
+      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.RAW.txt'
 
-      CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
+      open(unit=88,file=fname,form='formatted',status='old')
+      DO i = 1, 6
+      READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i)
+      QV1(i) = QV1(i)
+      T1(i) = T1(i) + 273.15
+      ENDDO
+      close(88)
+      20000 format(6F11.2)
 
+
+      PQ1=P1
+      T1=T1*(p1/1000.)**(287./1004.)
+      QV1=QV1*1E-3
+      Q1OBS=0.
+      Q2OBS=0.
+
+      !print *, t1
       casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
@@ -116,54 +126,12 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 300.
-      
-!!     initialization for rcemip
-!      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
-!      OPEN(939,FILE=trim(filename))
-!      READ(939,*)
-!      DO k=1,nk2
-!        READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1)
-!        111 FORMAT(32X,3F16.4)
-!      ENDDO
-!      CLOSE(939)
-!
-!      PBAR(1)=PBAR(2)
-!      THBAR(1)=THBAR(2)
-!      QVBAR(1)=QVBAR(2)
-!
-!      PBAR(nk3)=PBAR(nk2)+(PBAR(nk2)-PBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-!      THBAR(nk3)=THBAR(nk2)+(THBAR(nk2)-THBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-!      QVBAR(nk3)=QVBAR(nk2)+(QVBAR(nk2)-QVBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-!
-!      QVBAR=QVBAR*0.001
-!      PBAR=PBAR*100.
-!
-!      PIBAR=(PBAR/100000.)**(2./7.)
-!      RHO=PBAR/(rgas*THBAR*PIBAR)
-!      DO k=1,nk2
-!        RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
-!      ENDDO
-!      RHOZ(nk3)=RHOZ(nk2)+(RHOZ(nk2)-RHOZ(nk1))/(ZZ(nk2)-ZZ(nk1))*(ZZ(nk3)-ZZ(nk2))
-!
-!      IF (my_task == 0) THEN
-!      WRITE(*,*) "initial profiles"
-!      DO k=1,nk3
-!        WRITE(*,256) pbar(k)/100.,pibar(k),thbar(k),qvbar(k)*1000.,rho(k),rhoz(k)
-!        256 FORMAT(6F15.5)
-!      ENDDO
-!      ENDIF
-
-!     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
-!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
-!     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
-!     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
-
-      PSFC = P1(1)
+      SST = T1(1)
+      PSFC = p1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K) !* 1.E-01 + 273.16
-      QV1(K)= QV1(K) !* 1.E-04
+      T1(K) =  T1(K)
+      QV1(K)= QV1(K)
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -171,23 +139,18 @@ CONTAINS
       PI1(K) = ( P1(K) / PZERO ) ** RBCP
   110 CONTINUE
 
-!     *** MIXED LAYER PROFILE ***
-
-!      T1(3) = PI1(3) * T1(2) / PI1(2)
-
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
-
 
       DO 120 K = 1, NT1
       T8  = T1(K)
       P8  = P1(K)
       QV8 = QV1(K)
-      QC8 = 0.D0
+      QC8 = QC1(K)
       QI8 = 0.D0
       if (my_task .eq. 0) print*, T8,P8,QV8,K
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
-      QC1(K) = 0.
+      QC1(K) = QC8
   120 CONTINUE
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
@@ -197,7 +160,6 @@ CONTAINS
       PILOG1(K) = LOG ( PI1(K) )
       TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
   130 CONTINUE
-
 
       ZT1(1) = Zz(1)
 
@@ -222,6 +184,13 @@ CONTAINS
       QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
       QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
   150 CONTINUE
+
+      if (my_task==0) then
+        print *, 'initial profile'
+        print *, t
+        print *, qvbar
+      endif
+
 
 !     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
 
@@ -263,15 +232,15 @@ CONTAINS
       T8 = T(K)
       P8 = PBAR(K) * 0.01
       QV8 = QVBAR(K)
-      QC8 = 0.D0
+      QC8 = QCBAR(K)
       QI8 = 0.D0
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QVBAR(K) = QV8
+      QCBAR(K) = QC8
       ES1 = ES ( T(K) )
       QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
       THBAR(K) = T(K) / PIBAR(K)
       H(K) = QVBAR(K) / QVSBAR(K)
-      QCBAR(K) = 0.
   168 CONTINUE
 
   160 CONTINUE
@@ -319,17 +288,17 @@ CONTAINS
   102 CONTINUE
 
       DO 200 K = 2, NK3
-      IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
-      K2 = K1 + 1
-      Q1LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
-      Q2LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
-      ELSE
+      !IF ( ZT(K) .LT. 15000. ) THEN
+      !K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
+      !K2 = K1 + 1
+      !Q1LS (K) =  &
+      !  FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
+      !Q2LS (K) =  &
+      !  FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
+      !ELSE
       Q1LS (K) = 0.0
       Q2LS (K) = 0.0
-      END IF
+      !END IF
   200 CONTINUE
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
@@ -410,14 +379,6 @@ CONTAINS
       endif
 
 
-      ! isentropic environment
-      THBAR=THBAR(2)
-      RHO=1.
-      RHOZ=1.
-      RHOU=1.
-      RHOT=1.
-      RHOW=1.
-
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
 
@@ -430,16 +391,8 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2&
-              !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
-              +((ZT(K)-6000.)/2000.)**2)<=1)THEN
-        TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
-                      sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2+ &
-                           !((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
-                           ((ZT(K)-6000.)/2000.)**2)))**2
-      ENDIF
       QV3D(I,J,K) = QVBAR(K)
-      QC3D(I,J,K) = 0.
+      QC3D(I,J,K) = QCBAR(K)
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
 #if defined (MICROP3)
@@ -509,10 +462,8 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-!      U3DX(I,J,K)=UG(K)
-!      U3DY(I,J,K)=VG(K)
-      U3DX(I,J,K)=0.
-      U3DY(I,J,K)=0.
+      U3DX(I,J,K)=UG(K)
+      U3DY(I,J,K)=VG(K)
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -539,11 +490,11 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
-              &tcvvm_qobs_large_uras.L.Thermodynamic-000030.nc"
+      thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_north_2/archive/&
+              &tcvvm_qobs_large_north_2.L.Thermodynamic-000006.nc"
 
-      dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
-              &tcvvm_qobs_large_uras.L.Dynamic-000030.nc" 
+      dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_north_2/archive/&
+              &tcvvm_qobs_large_north_2.L.Dynamic-000006.nc" 
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
@@ -595,7 +546,7 @@ CONTAINS
       IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
-      albdo = 0.30
+      albdo = 0.19
 #endif    
 #if defined (DIFFUSION)
       call turb_3d_ini
@@ -604,7 +555,7 @@ CONTAINS
       TG_restart: IF (.false.)THEN
 
       tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
-                 uras_landsea_1800.C.Surface-000192.nc"
+                &uras_landsea_1800.C.Surface-000192.nc"
       topo_file = "TOPO.nc"
 
       call SST_RESTART(tg_file,topo_file)
@@ -619,9 +570,10 @@ CONTAINS
       height,L,H,HT,tmp
       integer(kind=int_kind) :: &
       i,j,k,NN,midi,midj
-      real(kind=int_kind) :: &
-      twtopo(mi_glob,mj_glob) 
       character(25) FILENAME
+      ! use for read topo from nc file (Der 14 Jan 2023)
+      integer(kind=int_kind) :: ierr,ncid,varid
+      INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart,readlen
 
       ITYPEU = 1
       ITYPEV = 1
@@ -629,15 +581,23 @@ CONTAINS
 
 #if defined (TOPOGRAPHY) 
 
-!      DATA L/75000./,H/4000./ !width and height of bell shaped mountain. 
-      WRITE(FILENAME,'(A12,I3.3,A1,I3.3,A4)') &
-      'RUNDATA/TOPO',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      ! read topo from TOPO.nc (Der 14 Jan 2023)
+      ierr = nfmpi_open(mpi_comm_world,"TOPO.nc",nf_nowrite,mpi_info_null,ncid)
+      IF (ierr/=0) stop "opentopo"
 
-      PRINT*,FILENAME
+      arraystart = (/ NI_SBDM*MI1+1, NJ_SBDM*MJ1+1, 1, 1 /)
+      readlen    = (/ MI1, MJ1, 1, 1 /)
+ 
+      ierr = nfmpi_inq_varid(ncid,'topo',varid)
+      IF (ierr/=0) stop "inqtopo"
+      ierr = nfmpi_get_vara_double_all(ncid,varid,arraystart,readlen,HX(1:MI1,1:MJ1))
+      IF (ierr/=0) stop "readtopo"
+     
+      ierr = nfmpi_close(ncid)
+      IF (ierr/=0) stop "closetopo"
 
-      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='OLD')
-      READ(99) ((HX(I,J),I=1,MI1),J=1,MJ1)
-      CLOSE(99)
+      if (my_task==0) write(*,*) "successfully read topo from TOPO.nc"
+
 
       tmp = maxval(HX)
       CALL MPI_ALLREDUCE(tmp,H,1,MPI_dbl_kind, MPI_MAX, MPI_COMM_WORLD, mpierr)
@@ -652,8 +612,8 @@ CONTAINS
       ENDDO
       ENDDO
 
-      DO J=1,MJ1
-      DO I=1,MI1
+      DO J=1,mj1
+      DO I=1,mi1
       NN=INT(HX(I,J))
       IF(NN .NE. 0) THEN
       DO K=2,NN
@@ -668,8 +628,8 @@ CONTAINS
       call bound_int_arb(NK2,ITYPEW)
 
       DO K=2,NK2
-      DO J=mjm,mjp
-      DO I=mim,mip
+      DO J=1,mjp
+      DO I=1,mip
       NN=ITYPEW(I,J,K)
       IF(NN .EQ. 0) THEN
       ITYPEU(I-1,J,K)=0

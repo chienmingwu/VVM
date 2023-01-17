@@ -13,7 +13,9 @@ USE workcom
 USE domain_decomposition
 USE petscsys
 USE pnetcdf
-
+#if defined (KPP)
+use land_module, only: olev, depth
+#endif
       
 IMPLICIT NONE
 PRIVATE
@@ -46,6 +48,11 @@ PRIVATE
 #if defined (LSM)
       integer (KIND=int_kind), public :: &
           ncid_lsm                           ! LSM variables output ID
+
+#if defined (KPP)
+      integer (KIND=int_kind), public :: &
+          ncid_kpp                           ! LSM variables output ID
+#endif
 #endif
 #endif
 !========
@@ -204,8 +211,10 @@ PUBLIC :: &
    pcdf_ini_rad, &
    pcdf_ini_xy, &
    pcdf_ini_4dvar, &
+   pcdf_write_xy_slice, &
    pcdf_write_xy, &
    pcdf_ini_xy_var, &
+   pcdf_write_4d_slice, &
    pcdf_write_4d
 
 CONTAINS
@@ -340,6 +349,7 @@ CONTAINS
       CALL pCDF_INI_4DVAR (ncid_th, 'qg', 'graupel mixing ratio', &
                           'graupel_mixing_ratio', 'kg kg-1', &
                           'zt', 'yt', 'xt')
+#endif
 
 #if defined (HEATING)
 ! QS3D
@@ -363,7 +373,9 @@ CONTAINS
                           'zt', 'yt', 'xt')
 #endif
 
-#endif
+      nc_err = nfmpi_enddef(ncid_th)
+      call put_3d_coord(ncid_th,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
 
 ! RAS cumulus parameterization
 #if defined (RAS)
@@ -386,6 +398,10 @@ CONTAINS
                           'precipitation', 'm/s', &
                           'yt', 'xt')
 #endif
+
+      nc_err = nfmpi_enddef(ncid_ras)
+      call put_3d_coord(ncid_ras,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
 
 #endif
 
@@ -429,6 +445,10 @@ CONTAINS
                           'vertical_velocity', 'm s-1', &
                           'zt', 'yt', 'xt')
 
+      nc_err = nfmpi_enddef(ncid_z3dx)
+      call put_3d_coord(ncid_z3dx,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
+
 #if defined (PHYSICS)
 #if defined (RADCODE)
 ! Radiation diagnostics -------------------------------------------------------
@@ -470,6 +490,10 @@ CONTAINS
       CALL pCDF_INI_XY_VAR (ncid_rad, 'fulwtoa', 'Upward flux of longwave radiation at TOA', &
                           'upward_flux_longwave_radiation_toa', 'W/m**2', &
                           'yt', 'xt')
+
+      nc_err = nfmpi_enddef(ncid_rad)
+      call put_3d_coord(ncid_rad,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
 #endif
 #endif
 
@@ -488,7 +512,48 @@ CONTAINS
                           'tracer_mixing_ratio '//trnum, 'kg kg-1', &
                           'zt', 'yt', 'xt')
         enddo
+
+      nc_err = nfmpi_enddef(ncid_tc)
+      call put_3d_coord(ncid_tc,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
       endif
+
+#if defined (DIAG)
+! Tracers ---------------------------------------------------------------------
+      if (ndiag_2d > 0 .or. ndiag_3d > 0) then
+      call fname_nc(itp1, EXPHDR, 'Diag', ITT_OUTPUT, filnam_nc)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_diag)
+      CALL pCDF_INI_THERMO (ncid_diag, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      if (ndiag_2d > 0) then
+        do nt = 1,ndiag_2d
+          write(unit=trnum,fmt='(i2.2)')nt
+          CALL pCDF_INI_XY_VAR (ncid_diag, 'ds'//trnum, &
+                          'single-level diagnostic variable '//trnum, &
+                          'single_level_diagnostic_variable '//trnum, ' ', &
+                          'yt', 'xt')
+        enddo
+      endif
+
+      if (ndiag_3d > 0) then
+        do nt = 1,ndiag_3d
+          write(unit=trnum,fmt='(i2.2)')nt
+          CALL pCDF_INI_4DVAR (ncid_diag, 'dm'//trnum, &
+                          'multi-level diagnostic variable '//trnum, &
+                          'multi_level_diagnostic_variable '//trnum, ' ', &
+                          'zt', 'yt', 'xt')
+        enddo
+      endif
+
+      nc_err = nfmpi_enddef(ncid_diag)
+      call put_3d_coord(ncid_diag,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
+      endif
+#endif
+
 
 #if defined (DIAG)
 ! Tracers ---------------------------------------------------------------------
@@ -553,6 +618,10 @@ CONTAINS
       CALL pCDF_INI_XY_VAR(ncid_phys, 'olr', 'Outgoing longwave radiation', &
                           'outgoing_longwave_radiation', 'W m-2', &
                           'yt','xt')
+
+      nc_err = nfmpi_enddef(ncid_phys)
+      call put_2d_coord(ncid_phys,mj_glob,mi_glob,&
+                        yt(1:mj_glob),xt(1:mi_glob))
 #endif
 
 !===hchun
@@ -750,6 +819,40 @@ CONTAINS
       CALL pCDF_INI_XY_VAR(ncid_lsm, 'smcmax', 'porosity', &
                           'porosity', 'm3 m-3', &
                           'yt','xt')
+
+      nc_err = nfmpi_enddef(ncid_lsm)
+      call put_2d_coord(ncid_lsm,mj_glob,mi_glob,&
+                        yt(1:mj_glob),xt(1:mi_glob))
+            
+#if defined (KPP)            
+      call fname_nc(itp1, EXPHDR, 'Ocean', ITT_OUTPUT, filnam_nc)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_kpp)
+      CALL pCDF_INI_THERMO (ncid_kpp, time_len, &
+                           olev, mj_glob, mi_glob, depth, &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+      CALL pCDF_INI_4DVAR (ncid_kpp, 't', 'ocean temperature', &
+                          'ocean_temperature', 'K', &
+                          'zt', 'yt', 'xt')
+
+      CALL pCDF_INI_4DVAR (ncid_kpp, 'u', 'zonal velocity', &
+                          'zonal_velocity', 'm s-1', &
+                          'zt', 'yt', 'xt')
+
+      CALL pCDF_INI_4DVAR (ncid_kpp, 'v', 'meridional velocity', &
+                          'meridional_velocity', 'm s-1', &
+                          'zt', 'yt', 'xt')
+
+      CALL pCDF_INI_XY_VAR(ncid_kpp, 'mld', 'mixed-layer depth', &
+                          'mixed_layer_depth', 'm', &
+                          'yt','xt')
+
+      nc_err = nfmpi_enddef(ncid_kpp)
+      call put_3d_coord(ncid_kpp,olev,mj_glob,mi_glob,depth,&
+                          yt(1:mj_glob),xt(1:mi_glob))
+#endif
+
 #endif
 
 #endif
@@ -795,6 +898,9 @@ CONTAINS
 ! Land surface variables
       nc_err = nfmpi_sync(ncid_lsm)
 
+#if defined (KPP)
+      nc_err = nfmpi_sync(ncid_kpp)
+#endif
 #endif
 #endif
 
@@ -842,6 +948,9 @@ CONTAINS
 ! Land surface variables
       nc_err = nfmpi_close(ncid_lsm)
 
+#if defined (KPP)
+      nc_err = nfmpi_close(ncid_kpp)
+#endif
 #endif
 #endif
 
@@ -1165,7 +1274,7 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 !------------------------------------------------------------------------------
@@ -1486,7 +1595,7 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 !------------------------------------------------------------------------------
@@ -1776,8 +1885,85 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+!!------------------------------------------------------------------------------
+!! store zc
+!        temlen=zc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'zc', zc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
+!      nc_err = nfmpi_inq_varid(ncid, 'zb', zb_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, zb_id, (/1_mpi_offset_kind/), (/temlen/), zb)
+!      nc_err = nfmpi_inq_varid(ncid, 'lev', zc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), levc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store yc
+!        temlen=yc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'yc', yc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
+!      nc_err = nfmpi_inq_varid(ncid, 'lat', yc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), latc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store xc
+!        temlen=xc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'xc', xc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
+!      nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+#endif
+
+!==============================================================================
+      END SUBROUTINE pCDF_INI_RAD
+!==============================================================================
+
+!==============================================================================
+      SUBROUTINE put_3d_coord(ncid,zc_len,yc_len,xc_len,zc,yc,xc)
+!==============================================================================
+
+! Input
+
+      integer (KIND=int_kind), intent(in) :: &
+          ncid      ! netCDF id
+
+! dimension length
+      integer (KIND=int_kind), intent(in) :: &
+          zc_len, &    ! vertical height (model layer position)
+          yc_len, &    ! meridional coordinate (column centers)
+          xc_len       ! zonal coordinate (column centers)
+
+! data variables
+      real (KIND=dbl_kind), dimension(zc_len), intent(inout) :: &
+          zc  ! vertical height (model layer position; m)
+
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
+          yc  ! meridional coordinates (column centers; m)
+      
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
+          xc  ! zonal coordinates (column centers; m)
+
+!------------------------------------------------------------------------------
+! Local
+
+! variable len copy
+      integer (kind=mpi_offset_kind) :: temlen
+
+! dimension id
+      integer (KIND=int_kind) :: &
+          zc_dim, &     ! vertical height (model layer position)
+          yc_dim, &     ! meridional coordinate (column centers)
+          xc_dim        ! zonal coordinate (column centers)
+
+! variable id
+      integer (KIND=int_kind) :: &
+          zc_id, &     ! vertical height (model layer position)
+          yc_id, &     ! meridional coordinate (column centers)
+          xc_id        ! zonal coordinate (column centers)
 
 !------------------------------------------------------------------------------
 ! store zc
@@ -1785,8 +1971,6 @@ CONTAINS
         if (my_task /= 0) temlen=0
       nc_err = nfmpi_inq_varid(ncid, 'zc', zc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), zc)
-      nc_err = nfmpi_inq_varid(ncid, 'zb', zb_id)
-      nc_err = nfmpi_put_vara_double_all(ncid, zb_id, (/1_mpi_offset_kind/), (/temlen/), zb)
       nc_err = nfmpi_inq_varid(ncid, 'lev', zc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, zc_id, (/1_mpi_offset_kind/), (/temlen/), levc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
@@ -1806,11 +1990,9 @@ CONTAINS
       nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
       nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-#endif
 
 !==============================================================================
-      END SUBROUTINE pCDF_INI_RAD
+      END SUBROUTINE put_3d_coord
 !==============================================================================
 
 
@@ -2051,8 +2233,79 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+!!------------------------------------------------------------------------------
+!!! store yb
+!!        temlen=yb_len
+!!        if (my_task /= 0) temlen=0
+!!      nc_err = nfmpi_put_vara_double_all(ncid, yb_id, (/1_mpi_offset_kind/), (/temlen/), yb)
+!!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store yc
+!        temlen=yc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'yc', yc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), yc)
+!      nc_err = nfmpi_inq_varid(ncid, 'lat', yc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, yc_id, (/1_mpi_offset_kind/), (/temlen/), latc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!!! store xb
+!!        temlen=xb_len
+!!        if (my_task /= 0) temlen=0
+!!      nc_err = nfmpi_put_vara_double_all(ncid, xb_id, (/1_mpi_offset_kind/), (/temlen/), xb)
+!!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+!! store xc
+!        temlen=xc_len
+!        if (my_task /= 0) temlen=0
+!      nc_err = nfmpi_inq_varid(ncid, 'xc', xc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), xc)
+!      nc_err = nfmpi_inq_varid(ncid, 'lon', xc_id)
+!      nc_err = nfmpi_put_vara_double_all(ncid, xc_id, (/1_mpi_offset_kind/), (/temlen/), lonc)
+!!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+!==============================================================================
+      END SUBROUTINE pCDF_INI_XY
+!==============================================================================
+
+
+!==============================================================================
+      SUBROUTINE put_2d_coord(ncid,yc_len,xc_len,yc,xc)
+!==============================================================================
+
+!------------------------------------------------------------------------------
+! Input
+
+      integer (KIND=int_kind), intent(in) :: &
+          ncid      ! netCDF id
+
+! dimension length
+      integer (KIND=int_kind), intent(in) :: &
+          yc_len, &    ! meridional coordinate (column centers)
+          xc_len       ! zonal coordinate (column centers)
+
+! data variables
+      real (KIND=dbl_kind), dimension(yc_len), intent(inout) :: &
+          yc  ! meridional coordinates (column centers; m)
+      
+      real (KIND=dbl_kind), dimension(xc_len), intent(inout) :: &
+          xc  ! zonal coordinates (column centers; m)
+
+!------------------------------------------------------------------------------
+! Local
+
+! variable len copy
+      integer (kind=mpi_offset_kind) :: temlen
+
+! dimension id
+      integer (KIND=int_kind) :: &
+          yc_dim, &     ! meridional coordinate (column centers)
+          xc_dim        ! zonal coordinate (column centers)
+
+! variable id
+      integer (KIND=int_kind) :: &
+          yc_id, &     ! meridional coordinate (column centers)
+          xc_id        ! zonal coordinate (column centers)
 
 !------------------------------------------------------------------------------
 !! store yb
@@ -2083,8 +2336,9 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !==============================================================================
-      END SUBROUTINE pCDF_INI_XY
+      END SUBROUTINE put_2d_coord
 !==============================================================================
+
 
 !==============================================================================
       SUBROUTINE pCDF_INI_4DVAR (ncid, var_nc, var_long_name, var_std_name, &
@@ -2169,7 +2423,7 @@ CONTAINS
       var_dims(1) = xc_dim
 
 ! Enter define mode
-      nc_err = nfmpi_redef(ncid)
+      !nc_err = nfmpi_redef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 ! define variable      
@@ -2196,7 +2450,7 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !==============================================================================
@@ -2278,7 +2532,7 @@ CONTAINS
       var_dims(1) = xc_dim
       
 ! Enter define mode
-      nc_err = nfmpi_redef(ncid)
+      !nc_err = nfmpi_redef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
 ! define variable      
@@ -2305,7 +2559,7 @@ CONTAINS
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 ! leave define mode
-      nc_err = nfmpi_enddef(ncid)
+      !nc_err = nfmpi_enddef(ncid)
 !      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
 !==============================================================================
@@ -2393,6 +2647,130 @@ CONTAINS
       END SUBROUTINE pCDF_WRITE_4D
 !==============================================================================
 
+!==============================================================================
+      SUBROUTINE pCDF_WRITE_4D_slice (ncid, var_nc, time_l, time_start, &
+                               var_values, k)
+!==============================================================================
+
+! Write NetCDF data. Input data array is 3-dimensional (x,y,z).  Fourth
+! dimension in the NetCDF data represents time.
+
+      integer (KIND=int_kind), intent(in) :: &
+          ncid, k
+          
+      character (len=*), intent(in) :: &
+          var_nc
+
+      real (KIND=real_kind), intent(inout) :: &
+          time_l
+
+      real (KIND=real_kind), dimension(1) :: &
+          time_temp
+          
+      integer (KIND=int_kind), dimension(1), intent(in) :: &
+          time_start
+
+      real (KIND=tm_kind), dimension(mi1,mj1,k), intent(inout) :: &
+!      real (KIND=dbl_kind), dimension(mi1,mj1,k), intent(in) :: &
+          var_values
+
+      real (KIND=tm_kind), dimension(k,mj1,mi1) :: &
+          var_values_tmp
+
+      real (KIND=tm_kind), dimension(:,:,:), allocatable :: &
+          out_values_tmp, out_values
+
+      integer (KIND=int_kind) :: &
+          time_id, &
+          var_id
+          
+      character (len=20) :: name
+      integer (KIND=int_kind) :: ndims, j, i, ierr
+      integer (KIND=int_kind), dimension(3) :: var_shape
+      integer (kind=mpi_offset_kind), dimension(1) :: start1, count1
+      integer (kind=mpi_offset_kind), dimension(4) :: start4, count4
+      integer (kind=int_kind), dimension(ntasks) :: mpi_n, mpi_s
+
+      start4=1
+      count4=0 
+      mpi_n=0
+      mpi_s=0
+      if (ni_sbdm==0) then
+      ! indexes for NetCDF
+      start4(1) = 1
+      start4(2) = nj_sbdm*mj1 + 1
+      start4(3) = 1
+      start4(4) = time_start(1)
+      count4(1) = mi_glob
+      count4(2) = mj1
+      count4(3) = k
+      count4(4) = 1
+      ! indexes for MPI
+      do j=my_task+1,my_task+nsbdm_x
+      !write(*,*) "0 out:", j,my_task+1,my_task+nsbdm_x,ntasks
+      mpi_s(j)=(j-(my_task+1))*mi1*mj1*k!+1
+      enddo
+      allocate(out_values(mi_glob,mj1,k))
+      allocate(out_values_tmp(k,mj1,mi_glob))
+      else
+      allocate(out_values(1,1,1))
+      allocate(out_values_tmp(1,1,1))
+      endif
+      mpi_n(int(my_task/nsbdm_x)*nsbdm_x+1:int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x)=mi1*mj1*k
+      !write(*,*) "out if:", my_task,int(my_task/nsbdm_x)*nsbdm_x+1,int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x
+
+      var_values_tmp=reshape(var_values,(/k,mj1,mi1/),order=(/3,2,1/))
+      ! recive data from ni_sbdm/=0 to ni_sbdm==0
+      do j=0,nsbdm_y-1
+      i=0
+      if (int(my_task/nsbdm_x)==j) i=mpi_n(my_task+1) 
+      !write(*,*) "do loop",my_task, int(j*nsbdm_x),i
+      !if (my_task==int(j*nsbdm_x)) then
+      !        write(*,*) "mpi_s", mpi_s
+      !        write(*,*) "mpi_n", mpi_n
+      !endif
+      call mpi_gatherv(var_values_tmp,i,mpi_real,out_values_tmp,mpi_n,mpi_s,mpi_real,int(j*nsbdm_x),mpi_comm_world,ierr)
+      call mpi_barrier(mpi_comm_world,ierr)
+      enddo
+      if (ni_sbdm==0) out_values=reshape(out_values_tmp,(/mi_glob,mj1,k/),order=(/3,2,1/))
+
+! Inquire time id and store time
+      nc_err = nfmpi_inq_varid(ncid, 'time',time_id)
+!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      count1(1) = 1
+      start1 = time_start
+      time_temp = time_l
+      nc_err = nfmpi_put_vara_real_all(ncid, time_id, start1, count1, time_temp )
+!      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, time_id)
+
+! Inquire variable id
+      nc_err = nfmpi_inq_varid(ncid, var_nc, var_id)
+!      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
+      
+      nc_err = nfmpi_inq_varname(ncid, var_id, name)
+      nc_err = nfmpi_inq_varndims(ncid, var_id, ndims)
+      
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_4D: var_start = ',var_start 
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_4D: name = ',name
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_4D: ndims = ',ndims
+!      
+!      var_shape = SHAPE(var_values)
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_4D: var_shape = ',var_shape
+      
+! Store variable
+!      call transpose_x(var_values, var_t, k)
+!      nc_err = nfmpi_put_vara_double_all(ncid, var_id, start4, count4, var_values)
+      !if (my_task==0) write(*,*) "before output"
+      nc_err = nfmpi_put_vara_real_all(ncid, var_id, start4, count4, out_values)
+      if (ni_sbdm==0) deallocate(out_values,out_values_tmp)
+      !if (my_task==0) write(*,*) "after output"
+       
+      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
+
+!==============================================================================
+      END SUBROUTINE pCDF_WRITE_4D_slice
+!==============================================================================
 
 !==============================================================================
       SUBROUTINE pCDF_WRITE_XY (ncid, var_nc, time_l, time_start, &
@@ -2472,6 +2850,128 @@ CONTAINS
 !==============================================================================
       END SUBROUTINE pCDF_WRITE_XY
 !==============================================================================
+
+!==============================================================================
+      SUBROUTINE pCDF_WRITE_XY_slice (ncid, var_nc, time_l, time_start, &
+                               var_values)
+!==============================================================================
+
+! Write NetCDF data.  Input data array is 2-dimensional (x,y).  Third dimension
+! in the NetCDF data represents time.
+
+      integer (KIND=int_kind), intent(in) :: &
+          ncid
+          
+      character (len=*), intent(in) :: &
+          var_nc
+
+      real (KIND=real_kind), intent(inout) :: &
+          time_l
+
+      real (KIND=real_kind), dimension(1) :: &
+          time_temp
+          
+      integer (KIND=int_kind), dimension(1), intent(in) :: &
+          time_start
+
+!      real (KIND=dbl_kind), dimension(mi1,mj1,1), intent(in) :: &
+      real (KIND=tm_kind), dimension(mi1,mj1,1), intent(inout) :: &
+          var_values
+
+      real (KIND=tm_kind), dimension(1,mj1,mi1) :: &
+          var_values_tmp
+
+      real (KIND=tm_kind), dimension(:,:,:), allocatable :: &
+          out_values_tmp, out_values
+
+      integer (KIND=int_kind) :: &
+          time_id, &
+          var_id
+          
+      character (len=20) :: name
+      integer (KIND=int_kind) :: ndims, j, i, ierr
+      integer (KIND=int_kind), dimension(2) :: var_shape
+      integer (kind=mpi_offset_kind), dimension(1) :: start1, count1
+      integer (kind=mpi_offset_kind), dimension(3) :: start3, count3
+      integer (kind=int_kind), dimension(ntasks) :: mpi_n, mpi_s
+      
+      start3=1
+      count3=0
+      mpi_n=0
+      mpi_s=0
+      if (ni_sbdm==0) then
+      ! indexes for NetCDF
+      start3(1) = 1
+      start3(2) = nj_sbdm*mj1 + 1
+      start3(3) = time_start(1)
+      count3(1) = mi_glob
+      count3(2) = mj1
+      count3(3) = 1
+      ! indexes for MPI
+      do j=my_task+1,my_task+nsbdm_x
+      !write(*,*) "0 out:", j,my_task+1,my_task+nsbdm_x,ntasks
+      mpi_s(j)=(j-(my_task+1))*mi1*mj1!+1
+      enddo
+      allocate(out_values(mi_glob,mj1,1))
+      allocate(out_values_tmp(1,mj1,mi_glob))
+      else
+      allocate(out_values(1,1,1))
+      allocate(out_values_tmp(1,1,1))
+      endif
+      mpi_n(int(my_task/nsbdm_x)*nsbdm_x+1:int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x)=mi1*mj1
+      !write(*,*) "out if:", my_task,int(my_task/nsbdm_x)*nsbdm_x+1,int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x
+
+      ! recive data from ni_sbdm/=0 to ni_sbdm==0
+      var_values_tmp=reshape(var_values, (/1,mj1,mi1/), order=(/3,2,1/))
+      do j=0,nsbdm_y-1
+      i=0
+      if (int(my_task/nsbdm_x)==j) i=mpi_n(my_task+1)
+      !write(*,*) "do loop",my_task, int(j*nsbdm_x),i
+      !if (my_task==int(j*nsbdm_x)) then
+      !        write(*,*) "mpi_s", mpi_s
+      !        write(*,*) "mpi_n", mpi_n
+      !endif
+      call mpi_gatherv(var_values_tmp,i,mpi_real,out_values_tmp,mpi_n,mpi_s,mpi_real,int(j*nsbdm_x),mpi_comm_world,ierr)
+      call mpi_barrier(mpi_comm_world,ierr)
+      enddo
+      if (ni_sbdm==0) out_values=reshape(out_values_tmp,(/mi_glob,mj1,1/),order=(/3,2,1/))
+
+! Inquire time id and store time
+      nc_err = nfmpi_inq_varid(ncid, 'time',time_id)
+!      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      count1(1) = 1
+      start1 = time_start
+      time_temp = time_l
+      nc_err = nfmpi_put_vara_real_all(ncid, time_id, start1, count1, time_temp )
+!      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, time_id)
+
+! Inquire variable id
+      nc_err = nfmpi_inq_varid(ncid, var_nc, var_id)
+!      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
+      
+      nc_err = nfmpi_inq_varname(ncid, var_id, name)
+      nc_err = nfmpi_inq_varndims(ncid, var_id, ndims)
+
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_XY: var_start = ',var_start 
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_XY: name = ',name
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_XY: ndims = ',ndims
+!      
+!      var_shape = SHAPE(var_values)
+!      if (my_task == 0) write(6,*) 'CDF_WRITE_XY: var_shape = ',var_shape
+      
+! Store variable
+!      call transpose_x(var_values, var_t, 1)
+!      nc_err = nfmpi_put_vara_double_all(ncid, var_id, start3, count3, var_values)
+      nc_err = nfmpi_put_vara_real_all(ncid, var_id, start3, count3, out_values)
+      deallocate(out_values,out_values_tmp)
+
+      if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
+
+!==============================================================================
+      END SUBROUTINE pCDF_WRITE_XY_slice
+!==============================================================================
+
 !==============================================================================
       SUBROUTINE pCDF_INI_RSTART (ncid, time_len, &
                                  zc_len, &
