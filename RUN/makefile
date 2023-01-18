@@ -190,8 +190,7 @@ $(TOPOLSM): %.o: %.F
 	$(FC) -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF)
 
 $(TOPO): $(TOPOOBJ)
-	echo $(TOPOCODE) $(TOPOOBJ)
-	$(LD) $(LDFLAGS) $^ -o $@ $(LDLIBS)
+	$(LD) $(CH) $(LDFLAGS) $^ -o $@ $(LDLIBS)
 
 
 	

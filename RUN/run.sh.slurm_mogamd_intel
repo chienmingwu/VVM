@@ -14,12 +14,15 @@ module load Intel-oneAPI-2022.1
 module load compiler mpi mkl
 module load petsc/3.14.0 pnetcdf/1.12.2
 
+ulimit -s unlimited
+
 export I_MPI_FABRICS=shm
 
 export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
 
+mpirun -np 1 ./create_topolsm
 mpirun -np total_cores ./vvm < INPUT | tee OUTPUT  
 
 date >> runtime

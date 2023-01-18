@@ -9,7 +9,7 @@ integer :: i,j,k,m,n,o,ii,jj,kk,is,js
 real :: dum1
 real, parameter :: tripi=4.*atan(1.)
 real, dimension(:,:,:), allocatable :: routput,rtemp_tw,r_tw
-integer, dimension(:,:,:), allocatable :: ioutput,itemp_tw,i_tw
+integer*4, dimension(:,:,:), allocatable :: ioutput,itemp_tw,i_tw
 integer*1, dimension(:,:,:), allocatable :: mask
 integer, dimension(:), allocatable :: tmp
 real, dimension(:), allocatable :: tlon_tw,tlat_tw,lon_tw,lat_tw,olon,olat
@@ -266,7 +266,7 @@ if (taiwanvvm) then
 
  
   ! apply taiwan
-  routput(1+xs_tw:xs_tw+1024/f_coarse_taiwanvvm,1+ys_tw:ys_tw+1024/f_coarse_taiwanvvm,:)=r_tw
+  routput(1+xs_tw:xs_tw+1024/f_coarse_taiwanvvm,1+ys_tw:ys_tw+1024/f_coarse_taiwanvvm,1:6)=r_tw
   ioutput(1+xs_tw:xs_tw+1024/f_coarse_taiwanvvm,1+ys_tw:ys_tw+1024/f_coarse_taiwanvvm,:)=i_tw
 
   ! setup lon/lat
@@ -350,6 +350,7 @@ mask=1
 do j=1,mj_glob
 do i=1,mi_glob
   k=int(routput(i,j,7))
+  if (k<1) k=1
   routput(i,j,1)=(zz(k))/1000.
   mask(i,j,1:k)=0
 enddo
