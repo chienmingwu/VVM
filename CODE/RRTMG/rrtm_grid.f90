@@ -40,7 +40,7 @@
           doshortwave = .TRUE., &       ! true = do shortwave calculation
           dolongwave = .TRUE., &        ! true = do longwave calculation
           doseasons = .FALSE., &        ! true = seasonal cycle in solar radiation
-          doperpetual = .FALSE., &      ! true = perpetual sun
+          doperpetual = .TRUE., &      ! true = perpetual sun
           dosolarconstant = .TRUE., &  ! true = fix solar constant and zenith angle
           restart_sep = .FALSE., &      ! true = write separate restart files for subdomains
           initialized = .FALSE., &      ! true = radiation has been initialized
