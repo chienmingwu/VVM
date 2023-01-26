@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rrce_300_45_8km
+set expname = rrce_300_45_4km
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -72,7 +72,6 @@ cat > definesld.com << 'END1'
 #define PERIODIC
 #define PHYSICS
 #define MICROCODE
-#define MICROP3
 #define DIFFUSION
 'END1'
 cat definesld.com
@@ -95,7 +94,7 @@ sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=864000 /
  &INPUT2 RLAT=45, RLON=120 /
- &INPUT3 DX=8000.,DYNEW=8000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
+ &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
 #         ( case output frequency)   ( result could be seen in ncfile)

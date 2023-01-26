@@ -92,7 +92,7 @@ CONTAINS
       END IF
 
 !ccwu qbo case
-CRAD1=0
+!CRAD1=0
 !ccwu
 
       !IF (.false.) THEN ! Der test for rcemip
