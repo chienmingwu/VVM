@@ -16,8 +16,8 @@ set echo  # echoes the commands
 set expname = topolsm_mogamd_opt3
 
 # set job system and compiler
-set compiler = 'intel_mogamd'
-set jobsys = 'slurm_mogamd_intel'
+set compiler = 'fujitsu_cwb'
+set jobsys = 'pjm_cwb'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
