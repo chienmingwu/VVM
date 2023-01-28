@@ -78,8 +78,8 @@ set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
 sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/60/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
@@ -89,7 +89,7 @@ cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=60 /
+ &INPUT1 NEWRUN=T, ITTADD=4320 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
