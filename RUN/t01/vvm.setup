@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rrce_300_45_4km
+set expname = rrce_300_45_16km_p3_z45_10_1_small_noq1q2_clean
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -72,7 +72,9 @@ cat > definesld.com << 'END1'
 #define PERIODIC
 #define PHYSICS
 #define MICROCODE
+#define MICROP3
 #define DIFFUSION
+#define RADCODE
 'END1'
 cat definesld.com
 
@@ -81,24 +83,24 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/64/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=864000 /
+ &INPUT1 NEWRUN=T, ITTADD=432000 /
  &INPUT2 RLAT=45, RLON=120 /
- &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
+ &INPUT3 DX=16000.,DYNEW=16000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=10,ITSTOP=8640,SCALE=1.,Q1Q2=T,DTRAD=120.,petsc_cr=0 /
+ &INPUT5 IX=3182073,ITINIT=10,ITSTOP=8640,SCALE=0.,Q1Q2=T,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT

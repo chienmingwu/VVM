@@ -234,7 +234,7 @@
 ! mode 1
  inv_rm1 = 2.e+7           ! inverse aerosol mean size (m-1)
  sig1    = 2.0             ! aerosol standard deviation
- nanew1  = 300.e6          ! aerosol number mixing ratio (kg-1)
+ nanew1  = 3.e6  !ccwu clean           ! aerosol number mixing ratio (kg-1)
  f11     = 0.5*exp(2.5*(log(sig1))**2)
  f21     = 1. + 0.25*log(sig1)
 
