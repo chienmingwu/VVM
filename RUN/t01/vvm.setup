@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = taiwanvvmL_20160107
+set expname = taiwanvvmL_20160107_W
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -76,6 +76,7 @@ cat > definesld.com << 'END1'
 #define RADCODE
 #define LSM
 #define TOPOGRAPHY
+#define AREAMN
 'END1'
 cat definesld.com
 
@@ -95,13 +96,13 @@ sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=120 /
+ &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=10800. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=30,NWR11=1,NFLPRT=1,NRESTART=30 /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=-1,ITSTOP=-1,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
+ &INPUT5 IX=3182073,ITINIT=1,ITSTOP=120,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT

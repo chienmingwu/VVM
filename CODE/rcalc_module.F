@@ -122,12 +122,18 @@ CONTAINS
       FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
   309 CONTINUE
   SELECT CASE (TRIM(casename))
-  CASE ('TWP-ICE','BOMEX')
+  CASE ('TWP-ICE','BOMEX','GATE_PHASE_III')
       fntddz = FNT(K)/DZ
       IF (WLS(K) .LT. 0.) THEN
       
       DO 301 J = 1, MJ1
       DO 301 I = 1, MI1
+      ! add WLS to TH & QV      
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) - WLS(K)*         &
+                (TH3D(I,J,K+1)-TH3D(I,J,K))*fntddz
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) - WLS(K)*         &
+                (QV3D(I,J,K+1)-QV3D(I,J,K))*fntddz
+
       FQC3D(I,J,K,L)=FQC3D(I,J,K,L) - WLS(K)*         &
                 (QC3D(I,J,K+1)-QC3D(I,J,K))*fntddz
       FQI3D(I,J,K,L)=FQI3D(I,J,K,L) - WLS(K)*         &
@@ -172,6 +178,12 @@ CONTAINS
       ELSE
       DO 302 J = 1, MJ1
       DO 302 I = 1, MI1
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) - WLS(K)*         &
+                (TH3D(I,J,K)-TH3D(I,J,K-1))*fntddz
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) - WLS(K)*         &
+                (QV3D(I,J,K)-QV3D(I,J,K-1))*fntddz
+
+
       FQC3D(I,J,K,L)=FQC3D(I,J,K,L) - WLS(K)*         &
                 (QC3D(I,J,K)-QC3D(I,J,K-1))*fntddz
       FQI3D(I,J,K,L)=FQI3D(I,J,K,L) - WLS(K)*         &
