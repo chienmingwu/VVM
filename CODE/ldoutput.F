@@ -448,7 +448,7 @@ CONTAINS
       REAL (KIND=real_kind) ::  FNZ_s(NK3),FNT_s(NK3)
       REAL (KIND=real_kind) ::  RHO_s(NK3),RHOZ_s(NK2),THBAR_s(NK3),  &
              QVBAR_s(NK3),PBAR_s(NK3),PIBAR_s(NK3),                   &
-             UG_s(NK3),vG_s(NK3),Q1LS_s(NK3),Q2LS_s(NK3)
+             UG_s(NK3),vG_s(NK3),Q1LS_s(NK3),Q2LS_s(NK3),WLS_s(NK3)
 
       if(my_task .ne. 0) RETURN
 
@@ -497,15 +497,16 @@ CONTAINS
                        PBAR_s(i),PIBAR_s(i),QVBAR_s(i)
       enddo
       write(98,*) '============================================'
-      write(98,*) 'K,UG(K),Q1LS(K),Q2LS(K)'
+      write(98,*) 'K,UG(K),Q1LS(K),Q2LS(K),WLS(m/s)'
       write(98,*) '============================================'
       do i=1, NK3
       UG_s(i)=UG(i)
       vG_s(i)=vG(i)
       Q1LS_s(i)=Q1LS(i)
       Q2LS_s(i)=Q2LS(i)
-      write(98,'(i3,2F12.3,3E12.3)') i,UG_s(i), vg_s(i),              &
-                                 Q1LS_s(i),Q2LS_s(i)
+      WLS_s(i) =WLS(i)
+      write(98,'(i3,2F12.3,4E12.3)') i,UG_s(i), vg_s(i),              &
+                                 Q1LS_s(i),Q2LS_s(i),WLS_s(i)
       enddo
       write(98,*) '============================================'
       write(98,*) 'K, RHOZ(K)'

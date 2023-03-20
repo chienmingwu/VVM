@@ -71,13 +71,13 @@ CONTAINS
       REAL (KIND=dbl_kind) :: ZT1(6),PI1(6),TV1(6),PILOG1(6)
       REAL (KIND=dbl_kind) :: PQ1(6),P1(6),T1(6),QV1(6),QC1(6)
       REAL (KIND=dbl_kind) ::  PU1(6),WIND(6),DEG(6),U1(6),V1(6), WLS1(6)
-      DATA P1/1021.,905.,720.,600.,490.,285./
-      DATA T1/295.,295.,310.5,310.5,325.,340./
-      DATA QV1/12.,12.,2.5,2.5,0.,0./
-      DATA QC1/6*0./
-      DATA PU1/1021.,905.,800.,285.,250.,200./
-      DATA U1/-7.5,-7.5,0.,10.,10.,10./
-      DATA V1/-7.5,-7.5,0.,0.,0.,0./
+      !DATA P1/1021.,905.,720.,600.,490.,285./
+      !DATA T1/295.,295.,310.5,310.5,325.,340./
+      !DATA QV1/12.,12.,2.5,2.5,0.,0./
+      !DATA QC1/6*0./
+      !DATA PU1/1021.,905.,800.,285.,250.,200./
+      !DATA U1/-7.5,-7.5,0.,10.,10.,10./
+      !DATA V1/-7.5,-7.5,0.,0.,0.,0./
 
       REAL (KIND=dbl_kind) ::  Q1OBS(6),Q2OBS(6)
       !DATA WIND/8.,19.,31.,31.,15*12./
@@ -96,21 +96,23 @@ CONTAINS
       
       ! Read ideal sounding (RAW) from file
       fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.SHL.txt'
+      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/Ish.ideal2.H2D50.RAW.txt'
 
       open(unit=88,file=fname,form='formatted',status='old')
       DO i = 1, 6
       READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i), WLS1(i)
-      QV1(i) = QV1(i)
-      T1(i) = T1(i) + 273.15
-      WLS(i) = WLS(i)*0.01
+      !QV1(i) = QV1(i)
+      !T1(i) = T1(i) + 273.15
+      !WLS(i) = WLS(i)*0.01
       ENDDO
       close(88)
       20000 format(7F11.2)
 
 
       PQ1=P1
-      T1=T1*(p1/1000.)**(287./1004.)
-      QV1=QV1*1E-3
+      T1 = T1*(p1/1000.)**(287./1004.)
+      QV1 = QV1*1E-3    ! g/kg to kg/kg
+      WLS1 = WLS1*0.01  ! cm/s to m/s
       Q1OBS=0.
       Q2OBS=0.
 
@@ -293,7 +295,7 @@ CONTAINS
       K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
       K2 = K1 + 1
       WLS (K) = &
-         FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLS(K1),PQ1(K2),WLS(K2)) 
+         FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLS1(K1),PQ1(K2),WLS1(K2)) 
       !Q1LS (K) =  &
       !  FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
       !Q2LS (K) =  &
@@ -353,7 +355,7 @@ CONTAINS
       WRITE(95,*) 
       WRITE(95,*) '************* LS FORCING **********************'
       WRITE(95,403)
-      WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),K=2,NK2)
+      WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),WLS(K),K=2,NK2)
 
 
   401 FORMAT (7X,'Z(m)',2X,'PBAR(mb)',4X,'T(K)',4X,'THBAR(K)',2X,  &
@@ -362,7 +364,7 @@ CONTAINS
   402 FORMAT ( 0PF10.0,-2PF10.1,0PF10.2,0PF10.2,3PF10.1,0PF10.1)
 
   403 FORMAT (7X,'Z(m)',3X,'Q1LS(K/day)',1X,'Q2LS(K/day)'//)
-  404 FORMAT (0PF10.0,0PE12.3,0PE12.3)
+  404 FORMAT (0PF10.0,0PE12.3,0PE12.3,0PE12.3)
 
       if(my_task == 0) then
       INQUIRE(iolength=k) temp
