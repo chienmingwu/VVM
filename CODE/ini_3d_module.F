@@ -68,9 +68,9 @@ CONTAINS
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(6),PI1(6),TV1(6),PILOG1(6)
-      REAL (KIND=dbl_kind) :: PQ1(6),P1(6),T1(6),QV1(6),QC1(6)
-      REAL (KIND=dbl_kind) ::  PU1(6),WIND(6),DEG(6),U1(6),V1(6), WLS1(6)
+      REAL (KIND=dbl_kind) :: ZT1(10),PI1(10),TV1(10),PILOG1(10)
+      REAL (KIND=dbl_kind) :: PQ1(10),P1(10),T1(10),QV1(10),QC1(10)
+      REAL (KIND=dbl_kind) ::  PU1(10),WIND(10),DEG(10),U1(10),V1(10), WLS1(10)
       !DATA P1/1021.,905.,720.,600.,490.,285./
       !DATA T1/295.,295.,310.5,310.5,325.,340./
       !DATA QV1/12.,12.,2.5,2.5,0.,0./
@@ -79,7 +79,7 @@ CONTAINS
       !DATA U1/-7.5,-7.5,0.,10.,10.,10./
       !DATA V1/-7.5,-7.5,0.,0.,0.,0./
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(6),Q2OBS(6)
+      REAL (KIND=dbl_kind) ::  Q1OBS(10),Q2OBS(10)
       !DATA WIND/8.,19.,31.,31.,15*12./
       !DATA DEG/140.,140.,140.,140.,15*275./
       ! DATA DEG/110.,110.,110.,110.,15*275./
@@ -99,7 +99,7 @@ CONTAINS
       fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/Ish.ideal2.H2D50.RAW.txt'
 
       open(unit=88,file=fname,form='formatted',status='old')
-      DO i = 1, 6
+      DO i = 1, 8
       READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i), WLS1(i)
       !QV1(i) = QV1(i)
       !T1(i) = T1(i) + 273.15
