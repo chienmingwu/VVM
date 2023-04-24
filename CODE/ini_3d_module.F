@@ -96,14 +96,12 @@ CONTAINS
       
       ! Read ideal sounding (RAW) from file
       !fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.SHL.txt'
-      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/Ish.ideal2.H2D50.RAW.txt'
+      !Ish.ideal2.H3D50S8.RAW.txt
+      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/Ish.ideal2.H2D50S8.RAW.txt'
 
       open(unit=88,file=fname,form='formatted',status='old')
       DO i = 1, 8
       READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i), WLS1(i)
-      !QV1(i) = QV1(i)
-      !T1(i) = T1(i) + 273.15
-      !WLS(i) = WLS(i)*0.01
       ENDDO
       close(88)
       20000 format(7F11.2)

@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = taiwanvvmL_Ideal_H2D50
+set expname = taiwanvvmL_Ideal_H2D50S8
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
