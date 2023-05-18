@@ -61,38 +61,53 @@ CONTAINS
       REAL (KIND=int_kind) :: temp(NK3)
       CHARACTER (60) FILENAME
 
-      integer nu1, nt1, nq1, k1, k2, it
+      integer nu1, nt1, k1, k2, it
       logical lf
-      DATA NU1/6/,NT1/6/,NQ1/6/
+      DATA NU1/33/,NT1/21/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(6),PI1(6),TV1(6),PILOG1(6)
-      REAL (KIND=dbl_kind) :: PQ1(6),P1(6),T1(6),QV1(6),QC1(6)
-      REAL (KIND=dbl_kind) ::  PU1(6),WIND(6),DEG(6),U1(6),V1(6)
-      DATA P1/1021.,905.,720.,600.,490.,285./
-      DATA T1/295.,295.,310.5,310.5,325.,340./
-      DATA QV1/12.,12.,2.5,2.5,0.,0./
-      DATA QC1/6*0./
-      DATA PU1/1021.,905.,800.,285.,250.,200./
-      DATA U1/-7.5,-7.5,0.,10.,10.,10./
-      DATA V1/-7.5,-7.5,0.,0.,0.,0./
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(6),Q2OBS(6)
-      !DATA WIND/8.,19.,31.,31.,15*12./
-      !DATA DEG/140.,140.,140.,140.,15*275./
-      ! DATA DEG/110.,110.,110.,110.,15*275./
-      !DATA DEG/80.,80.,80.,100.,15*275./
-      !DATA DEG/50.,50.,50.,100.,15*275./
-      !DATA DEG/20.,20.,20.,100.,15*275./
+      !for restart run(now is no-used) poyen 05.18.2023
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, &
                         tracer_file
-      !CHARACTER(len=8) :: dateStr = '20160107'
-      !CHARACTER(len=5) :: stno = '47918'
-      !!CHARACTER(len=5) :: stno = '46692'
-      !CHARACTER(len=80) :: fname
+      !=============chen 2009 profile         
+      REAL (KIND=dbl_kind) :: ZT1(21),PI1(21),TV1(21),PILOG1(21)
+      REAL (KIND=dbl_kind) :: PQ1(20),P1(21),T1(21),QV1(21),QC1(21)
+      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
+              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
+              ,111.3,92.6/
+      DATA P1/1012.0,991.2,950.0,945.5,893.8,836.1,772.8,705.2,635.0   &
+             ,564.5,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9    &
+             ,133.6,111.3,92.6/
+      DATA T1/257.2,240.0,0.0,210.4,182.5,153.5,120.9,79.7,29.6,-21.3  &
+             ,-76.9,-142.1,-218.1,-303.4,-396.8,-493.1,-585.9,-666.9   &
+             ,-726.4,-755.8,-749.0/
+      DATA QV1/3*165.0,153.1,132.5,111.3,90.8,73.2,57.3,42.2,26.3   &
+              ,14.3,8.3,4.3,1.9,0.8,0.3,0.1,0.1,0.1,0.1/
+      DATA QC1/21*0./
 
+      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
+      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
+                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
+      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
+                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
+!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
+!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
+!     PU1 (MB) , U1(M/S)
+
+      REAL (KIND=dbl_kind) ::  PU1(33),U1(33)
+      DATA PU1/1006.7, 993.8, 977.9, 959.1, 937.7, 913.7, 887.4,   &
+                858.9, 828.5, 796.4, 762.8, 728.0, 692.2, 655.7,   &
+                618.6, 581.3, 543.9, 506.8, 470.2, 434.1, 398.9,   &
+                364.6, 331.4, 299.4, 268.7, 239.5, 211.8, 185.8,   &
+                161.6, 139.4, 119.2, 101.4,  85.8 /
+      DATA U1/ -1.0,  -1.0,  -1.4,  -1.7,  -1.8,  -2.1,  -2.6,  -3.6,   &
+               -4.9,  -6.7,  -8.7, -10.6, -12.2, -13.2, -13.1, -12.0,   &
+               -9.7,  -6.6,  -3.2,  -0.3,   1.3,   1.3,   0.4,  -1.0,   &
+               -2.9,  -4.3,  -4.5,  -2.8,  -0.6,  -0.5,  -2.2,  -2.5,   &
+               -3.0 /
       !
       !! Read ideal sounding (RAW) from file
       !fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.RAW.txt'
@@ -105,7 +120,7 @@ CONTAINS
       !ENDDO
       !close(88)
       !20000 format(6F11.2)
-
+    
 
       PQ1=P1
       T1=T1*(p1/1000.)**(287./1004.)
@@ -125,14 +140,18 @@ CONTAINS
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
 !SST=299.88K
+!     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
+!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
+!     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
+!     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 
-      SST = T1(1)
-      PSFC = p1(1)
+      PSFC = P1(1)
 
       DO 100 K = 1, NT1
-      T1(K) =  T1(K)
-      QV1(K)= QV1(K)
+      T1(K) =  T1(K) * 1.E-01 + 273.16
+      QV1(K)= QV1(K) * 1.E-04
   100 CONTINUE
+      SST = 302. !T1(K)
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -462,8 +481,9 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=UG(K)
-      U3DY(I,J,K)=VG(K)
+      ! no initial wind  
+      U3DX(I,J,K)=0.!UG(K)
+      U3DY(I,J,K)=0.!VG(K)
   610 CONTINUE
 
       DO 660 K = 2, NK1

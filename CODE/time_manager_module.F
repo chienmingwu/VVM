@@ -86,7 +86,7 @@ CONTAINS
       imonth0 = 12
       iday0 = 24
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 4.0
+      hour0 = 22.0
   END SELECT 
 
 !  Get Julian day

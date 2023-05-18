@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = topolsm_mogamd_opt3
+set expname = taiwan_nowind
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -89,7 +89,7 @@ cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=4320 /
+ &INPUT1 NEWRUN=T, ITTADD=6480 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)

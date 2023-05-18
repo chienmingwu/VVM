@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = topolsm_mogamd_opt3
+set expname = taiwan_nowind
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -48,7 +48,7 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/walltime/18:00:00/g' \
+    -e 's/walltime/22:00:00/g' \
     -e 's/np_nodes/22/g' \
     -e 's/np_threads/48/g' \
     -e 's/total_cores/1024/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
