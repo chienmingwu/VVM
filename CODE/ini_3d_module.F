@@ -122,14 +122,14 @@ CONTAINS
       !20000 format(6F11.2)
     
 
-      PQ1=P1
-      T1=T1*(p1/1000.)**(287./1004.)
-      QV1=QV1*1E-3
-      Q1OBS=0.
-      Q2OBS=0.
+      !PQ1=P1
+!      T1=T1*(p1/1000.)**(287./1004.)
+!      QV1=QV1*1E-3
+!      Q1OBS=0.
+!      Q2OBS=0.
 
       !print *, t1
-      casename= 'GATE_PHASE_III'
+!      casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN

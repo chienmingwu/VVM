@@ -48,7 +48,7 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
-    -e 's/walltime/22:00:00/g' \
+    -e 's/walltime/18:00:00/g' \
     -e 's/np_nodes/22/g' \
     -e 's/np_threads/48/g' \
     -e 's/total_cores/1024/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
