@@ -495,8 +495,8 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=0.
-      U3DY(I,J,K)=0.
+      U3DX(I,J,K)=3./sqrt(2.)
+      U3DY(I,J,K)=3./sqrt(2.)
   610 CONTINUE
 
       DO 660 K = 2, NK1
