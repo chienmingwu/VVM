@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = topolsm_mogamd_opt3
+set expname = topolsm_mogamd_debug
 
 # set job system and compiler
 set compiler = 'intel_mogamd'

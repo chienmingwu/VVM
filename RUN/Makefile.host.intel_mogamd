@@ -56,9 +56,9 @@ SUF      = f
 
 INC = -I/opt/libs-intel-oneapi/pnetcdf-1.12.2/include -I/opt/libs-intel-oneapi/netcdf-4.7.4/include -I/opt/libs-intel-oneapi/petsc-3.14.0/include -I$(CDECKS) -I$(EXPDIR)
 
-CH = #-g -traceback -check all -debug all
+CH = -g -traceback -check all,noarg_temp_created -debug extended
 
-FC = mpiifort -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large #-fp-model precise 
+FC = mpiifort -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large -fp-model precise 
 
 LDLIBS = -L/opt/libs-intel-oneapi/pnetcdf-1.12.2/lib -lpnetcdf -L/opt/libs-intel-oneapi/netcdf-4.7.4/lib -lnetcdff -lnetcdf -L/opt/libs-intel-oneapi/petsc-3.14.0/lib -lpetsc -qmkl
 
