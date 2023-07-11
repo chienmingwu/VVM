@@ -38,7 +38,7 @@
       USE domain_decomposition
 !     P3 and RAS are install by Der
 #if defined (MICROP3)
-      USE MODULE_MP_P3
+      USE microphy_p3
       USE update_thermo_module
       USE cam_rad_parameterizations, only: ReI_p3, ReC_p3
 #endif
@@ -97,14 +97,14 @@
       DATA first_rad/.TRUE./
 !-----------------------------------------------------------------
 #if defined (MICROP3)
-      REAL :: scpf_pfrac, scpf_resfact
+      REAL :: scpf_pfrac,scpf_resfact,clbfact_dep,clbfact_sub
       REAL :: theta_p3(im,km),qv_p3(im,km),qc_p3(im,km),qi_p3(im,km),qr_p3(im,km)
       REAL :: nc(im,km), nr(im,km), ni(im,km), qrim(im,km), brim(im,km), &
               theta_old(im,jm,km), qv_old(im,jm,km), dz_p3(im,km), p_p3(im,km), &
               ssat(im,km), pcprt_liq(im), pcprt_sol(im), w_p3(im,km), &
               diag_ze(im,km),diag_effc(im,km),diag_effi(im,km), &
               diag_vmi(im,km),diag_di(im,km),diag_rhoi(im,km), dt_p3, &
-              th_old_p3(im,km), qv_old_p3(im,km), &
+              th_old_p3(im,km),qv_old_p3(im,km),qiliq(im,km),zi_p3(im,km),&
 #if defined (HEATING)
               diag_3d(im,km,7),&
 #else
@@ -112,10 +112,11 @@
 #endif
               diag_2d(im,1), cldfrac(im,km)
 
-      INTEGER (KIND=int_kind) :: itt_p3, stat
+      INTEGER (KIND=int_kind) :: itt_p3, stat, ncat
 
       LOGICAL (KIND=log_kind), SAVE :: &
-          log_predictNc, typeDiags_ON, debug_on, scpf_on
+          log_predictNc, typeDiags_ON, debug_on, scpf_on, trplMomI, liqfrac, &
+          abort_on_err, dowr
       CHARACTER(LEN=16), PARAMETER :: model = 'VVM'
 #endif
 !-----------------------------------------------------------------
@@ -160,17 +161,25 @@
 ! Initialize physics related constants and parameters
 #if defined (MICROP3)
       ! initialize for p3 microphysics scheme
-      call p3_init('.',1,trim(model),my_task,stat)
+      ncat          = 1       ! the number of categories
+      log_predictNc = .True.  ! predict cloud droplet number or not
+      typeDiags_ON  = .False. ! diagnose ice types or not
+      debug_on      = .False. ! debug mode
+      scpf_on       = .False. ! cloud fraction version not used
+      trplMomI      = .False. ! triple moment ice 
+      liqfrac       = .False. ! liquid fraction ice
+      abort_on_err  = .True.  ! program aborts when encountering error
+      dowr          = .False. ! print message or not
+      if (my_task==0) dowr = .True. ! print message when the MPI rank is 0
+      scpf_pfrac    = 0.      ! dummy variable (not used), set to 0
+      scpf_resfact  = 0.      ! dummy variable (not used), set to 0
+      clbfact_dep   = 1.      ! calibration for deposition 
+      clbfact_sub   = 1.      ! calibration for sublimation
+      call p3_init('.',ncat,trplMomI,liqfrac,trim(model),stat,abort_on_err,dowr)
       IF (stat/=0)THEN
       WRITE(*,*) "Fail in P3 initialization"
       STOP
       ENDIF
-      log_predictNc = .True.
-      typeDiags_ON  = .False.
-      debug_on      = .False.
-      scpf_on       = .False. ! cloud fraction version not used
-      scpf_pfrac    = 0.      ! dummy variable (not used), set to 0
-      scpf_resfact  = 0.      ! dummy variable (not used), set to 0
 #else
       ! initialize for Lin microphysics scheme
       CALL initialize_physics
@@ -446,9 +455,9 @@
       itt_p3=ITT
  
       call p3_main(qc_p3,nc,qr_p3,nr,th_old_p3,theta_p3,qv_old_p3,qv_p3, &
-                   dt_p3,qi_p3,qrim,ni,brim,ssat,w_p3,                   &
+                   dt_p3,qi_p3,qrim,qiliq,ni,brim,zi_p3,ssat,w_p3,       &
                    p_p3,dz_p3,itt_p3,pcprt_liq,pcprt_sol,                &
-                   1,im,1,km,1,diag_ze,diag_effc,                        & 
+                   1,im,1,km,ncat,diag_ze,diag_effc,                     & 
                    diag_effi,diag_vmi,diag_di,diag_rhoi,                 &
                    1,diag_2d, &
 #if defined (HEATING)
@@ -456,11 +465,12 @@
 #else
                    3,diag_3d, &
 #endif                   
-                   log_predictNc,typeDiags_ON,model, &
-                   1.0,1.0,debug_on,scpf_on,scpf_pfrac,scpf_resfact,cldfrac)
+                   log_predictNc,model,clbfact_dep,clbfact_sub,          &
+                   debug_on,scpf_on,scpf_pfrac,scpf_resfact,cldfrac,     &
+                   trplMomI,liqfrac )
 
       IF (global_status == -1 )THEN
-      WRITE(*,*) "microphysics stop", ni_sbdm, nj_sbdm,j
+      WRITE(*,*) "microphysics stop", ni_sbdm,nj_sbdm,j
       STOP
       ENDIF
 

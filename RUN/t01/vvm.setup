@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = topolsm_mogamd_debug
+set expname = update_p3
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -38,20 +38,21 @@ mkdir archive
 cp ${rundir}/t01/vvm.setup .
 cp ${vvmdir}/CODE/make_ctl.sh .
 
-# for RRTMG
-cp ${vvmdir}/RUNDATA/fort.91 fort.91
-cp ${vvmdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
-cp ${vvmdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
-cp ${vvmdir}/RUNDATA/topolsm_TW.nc RUNDATA/topolsm_TW.nc
-
 # for NOAH LSM
-cp -r ${vvmdir}/RUNDATA/LSM RUNDATA/LSM
-cp ${vvmdir}/CODE/LSM/GENPARM.TBL .
-cp ${vvmdir}/CODE/LSM/SOILPARM.TBL .
-cp ${vvmdir}/CODE/LSM/VEGPARM.TBL .
+ln -s ${vvmdir}/CODE/LSM/GENPARM.TBL .
+ln -s ${vvmdir}/CODE/LSM/SOILPARM.TBL .
+ln -s ${vvmdir}/CODE/LSM/VEGPARM.TBL .
+
+# for RRTMG
+ln -s ${vvmdir}/RUNDATA/fort.91 fort.91
+ln -s ${vvmdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
+ln -s ${vvmdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+ln -s ${vvmdir}/RUNDATA/topolsm_TW.nc RUNDATA/topolsm_TW.nc
 
 # for P3 scheme
-cp ${vvmdir}/CODE/p3_lookup_table_* .
+ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-2momI .
+ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-3momI .
+ln -s ${vvmdir}/RUNDATA/p3_lookupTable_2.dat-v6.0 .
 
 # create CPP list
 cat > definesld.com << 'END1'
