@@ -88,23 +88,17 @@ CONTAINS
       !DATA DEG/20.,20.,20.,100.,15*275./
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, &
                         tracer_file
-      CHARACTER(len=8) :: dateStr = '20160107'
-      CHARACTER(len=5) :: stno = '47918'
-      !CHARACTER(len=5) :: stno = '46692'
+      CHARACTER(len=8) :: dateStr = '20050606'
+      !CHARACTER(len=5) :: stno = '47918'
+      CHARACTER(len=5) :: stno = '46692'
       CHARACTER(len=80) :: fname
-
       
       ! Read ideal sounding (RAW) from file
-      !fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.SHL.txt'
-      !Ish.ideal2.H3D50S8.RAW.txt
-      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/Ish.ideal.H2D50S8.CLOSE.txt'
+      fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.CWB.txt'
 
-      open(unit=88,file=fname,form='formatted',status='old')
-      DO i = 1, 8
+      open(unit=88,file=fname,form='unformatted',status='old',access='direct',recl=NK3*2)
       READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i), WLS1(i)
-      ENDDO
       close(88)
-      20000 format(7F11.2)
 
 
       PQ1=P1
