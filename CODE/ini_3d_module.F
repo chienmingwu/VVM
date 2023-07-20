@@ -97,7 +97,7 @@ CONTAINS
       ! Read ideal sounding (RAW) from file
       !fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.SHL.txt'
       !Ish.ideal2.H3D50S8.RAW.txt
-      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/Ish.ideal2.H2D50S8.RAW.txt'
+      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/Ish.ideal.H2D50S8.CLOSE.txt'
 
       open(unit=88,file=fname,form='formatted',status='old')
       DO i = 1, 8
