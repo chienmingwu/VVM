@@ -276,6 +276,12 @@ CONTAINS
                   start(1:3), count(1:3), brim3d(1:mi1,1:mj1,1:nk2) )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
 
+#if defined (LIQFRACP3)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qiliq3d_id_rst,       &
+                  start(1:3), count(1:3), qiliq3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+#endif
 #else
 !QS and QG
       nc_err = nfmpi_put_vara_double_all(ncid_rst, qs3d_id_rst,       &
@@ -415,6 +421,12 @@ CONTAINS
                   start(1:4), count(1:4), fbrim3d )
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
 
+#if defined (LIQFRACP3)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqiliq3d_id_rst,       &
+                  start(1:4), count(1:4), fqiliq3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+#endif
 #else
 ! QS and QG
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqs3d_id_rst,       &
@@ -1065,6 +1077,11 @@ CONTAINS
       OUT_tm1(:,:,1:nk2) = brim3d(1:mi1,1:mj1,1:nk2)
       call pCDF_WRITE_4D_slice(ncid_th, 'brim', TIME_L, time_start, out_tm1, nk2 )
 
+#if defined (LIQFRACP3)
+      OUT_tm1(:,:,1:nk2) = qiliq3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'qiliq', TIME_L, time_start, out_tm1, nk2 )
+
+#endif
 #else
 ! QS and QG
       OUT_tm1(:,:,1:nk2) = qs3d(1:mi1,1:mj1,1:nk2)

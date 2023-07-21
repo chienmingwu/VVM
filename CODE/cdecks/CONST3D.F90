@@ -29,6 +29,9 @@ PRIVATE
       NI3D,    &  ! cloud ice number mixing ratio (1/kg)
       QRIM3D,  &  ! riming cloud ice mass mixing ratio (kg/kg)
       BRIM3D,  &  ! riming cloud ice volume mixing ratio (m^3/kg)
+#if defined (LIQFRACP3)
+      QILIQ3D, &  ! ice, liquid mass mixing ratio (kg/kg)
+#endif
 #endif
 #if defined (HEATING)
       L_dep,   &  ! latent heat due to deposition
@@ -98,6 +101,9 @@ PRIVATE
       fni3d,    &  ! tendency of cloud ice number due to advection (1/kg/s)
       fqrim3d,  &  ! tendency of riming cloud ice due to advection (kg/kg/s)
       fbrim3d,  &  ! tendency of riming cloud ice volume due to advection (m^3/kg/s)
+#if defined (LIQFRACP3)
+      fqiliq3d,  &  ! tendency of riming ice, liquid mass due to advection (kg/kg/s)
+#endif
 #endif
       fqs3d,    &  ! tendency of snow due to advection
                    ! falling with terminal velocity (kg/kg/s)
@@ -153,6 +159,9 @@ PRIVATE
       niad3,     &  ! tendency of cloud ice number due to turbulence (1/kg/s)
       qrimad3,   &  ! tendency of riming cloud ice due to turbulence (kg/kg/s)
       brimad3,   &  ! tendency of riming cloud ice volume due to turbulence (m^3/kg/s)
+#if defined (LIQFRACP3)
+      qiliqad3,     &  ! tendency of ice, liquid mass due to turbulence (kg/kg/s)
+#endif
 #endif
       qsad3,     &  ! not used
       qgad3         ! not used
@@ -169,13 +178,6 @@ PRIVATE
       qrad_micro,   &  ! tendency of rain due to microphysics (kg/kg/s)
       qcad_micro,   &  ! tendency of cloud water due to microphysics (kg/kg/s)
       qiad_micro,   &  ! tendency of cloud ice due to microphysics (kg/kg/s)
-#if defined (MICROP3)
-      ncad_micro,   &  ! not used
-      nrad_micro,   &  ! not udsd
-      niad_micro,   &  ! not udsd
-      qrimad_micro, &  ! not udsd
-      brimad_micro, &  ! not udsd
-#endif
       qsad_micro,   &  ! tendency of snow due to microphysics (kg/kg/s)
       qgad_micro       ! tendency of graupel due to microphysics(kg/kg/s)
 

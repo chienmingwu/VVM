@@ -71,6 +71,10 @@ CONTAINS
       CALL ADVEC_3D ( QRIM3D, FQRIM3D(1,1,1,L), term4 )
 
       CALL ADVEC_3D ( BRIM3D, FBRIM3D(1,1,1,L), term4 )
+#if defined (LIQFRACP3)
+
+      CALL ADVEC_3D ( QILIQ3D, FQILIQ3D(1,1,1,L), term4 )
+#endif
 #else
 
       CALL ADVEC_3D ( QS3D, FQS3D(1,1,1,L), term4 )
@@ -145,6 +149,10 @@ CONTAINS
                 (QRIM3D(I,J,K+1)-QRIM3D(I,J,K))*fntddz
       FBRIM3D(I,J,K,L)=FBRIM3D(I,J,K,L) - WLS(K)*         &
                 (BRIM3D(I,J,K+1)-BRIM3D(I,J,K))*fntddz
+#if defined (LIQFRACP3)
+      FQILIQ3D(I,J,K,L)=FQILIQ3D(I,J,K,L) - WLS(K)*         &
+                (QILIQ3D(I,J,K+1)-QILIQ3D(I,J,K))*fntddz
+#endif
 #else
       FQG3D(I,J,K,L)=FQG3D(I,J,K,L) - WLS(K)*         &
                 (QG3D(I,J,K+1)-QG3D(I,J,K))*fntddz
@@ -189,6 +197,10 @@ CONTAINS
                 (QRIM3D(I,J,K)-QRIM3D(I,J,K-1))*fntddz
       FBRIM3D(I,J,K,L)=FBRIM3D(I,J,K,L) - WLS(K)*         &
                 (BRIM3D(I,J,K)-BRIM3D(I,J,K-1))*fntddz
+#if defined (LIQFRACP3)
+      FQILIQ3D(I,J,K,L)=FQILIQ3D(I,J,K,L) - WLS(K)*         &
+                (QILIQ3D(I,J,K)-QILIQ3D(I,J,K-1))*fntddz
+#endif
 #else
       FQG3D(I,J,K,L)=FQG3D(I,J,K,L) - WLS(K)*         &
                 (QG3D(I,J,K)-QG3D(I,J,K-1))*fntddz
@@ -244,6 +256,9 @@ CONTAINS
         NIAD3(I,J,K)   = 0.
         QRIMAD3(I,J,K) = 0.
         BRIMAD3(I,J,K) = 0.
+#if defined (LIQFRACP3)
+        QILIQAD3(I,J,K) = 0.
+#endif
 #else
         QSAD3(I,J,K) = 0.
         QGAD3(I,J,K) = 0.

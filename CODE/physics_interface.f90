@@ -97,7 +97,6 @@
       DATA first_rad/.TRUE./
 !-----------------------------------------------------------------
 #if defined (MICROP3)
-      REAL :: scpf_pfrac,scpf_resfact,clbfact_dep,clbfact_sub
       REAL :: theta_p3(im,km),qv_p3(im,km),qc_p3(im,km),qi_p3(im,km),qr_p3(im,km)
       REAL :: nc(im,km), nr(im,km), ni(im,km), qrim(im,km), brim(im,km), &
               theta_old(im,jm,km), qv_old(im,jm,km), dz_p3(im,km), p_p3(im,km), &
@@ -112,8 +111,10 @@
 #endif
               diag_2d(im,1), cldfrac(im,km)
 
-      INTEGER (KIND=int_kind) :: itt_p3, stat, ncat
+      INTEGER (KIND=int_kind) :: itt_p3, stat
 
+      INTEGER (KIND=int_kind), SAVE :: ncat
+      REAL, SAVE :: scpf_pfrac,scpf_resfact,clbfact_dep,clbfact_sub
       LOGICAL (KIND=log_kind), SAVE :: &
           log_predictNc, typeDiags_ON, debug_on, scpf_on, trplMomI, liqfrac, &
           abort_on_err, dowr
@@ -167,7 +168,11 @@
       debug_on      = .False. ! debug mode
       scpf_on       = .False. ! cloud fraction version not used
       trplMomI      = .False. ! triple moment ice 
+#if defined (LIQFRACP3)
+      liqfrac       = .True. ! liquid fraction ice
+#else
       liqfrac       = .False. ! liquid fraction ice
+#endif
       abort_on_err  = .True.  ! program aborts when encountering error
       dowr          = .False. ! print message or not
       if (my_task==0) dowr = .True. ! print message when the MPI rank is 0
@@ -330,11 +335,6 @@
       QCAD_MICRO   = 0.0_dbl_kind
       QIAD_MICRO   = 0.0_dbl_kind
       QRAD_MICRO   = 0.0_dbl_kind
-      NCAD_MICRO   = 0.0_dbl_kind
-      NRAD_MICRO   = 0.0_dbl_kind
-      NIAD_MICRO   = 0.0_dbl_kind
-      QRIMAD_MICRO = 0.0_dbl_kind
-      BRIMAD_MICRO = 0.0_dbl_kind
 
       DO k=1,km
         dz_p3(:,k)  = dzl(k)
@@ -408,6 +408,10 @@
         qrim(i,k)        = QRIM3D(i,j,k+1)
         brim(i,k)        = BRIM3D(i,j,k+1)
 
+#if defined (LIQFRACP3)
+        qiliq(i,k)    = QILIQ3D(i,j,k+1)
+#endif
+
         w_p3(i,k)        = 0.5*(W3D(i,j,k) + W3D(i,j,k+1))
 #else
         theta(i,k) = TH3D(i,j,k+1)
@@ -453,7 +457,7 @@
 
       dt_p3=DT
       itt_p3=ITT
- 
+     
       call p3_main(qc_p3,nc,qr_p3,nr,th_old_p3,theta_p3,qv_old_p3,qv_p3, &
                    dt_p3,qi_p3,qrim,qiliq,ni,brim,zi_p3,ssat,w_p3,       &
                    p_p3,dz_p3,itt_p3,pcprt_liq,pcprt_sol,                &
@@ -529,6 +533,9 @@
         NI3D(i,j,k)   = ni(i,k-1)
         QRIM3D(i,j,k) = qrim(i,k-1)
         BRIM3D(i,j,k) = brim(i,k-1)
+#if defined (LIQFRACP3)
+        QILIQ3D(i,j,k) = qiliq(i,k-1)
+#endif
   500 CONTINUE
 
 !ccwut set physics variables on topo to zero
@@ -545,6 +552,9 @@
       NI3D(I,J,K) = 0.
       QRIM3D(I,J,K) = 0.
       BRIM3D(I,J,K) = 0.
+#if defined (LIQFRACP3)
+      QILIQ3D(I,J,K) = 0.
+#endif
       ENDIF
       ENDDO
       ENDDO

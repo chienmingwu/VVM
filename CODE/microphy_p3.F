@@ -26,6 +26,8 @@
 ! Last updated:  2023 June                                                                 !
 !__________________________________________________________________________________________!
 
+#include "definesld.com"
+
  MODULE microphy_p3
 
 #ifdef ECCCGEM
@@ -361,14 +363,13 @@
 
   TRIPLE_MOMENT_ICE: if (.not. trplMomI) then
 
-    print*, '     Reading table 1 [',trim(version_intended_table_1_2mom),'] ...'
+    if(dowr) print*, '     Reading table 1 [',trim(version_intended_table_1_2mom),'] ...'
 
     open(unit=951, file=lookup_file_1, status='old', action='read')
 
     !-- check that table version is correct:
     !   note:  to override and use a different lookup table, simply comment out the 'return' below
     read(951,*) dumstr,version_header_table_1_2mom
-    if (dowr) write(*,*) dumstr,version_header_table_1_2mom
     if (trim(version_intended_table_1_2mom) /= trim(version_header_table_1_2mom)) then
        if(dowr) print*
        if(dowr) print*, '***********   WARNING in P3_INIT   *************'
@@ -430,7 +431,7 @@
 
   else ! TRIPLE_MOMENT_ICE  (the following is for trplMomI=.true.)
 
-    print*, '     Reading table 1 [v',trim(version_intended_table_1_3mom),'] ...'
+    if(dowr) print*, '     Reading table 1 [v',trim(version_intended_table_1_3mom),'] ...'
 
     open(unit=951,file=lookup_file_1,status='old',iostat=ierr,err=101)
  101  if (ierr.ne.0) then
@@ -4164,6 +4165,18 @@ END subroutine p3_init
                               qrmul(iice)-qrmlt(iice)-qimlt(iice)+qifrz(iice))*        &
                               xlf(i,k)*inv_cp+(qlcon(iice)-qlevp(iice))*xxlv(i,k)*     &
                               inv_cp)*dt
+#if defined (HEATING)
+          diag_3d(i,k,4) = diag_3d(i,k,4) + &
+                             (qidep(iice)-qisub(iice)+qinuc(iice))*xxls(i,k)*inv_cp*dt
+          diag_3d(i,k,6) = diag_3d(i,k,6) + &
+                             (qrcol(iice)+qccol(iice)+qchetc(iice)+ &
+                              qcheti(iice)+qrhetc(iice)+qrheti(iice)+ &
+                              qrmul(iice)-qrmlt(iice)-qimlt(iice)+ &
+                              qifrz(iice))*xlf(i,k)*inv_cp*dt + &
+                              (qlcon(iice)-qlevp(iice))*xxlv(i,k)*inv_cp*dt
+          diag_3d(i,k,7) = diag_3d(i,k,7) - &
+                             (qrmlt(iice)+qimlt(iice))*xlf(i,k)*inv_cp*dt
+#endif
 
        enddo iice_loop3
    !==
@@ -4187,6 +4200,9 @@ END subroutine p3_init
        th(i,k) = th(i,k) + invexn(i,k)*((qcnuc+qccon+qrcon-qcevp-qrevp)*xxlv(i,k)*    &
                  inv_cp)*dt
    !==
+#if defined (HEATING)
+       diag_3d(i,k,5) = diag_3d(i,k,5) + (qcnuc+qccon+qrcon-qcevp-qrevp)*xxlv(i,k)*inv_cp*dt
+#endif
 
        ! clipping for Filiq > 0.99 (transfer unmelted ice to rain)
        if (log_LiquidFrac) then
@@ -4195,6 +4211,10 @@ END subroutine p3_init
                   qr(i,k) = qr(i,k) + qitot(i,k,iice)
                   nr(i,k) = nr(i,k) + nitot(i,k,iice)
                   th(i,k) = th(i,k) - invexn(i,k)*(qitot(i,k,iice)-qiliq(i,k,iice))*xlf(i,k)*inv_cp
+#if defined (HEATING)
+                  diag_3d(i,k,6) = diag_3d(i,k,6) - (qitot(i,k,iice)-qiliq(i,k,iice))*xlf(i,k)*inv_cp
+                  diag_3d(i,k,7) = diag_3d(i,k,7) + (qitot(i,k,iice)-qiliq(i,k,iice))*xlf(i,k)*inv_cp
+#endif
                   qitot(i,k,iice) = 0.
                   nitot(i,k,iice) = 0.
                   qirim(i,k,iice) = 0.
@@ -4208,6 +4228,9 @@ END subroutine p3_init
        if (qc(i,k).lt.qsmall) then
           qv(i,k) = qv(i,k) + qc(i,k)
           th(i,k) = th(i,k) - invexn(i,k)*qc(i,k)*xxlv(i,k)*inv_cp
+#if defined (HEATING)
+          diag_3d(i,k,5) = diag_3d(i,k,5) - qc(i,k)*xxlv(i,k)*inv_cp
+#endif
           qc(i,k) = 0.
           nc(i,k) = 0.
        else
@@ -4217,6 +4240,9 @@ END subroutine p3_init
        if (qr(i,k).lt.qsmall) then
           qv(i,k) = qv(i,k) + qr(i,k)
           th(i,k) = th(i,k) - invexn(i,k)*qr(i,k)*xxlv(i,k)*inv_cp
+#if defined (HEATING)
+          diag_3d(i,k,5) = diag_3d(i,k,5) - qr(i,k)*xxlv(i,k)*inv_cp
+#endif
           qr(i,k) = 0.
           nr(i,k) = 0.
        else
@@ -4228,6 +4254,10 @@ END subroutine p3_init
              qv(i,k) = qv(i,k) + qitot(i,k,iice)
              th(i,k) = th(i,k) - invexn(i,k)*(qitot(i,k,iice)-qiliq(i,k,iice))*xxls(i,k)*inv_cp
              th(i,k) = th(i,k) - invexn(i,k)*qiliq(i,k,iice)*xxlv(i,k)*inv_cp
+#if defined (HEATING)
+             diag_3d(i,k,4) = diag_3d(i,k,4) - (qitot(i,k,iice)-qiliq(i,k,iice))*xxls(i,k)*inv_cp &
+                                             - qiliq(i,k,iice)*xxlv(i,k)*inv_cp
+#endif
              qitot(i,k,iice) = 0.
              nitot(i,k,iice) = 0.
              qirim(i,k,iice) = 0.
@@ -4319,6 +4349,7 @@ END subroutine p3_init
 
        dt_left   = dt  !time remaining for sedi over full model (mp) time step
        prt_accum = 0.  !precip rate for individual category
+       diag_3d(i,:,1) = 0.
 
       !find bottom
        do k = kbot,k_qxtop,kdir
@@ -4364,6 +4395,8 @@ END subroutine p3_init
              do k = k_temp,k_qxtop,kdir
                 flux_qx(k) = V_qc(k)*qc(i,k)*rho(i,k)
                 flux_nx(k) = V_nc(k)*nc(i,k)*rho(i,k)
+                !-- for VVM
+                diag_3d(i,k,1) = diag_3d(i,k,1) + flux_qx(k)*dt_sub
              enddo
 
              !accumulated precip during time step
@@ -4420,6 +4453,8 @@ END subroutine p3_init
 
              do k = k_temp,k_qxtop,kdir
                 flux_qx(k) = V_qc(k)*qc(i,k)*rho(i,k)
+                !-- for VVM
+                diag_3d(i,k,1) = diag_3d(i,k,1) + flux_qx(k)*dt_sub
              enddo
 
              !accumulated precip during time step
@@ -4443,6 +4478,8 @@ END subroutine p3_init
        ENDIF two_moment
 
        prt_liq(i) = prt_accum*inv_rhow*odt  !note, contribution from rain is added below
+       !-- for VVM
+       diag_3d(i,:,1) = diag_3d(i,:,1)*odt
 
     endif qc_present
 
@@ -4466,6 +4503,7 @@ END subroutine p3_init
 
        dt_left   = dt  !time remaining for sedi over full model (mp) time step
        prt_accum = 0.  !precip rate for individual category
+       diag_3d(i,:,2) = 0.
 
       !find bottom
        do k = kbot,k_qxtop,kdir
@@ -4532,6 +4570,8 @@ END subroutine p3_init
              flux_qx(k) = V_qr(k)*qr(i,k)*rho(i,k)
              flux_nx(k) = V_nr(k)*nr(i,k)*rho(i,k)
              mflux_r(i,k) = flux_qx(k)  !store mass flux for use in visibility diagnostic)
+             !-- for VVM
+             diag_3d(i,k,2) = diag_3d(i,k,2) + flux_qx(k)*dt_sub
           enddo
 
           !accumulated precip during time step
@@ -4563,6 +4603,8 @@ END subroutine p3_init
        enddo substep_sedi_r
 
        prt_liq(i) = prt_liq(i) + prt_accum*inv_rhow*odt
+       !-- for VVM
+       diag_3d(i,:,2) = diag_3d(i,:,2)*odt
 
     endif qr_present
 
@@ -4588,6 +4630,7 @@ END subroutine p3_init
 
           dt_left   = dt  !time remaining for sedi over full model (mp) time step
           prt_accum = 0.  !precip rate for individual category
+          diag_3d(i,:,3) = 0.
 
          !find bottom
           do k = kbot,k_qxtop,kdir
@@ -4654,6 +4697,8 @@ END subroutine p3_init
                    flux_qir(k) = V_qit(k)*qirim(i,k,iice)*rho(i,k)
                    flux_bir(k) = V_qit(k)*birim(i,k,iice)*rho(i,k)
                    mflux_i(i,k) = flux_qit(k)  !store mass flux for use in visibility diagnostic)
+                   !-- for VVM
+                   diag_3d(i,k,3) = diag_3d(i,k,3) + flux_qit(k)*dt_sub
                 enddo
 
                 !accumulated precip during time step
@@ -4747,6 +4792,8 @@ END subroutine p3_init
                    flux_qil(k) = V_qit(k)*qiliq(i,k,iice)*rho(i,k)
                    flux_bir(k) = V_qit(k)*birim(i,k,iice)*rho(i,k)
                    mflux_i(i,k) = flux_qit(k)  !store mass flux for use in visibility diagnostic)
+                   !-- for VVM
+                   diag_3d(i,k,3) = diag_3d(i,k,3) + flux_qit(k)*dt_sub
                 enddo
 
                 !accumulated precip during time step
@@ -4869,6 +4916,8 @@ END subroutine p3_init
                    flux_bir(k) = V_qit(k)*birim(i,k,iice)*rho(i,k)
                    flux_zit(k) = V_zit(k)*zitot(i,k,iice)*rho(i,k)
                    mflux_i(i,k) = flux_qit(k)  !store mass flux for use in visibility diagnostic)
+                   !-- for VVM
+                   diag_3d(i,k,3) = diag_3d(i,k,3) + flux_qit(k)*dt_sub
                 enddo
 
                 !accumulated precip during time step
@@ -4988,6 +5037,8 @@ END subroutine p3_init
                    flux_bir(k) = V_qit(k)*birim(i,k,iice)*rho(i,k)
                    flux_zit(k) = V_zit(k)*zitot(i,k,iice)*rho(i,k)
                    mflux_i(i,k) = flux_qit(k)  !store mass flux for use in visibility diagnostic)
+                   !-- for VVM
+                   diag_3d(i,k,3) = diag_3d(i,k,3) + flux_qit(k)*dt_sub
                 enddo
 
                 !accumulated precip during time step
@@ -5041,6 +5092,8 @@ END subroutine p3_init
 
           prt_sol(i) = prt_sol(i) + prt_accum*inv_rhow*odt
           prt_soli(i,iice) = prt_soli(i,iice) + prt_accum*inv_rhow*odt
+          !-- for VVM
+          diag_3d(i,:,3) = diag_3d(i,:,3)*odt
 
        endif qi_present
 
@@ -5151,6 +5204,9 @@ END subroutine p3_init
           th(i,k) = th(i,k) + invexn(i,k)*Q_nuc*xlf(i,k)*inv_cp
           qc(i,k) = 0.  != qc(i,k) - Q_nuc
           nc(i,k) = 0.  != nc(i,k) - N_nuc
+#if defined (HEATING)
+          diag_3d(i,k,6) = diag_3d(i,k,6) + Q_nuc*xlf(i,k)*inv_cp
+#endif
 
        endif qc_not_small_2
 
@@ -5183,6 +5239,9 @@ END subroutine p3_init
           th(i,k) = th(i,k) + invexn(i,k)*Q_nuc*xlf(i,k)*inv_cp
           qr(i,k) = 0.  ! = qr(i,k) - Q_nuc
           nr(i,k) = 0.  ! = nr(i,k) - N_nuc
+#if defined (HEATING)
+          diag_3d(i,k,6) = diag_3d(i,k,6) + Q_nuc*xlf(i,k)*inv_cp
+#endif
 
        endif qr_not_small_2
 
@@ -5260,6 +5319,10 @@ END subroutine p3_init
                 qv(i,k) = qv(i,k) + qitot(i,k,iice)
                 th(i,k) = th(i,k) - invexn(i,k)*(qitot(i,k,iice)-qiliq(i,k,iice))*xxls(i,k)*inv_cp
                 th(i,k) = th(i,k) - invexn(i,k)*qiliq(i,k,iice)*xxlv(i,k)*inv_cp
+#if defined (HEATING)
+                diag_3d(i,k,4) = diag_3d(i,k,4) - (qitot(i,k,iice)-qiliq(i,k,iice))*xxls(i,k)*inv_cp &
+                                                - qiliq(i,k,iice)*xxlv(i,k)*inv_cp
+#endif
                 qitot(i,k,iice) = 0.
                 nitot(i,k,iice) = 0.
                 qirim(i,k,iice) = 0.
@@ -5333,6 +5396,9 @@ END subroutine p3_init
        else
           qv(i,k) = qv(i,k)+qc(i,k)
           th(i,k) = th(i,k)-invexn(i,k)*qc(i,k)*xxlv(i,k)*inv_cp
+#if defined (HEATING)
+          diag_3d(i,k,5) = diag_3d(i,k,5) - qc(i,k)*xxlv(i,k)*inv_cp
+#endif
           qc(i,k) = 0.
           nc(i,k) = 0.
        endif
@@ -5362,6 +5428,9 @@ END subroutine p3_init
        else
           qv(i,k) = qv(i,k)+qr(i,k)
           th(i,k) = th(i,k)-invexn(i,k)*qr(i,k)*xxlv(i,k)*inv_cp
+#if defined (HEATING)
+          diag_3d(i,k,5) = diag_3d(i,k,5) - qr(i,k)*xxlv(i,k)*inv_cp
+#endif
           qr(i,k) = 0.
           nr(i,k) = 0.
        endif
@@ -5505,6 +5574,10 @@ END subroutine p3_init
              qv(i,k) = qv(i,k) + qitot(i,k,iice)
              th(i,k) = th(i,k) - invexn(i,k)*(qitot(i,k,iice)-qiliq(i,k,iice))*xxls(i,k)*inv_cp
              th(i,k) = th(i,k) - invexn(i,k)*qiliq(i,k,iice)*xxlv(i,k)*inv_cp
+#if defined (HEATING)
+             diag_3d(i,k,4) = diag_3d(i,k,4) - (qitot(i,k,iice)-qiliq(i,k,iice))*xxls(i,k)*inv_cp &
+                                             - qiliq(i,k,iice)*xxlv(i,k)*inv_cp
+#endif
              qitot(i,k,iice) = 0.
              nitot(i,k,iice) = 0.
              qirim(i,k,iice) = 0.
@@ -5671,10 +5744,10 @@ END subroutine p3_init
 !  note: This is not necessary for GEM, which already has these values available
 !        from the beginning of the model time step (TT_moins and HU_moins) when
 !        s/r 'p3_wrapper_gem' is called (from s/r 'condensation').
- if (trim(model) == 'WRF') then
+! if (trim(model) == 'WRF') then
     th_old = th
     qv_old = qv
- endif
+! endif
 
 !...........................................................................................
 ! Compute diagnostic hydrometeor types for output as 3D fields and
@@ -5694,14 +5767,14 @@ END subroutine p3_init
              diag_dhmax(i,k,iice) = maxHailSize(rho(i,k),nitot(i,k,iice),rhofaci(i,k),    &
                                                 arr_lami(i,k,iice),arr_mui(i,k,iice))
           enddo
-          diag_3d(i,k,1) = sum(qitot(i,k,:))
-          diag_3d(i,k,2) = maxval(diag_dhmax(i,k,:))
+          !diag_3d(i,k,1) = sum(qitot(i,k,:))
+          !diag_3d(i,k,2) = maxval(diag_dhmax(i,k,:))
        enddo
     enddo
 
 !-- diagnostic output (for hail study):
-    diag_2d(:,1) = prt_liq(:)
-    diag_2d(:,2) = prt_sol(:)
+!    diag_2d(:,1) = prt_liq(:)
+!    diag_2d(:,2) = prt_sol(:)
 !   diag_3d(:,:,1) = qitot(:,:,1)
 !--
 

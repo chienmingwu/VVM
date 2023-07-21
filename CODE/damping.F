@@ -83,6 +83,9 @@ CONTAINS
       NI3D(I,J,K)  =NI3D(I,J,K)-DT*CGR*NI3D(I,J,K)
       QRIM3D(I,J,K)=QRIM3D(I,J,K)-DT*CGR*QRIM3D(I,J,K)
       BRIM3D(I,J,K)=BRIM3D(I,J,K)-DT*CGR*BRIM3D(I,J,K)
+#if defined (LIQFRACP3)
+      QILIQ3D(I,J,K)=QILIQ3D(I,J,K)-DT*CGR*QILIQ3D(I,J,K)
+#endif
 #endif      
   704 CONTINUE
 #endif
@@ -91,8 +94,8 @@ CONTAINS
 !-------------------------
       END IF
 
-      !IF (.false.) THEN ! Der test for rcemip
-      IF (CRAD1.NE.0.) THEN
+      IF (.false.) THEN ! Der test for rcemip
+      !IF (CRAD1.NE.0.) THEN
 !     Newtonian Cooling - Original Code plus thtd3d counter
 !------------------------------------------
 

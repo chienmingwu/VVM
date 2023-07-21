@@ -96,6 +96,9 @@ CONTAINS
       NI3D(I,J,K) = NI3D(I,J,K) + DT*NIAD3(I,J,K)
       QRIM3D(I,J,K) = QRIM3D(I,J,K) + DT*QRIMAD3(I,J,K)
       BRIM3D(I,J,K) = BRIM3D(I,J,K) + DT*BRIMAD3(I,J,K)
+#if defined (LIQFRACP3)
+      QILIQ3D(I,J,K) = QILIQ3D(I,J,K) + DT*QILIQAD3(I,J,K)
+#endif
 #endif
   510 CONTINUE
 #endif
