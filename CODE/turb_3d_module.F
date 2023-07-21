@@ -1079,6 +1079,54 @@ CONTAINS
       BRIMAD3(I,J,K)=DDX(I,J,K)
   1550 CONTINUE
 
+#if defined (LIQFRACP3)
+!ccwu
+      DO 1570 K=2,NK2
+      DO 1570 J=1,MJ1
+      DO 1570 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))     &
+                      *(QILIQ3D(I+1,J,K)-QILIQ3D(I,J,K))*DHWU1(I,J,K)   &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))     &
+                      *(QILIQ3D(I,J,K)-QILIQ3D(I-1,J,K))*DHWU2(I,J,K) )/DXSQ
+ 1570 CONTINUE
+
+!ccwu
+      DO 1590 K=2,NK2
+      DO 1590 J=1,MJ1
+      DO 1590 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                            & 
+               +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))        &
+                      *(QILIQ3D(I,J+1,K)-QILIQ3D(I,J,K))*DHWV1(I,J,K)     &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))       &
+                      *(QILIQ3D(I,J,K)-QILIQ3D(I,J-1,K))*DHWV2(I,J,K) )/DYSQ
+ 1590 CONTINUE
+!ccwu
+!easy RKH -> RKQ
+      DO 1610 K=2,NK1
+      DO 1610 J=1,MJ1
+      DO 1610 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                      &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))     &
+                   *(QILIQ3D(I,J,K+1)-QILIQ3D(I,J,K))*DHWW1(I,J,K)                  &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1)) &
+                   *(QILIQ3D(I,J,K)-QILIQ3D(I,J,K-1))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+ 1610 CONTINUE
+
+      DO 1630 J=1,MJ1
+      DO 1630 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                      &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1)) &
+                   *(QILIQ3D(I,J,NK2)-QILIQ3D(I,J,NK1)))/(RHOU(NK2)*DZSQ)
+ 1630 CONTINUE
+
+      DO 1650 K=2,NK2
+      DO 1650 J=1,MJ1
+      DO 1650 I=1,MI1
+      QILIQAD3(I,J,K)=DDX(I,J,K)
+ 1650 CONTINUE
+#endif
+
 #endif
 
 #endif

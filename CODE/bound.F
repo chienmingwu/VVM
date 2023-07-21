@@ -46,13 +46,21 @@ CONTAINS
 #if defined (PHYSICS)
 
 #if defined (MICROP3)
+#if defined (LIQFRACP3)
+      REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
+         buff_c(nhalo, nhalo,nk1,11+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
+         buff_ns(1:mi1,nhalo,nk1,11+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
+                                          !                  3 send to n, 4 send to south
+         buff_ew(nhalo,1:mj1,nk1,11+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
+                                          !                  3 send to e, 4 send to w
+#else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
          buff_c(nhalo, nhalo,nk1,10+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
          buff_ns(1:mi1,nhalo,nk1,10+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
                                           !                  3 send to n, 4 send to south
          buff_ew(nhalo,1:mj1,nk1,10+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
                                           !                  3 send to e, 4 send to w
-
+#endif
 #else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
          buff_c(nhalo, nhalo,nk1,7+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
@@ -77,9 +85,15 @@ CONTAINS
 #if defined (PHYSICS)
 
 #if defined (MICROP3)
+#if defined (LIQFRACP3)
+      size_ns = nhalo*(11+ntracer)*(nk2-1)*(mi1)
+      size_ew = nhalo*(11+ntracer)*(nk2-1)*(mj1)
+      size_c = (11+ntracer)*(nk2-1)*nhalo*nhalo
+#else
       size_ns = nhalo*(10+ntracer)*(nk2-1)*(mi1)
       size_ew = nhalo*(10+ntracer)*(nk2-1)*(mj1)
       size_c = (10+ntracer)*(nk2-1)*nhalo*nhalo
+#endif
 #else
       size_ns = nhalo*(7+ntracer)*(nk2-1)*(mi1)
       size_ew = nhalo*(7+ntracer)*(nk2-1)*(mj1)
@@ -152,12 +166,24 @@ CONTAINS
           buff_ns(1:mi1,j,k-1,10,3) = brim3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,10,4) = brim3d(1:mi1,j,k)
 
+#if defined (LIQFRACP3)
+          buff_ns(1:mi1,j,k-1,11,3) = qiliq3d(1:mi1,mj1-nhalo+j,k)
+          buff_ns(1:mi1,j,k-1,11,4) = qiliq3d(1:mi1,j,k)
+
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              buff_ns(1:mi1,j,k-1,11+nt,3) = tc3d(1:mi1,mj1-nhalo+j,k,nt)
+              buff_ns(1:mi1,j,k-1,11+nt,4) = tc3d(1:mi1,j,k,nt)
+            enddo
+          endif
+#else
           if (ntracer > 0)then
             DO nt = 1,ntracer
               buff_ns(1:mi1,j,k-1,10+nt,3) = tc3d(1:mi1,mj1-nhalo+j,k,nt)
               buff_ns(1:mi1,j,k-1,10+nt,4) = tc3d(1:mi1,j,k,nt)
             enddo
           endif
+#endif
 #else
           buff_ns(1:mi1,j,k-1,6,3) = qs3d(1:mi1,mj1-nhalo+j,k)
           buff_ns(1:mi1,j,k-1,6,4) = qs3d(1:mi1,j,k)
@@ -191,19 +217,31 @@ CONTAINS
           buff_ew(i,1:mj1,k-1,6,4)  = nc3d(i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,7,3)  = nr3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,7,4)  = nr3d(i,1:mj1,k)
-          buff_ew(i,1:mj1,k-1,8,3) = ni3d(mi1-nhalo+i,1:mj1,k)
-          buff_ew(i,1:mj1,k-1,8,4) = ni3d(i,1:mj1,k)
-          buff_ew(i,1:mj1,k-1,9,3) = qrim3d(mi1-nhalo+i,1:mj1,k)
-          buff_ew(i,1:mj1,k-1,9,4) = qrim3d(i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,8,3)  = ni3d(mi1-nhalo+i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,8,4)  = ni3d(i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,9,3)  = qrim3d(mi1-nhalo+i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,9,4)  = qrim3d(i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,10,3) = brim3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,10,4) = brim3d(i,1:mj1,k)
 
+#if defined (LIQFRACP3)
+          buff_ew(i,1:mj1,k-1,11,3) = qiliq3d(mi1-nhalo+i,1:mj1,k)
+          buff_ew(i,1:mj1,k-1,11,4) = qiliq3d(i,1:mj1,k)
+
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              buff_ew(i,1:mj1,k-1,11+nt,3) = tc3d(mi1-nhalo+i,1:mj1,k,nt)
+              buff_ew(i,1:mj1,k-1,11+nt,4) = tc3d(i,1:mj1,k,nt)
+            enddo
+          endif
+#else
           if (ntracer > 0)then
             DO nt = 1,ntracer
               buff_ew(i,1:mj1,k-1,10+nt,3) = tc3d(mi1-nhalo+i,1:mj1,k,nt)
               buff_ew(i,1:mj1,k-1,10+nt,4) = tc3d(i,1:mj1,k,nt)
             enddo
           endif
+#endif
 #else
           buff_ew(i,1:mj1,k-1,6,3) = qs3d(mi1-nhalo+i,1:mj1,k)
           buff_ew(i,1:mj1,k-1,6,4) = qs3d(i,1:mj1,k)
@@ -320,12 +358,24 @@ CONTAINS
           brim3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,10,1)
           brim3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,10,2)
 
+#if defined (LIQFRACP3)
+          qiliq3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,11,1)
+          qiliq3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,11,2)
+
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              tc3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,11+nt,1)
+              tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,11+nt,2)
+            enddo
+          endif
+#else
           if (ntracer > 0)then
             DO nt = 1,ntracer
               tc3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,10+nt,1)
               tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,10+nt,2)
             enddo
           endif
+#endif
 #else
           qs3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,6,1)
           qs3d(1:mi1,mj1+j,k)   = buff_ns(1:mi1,j,k-1,6,2)
@@ -369,12 +419,24 @@ CONTAINS
           brim3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,10,1)
           brim3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,10,2)
 
+#if defined (LIQFRACP3)
+          qiliq3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,11,1)
+          qiliq3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,11,2)
+
+          if (ntracer > 0)then
+            DO nt = 1,ntracer
+              tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,11+nt,1)
+              tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,11+nt,2)
+            enddo
+          endif
+#else
           if (ntracer > 0)then
             DO nt = 1,ntracer
               tc3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,10+nt,1)
               tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,10+nt,2)
             enddo
           endif
+#endif
 #else
           qs3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,6,1)
           qs3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,6,2)
@@ -457,6 +519,9 @@ CONTAINS
       NI3D(im,J,K)  =NI3D(ii,J,K)
       QRIM3D(im,J,K)=QRIM3D(ii,J,K)
       BRIM3D(im,J,K)=BRIM3D(ii,J,K)
+#if defined (LIQFRACP3)
+      QILIQ3D(im,J,K)=QILIQ3D(ii,J,K)
+#endif
 #else
       QS3D(im,J,K)=QS3D(ii,J,K)
       QG3D(im,J,K)=QG3D(ii,J,K)
@@ -472,6 +537,9 @@ CONTAINS
       NI3D(ip,J,K)  =NI3D(i,J,K)
       QRIM3D(ip,J,K)=QRIM3D(i,J,K)
       BRIM3D(ip,J,K)=BRIM3D(i,J,K)
+#if defined (LIQFRACP3)
+      QILIQ3D(ip,J,K)=QILIQ3D(i,J,K)
+#endif
 #else
       QS3D(ip,J,K)=QS3D(i,J,K)
       QG3D(ip,J,K)=QG3D(i,J,K)
@@ -511,6 +579,9 @@ CONTAINS
       NI3D(I,im,K)  =NI3D(I,ii,K)
       QRIM3D(I,im,K)=QRIM3D(I,ii,K)
       BRIM3D(I,im,K)=BRIM3D(I,ii,K)
+#if defined (LIQFRACP3)
+      QILIQ3D(I,im,K)=QILIQ3D(I,ii,K)
+#endif
 #else
       QS3D(I,im,K)=QS3D(I,ii,K)
       QG3D(I,im,K)=QG3D(I,ii,K)
@@ -526,6 +597,9 @@ CONTAINS
       NI3D(I,ip,K)  =NI3D(I,j,K)
       QRIM3D(I,ip,K)=QRIM3D(I,j,K)
       BRIM3D(I,ip,K)=BRIM3D(I,j,K)
+#if defined (LIQFRACP3)
+      QILIQ3D(I,ip,K)=QILIQ3D(I,j,K)
+#endif
 #else
       QS3D(I,ip,K)=QS3D(I,j,K)
       QG3D(I,ip,K)=QG3D(I,j,K)
@@ -565,6 +639,9 @@ CONTAINS
       NI3D(I,J,1)  =NI3D(I,J,2)
       QRIM3D(I,J,1)=QRIM3D(I,J,2)
       BRIM3D(I,J,1)=BRIM3D(I,J,2)
+#if defined (LIQFRACP3)
+      QILIQ3D(I,J,1)=QILIQ3D(I,J,2)
+#endif
 #else
       QS3D(I,J,1)=QS3D(I,J,2)
       QG3D(I,J,1)=QG3D(I,J,2)
@@ -580,6 +657,9 @@ CONTAINS
       NI3D(I,J,NK3)= 0.
       QRIM3D(I,J,NK3)= 0.
       BRIM3D(I,J,NK3)= 0.
+#if defined (LIQFRACP3)
+      QILIQ3D(I,J,NK3)= 0.
+#endif
 #else
       QS3D(I,J,NK3)= 0.
       QG3D(I,J,NK3)= 0.

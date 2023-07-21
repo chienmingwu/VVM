@@ -113,24 +113,24 @@ CONTAINS
 
 #if defined (MICROP3)
       NC3D(I,J,K) = NC3D(I,J,K)            &
-                  + DT * NCAD_MICRO(I,J,K) &
                   + A*FNC3D(I,J,K,N2)+B*FNC3D(I,J,K,N1)
 
       NR3D(I,J,K) = NR3D(I,J,K)            &
-                  + DT * NRAD_MICRO(I,J,K) &
                   + A*FNR3D(I,J,K,N2)+B*FNR3D(I,J,K,N1)
 
       NI3D(I,J,K) = NI3D(I,J,K)            &
-                  + DT * NIAD_MICRO(I,J,K) &
                   + A*FNI3D(I,J,K,N2)+B*FNI3D(I,J,K,N1)
 
       QRIM3D(I,J,K) = QRIM3D(I,J,K)            &
-                    + DT * QRIMAD_MICRO(I,J,K) &
                     + A*FQRIM3D(I,J,K,N2)+B*FQRIM3D(I,J,K,N1)
 
       BRIM3D(I,J,K) = BRIM3D(I,J,K)            &
-                    + DT * BRIMAD_MICRO(I,J,K) &
                     + A*FBRIM3D(I,J,K,N2)+B*FBRIM3D(I,J,K,N1)
+#if defined (LIQFRACP3)
+
+      QILIQ3D(I,J,K) = QILIQ3D(I,J,K)            &
+                     + A*FQILIQ3D(I,J,K,N2)+B*FQILIQ3D(I,J,K,N1)
+#endif
 #else
 
       QS3D(I,J,K) = QS3D(I,J,K)            &
@@ -179,12 +179,16 @@ CONTAINS
       QV3D(I,J,K) = 0.
       QC3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
+      QI3D(I,J,K) = 0.
 #if defined (MICROP3)
       NC3D(I,J,K) = 0.
       NR3D(I,J,K) = 0.
       NI3D(I,J,K) = 0.
       QRIM3D(I,J,K) = 0.
       BRIM3D(I,J,K) = 0.
+#if defined (LIQFRACP3)
+      QILIQ3D(I,J,K) = 0.
+#endif
 #else
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.

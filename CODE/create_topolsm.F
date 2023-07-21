@@ -120,7 +120,7 @@ integer :: f_coarse_taiwanvvm,xs_tw,ys_tw
 
 
 ! options for taiwanvvm
-taiwanvvm=.true.       ! read taiwanvvm information (500 m spatial resolution)
+taiwanvvm=.false.       ! read taiwanvvm information (500 m spatial resolution)
 f_coarse_taiwanvvm=1   ! The coarsening factor for taiwanvvm should be aliquot part of 1024
                        ! (1 is 0.5 km, 2 is 1 km, 4 is 2 km, and so on)
 xs_tw=0                ! displacement (grids) of taiwan in x direction (0: placing against west boundary)

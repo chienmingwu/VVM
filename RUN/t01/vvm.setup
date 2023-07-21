@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = topolsm_mogamd_debug
+set expname = HW20_p3_dampoff
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -38,20 +38,21 @@ mkdir archive
 cp ${rundir}/t01/vvm.setup .
 cp ${vvmdir}/CODE/make_ctl.sh .
 
-# for RRTMG
-cp ${vvmdir}/RUNDATA/fort.91 fort.91
-cp ${vvmdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
-cp ${vvmdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
-cp ${vvmdir}/RUNDATA/topolsm_TW.nc RUNDATA/topolsm_TW.nc
-
 # for NOAH LSM
-cp -r ${vvmdir}/RUNDATA/LSM RUNDATA/LSM
-cp ${vvmdir}/CODE/LSM/GENPARM.TBL .
-cp ${vvmdir}/CODE/LSM/SOILPARM.TBL .
-cp ${vvmdir}/CODE/LSM/VEGPARM.TBL .
+ln -s ${vvmdir}/CODE/LSM/GENPARM.TBL .
+ln -s ${vvmdir}/CODE/LSM/SOILPARM.TBL .
+ln -s ${vvmdir}/CODE/LSM/VEGPARM.TBL .
+
+# for RRTMG
+ln -s ${vvmdir}/RUNDATA/fort.91 fort.91
+ln -s ${vvmdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
+ln -s ${vvmdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+ln -s ${vvmdir}/RUNDATA/topolsm_TW.nc RUNDATA/topolsm_TW.nc
 
 # for P3 scheme
-cp ${vvmdir}/CODE/p3_lookup_table_* .
+ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-2momI .
+ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-3momI .
+ln -s ${vvmdir}/RUNDATA/p3_lookupTable_2.dat-v6.0 .
 
 # create CPP list
 cat > definesld.com << 'END1'
@@ -61,9 +62,7 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define MICROP3
-#define RADCODE
-#define LSM
-#define TOPOGRAPHY
+#define HEATING
 'END1'
 cat definesld.com
 
@@ -76,11 +75,11 @@ cat > DOMAIN << 'END3'
 #!/bin/csh
 set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
-sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/60/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/40/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
@@ -89,13 +88,13 @@ cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=60 /
+ &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=30,NWR11=1,NFLPRT=1,NRESTART=30 /
+ &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=-1,ITSTOP=-1,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
+ &INPUT5 IX=3182073,ITINIT=1,ITSTOP=360,SCALE=6.,Q1Q2=T,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT

@@ -116,6 +116,9 @@ PRIVATE
           ni3d_id_rst,   & ! cloud ice number mixing ratio
           qrim3d_id_rst, & ! riming cloud ice mixing ratio
           brim3d_id_rst, & ! riming cloud ice volume mixing ratio
+#if defined (LIQFRACP3)
+          qiliq3d_id_rst, & ! riming cloud ice volume mixing ratio
+#endif
 #else
           qs3d_id_rst, &   ! snow mixing ratio
           qg3d_id_rst, &   ! graupel mixing ratio
@@ -155,6 +158,9 @@ PRIVATE
           fni3d_id_rst,  & ! cloud ice number tendency
           fqrim3d_id_rst,& ! riming cloud ice tendency
           fbrim3d_id_rst,& ! riming cloud ice volume tendency
+#if defined (LIQFRACP3)
+          fqiliq3d_id_rst, &  ! cloud ice tendency
+#endif
 #else
           fqs3d_id_rst, &  ! snow tendency
           fqg3d_id_rst, &  ! graupel tendency
@@ -339,6 +345,13 @@ CONTAINS
                           'riming_cloud_ice_volume_mixing_ratio', 'm^3 kg-1', &
                           'zt', 'yt', 'xt')
 
+#if defined (LIQFRACP3)
+! QILIQ3D
+      CALL pCDF_INI_4DVAR (ncid_th, 'qiliq', 'ice, liquid mass mixing ratio', &
+                          'ice_liquid_mass_mixing_ratio', 'kg kg-1', &
+                          'zt', 'yt', 'xt')
+
+#endif
 #else
 ! QS3D
       CALL pCDF_INI_4DVAR (ncid_th, 'qs', 'snow mixing ratio', &
@@ -3570,6 +3583,27 @@ CONTAINS
       nc_err = nfmpi_put_att_double(ncid, brim3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
+#if defined (LIQFRACP3)
+! qiliq3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'qiliq3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), qiliq3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, qiliq3d_id_rst, 'long_name', 22_mpi_offset_kind, 'ice, liquid mass mixing ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_text(ncid, qiliq3d_id_rst, 'standard_name', 16_mpi_offset_kind, 'ice_liquid_mass_mixing_ratio')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, qiliq3d_id_rst, 'units', 7_mpi_offset_kind, 'kg kg-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_double(ncid, qiliq3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_double(ncid, qiliq3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+#endif
 #else 
 ! qs3d ------------------------------------------------------------------------
       nc_err = nfmpi_def_var(ncid, 'qs3d', NF_double, 3, (/ xc_dim, yc_dim, zc_dim /), qs3d_id_rst)
@@ -4762,6 +4796,28 @@ CONTAINS
       nc_err = nfmpi_put_att_double(ncid, fbrim3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
+#if defined (LIQFRACP3)
+! fqiliq3d ------------------------------------------------------------------------
+      nc_err = nfmpi_def_var(ncid, 'fqiliq3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, time_dim /), fqiliq3d_id_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fqiliq3d_id_rst, 'long_name', 38_mpi_offset_kind, 'tendency of cloud ice due &
+              &to advection')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_text(ncid, fqiliq3d_id_rst, 'standard_name', 20_mpi_offset_kind, 'qiliq_tendency_dynamics')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+      nc_err = nfmpi_put_att_text(ncid, fqiliq3d_id_rst, 'units', 11_mpi_offset_kind, 'kg kg-1 s-1')
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_double(ncid, fqiliq3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+      nc_err = nfmpi_put_att_double(ncid, fqiliq3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+#endif
 #else      
 ! fqs3d ------------------------------------------------------------------------
       nc_err = nfmpi_def_var(ncid, 'fqs3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, time_dim /), fqs3d_id_rst)

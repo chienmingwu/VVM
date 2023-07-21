@@ -209,7 +209,7 @@ SRC_FREE_CODE = \
 	nudge_module.F \
 	physics_interface.f90 \
 	physics_v10d.f90 \
-        module_mp_p3.F \
+        microphy_p3.F \
         ras_module.F \
 	q_chk_module.F \
 	radiation_rrtmg.f90 \
@@ -571,11 +571,11 @@ wind_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o bound.o elliptic.o 
 
 radiation_rrtmg.o: kinds.o rrtm_params.o rrtm_grid.o rrtm_vars.o rad.o trace_gases.o RADOUTLD.o TIMEINFO.o CONST3D.o bound.o rad_full.o
 
-physics_interface.o: kinds.o timer.o rrtm_params.o rrtm_grid.o rrtm_vars.o physics_v10d.o module_mp_p3.o update_thermo_module.o PROFOUTLD.o RADOUTLD.o CONST3D.o TIMEINFO.o bound.o cloud_module.o radiation_rrtmg.o domain_decomposition.o cam_rad_parameterizations.o
+physics_interface.o: kinds.o timer.o rrtm_params.o rrtm_grid.o rrtm_vars.o physics_v10d.o microphy_p3.o update_thermo_module.o PROFOUTLD.o RADOUTLD.o CONST3D.o TIMEINFO.o bound.o cloud_module.o radiation_rrtmg.o domain_decomposition.o cam_rad_parameterizations.o
 
 physics_v10d.o: kinds.o PARMSLD.o
 
-module_mp_p3.o: module_mp_p3.F kinds.o PARMSLD.o
+microphy_p3.o: microphy_p3.F kinds.o PARMSLD.o
 
 ras_module.o: ras_module.F kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o
 
