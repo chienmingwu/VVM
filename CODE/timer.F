@@ -376,8 +376,8 @@
 !      CALL MPI_BARRIER (MPI_COMM_WORLD,ierr)
 !#endif
 
-   10 FORMAT (1x,i5,' : ',a20,l1,2f15.5,f8.2)
-   20 FORMAT (1x,i5,' : ',a20,l1,2f15.5     )
+   10 FORMAT (1x,i5,' : ',a20,l1,2f15.2,f8.2)
+   20 FORMAT (1x,i5,' : ',a20,l1,2f15.2     )
 
       END SUBROUTINE timer_write
 !cccccccc1ccccccccc2ccccccccc3ccccccccc4ccccccccc5cccgtgccc6ccccccccc7cc
