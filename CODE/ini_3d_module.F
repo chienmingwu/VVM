@@ -59,18 +59,23 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
-      CHARACTER (60) FILENAME
-
       integer nu1, nt1, nq1, k1, k2, it
       logical lf
+      CHARACTER (60) FILENAME
+
       DATA NU1/6/,NT1/6/,NQ1/6/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(10),PI1(10),TV1(10),PILOG1(10)
-      REAL (KIND=dbl_kind) :: PQ1(10),P1(10),T1(10),QV1(10),QC1(10)
-      REAL (KIND=dbl_kind) ::  PU1(10),WIND(10),DEG(10),U1(10),V1(10), WLS1(10)
+          ,QCBAR(NK3),QVSBAR(NK3),UG(NK3),VG(NK3),qv1(NK3),p1(NK3)
+      REAL (KIND=dbl_kind) :: Q1OBS(NK3),Q2OBS(NK3),wls1(NK3)
+      REAL (KIND=real_kind) ::  RHO_s(NK3),RHOZ_s(NK2),THBAR_s(NK3),  &
+             QVBAR_s(NK3),PBAR_s(NK3),PIBAR_s(NK3) 
+
+      CHARACTER(len=8) :: dateStr = '20160618'
+      !REAL (KIND=dbl_kind) :: ZT1(10),PI1(10),TV1(10),PILOG1(10)
+      !REAL (KIND=dbl_kind) :: PQ1(10),P1(10),T1(10),QV1(10),QC1(10)
+      !REAL (KIND=dbl_kind) ::  PU1(10),WIND(10),DEG(10),U1(10),V1(10), WLS1(10)
       !DATA P1/1021.,905.,720.,600.,490.,285./
       !DATA T1/295.,295.,310.5,310.5,325.,340./
       !DATA QV1/12.,12.,2.5,2.5,0.,0./
@@ -79,7 +84,7 @@ CONTAINS
       !DATA U1/-7.5,-7.5,0.,10.,10.,10./
       !DATA V1/-7.5,-7.5,0.,0.,0.,0./
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(10),Q2OBS(10)
+      !REAL (KIND=dbl_kind) ::  Q1OBS(10),Q2OBS(10)
       !DATA WIND/8.,19.,31.,31.,15*12./
       !DATA DEG/140.,140.,140.,140.,15*275./
       ! DATA DEG/110.,110.,110.,110.,15*275./
@@ -88,28 +93,44 @@ CONTAINS
       !DATA DEG/20.,20.,20.,100.,15*275./
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, &
                         tracer_file
-      CHARACTER(len=8) :: dateStr = '20050606'
       !CHARACTER(len=5) :: stno = '47918'
       CHARACTER(len=5) :: stno = '46692'
       CHARACTER(len=80) :: fname
+      LOGICAL(kind=2) :: noWind = .FALSE.
       
-      ! Read ideal sounding (RAW) from file
+      ! Read sounding data from binary file
       fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.CWB.txt'
+      if (my_task==0) write(*,*) "fname:", trim(fname)
+      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NK3*dbl_kind)
+      read(88,rec=1) UG(:)
+      read(88,rec=2) VG(:)
+      read(88,rec=3) T(:)
+      read(88,rec=4) qv1(:)
+      read(88,rec=5) p1(:)
+      print *, 'read data in u:',UG(1),UG(NK3)
+      print *, 'read data in v:',VG(1),VG(NK3)
+      print *, 'read data in t:',T(1),T(NK3)
+      print *, 'read data in qv:',qv1(1),qv1(NK3)
+      print *, 'read data in p:',p1(1),p1(NK3)
+      if (noWind) then
+        do k=1,NK3
+          UG(k)=0.
+          VG(k)=0.
+        enddo
+      end if
 
-      open(unit=88,file=fname,form='unformatted',status='old',access='direct',recl=NK3*2)
-      READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i), WLS1(i)
+      wls1=0.
+
+      do k=1,NK3
+        QVBAR(k)=qv1(k)/1000.
+        PBAR(k)=p1(k)*100.0
+      enddo
+
       close(88)
 
-
-      PQ1=P1
-      T1 = T1*(p1/1000.)**(287./1004.)
-      QV1 = QV1*1E-3    ! g/kg to kg/kg
-      WLS1 = WLS1*0.01  ! cm/s to m/s
       Q1OBS=0.
       Q2OBS=0.
 
-      !print *, t1
-      casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
@@ -121,125 +142,123 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = T1(1)
+      SST = T(1)
       PSFC = p1(1)
 
-      DO 100 K = 1, NT1
-      T1(K) =  T1(K)
-      QV1(K)= QV1(K)
-  100 CONTINUE
 
       RBCP = RGAS / CP
-      DO 110 K = 1, NT1
-      PI1(K) = ( P1(K) / PZERO ) ** RBCP
+      PZERO=PZERO*100.0
+      PSFC=PSFC*100.0
+      DO 110 K = 1, NK3
+      PIBAR(K) = ( PBAR(K) / PZERO ) ** RBCP
   110 CONTINUE
 
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
 
-      DO 120 K = 1, NT1
-      T8  = T1(K)
-      P8  = P1(K)
-      QV8 = QV1(K)
-      QC8 = QC1(K)
+      DO 120 K = 1, NK3
+      T8  = T(K)
+      P8  = PBAR(K)*0.01
+      QV8 = QVBAR(K)
+      QC8 = 0.D0
       QI8 = 0.D0
       if (my_task .eq. 0) print*, T8,P8,QV8,K
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      QV1(K) = QV8
-      QC1(K) = QC8
+      QVBAR(K) = QV8
+      QCBAR(K) = 0.
   120 CONTINUE
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
 !     UNITS ARE T : DEG K, QV : G/G.
 
-      DO 130 K = 1, NT1
-      PILOG1(K) = LOG ( PI1(K) )
-      TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
+      DO 130 K = 1, NK3
+      PILOG(K) = LOG ( PIBAR(K) )
+      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) - QCBAR(K) )
   130 CONTINUE
 
-      ZT1(1) = Zz(1)
-
-      DO 140 K = 2, NT1
-      ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
-              *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
-  140 CONTINUE
-!     LOCATE J = 1 T-LEVEL AT ZW(1).
-
-      ZT(1)    = Zz(1)
-      T(1)     = T1(1)
-      QVBAR(1) = QV1(1)
-      QCBAR(1) = QC1(1)
-
-!     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
-!     FOR K = 2, NK3
-
-      DO 150 K = 2, NK3
-      K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
-      K2 = K1 + 1
-      T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
-      QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
-      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
-  150 CONTINUE
-
-      if (my_task==0) then
-        print *, 'initial profile'
-        print *, t
-        print *, qvbar
-      endif
-
-
-!     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
-
-      GDZBCP = 2. * GRAV * DZ / CP
-      CPBR = CP / RGAS
-      RBCP = 1. / CPBR
-
-!     CONVERT PRESSURES TO PASCALS
-
-      PSFC  = PSFC * 100.
-      PZERO = PZERO * 100.
-
-      PISFC = ( PSFC / PZERO ) ** RBCP
-
-      PBAR(1)  = PSFC
-      PIBAR(1) = PISFC
-      PILOG(1) = LOG ( PIBAR(1) )
-
-      DO 160 IT = 1, 3
-
-      DO 162 K = 1, NK3
-      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) )
-  162 CONTINUE
-
-      PILOG(2)=PILOG(1)-GDZBCP/(TV(1)+TV(2))     &
-              *(ZT(2)-Zz(1))/DZ
-      DO 164 K = 3, NK3
-      PILOG(K)=PILOG(K-1)-GDZBCP/(TV(K-1)+TV(K))/FNZ(K-1)
-  164 CONTINUE
-
-      DO 166 K = 2, NK3
-      PIBAR(K)= EXP ( PILOG(K) )
-      PBAR(K) = PZERO * PIBAR(K) ** CPBR
-  166 CONTINUE
+!      ZT1(1) = Zz(1)
+!
+!      DO 140 K = 2, NT1
+!      ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
+!              *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
+!  140 CONTINUE
+!!     LOCATE J = 1 T-LEVEL AT ZW(1).
+!
+!      ZT(1)    = Zz(1)
+!      T(1)     = T1(1)
+!      QVBAR(1) = QV1(1)
+!      QCBAR(1) = QC1(1)
+!
+!!     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
+!!     FOR K = 2, NK3
+!
+!      DO 150 K = 2, NK3
+!      K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
+!      K2 = K1 + 1
+!      T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
+!      QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
+!      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
+!  150 CONTINUE
+!
+!      if (my_task==0) then
+!        print *, 'initial profile'
+!        print *, t
+!        print *, qvbar
+!      endif
+!
+!
+!!     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
+!
+!      GDZBCP = 2. * GRAV * DZ / CP
+!      CPBR = CP / RGAS
+!      RBCP = 1. / CPBR
+!
+!!     CONVERT PRESSURES TO PASCALS
+!
+!      PSFC  = PSFC * 100.
+!      PZERO = PZERO * 100.
+!
+!      PISFC = ( PSFC / PZERO ) ** RBCP
+!
+!      PBAR(1)  = PSFC
+!      PIBAR(1) = PISFC
+!      PILOG(1) = LOG ( PIBAR(1) )
+!
+!      DO 160 IT = 1, 3
+!
+!      DO 162 K = 1, NK3
+!      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) )
+!  162 CONTINUE
+!
+!      PILOG(2)=PILOG(1)-GDZBCP/(TV(1)+TV(2))     &
+!              *(ZT(2)-Zz(1))/DZ
+!      DO 164 K = 3, NK3
+!      PILOG(K)=PILOG(K-1)-GDZBCP/(TV(K-1)+TV(K))/FNZ(K-1)
+!  164 CONTINUE
+!
+!      DO 166 K = 2, NK3
+!      PIBAR(K)= EXP ( PILOG(K) )
+!      PBAR(K) = PZERO * PIBAR(K) ** CPBR
+!  166 CONTINUE
 
 !     ADJUST T, QVBAR AND QCBAR.
 
       DO 168 K = 1, NK3
-      T8 = T(K)
-      P8 = PBAR(K) * 0.01
-      QV8 = QVBAR(K)
-      QC8 = QCBAR(K)
-      QI8 = 0.D0
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      QVBAR(K) = QV8
-      QCBAR(K) = QC8
+      !T8 = T(K)
+      !P8 = PBAR(K) * 0.01
+      !QV8 = QVBAR(K)
+      !QC8 = QCBAR(K)
+      !QI8 = 0.D0
+      !CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+      !QVBAR(K) = QV8
+      !QCBAR(K) = QC8
       ES1 = ES ( T(K) )
       QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
       THBAR(K) = T(K) / PIBAR(K)
       H(K) = QVBAR(K) / QVSBAR(K)
   168 CONTINUE
 
-  160 CONTINUE
-
+!  160 CONTINUE
+!
       IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
 
 
@@ -286,8 +305,8 @@ CONTAINS
       !IF ( ZT(K) .LT. 15000. ) THEN
       K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
       K2 = K1 + 1
-      WLS (K) = &
-         FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLS1(K1),PQ1(K2),WLS1(K2)) 
+      !WLS (K) = &
+      !   FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLS1(K1),PQ1(K2),WLS1(K2)) 
       !Q1LS (K) =  &
       !  FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
       !Q2LS (K) =  &
@@ -314,13 +333,13 @@ CONTAINS
   212 CONTINUE
 #endif
 
-      DO 220 K = 2, NK2
-      PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
-      K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-  220 CONTINUE
+!      DO 220 K = 2, NK2
+!      PBARMB = PBAR(K) * 0.01
+!      K1 = INDEXR(PBARMB,NU1,PU1,LF)
+!      K2 = K1 + 1
+!      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
+!      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
+!  220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)
@@ -347,8 +366,8 @@ CONTAINS
       WRITE(95,*) 
       WRITE(95,*) '************* LS FORCING **********************'
       WRITE(95,403)
-      WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),WLS(K),K=2,NK2)
-
+      !WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),WLS(K),K=2,NK2)
+      WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),K=2,NK2)
 
   401 FORMAT (7X,'Z(m)',2X,'PBAR(mb)',4X,'T(K)',4X,'THBAR(K)',2X,  &
        'QVBAR(g/kg)',2X,'U(m/s)'//)
@@ -356,7 +375,8 @@ CONTAINS
   402 FORMAT ( 0PF10.0,-2PF10.1,0PF10.2,0PF10.2,3PF10.1,0PF10.1)
 
   403 FORMAT (7X,'Z(m)',3X,'Q1LS(K/day)',1X,'Q2LS(K/day)'//)
-  404 FORMAT (0PF10.0,0PE12.3,0PE12.3,0PE12.3)
+  !404 FORMAT (0PF10.0,0PE12.3,0PE12.3,0PE12.3)
+  404 FORMAT (0PF10.0,0PE12.3,0PE12.3)
 
       if(my_task == 0) then
       INQUIRE(iolength=k) temp
@@ -389,7 +409,8 @@ CONTAINS
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
       QV3D(I,J,K) = QVBAR(K)
-      QC3D(I,J,K) = QCBAR(K)
+      QC3D(I,J,K) = 0.
+      !QC3D(I,J,K) = QCBAR(K)
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
 #if defined (MICROP3)

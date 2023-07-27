@@ -11,8 +11,8 @@
       character(23) FILENAME
 
       integer NX, NY
-      parameter (NX = 1024, NY = 1024)
-      !parameter (NX = 2048, NY = 2048)
+      !parameter (NX = 1024, NY = 1024)
+      parameter (NX = 2048, NY = 2048)
       REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
       REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB), ZT1(NK3)
@@ -39,7 +39,7 @@
       LOGICAL NOTURB,NOSFX,BUOY
       INTEGER NSFLUX,NP,NOTHERM
 
-      INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT,KK,KT,KT1
+      INTEGER IC,JC,IP,JP,IE,JE,II,JI,IT
 
 
       REAL alb(MI_glob,MJ_glob), grf(MI_glob,MJ_glob),
@@ -47,12 +47,8 @@
      1 shdmax(MI_glob,MJ_glob), shdmin(MI_glob,MJ_glob),
      1 slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
 
-      REAL alb_s(nx,ny), grf_s(nx,ny),hgt_s(nx,ny),lai_s(nx,ny),
-     1 lu_s(nx,ny),shdmax_s(nx,ny),shdmin_s(nx,ny),slope_s(nx,ny),
-     1 soil_s(nx,ny),xt_s(nx),yt_s(ny)   
-
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
-      REAL*8 ZZ(NK3), ZT(NK3), FNZ(NK3), FNT(NK3)
+      REAL*8 ZZ(NK3), ZT(NK3)
 
       REAL (KIND=int_kind) HX(MI_GLOB,MJ_GLOB), height(MI_GLOB,MJ_GLOB),
      1 mask(MI_GLOB,MJ_GLOB,NK2)
