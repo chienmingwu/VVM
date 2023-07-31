@@ -11,8 +11,8 @@
       character(23) FILENAME
 
       integer NX, NY
-      !parameter (NX = 1024, NY = 1024)
-      parameter (NX = 2048, NY = 2048)
+      parameter (NX = 1024, NY = 1024)
+      !parameter (NX = 2048, NY = 2048)
       REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
       REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB), ZT1(NK3)
@@ -47,6 +47,10 @@
      1 shdmax(MI_glob,MJ_glob), shdmin(MI_glob,MJ_glob),
      1 slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
 
+     ! REAL alb_s(nx,ny), grf_s(nx,ny),hgt_s(nx,ny),lai_s(nx,ny),
+     !1 lu_s(nx,ny),shdmax_s(nx,ny),shdmin_s(nx,ny),slope_s(nx,ny),
+     !1 soil_s(nx,ny),xt_s(nx),yt_s(ny)
+
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
       REAL*8 ZZ(NK3), ZT(NK3)
 
@@ -70,54 +74,11 @@
 
 ! DZTMP = MIN(DZ,DZ1)
       Zz(1) = ZB
-      ZT(1) = ZZ(1)
-      Zz(2) = ZZ(1) + DZ
-      ZT(2) = ZZ(1) + 0.5*DZ
-      DO 50 K = 3, NK3
-      Zz(K) = Zz(K-1) + DZ
-      ZT(K) = ZT(K-1) + DZ
+      DO 50 K = 2, NK3
+      Zz(K) = Zz(K-1) + DZ1
+
    50 CONTINUE
 
-      DO 411 K = 1, NK3
-      FNZ(K) = 1. / ( CZ1 + 2. * CZ2 * ZZ(K) )
-      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
-  411 CONTINUE
-
-      KT = INT((1-CZ1)/CZ2/2/DZ)
-      KT1 = INT(ZZ(KT)/DZ1+0.999)
-
-      PRINT*,KT,KT1,ZZ(KT)
-
-      ZZ(1) = ZB
-      FNZ(1) = DZ/DZ1
-
-      DO 412 K = 2,KT1-1
-      DO 413 KK = NK3,K+1,-1
-      FNZ(KK) = FNZ(KK-1)
-      ZZ(KK) = ZZ(KK-1) + DZ1
-  413 CONTINUE
-      FNZ(K) = DZ/DZ1
-      ZZ(K) = ZZ(K-1) + DZ1
-  412 CONTINUE
-
-      DO 414 K = 1, NK3
-      FNT(K) = 1. / ( CZ1 + 2. * CZ2 * ZT(K) )
-      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
-  414 CONTINUE
-
-      ZT(1) = ZB
-      FNT(1) = DZ/DZ1
-      ZT(2) = ZZ(1) + DZ1/2
-      FNT(2) = DZ/DZ1
-      DO 415 K = 3,KT1
-      DO 416 KK = NK3,K+1,-1
-      FNT(KK) = FNT(KK-1)
-      ZT(KK) = ZT(KK-1) +DZ1
-  416 CONTINUE
-      FNT(K) = DZ/DZ1
-      ZT(K) = ZT(K-1) + DZ1
-  415 CONTINUE
-      FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
 
 ! import INPUT FILE
       IF (TWTOPO) THEN
@@ -216,46 +177,57 @@ C TMP = MAX(TMP,DATA(IP,JP))
       ELSE
 
       OPEN(unit=15,file='RUNDATA/LSM/lon.txt',form='formatted')
-      READ(15,*) xt_s
+      READ(15,*) xt
+      !READ(15,*) xt_s
       CLOSE(15)
       OPEN(unit=15,file='RUNDATA/LSM/lat.txt',form='formatted')
-      READ(15,*) yt_s
+      READ(15,*) yt
+      !READ(15,*) yt_s
       CLOSE(15)
 
       OPEN(unit=15,file='RUNDATA/LSM/albedo.txt',form='formatted')
-      READ(15,*) alb_s
+      READ(15,*) alb
+      !READ(15,*) alb_s
       CLOSE(15)
 
       OPEN(unit=15,file='RUNDATA/LSM/grf.txt',form='formatted')
-      READ(15,*) grf_s
+      READ(15,*) grf
+      !READ(15,*) grf_s
       CLOSE(15)
 
       OPEN(unit=15,file='RUNDATA/LSM/hgt.txt',form='formatted')
-      READ(15,*) hgt_s
+      READ(15,*) hgt
+      !READ(15,*) hgt_s
       CLOSE(15)
 
       OPEN(unit=15,file='RUNDATA/LSM/lai.txt',form='formatted')
-      READ(15,*) lai_s
+      READ(15,*) lai
+      !READ(15,*) lai_s
       CLOSE(15)
 
       OPEN(unit=15,file='RUNDATA/LSM/lu.txt',form='formatted')
-      READ(15,*) lu_s
+      READ(15,*) lu
+      !READ(15,*) lu_s
       CLOSE(15)
 
       OPEN(unit=15,file='RUNDATA/LSM/shdmax.txt',form='formatted')
-      READ(15,*) shdmax_s
+      READ(15,*) shdmax
+      !READ(15,*) shdmax_s
       CLOSE(15)
 
       OPEN(unit=15,file='RUNDATA/LSM/shdmin.txt',form='formatted')
-      READ(15,*) shdmin_s
+      READ(15,*) shdmin
+      !READ(15,*) shdmin_s
       CLOSE(15)
 
       OPEN(unit=15,file='RUNDATA/LSM/slope.txt',form='formatted')
-      READ(15,*) slope_s
+      READ(15,*) slope
+      !READ(15,*) slope_s
       CLOSE(15)
 
       OPEN(unit=15,file='RUNDATA/LSM/soil.txt',form='formatted')
-      READ(15,*) soil_s
+      READ(15,*) soil
+      !READ(15,*) soil_s
       CLOSE(15)
 
 
@@ -398,22 +370,22 @@ C TMP = MAX(TMP,DATA(IP,JP))
 ! WRITE(16)HX
 ! CLOSE(16)
 
-!= change 1024 grid to 2048
-      alb=8.
-      lu=16
-      soil=14
-      do i=1,nx
-      do j=1,ny
-      alb(i,j)=alb_s(i,j)
-      grf(i,j)=grf_s(i,j)
-      lai(i,j)=lai_s(i,j)
-      lu(i,j)=lu_s(i,j)
-      shdmax(i,j)=shdmax_s(i,j)
-      shdmin(i,j)=shdmin_s(i,j)
-      slope(i,j)=slope_s(i,j)
-      soil(i,j)=soil_s(i,j)
-      enddo
-      enddo
+!!= change 1024 grid to 2048
+!      alb=8.
+!      lu=16
+!      soil=14
+!      do i=1,nx
+!      do j=1,ny
+!      alb(i,j)=alb_s(i,j)
+!      grf(i,j)=grf_s(i,j)
+!      lai(i,j)=lai_s(i,j)
+!      lu(i,j)=lu_s(i,j)
+!      shdmax(i,j)=shdmax_s(i,j)
+!      shdmin(i,j)=shdmin_s(i,j)
+!      slope(i,j)=slope_s(i,j)
+!      soil(i,j)=soil_s(i,j)
+!      enddo
+!      enddo
 !=====
 
 
