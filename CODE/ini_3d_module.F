@@ -99,7 +99,7 @@ CONTAINS
       LOGICAL(kind=2) :: noWind = .FALSE.
       
       ! Read sounding data from binary file
-      fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.CWB.txt'
+      fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.taiwania.dat'
       if (my_task==0) write(*,*) "fname:", trim(fname)
       open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NK3*dbl_kind)
       read(88,rec=1) UG(:)
@@ -303,8 +303,8 @@ CONTAINS
 
       DO 200 K = 2, NK3
       !IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
-      K2 = K1 + 1
+      !K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
+      !K2 = K1 + 1
       !WLS (K) = &
       !   FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLS1(K1),PQ1(K2),WLS1(K2)) 
       !Q1LS (K) =  &

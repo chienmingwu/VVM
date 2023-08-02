@@ -47,9 +47,9 @@
      1 shdmax(MI_glob,MJ_glob), shdmin(MI_glob,MJ_glob),
      1 slope(MI_glob,MJ_glob), soil(MI_glob,MJ_glob)
 
-     ! REAL alb_s(nx,ny), grf_s(nx,ny),hgt_s(nx,ny),lai_s(nx,ny),
-     !1 lu_s(nx,ny),shdmax_s(nx,ny),shdmin_s(nx,ny),slope_s(nx,ny),
-     !1 soil_s(nx,ny),xt_s(nx),yt_s(ny)
+!      REAL alb_s(nx,ny), grf_s(nx,ny),hgt_s(nx,ny),lai_s(nx,ny),
+!     1 lu_s(nx,ny),shdmax_s(nx,ny),shdmin_s(nx,ny),slope_s(nx,ny),
+!     1 soil_s(nx,ny),xt_s(nx),yt_s(ny)
 
       REAL*8 CZ1,CZ2, DOMAIN, R, RX,RY,PI,DZTMP
       REAL*8 ZZ(NK3), ZT(NK3)
@@ -60,7 +60,7 @@
       R = 6378137.0
       ZB = 0.
       PI = 3.14159265358979323846264338327
-      NAMELIST /INPUT3/ DT,DX,DYNEW,DZ,DZ1,DOMAIN,ZB,NOTURB,NOSFX
+      NAMELIST /INPUT3/ DT,DX,DYNEW,DZ,DZ1,DOMAIN,NOTURB,NOSFX
      1 ,NSFLUX,ALADV,UVTAU,BUOY,NOTHERM,WRXMU
 
       OPEN(unit=15,file='INPUT',form='formatted')
@@ -332,7 +332,8 @@ C TMP = MAX(TMP,DATA(IP,JP))
 ! DO J=1,mj_glob
       DO I=1,NX
       DO J=1,NY
-      TMP=DBLE(hgt_s(I,J))
+      !TMP=DBLE(hgt_s(I,J))
+      TMP=DBLE(hgt(I,J))
 
       IF (TMP .GT. 0.) HX(I,J) = 2.
       DO K=2,NK1
