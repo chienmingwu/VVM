@@ -5,11 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = HW20_p3_dampoff
+set expname = HW20_p3_petsc
 
 # set job system and compiler
-set compiler = 'intel_mogamd'
-set jobsys = 'slurm_mogamd_intel'
+set compiler = 'aocc_mogamd'
+set jobsys = 'slurm_mogamd_aocc'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `

@@ -9,7 +9,20 @@ MODULE domain_decomposition
    PRIVATE
    
    
+   ! use for solve 2D elliptic equations
+   INTEGER (KIND=int_kind), PUBLIC ::           &
+      reduce_x,  & ! reduce facter of MPI in x direction
+      reduce_y,  & ! reduce facter of MPI in y direction
+      solve2d_chi,   & ! solve2d for psi 
+      solve2d_psi,   & ! solve2d for chi
+      solve2d_comm_chi,   & 
+      solve2d_comm_psi
+   integer (kind=int_kind), dimension(:), allocatable, public :: &
+      ind_sub ! for sub-domain indexing
+
+
    INTEGER (kind=int_kind), PUBLIC :: &
+      nproc,   & ! total process
       my_task   ! process and subdomain identifer (0 through ntasks-1)
       
 ! variables that relate the local subdomain to the global domain
@@ -70,8 +83,8 @@ MODULE domain_decomposition
 
 
    call MPI_COMM_RANK(PETSC_COMM_WORLD, my_task, mpierr)
-   call MPI_comm_size(MPI_COMM_WORLD, i,mpierr)
-   IF (i .NE. ntasks) THEN
+   call MPI_comm_size(MPI_COMM_WORLD, nproc,mpierr)
+   IF (nproc .NE. ntasks) THEN
    IF (MY_TASK .EQ. 0) THEN
    PRINT*, 'The number of porcessors =/= zonal_decomposition*merid_decomposition'
    PRINT*, 'Please check the vvm.setup'

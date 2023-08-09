@@ -115,12 +115,14 @@ IMPLICIT NONE
 PRIVATE
 PetscInt, PRIVATE:: i,j,k,kt,npt,np
 PetscInt, PRIVATE:: ixx,iy,iz,mx,my,mz,ixg,iyg,izg,mxg,myg,mzg
+PetscInt, PRIVATE:: ixx2,iy2,iz2,mx2,my2,mz2,ixg2,iyg2,izg2,mxg2,myg2,mzg2
 PetscInt, PRIVATE:: ctx3,ctx2
 PetscScalar, PRIVATE:: tmp(1)
 PetscScalar, PRIVATE:: vsum,tpts = -1.d0/dble(mi_glob*mj_glob)
 PetscOffset, PRIVATE:: ip
 PetscErrorCode, PRIVATE:: ierr
 Vec, PRIVATE::v,vl,rhs,v1,v2
+Vec, PRIVATE::vl2,rhs2
 PC, PRIVATE::PC_Conti,PC_Toppsi,PC_Topchi
 KSP Conti,Toppsi,Topchi
 #if defined (PETSCMG)
@@ -147,8 +149,8 @@ Character(len=*), PARAMETER, PRIVATE :: ksp_type_topchi = KSPCG, pc_type_topchi 
 !sub-ksp and respect pc for PCMG setting
 
 #endif
-DM, PRIVATE::da3(nlevel),da2(nlevel)
-Mat, PRIVATE:: R, Amat,Cmat
+DM, PRIVATE::da3(nlevel),da2(nlevel),da1(nlevel)
+Mat, PRIVATE:: R, Amat,Cmat,Bmat
 PetscReal, PARAMETER, PRIVATE:: Omega =1.65d0
 ! Set tolerance  
 PetscInt, PRIVATE:: MXIT = 2000
@@ -294,37 +296,37 @@ endif
 ! The grid information can be used in both 2d and 3d grid.
 
 
-    call DMDACreate2d(PETSC_COMM_WORLD,DM_BOUNDARY_PERIODIC,                &
+    if (solve2d_psi==0) then
+    call DMDACreate2d(solve2d_comm_psi,DM_BOUNDARY_PERIODIC,                &
       DM_BOUNDARY_PERIODIC,DMDA_STENCIL_BOX,MI_glob/(2**nlv),MJ_glob/(2**nlv), &
-      nsbdm_x,nsbdm_y,1,nhalo,PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da2(nlevel),ierr)
+      nsbdm_x/reduce_x,nsbdm_y/reduce_y,1,nhalo,PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da2(nlevel),ierr)
     call DMSetUp(da2(nlevel),ierr) ! must be call after PETSc 3.8.0
 
     call DMDASetUniformCoordinates(da2(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
 
     DO I = nlevel,2,-1
     call DMDASetRefinementFactor(da2(I),2,2,1,ierr)
-    call DMRefine(da2(I), PETSC_COMM_WORLD, da2(I-1),ierr)
+    call DMRefine(da2(I), solve2d_comm_psi, da2(I-1),ierr)
     call DMDASetUniformCoordinates(da2(I-1),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
 
     ENDDO
 
-!    call DMDAGetCorners(da2(1),ixx,iy,iz,mx,my,mz,ierr)
-!    call DMDAGetGhostCorners(da2(1),ixg,iyg,izg,mxg,myg,mzg,ierr)
+    call DMDAGetCorners(da2(1),ixx2,iy2,iz2,mx2,my2,mz2,ierr)
+    call DMDAGetGhostCorners(da2(1),ixg2,iyg2,izg2,mxg2,myg2,mzg2,ierr)
 
     call DMCreateGlobalVector(da2(1),v1,ierr)
-    call DMCreateGlobalVector(da2(1),v2,ierr)
     call DMCreateGlobalVector(da2(1),rhs,ierr)
 
-    call KSPCreate(MPI_COMM_WORLD,Toppsi,ierr)
+    call KSPCreate(solve2d_comm_psi,Toppsi,ierr)
 !    call KSPSetDM(Toppsi,da2,ierr)
 !    call KSPSetComputeOperators(Toppsi,ComputeTopbc,ctx2,ierr)
 
     npt=mi_glob*mj_glob
-    np=nsbdm_x*nsbdm_y
+    np=nsbdm_x*nsbdm_y/(reduce_x*reduce_y)
 
-    call MatCreateAIJ(MPI_COMM_WORLD,npt/np,npt/np,npt,npt,5, &
+    call MatCreateAIJ(solve2d_comm_psi,npt/np,npt/np,npt,npt,5, &
          PETSC_NULL_INTEGER,3,PETSC_NULL_INTEGER,Amat,ierr)
-    call OperatorTopbc(Amat)
+    call OperatorTopbc(Amat,da2(1))
     call KSPSetOperators(Toppsi,Amat,Amat,ierr)
 
     call KSPSetType(Toppsi, ksp_type_toppsi,ierr)
@@ -372,20 +374,49 @@ endif
     call KSPSetFromOptions(Toppsi,ierr)
     call KSPSolve(Toppsi,rhs,v1,ierr)
     call KSPSetInitialGuessNonzero(Toppsi,PETSC_TRUE,ierr)
+    call VecDestroy(rhs,ierr)
+    endif
 
+    if (solve2d_chi==0) then
+    call DMDACreate2d(solve2d_comm_chi,DM_BOUNDARY_PERIODIC,                &
+      DM_BOUNDARY_PERIODIC,DMDA_STENCIL_BOX,MI_glob/(2**nlv),MJ_glob/(2**nlv), &
+      nsbdm_x/reduce_x,nsbdm_y/reduce_y,1,nhalo,PETSC_NULL_INTEGER,PETSC_NULL_INTEGER,da1(nlevel),ierr)
+    call DMSetUp(da1(nlevel),ierr) ! must be call after PETSc 3.8.0
 
-    call KSPCreate(MPI_COMM_WORLD,Topchi,ierr)
-!    call KSPSetDM(Topchi,da2,ierr)
+    call DMDASetUniformCoordinates(da1(nlevel),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
+
+    DO I = nlevel,2,-1
+    call DMDASetRefinementFactor(da1(I),2,2,1,ierr)
+    call DMRefine(da1(I), solve2d_comm_chi, da1(I-1),ierr)
+    call DMDASetUniformCoordinates(da1(I-1),0.d0,1.d0,0.d0,1.d0,0.d0,1.d0,ierr)
+
+    ENDDO
+
+    call DMDAGetCorners(da1(1),ixx2,iy2,iz2,mx2,my2,mz2,ierr)
+    call DMDAGetGhostCorners(da1(1),ixg2,iyg2,izg2,mxg2,myg2,mzg2,ierr)
+    write(*,'(A,10I5)') "123",my_task,ixx2,iy2,iz2,mx2,my2,mz2
+
+    call DMCreateGlobalVector(da1(1),v2,ierr)
+    call DMCreateGlobalVector(da1(1),rhs2,ierr)
+
+    call KSPCreate(solve2d_comm_chi,Topchi,ierr)
+!    call KSPSetDM(Topchi,da1,ierr)
 !    call KSPSetComputeOperators(Topchi,ComputeTopbc,ctx2,ierr)
+    npt=mi_glob*mj_glob
+    np=nsbdm_x*nsbdm_y/(reduce_x*reduce_y)
 
-    call KSPSetOperators(Topchi,Amat,Amat,ierr)
+    call MatCreateAIJ(solve2d_comm_chi,npt/np,npt/np,npt,npt,5, &
+         PETSC_NULL_INTEGER,3,PETSC_NULL_INTEGER,Bmat,ierr)
+    call OperatorTopbc(Bmat,da1(1))
+
+    call KSPSetOperators(Topchi,Bmat,Bmat,ierr)
     call KSPSetType(Topchi, ksp_type_topchi,ierr)
     call KSPGetPC(Topchi,PC_Topchi,ierr)
     call PCSetType(PC_Topchi,pc_type_topchi,ierr)
 !    IF (pc_type_topchi .eq. PCMG) THEN
 
 #if defined (PETSCMG)
-    call PCSetDM(PC_Topchi,da2(1),ierr)
+    call PCSetDM(PC_Topchi,da1(1),ierr)
     call PCMGSetLevels(PC_Topchi, nlevel,PETSC_NULL_OBJECT,ierr)
     call PCMGSetCycleType(PC_Topchi, PC_MG_CYCLE_V,ierr)
     call PCMGSetType(PC_Topchi,PC_MG_MULTIPLICATIVE,ierr)
@@ -393,7 +424,7 @@ endif
     call PCMGSetGalerkin(PC_Topchi,PETSC_TRUE,ierr)
 
     DO I = 1, nlevel -1
-    call DMCreateInterpolation(da2(I+1),da2(I),R,PETSC_NULL_OBJECT,ierr)
+    call DMCreateInterpolation(da1(I+1),da1(I),R,PETSC_NULL_OBJECT,ierr)
     call PCMGSetInterpolation(PC_Topchi,nlevel-I,R,ierr)
     call MATDestroy(R,ierr)
     ENDDO
@@ -421,11 +452,12 @@ endif
     IF (pc_type_topchi .eq. PCEISENSTAT) call PCEisenstatSetOmega(PC_Topchi,Omega,ierr)
     call KSPSetTolerances(Topchi,tol_Topchi,atol_Topchi,dtol_Topchi,mxit,ierr)
 
-    call VecSet(rhs,0.d0,ierr)
+    call VecSet(rhs2,0.d0,ierr)
     call KSPSetFromOptions(Topchi,ierr)
-    call KSPSolve(Topchi,rhs,v2,ierr)
+    call KSPSolve(Topchi,rhs2,v2,ierr)
     call KSPSetInitialGuessNonzero(Topchi,PETSC_TRUE,ierr)
-    call VecDestroy(rhs,ierr)
+    call VecDestroy(rhs2,ierr)
+    endif
 
 
 END SUBROUTINE petsc_solver_initialize
@@ -442,6 +474,7 @@ SUBROUTINE petsc_solver_finalize
     DO I=1,nlevel
     call DMDestroy(da3(i),ierr)
     call DMDestroy(da2(i),ierr)
+    call DMDestroy(da1(i),ierr)
     enddo
 END SUBROUTINE petsc_solver_finalize
 SUBROUTINE petsc_solve_3d(F,X)
@@ -496,17 +529,71 @@ PetscReal norm
 END SUBROUTINE petsc_solve_3d
 SUBROUTINE petsc_solve_psi(X)
 REAL (KIND=dbl_kind), INTENT(INOUT)::X(mi1+2,mj1+2)
+real(dbl_kind), dimension(:,:,:), allocatable :: trans
+real(dbl_kind), dimension(:,:), allocatable :: gtemp
+!INTEGER :: sr_req(reduce_x*reduce_y)
+integer :: n
+!INTEGER, DIMENSION(MPI_STATUS_SIZE,reduce_x*reduce_y) :: status
+integer :: stat(MPI_STATUS_SIZE)
 PetscInt its
 PetscReal norm
+
+    if (solve2d_psi==0) then
+      allocate(gtemp(reduce_x*mi1,reduce_y*mj1))
+      allocate(trans(mi1,mj1,reduce_x*reduce_y))
+    else
+      allocate(gtemp(1,1))
+      allocate(trans(mi1,mj1,1))
+    endif
+
+    trans(:,:,1)=X(2:mi1+1,2:mj1+1)
+
+    if (solve2d_psi==0) then
+      do j=1,reduce_y
+      do i=1,reduce_x
+        n=(j-1)*reduce_x+i
+        if (n>1) &
+          !call mpi_irecv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
+          !               mpi_comm_world,sr_req(n-1),ierr)
+          call mpi_recv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
+                        mpi_comm_world,stat,ierr)
+        !if (n>1) write(*,*) "recv",ind_sub(n), n, my_task
+      enddo
+      enddo
+    endif
+
+    if (solve2d_psi/=0) then
+      do j=1,reduce_y
+      do i=1,reduce_x
+        n=(j-1)*reduce_x+i
+        if (my_task==ind_sub(n)) &
+          !call mpi_isend(trans(1,1,1),mi1*mj1,mpi_dbl_kind,ind_sub(1),my_task, &
+          !               mpi_comm_world,sr_req(n-1),ierr)
+          call mpi_send(trans(1,1,1),mi1*mj1,mpi_dbl_kind,ind_sub(1),my_task, &
+                        mpi_comm_world,ierr)
+        !if (my_task==ind_sub(n)) write(*,*) "send",ind_sub(n), n, my_task
+      enddo
+      enddo
+    endif
+    !n=reduce_x*reduce_y-1
+    !call mpi_waitall(n,sr_req(1:n),status(:,1:n),ierr)
+
+    if (solve2d_psi==0) then
+
+    gtemp(1:mi1,1:mj1)=trans(:,:,1)
+    gtemp(mi1+1:2*mi1,1:mj1)=trans(:,:,2)
+    gtemp(1:mi1,mj1+1:2*mj1)=trans(:,:,3)
+    gtemp(mi1+1:2*mi1,mj1+1:2*mj1)=trans(:,:,4)
 
     call DMCreateGlobalVector(da2(1),rhs,ierr)
     call DMCreateLocalVector(da2(1),vl,ierr)
 
       call VecGetArray(vl,tmp,ip,ierr)
-      do j=iy,iy+my-1
-      do i=ixx,ixx+mx-1
-      kt = i - ixg + (j - iyg)*mxg + 1
-      tmp(ip+kt)=-X(I-ixx+2,J-iy+2)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      !tmp(ip+kt)=-X(I-ixx2+2,J-iy2+2)
+      tmp(ip+kt)=-gtemp(i-ixx2+1,j-iy2+1)
       enddo
       enddo
       call VecRestoreArray(vl,tmp,ip,ierr)
@@ -515,6 +602,7 @@ PetscReal norm
       call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
 
       call vecsum(rhs,vsum,ierr)
+      !IF ( MY_TASK .EQ. 0) write(*,*) "psi",my_task,vsum
       call vecshift(rhs,vsum*tpts, ierr)
 
       call KSPSetFromOptions(Toppsi,ierr)
@@ -534,46 +622,148 @@ PetscReal norm
       call DMGlobalToLocalEnd(da2(1),v1,INSERT_VALUES,vl,ierr)
 
       call VecGetArray(vl,tmp,ip,ierr)
-      do j=iy,iy+my-1
-      do i=ixx,ixx+mx-1
-      kt = i - ixg + (j - iyg)*mxg + 1
-      X(I-ixx+2,J-iy+2) = tmp(ip+kt)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      !X(I-ixx2+2,J-iy2+2) = tmp(ip+kt)
+      gtemp(I-ixx2+1,J-iy2+1) = tmp(ip+kt)
       enddo
       enddo
       call VecRestoreArray(vl,tmp,ip,ierr)
+
+    trans(:,:,1)=gtemp(1:mi1,1:mj1)
+    trans(:,:,2)=gtemp(mi1+1:2*mi1,1:mj1)
+    trans(:,:,3)=gtemp(1:mi1,mj1+1:2*mj1)
+    trans(:,:,4)=gtemp(mi1+1:2*mi1,mj1+1:2*mj1)
 
     call VecDestroy(rhs,ierr)
     call VecDestroy(vl,ierr)
+    !write(*,*) "destroy psi",my_task
+    endif
 
+    if (solve2d_psi/=0) then
+      do j=1,reduce_y
+      do i=1,reduce_x
+        n=(j-1)*reduce_x+i
+        if (my_task==ind_sub(n)) &
+          !call mpi_irecv(trans(1,1,1),mi1*mj1,mpi_dbl_kind, &
+          !               ind_sub(1),ind_sub(1), &
+          !               mpi_comm_world,sr_req(n-1),ierr)
+          call mpi_recv(trans(1,1,1),mi1*mj1,mpi_dbl_kind, &
+                        ind_sub(1),ind_sub(1), &
+                        mpi_comm_world,stat,ierr)
+      enddo
+      enddo
+    endif
+
+    if (solve2d_psi==0) then
+      do j=1,reduce_y
+      do i=1,reduce_x
+        n=(j-1)*reduce_x+i
+        if (n>1) &
+          !call mpi_isend(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
+          !               mpi_comm_world,sr_req(n-1),ierr)
+          call mpi_send(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
+                        mpi_comm_world,ierr)
+      enddo
+      enddo
+    endif
+
+    !write(*,'(A,10I10)') "psi:", my_task,sr_req
+    !n=reduce_x*reduce_y-1
+    !call mpi_waitall(n,sr_req(1:n),status(:,1:n),ierr)
+
+    X(2:mi1+1,2:mj1+1)=trans(:,:,1)
+
+    call mpi_barrier(mpi_comm_world,ierr)
+    deallocate(gtemp,trans)
 END SUBROUTINE petsc_solve_psi
 SUBROUTINE petsc_solve_chi(X)
 REAL (KIND=dbl_kind), INTENT(INOUT)::X(mi1+2,mj1+2)
+real(dbl_kind), dimension(:,:,:), allocatable :: trans
+real(dbl_kind), dimension(:,:), allocatable :: gtemp
+INTEGER :: sr_req(2*reduce_x*reduce_y),n
+!INTEGER, DIMENSION(MPI_STATUS_SIZE,2*reduce_x*reduce_y) :: status
+integer :: stat(MPI_STATUS_SIZE)
 PetscInt its
 PetscReal norm
-
-    call DMCreateGlobalVector(da2(1),rhs,ierr)
-    call DMCreateLocalVector(da2(1),vl,ierr)
-
-      call VecGetArray(vl,tmp,ip,ierr)
-      do j=iy,iy+my-1
-      do i=ixx,ixx+mx-1
-      kt = i - ixg + (j - iyg)*mxg + 1
-      tmp(ip+kt)= -X(I-ixx+2,J-iy+2)
+    
+    if (solve2d_chi==0) then
+      allocate(gtemp(reduce_x*mi1,reduce_y*mj1))
+      allocate(trans(mi1,mj1,reduce_x*reduce_y))
+    else
+      allocate(gtemp(1,1))
+      allocate(trans(mi1,mj1,reduce_x*reduce_y:reduce_x*reduce_y))
+    endif
+    trans(:,:,reduce_x*reduce_y)=X(2:mi1+1,2:mj1+1)
+   
+    if (solve2d_chi==0) then
+      do j=1,reduce_y
+      do i=1,reduce_x
+        n=(j-1)*reduce_x+i
+        if (n<reduce_x*reduce_y) &
+          !call mpi_irecv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
+          !               mpi_comm_world,sr_req(n),ierr)
+          call mpi_recv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
+                        mpi_comm_world,stat,ierr)
+        !if (n<reduce_x*reduce_y) write(*,*) "recv",ind_sub(n), n, my_task
       enddo
       enddo
-      call VecRestoreArray(vl,tmp,ip,ierr)
+    endif
+ 
+    if (solve2d_chi/=0) then
+      do j=1,reduce_y
+      do i=1,reduce_x
+        n=(j-1)*reduce_x+i
+        if (my_task==ind_sub(n)) &
+          !call mpi_isend(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
+          !               ind_sub(reduce_x*reduce_y),my_task, &
+          !               mpi_comm_world,sr_req(n+reduce_x*reduce_y-1),ierr)
+          call mpi_send(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
+                        ind_sub(reduce_x*reduce_y),my_task, &
+                        mpi_comm_world,ierr)
+        !if (my_task==ind_sub(n)) write(*,*) "send",ind_sub(reduce_x*reduce_y), n, my_task, n+reduce_x*reduce_y-1
+      enddo
+      enddo
+    endif
+    !n=2*reduce_x*reduce_y-2
+    !call mpi_waitall(n,sr_req(1:n),status(:,1:n),ierr)
+    !write(*,*) "waitall",ierr,my_task
+    !call mpi_barrier(mpi_comm_world,ierr)
 
-      call DMLocalToGlobalBegin(da2(1),vl,INSERT_VALUES,rhs,ierr)
-      call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
+    if (solve2d_chi==0) then
+ 
+    gtemp(1:mi1,1:mj1)=trans(:,:,1)
+    gtemp(mi1+1:2*mi1,1:mj1)=trans(:,:,2)
+    gtemp(1:mi1,mj1+1:2*mj1)=trans(:,:,3)
+    gtemp(mi1+1:2*mi1,mj1+1:2*mj1)=trans(:,:,4)
 
-      call vecsum(rhs,vsum,ierr)
-      call vecshift(rhs,vsum*tpts, ierr)
+    call DMCreateGlobalVector(da1(1),rhs2,ierr)
+    call DMCreateLocalVector(da1(1),vl2,ierr)
+   
+
+      call VecGetArray(vl2,tmp,ip,ierr)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      !tmp(ip+kt)= -X(I-ixx2+2,J-iy2+2) 
+      tmp(ip+kt)=-gtemp(i-ixx2+1,j-iy2+1)
+      enddo
+      enddo
+      call VecRestoreArray(vl2,tmp,ip,ierr)
+
+      call DMLocalToGlobalBegin(da1(1),vl2,INSERT_VALUES,rhs2,ierr)
+      call DMLocalToGlobalEnd(da1(1),vl2,INSERT_VALUES,rhs2,ierr)
+
+      call vecsum(rhs2,vsum,ierr)
+      !IF ( MY_TASK .EQ. 9) write(*,*) "chi",my_task,vsum
+      call vecshift(rhs2,vsum*tpts, ierr)
 
       call KSPSetFromOptions(Topchi,ierr)
 
-      call KSPSolve(Topchi,rhs,v2,ierr)
+      call KSPSolve(Topchi,rhs2,v2,ierr)
 
-      IF ( MY_TASK .EQ. 0) THEN
+      IF ( MY_TASK .EQ. 0+nsbdm_x+1) THEN
       call KSPGetIterationNumber(Topchi,its,ierr)
       call KSPGetResidualNorm(Topchi,norm,ierr)
       write(6,100) norm,its
@@ -583,21 +773,65 @@ PetscReal norm
       call vecsum(v2,vsum,ierr)
 !      call vecshift(v2,vsum*tpts,ierr)
 
-      call DMGlobalToLocalBegin(da2(1),v2,INSERT_VALUES,vl,ierr)
-      call DMGlobalToLocalEnd(da2(1),v2,INSERT_VALUES,vl,ierr)
+      call DMGlobalToLocalBegin(da1(1),v2,INSERT_VALUES,vl2,ierr)
+      call DMGlobalToLocalEnd(da1(1),v2,INSERT_VALUES,vl2,ierr)
 
-      call VecGetArray(vl,tmp,ip,ierr)
-      do j=iy,iy+my-1
-      do i=ixx,ixx+mx-1
-      kt = i - ixg + (j - iyg)*mxg + 1
-      X(I-ixx+2,J-iy+2) = tmp(ip+kt)
+      call VecGetArray(vl2,tmp,ip,ierr)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      !X(I-ixx2+2,J-iy2+2) = tmp(ip+kt)
+      gtemp(I-ixx2+1,J-iy2+1) = tmp(ip+kt)
       enddo
       enddo
-      call VecRestoreArray(vl,tmp,ip,ierr)
+      call VecRestoreArray(vl2,tmp,ip,ierr)
 
-    call VecDestroy(rhs,ierr)
-    call VecDestroy(vl,ierr)
+    trans(:,:,1)=gtemp(1:mi1,1:mj1)
+    trans(:,:,2)=gtemp(mi1+1:2*mi1,1:mj1)
+    trans(:,:,3)=gtemp(1:mi1,mj1+1:2*mj1)
+    trans(:,:,4)=gtemp(mi1+1:2*mi1,mj1+1:2*mj1)
 
+    call VecDestroy(rhs2,ierr)
+    call VecDestroy(vl2,ierr)
+    !write(*,*) "destroy chi",my_task
+    endif
+ 
+    if (solve2d_chi/=0) then
+      do j=1,reduce_y
+      do i=1,reduce_x
+        n=(j-1)*reduce_x+i
+        if (my_task==ind_sub(n)) &
+          !call mpi_irecv(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
+          !               ind_sub(reduce_x*reduce_y),ind_sub(reduce_x*reduce_y), &
+          !               mpi_comm_world,sr_req(n),ierr)
+          call mpi_recv(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
+                        ind_sub(reduce_x*reduce_y),ind_sub(reduce_x*reduce_y), &
+                        mpi_comm_world,stat,ierr)
+      enddo
+      enddo
+    endif
+ 
+    if (solve2d_chi==0) then
+      do j=1,reduce_y
+      do i=1,reduce_x
+        n=(j-1)*reduce_x+i
+        if (n<reduce_x*reduce_y) &
+          !call mpi_isend(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
+          !               mpi_comm_world,sr_req(n),ierr)
+          call mpi_send(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
+                        mpi_comm_world,ierr)
+      enddo
+      enddo
+    endif
+
+    !write(*,'(A,10I10)') "chi:",my_task,sr_req
+    !n=reduce_x*reduce_y-1
+    !call mpi_waitall(n,sr_req(1:n),status(:,1:n),ierr)
+    
+    X(2:mi1+1,2:mj1+1)=trans(:,:,reduce_x*reduce_y)
+
+    call mpi_barrier(mpi_comm_world,ierr)
+    deallocate(gtemp,trans)
 END SUBROUTINE petsc_solve_chi
 SUBROUTINE OperatorConti(jac)
 
@@ -725,9 +959,10 @@ SUBROUTINE OperatorConti(jac)
 
 
 END SUBROUTINE OperatorConti
-SUBROUTINE OperatorTopbc(jac)
+SUBROUTINE OperatorTopbc(jac,da)
 
       Mat         jac
+      DM   da
       PetscInt     ltog(1)
       PetscOffset idltog,idx
       PetscInt grow(1)
@@ -745,19 +980,19 @@ SUBROUTINE OperatorTopbc(jac)
       c1     = -1./dble(DX*DX)
       c2     = -1./dble(DYNEW*DYNEW)
       ctmp   = -2.*(c1+c2)
-
-      call DMGetLocalToGlobalMapping(da2(1),ltogm,ierr)
+  
+      call DMGetLocalToGlobalMapping(da,ltogm,ierr)
       call ISLocalToGlobalMappingGetIndices(ltogm,ltog,idltog,ierr)
 
-        do 20 j=iy,iy+my-1
-          irow = (j - iyg)*mxg + ixx - ixg
+        do 20 j=iy2,iy2+my2-1
+          irow = (j - iyg2)*mxg2 + ixx2 - ixg2
 !          do 30 i=xs,xs+xm-1
-          do 30 i=ixx,ixx+mx-1
-            krow = irow + (i - ixg)
+          do 30 i=ixx2,ixx2+mx2-1
+            krow = irow + (i - ixg2)
             grow(1) = ltog(idltog+krow)
 !          print*,i,j,krow,ltog(idltog+krow)
             vv(1)   = c2
-            col(1) = ltog(idltog+krow - mxg)
+            col(1) = ltog(idltog+krow - mxg2)
             vv(2)   = c1
             col(2) = ltog(idltog+krow - 1)
             vv(3)   = ctmp
@@ -765,7 +1000,7 @@ SUBROUTINE OperatorTopbc(jac)
             vv(4)   = c1
             col(4) = ltog(idltog+krow + 1)
             vv(5)   = c2
-            col(5) = ltog(idltog+krow + mxg)
+            col(5) = ltog(idltog+krow + mxg2)
       call MatSetValues(jac,ione,grow,ifive,col,vv,INSERT_VALUES,ierr)
  30   continue
 !      endif

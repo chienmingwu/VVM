@@ -115,6 +115,7 @@ PROGRAM ldmain
         itt_align   ,   &
         ttl_time
     INTEGER (KIND=int_kind)  ::  &
+        i,j,   &
         itt_record
 
 !-----------------------------------------------------------------------
@@ -122,6 +123,24 @@ PROGRAM ldmain
 !      call MPI_INIT(mpierr)
     CALL PetscInitialize(PETSC_NULL_CHARACTER,mpierr)
     call domain_init
+
+    reduce_x=2
+    reduce_y=2
+    solve2d_psi=mpi_undefined
+    if (mod(ni_sbdm,reduce_x)==0 .and. mod(nj_sbdm,reduce_y)==0) solve2d_psi=0
+    call mpi_comm_split(mpi_comm_world,solve2d_psi,my_task,solve2d_comm_psi,mpierr)
+    solve2d_chi=mpi_undefined
+    if (mod(ni_sbdm,reduce_x)==1 .and. mod(nj_sbdm,reduce_y)==1) solve2d_chi=0
+    call mpi_comm_split(mpi_comm_world,solve2d_chi,my_task,solve2d_comm_chi,mpierr)
+    allocate(ind_sub(reduce_x*reduce_y))
+    do j=1,reduce_y
+    do i=1,reduce_x
+      ind_sub((j-1)*reduce_x+i)=int(nj_sbdm/reduce_y)*reduce_y*nsbdm_x &
+                               +int(ni_sbdm/reduce_x)*reduce_x &
+                               +(j-1)*nsbdm_x+(i-1)
+    enddo
+    enddo
+    write(*,'(A,10I5)') "here",my_task,ind_sub(:)
 
     call timer_start('total vvm')
 
