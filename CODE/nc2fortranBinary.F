@@ -261,15 +261,15 @@ C TMP = MAX(TMP,DATA(IP,JP))
 ! 502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
 ! hx(I,J)=TOP
 
-       hx(I,J)= 1
-       LU(I,J) = 16
-       alb(I,J) = 8.
-       grf(I,J) = 10.
-       lai(I,J) = 4.
-       SHDMAX(I,J) = 10.
-       SHDMIN(I,J) = 10.
-       SLOPE(I,J) = 1
-       SOIL(I,J) = 14
+!       hx(I,J)= 1
+!       LU(I,J) = 16
+!       alb(I,J) = 8.
+!       grf(I,J) = 10.
+!       lai(I,J) = 4.
+!       SHDMAX(I,J) = 10.
+!       SHDMIN(I,J) = 10.
+!       SLOPE(I,J) = 1
+!       SOIL(I,J) = 14
 ! ! setup Wu and Chen 2021
 ! if (I>mi_glob/3 .and. I<=mi_glob*2/3) then
 ! LU(I,J) = 7
