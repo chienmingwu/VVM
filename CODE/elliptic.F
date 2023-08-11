@@ -69,10 +69,12 @@ CONTAINS
 
       call timer_start('DIRECT_XY')
 
-      call petsc_solve_psi(PSI)
+      call petsc_solve_top(psi,chi)
+
+      !call petsc_solve_psi(PSI)
       call bound_arb(1,PSI)
 
-      call petsc_solve_chi(CHI)
+      !call petsc_solve_chi(CHI)
       call bound_arb(1,CHI)
       call timer_stop('DIRECT_XY')
 

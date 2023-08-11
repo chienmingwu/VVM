@@ -161,7 +161,7 @@ PetscReal, PRIVATE:: tol_TopChi = 1.d-15,atol_TopChi=1.d-6,dtol_TopChi = 1.d2
 !PetscViewer viewer
 
 PUBLIC :: petsc_solver_initialize,petsc_solver_finalize,petsc_solve_3d, &
-          petsc_solve_psi,petsc_solve_chi
+          petsc_solve_psi,petsc_solve_chi,petsc_solve_top
 !INTERFACE
 !subroutine ComputeConti(ksp,JJ,jac,ctx,ierr)
 !      Mat          jac,JJ
@@ -505,9 +505,10 @@ PetscReal norm
       IF ( MY_TASK .EQ. 0) THEN
       call KSPGetIterationNumber(Conti,its,ierr)
       call KSPGetResidualNorm(Conti,norm,ierr)
-      write(6,100) norm,its
+      write(6,'(A,e11.4,A,i5)') 'Norm of error =',norm,',  Iterations =',its
+      !write(6,100) norm,its
       ENDIF
- 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+! 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
 
       call DMGlobalToLocalBegin(da3(1),v,INSERT_VALUES,vl,ierr)
       call DMGlobalToLocalEnd(da3(1),v,INSERT_VALUES,vl,ierr)
@@ -548,35 +549,17 @@ PetscReal norm
 
     trans(:,:,1)=X(2:mi1+1,2:mj1+1)
 
-    if (solve2d_psi==0) then
-      do j=1,reduce_y
-      do i=1,reduce_x
-        n=(j-1)*reduce_x+i
-        if (n>1) &
-          !call mpi_irecv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
-          !               mpi_comm_world,sr_req(n-1),ierr)
-          call mpi_recv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
-                        mpi_comm_world,stat,ierr)
-        !if (n>1) write(*,*) "recv",ind_sub(n), n, my_task
-      enddo
-      enddo
-    endif
-
-    if (solve2d_psi/=0) then
-      do j=1,reduce_y
-      do i=1,reduce_x
-        n=(j-1)*reduce_x+i
-        if (my_task==ind_sub(n)) &
-          !call mpi_isend(trans(1,1,1),mi1*mj1,mpi_dbl_kind,ind_sub(1),my_task, &
-          !               mpi_comm_world,sr_req(n-1),ierr)
-          call mpi_send(trans(1,1,1),mi1*mj1,mpi_dbl_kind,ind_sub(1),my_task, &
-                        mpi_comm_world,ierr)
-        !if (my_task==ind_sub(n)) write(*,*) "send",ind_sub(n), n, my_task
-      enddo
-      enddo
-    endif
-    !n=reduce_x*reduce_y-1
-    !call mpi_waitall(n,sr_req(1:n),status(:,1:n),ierr)
+    do j=1,reduce_y
+    do i=1,reduce_x
+      n=(j-1)*reduce_x+i
+      if (n>1 .and. solve2d_psi==0) &
+        call mpi_recv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
+                      mpi_comm_world,stat,ierr)
+      if (my_task==ind_sub(n) .and. solve2d_psi/=0) &
+        call mpi_send(trans(1,1,1),mi1*mj1,mpi_dbl_kind,ind_sub(1),my_task, &
+                      mpi_comm_world,ierr)
+    enddo
+    enddo
 
     if (solve2d_psi==0) then
 
@@ -638,40 +621,20 @@ PetscReal norm
 
     call VecDestroy(rhs,ierr)
     call VecDestroy(vl,ierr)
-    !write(*,*) "destroy psi",my_task
     endif
 
-    if (solve2d_psi/=0) then
-      do j=1,reduce_y
-      do i=1,reduce_x
-        n=(j-1)*reduce_x+i
-        if (my_task==ind_sub(n)) &
-          !call mpi_irecv(trans(1,1,1),mi1*mj1,mpi_dbl_kind, &
-          !               ind_sub(1),ind_sub(1), &
-          !               mpi_comm_world,sr_req(n-1),ierr)
-          call mpi_recv(trans(1,1,1),mi1*mj1,mpi_dbl_kind, &
-                        ind_sub(1),ind_sub(1), &
-                        mpi_comm_world,stat,ierr)
-      enddo
-      enddo
-    endif
-
-    if (solve2d_psi==0) then
-      do j=1,reduce_y
-      do i=1,reduce_x
-        n=(j-1)*reduce_x+i
-        if (n>1) &
-          !call mpi_isend(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
-          !               mpi_comm_world,sr_req(n-1),ierr)
-          call mpi_send(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
-                        mpi_comm_world,ierr)
-      enddo
-      enddo
-    endif
-
-    !write(*,'(A,10I10)') "psi:", my_task,sr_req
-    !n=reduce_x*reduce_y-1
-    !call mpi_waitall(n,sr_req(1:n),status(:,1:n),ierr)
+    do j=1,reduce_y
+    do i=1,reduce_x
+      n=(j-1)*reduce_x+i
+      if (my_task==ind_sub(n) .and. solve2d_psi/=0) &
+        call mpi_recv(trans(1,1,1),mi1*mj1,mpi_dbl_kind, &
+                      ind_sub(1),ind_sub(1), &
+                      mpi_comm_world,stat,ierr)
+      if (n>1 .and. solve2d_psi==0) &
+        call mpi_send(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
+                      mpi_comm_world,ierr)
+    enddo
+    enddo
 
     X(2:mi1+1,2:mj1+1)=trans(:,:,1)
 
@@ -697,40 +660,19 @@ PetscReal norm
     endif
     trans(:,:,reduce_x*reduce_y)=X(2:mi1+1,2:mj1+1)
    
-    if (solve2d_chi==0) then
-      do j=1,reduce_y
-      do i=1,reduce_x
-        n=(j-1)*reduce_x+i
-        if (n<reduce_x*reduce_y) &
-          !call mpi_irecv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
-          !               mpi_comm_world,sr_req(n),ierr)
-          call mpi_recv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
-                        mpi_comm_world,stat,ierr)
-        !if (n<reduce_x*reduce_y) write(*,*) "recv",ind_sub(n), n, my_task
-      enddo
-      enddo
-    endif
+    do j=1,reduce_y
+    do i=1,reduce_x
+      n=(j-1)*reduce_x+i
+      if (n<reduce_x*reduce_y .and. solve2d_chi==0) &
+        call mpi_recv(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
+                      mpi_comm_world,stat,ierr)
+      if (my_task==ind_sub(n) .and. solve2d_chi/=0) &
+        call mpi_send(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
+                      ind_sub(reduce_x*reduce_y),my_task, &
+                      mpi_comm_world,ierr)
+    enddo
+    enddo
  
-    if (solve2d_chi/=0) then
-      do j=1,reduce_y
-      do i=1,reduce_x
-        n=(j-1)*reduce_x+i
-        if (my_task==ind_sub(n)) &
-          !call mpi_isend(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
-          !               ind_sub(reduce_x*reduce_y),my_task, &
-          !               mpi_comm_world,sr_req(n+reduce_x*reduce_y-1),ierr)
-          call mpi_send(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
-                        ind_sub(reduce_x*reduce_y),my_task, &
-                        mpi_comm_world,ierr)
-        !if (my_task==ind_sub(n)) write(*,*) "send",ind_sub(reduce_x*reduce_y), n, my_task, n+reduce_x*reduce_y-1
-      enddo
-      enddo
-    endif
-    !n=2*reduce_x*reduce_y-2
-    !call mpi_waitall(n,sr_req(1:n),status(:,1:n),ierr)
-    !write(*,*) "waitall",ierr,my_task
-    !call mpi_barrier(mpi_comm_world,ierr)
-
     if (solve2d_chi==0) then
  
     gtemp(1:mi1,1:mj1)=trans(:,:,1)
@@ -793,46 +735,240 @@ PetscReal norm
 
     call VecDestroy(rhs2,ierr)
     call VecDestroy(vl2,ierr)
-    !write(*,*) "destroy chi",my_task
     endif
  
-    if (solve2d_chi/=0) then
-      do j=1,reduce_y
-      do i=1,reduce_x
-        n=(j-1)*reduce_x+i
-        if (my_task==ind_sub(n)) &
-          !call mpi_irecv(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
-          !               ind_sub(reduce_x*reduce_y),ind_sub(reduce_x*reduce_y), &
-          !               mpi_comm_world,sr_req(n),ierr)
-          call mpi_recv(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
-                        ind_sub(reduce_x*reduce_y),ind_sub(reduce_x*reduce_y), &
-                        mpi_comm_world,stat,ierr)
-      enddo
-      enddo
-    endif
- 
-    if (solve2d_chi==0) then
-      do j=1,reduce_y
-      do i=1,reduce_x
-        n=(j-1)*reduce_x+i
-        if (n<reduce_x*reduce_y) &
-          !call mpi_isend(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
-          !               mpi_comm_world,sr_req(n),ierr)
-          call mpi_send(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
-                        mpi_comm_world,ierr)
-      enddo
-      enddo
-    endif
-
-    !write(*,'(A,10I10)') "chi:",my_task,sr_req
-    !n=reduce_x*reduce_y-1
-    !call mpi_waitall(n,sr_req(1:n),status(:,1:n),ierr)
+    do j=1,reduce_y
+    do i=1,reduce_x
+      n=(j-1)*reduce_x+i
+      if (my_task==ind_sub(n) .and. solve2d_chi/=0) &
+        call mpi_recv(trans(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
+                      ind_sub(reduce_x*reduce_y),ind_sub(reduce_x*reduce_y), &
+                      mpi_comm_world,stat,ierr)
+      if (n<reduce_x*reduce_y .and. solve2d_chi==0) &
+        call mpi_send(trans(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
+                      mpi_comm_world,ierr)
+    enddo
+    enddo
     
     X(2:mi1+1,2:mj1+1)=trans(:,:,reduce_x*reduce_y)
 
     call mpi_barrier(mpi_comm_world,ierr)
     deallocate(gtemp,trans)
 END SUBROUTINE petsc_solve_chi
+
+subroutine petsc_solve_top(psi,chi)
+REAL (KIND=dbl_kind), INTENT(INOUT)::psi(mi1+2,mj1+2),chi(mi1+2,mj1+2)
+real(dbl_kind), dimension(:,:,:), allocatable :: trans_psi,trans_chi
+real(dbl_kind), dimension(:,:), allocatable :: gtemp_psi,gtemp_chi
+integer :: stat(MPI_STATUS_SIZE),n
+PetscInt its
+PetscReal norm
+
+    if (solve2d_psi==0) then
+      allocate(gtemp_psi(reduce_x*mi1,reduce_y*mj1))
+      allocate(trans_psi(mi1,mj1,reduce_x*reduce_y))
+    else
+      allocate(gtemp_psi(1,1))
+      allocate(trans_psi(mi1,mj1,1))
+    endif
+
+    trans_psi(:,:,1)=psi(2:mi1+1,2:mj1+1)
+
+    do j=1,reduce_y
+    do i=1,reduce_x
+      n=(j-1)*reduce_x+i
+      if (n>1 .and. solve2d_psi==0) &
+        call mpi_recv(trans_psi(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
+                      mpi_comm_world,stat,ierr)
+      if (my_task==ind_sub(n) .and. solve2d_psi/=0) &
+        call mpi_send(trans_psi(1,1,1),mi1*mj1,mpi_dbl_kind,ind_sub(1),my_task, &
+                      mpi_comm_world,ierr)
+    enddo
+    enddo
+
+    if (solve2d_chi==0) then
+      allocate(gtemp_chi(reduce_x*mi1,reduce_y*mj1))
+      allocate(trans_chi(mi1,mj1,reduce_x*reduce_y))
+    else
+      allocate(gtemp_chi(1,1))
+      allocate(trans_chi(mi1,mj1,reduce_x*reduce_y:reduce_x*reduce_y))
+    endif
+
+    trans_chi(:,:,reduce_x*reduce_y)=chi(2:mi1+1,2:mj1+1)
+
+    do j=1,reduce_y
+    do i=1,reduce_x
+      n=(j-1)*reduce_x+i
+      if (n<reduce_x*reduce_y .and. solve2d_chi==0) &
+        call mpi_recv(trans_chi(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),ind_sub(n), &
+                      mpi_comm_world,stat,ierr)
+      if (my_task==ind_sub(n) .and. solve2d_chi/=0) &
+        call mpi_send(trans_chi(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
+                      ind_sub(reduce_x*reduce_y),my_task, &
+                      mpi_comm_world,ierr)
+    enddo
+    enddo
+
+    if (solve2d_psi==0) then
+
+    gtemp_psi(1:mi1,1:mj1)=trans_psi(:,:,1)
+    gtemp_psi(mi1+1:2*mi1,1:mj1)=trans_psi(:,:,2)
+    gtemp_psi(1:mi1,mj1+1:2*mj1)=trans_psi(:,:,3)
+    gtemp_psi(mi1+1:2*mi1,mj1+1:2*mj1)=trans_psi(:,:,4)
+
+    call DMCreateGlobalVector(da2(1),rhs,ierr)
+    call DMCreateLocalVector(da2(1),vl,ierr)
+
+      call VecGetArray(vl,tmp,ip,ierr)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      !tmp(ip+kt)=-X(I-ixx2+2,J-iy2+2)
+      tmp(ip+kt)=-gtemp_psi(i-ixx2+1,j-iy2+1)
+      enddo
+      enddo
+      call VecRestoreArray(vl,tmp,ip,ierr)
+
+      call DMLocalToGlobalBegin(da2(1),vl,INSERT_VALUES,rhs,ierr)
+      call DMLocalToGlobalEnd(da2(1),vl,INSERT_VALUES,rhs,ierr)
+
+      call vecsum(rhs,vsum,ierr)
+      !IF ( MY_TASK .EQ. 0) write(*,*) "psi",my_task,vsum
+      call vecshift(rhs,vsum*tpts, ierr)
+
+      call KSPSetFromOptions(Toppsi,ierr)
+      call KSPSolve(Toppsi,rhs,v1,ierr)
+
+      IF ( MY_TASK .EQ. 0) THEN
+      call KSPGetIterationNumber(Toppsi,its,ierr)
+      call KSPGetResidualNorm(Toppsi,norm,ierr)
+      write(6,'(A,e11.4,A,i5)') 'Norm of error =',norm,',  Iterations =',its
+      ENDIF
+! 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+
+      call vecsum(v1,vsum,ierr)
+!      call vecshift(v1,vsum*tpts, ierr)
+
+      call DMGlobalToLocalBegin(da2(1),v1,INSERT_VALUES,vl,ierr)
+      call DMGlobalToLocalEnd(da2(1),v1,INSERT_VALUES,vl,ierr)
+
+      call VecGetArray(vl,tmp,ip,ierr)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      !X(I-ixx2+2,J-iy2+2) = tmp(ip+kt)
+      gtemp_psi(I-ixx2+1,J-iy2+1) = tmp(ip+kt)
+      enddo
+      enddo
+      call VecRestoreArray(vl,tmp,ip,ierr)
+
+    trans_psi(:,:,1)=gtemp_psi(1:mi1,1:mj1)
+    trans_psi(:,:,2)=gtemp_psi(mi1+1:2*mi1,1:mj1)
+    trans_psi(:,:,3)=gtemp_psi(1:mi1,mj1+1:2*mj1)
+    trans_psi(:,:,4)=gtemp_psi(mi1+1:2*mi1,mj1+1:2*mj1)
+
+    call VecDestroy(rhs,ierr)
+    call VecDestroy(vl,ierr)
+    endif
+
+    if (solve2d_chi==0) then
+ 
+    gtemp_chi(1:mi1,1:mj1)=trans_chi(:,:,1)
+    gtemp_chi(mi1+1:2*mi1,1:mj1)=trans_chi(:,:,2)
+    gtemp_chi(1:mi1,mj1+1:2*mj1)=trans_chi(:,:,3)
+    gtemp_chi(mi1+1:2*mi1,mj1+1:2*mj1)=trans_chi(:,:,4)
+
+    call DMCreateGlobalVector(da1(1),rhs2,ierr)
+    call DMCreateLocalVector(da1(1),vl2,ierr)
+
+      call VecGetArray(vl2,tmp,ip,ierr)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      !tmp(ip+kt)= -X(I-ixx2+2,J-iy2+2) 
+      tmp(ip+kt)=-gtemp_chi(i-ixx2+1,j-iy2+1)
+      enddo
+      enddo
+      call VecRestoreArray(vl2,tmp,ip,ierr)
+
+      call DMLocalToGlobalBegin(da1(1),vl2,INSERT_VALUES,rhs2,ierr)
+      call DMLocalToGlobalEnd(da1(1),vl2,INSERT_VALUES,rhs2,ierr)
+
+      call vecsum(rhs2,vsum,ierr)
+      !IF ( MY_TASK .EQ. 9) write(*,*) "chi",my_task,vsum
+      call vecshift(rhs2,vsum*tpts, ierr)
+
+      call KSPSetFromOptions(Topchi,ierr)
+
+      call KSPSolve(Topchi,rhs2,v2,ierr)
+
+      IF ( MY_TASK .EQ. 0+nsbdm_x+1) THEN
+      call KSPGetIterationNumber(Topchi,its,ierr)
+      call KSPGetResidualNorm(Topchi,norm,ierr)
+      write(6,'(A,e11.4,A,i5)') 'Norm of error =',norm,',  Iterations =',its
+      ENDIF
+! 100  format('Norm of error = ',e11.4,',  Iterations = ',i5)
+
+      call vecsum(v2,vsum,ierr)
+!      call vecshift(v2,vsum*tpts,ierr)
+
+      call DMGlobalToLocalBegin(da1(1),v2,INSERT_VALUES,vl2,ierr)
+      call DMGlobalToLocalEnd(da1(1),v2,INSERT_VALUES,vl2,ierr)
+
+      call VecGetArray(vl2,tmp,ip,ierr)
+      do j=iy2,iy2+my2-1
+      do i=ixx2,ixx2+mx2-1
+      kt = i - ixg2 + (j - iyg2)*mxg2 + 1
+      !X(I-ixx2+2,J-iy2+2) = tmp(ip+kt)
+      gtemp_chi(I-ixx2+1,J-iy2+1) = tmp(ip+kt)
+      enddo
+      enddo
+      call VecRestoreArray(vl2,tmp,ip,ierr)
+
+    trans_chi(:,:,1)=gtemp_chi(1:mi1,1:mj1)
+    trans_chi(:,:,2)=gtemp_chi(mi1+1:2*mi1,1:mj1)
+    trans_chi(:,:,3)=gtemp_chi(1:mi1,mj1+1:2*mj1)
+    trans_chi(:,:,4)=gtemp_chi(mi1+1:2*mi1,mj1+1:2*mj1)
+
+    call VecDestroy(rhs2,ierr)
+    call VecDestroy(vl2,ierr)
+    endif
+
+    call mpi_barrier(mpi_comm_world,ierr)
+
+    do j=1,reduce_y
+    do i=1,reduce_x
+      n=(j-1)*reduce_x+i
+      if (my_task==ind_sub(n) .and. solve2d_psi/=0) &
+        call mpi_recv(trans_psi(1,1,1),mi1*mj1,mpi_dbl_kind, &
+                      ind_sub(1),ind_sub(1), &
+                      mpi_comm_world,stat,ierr)
+      if (n>1 .and. solve2d_psi==0) &
+        call mpi_send(trans_psi(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
+                      mpi_comm_world,ierr)
+    enddo
+    enddo
+
+    do j=1,reduce_y
+    do i=1,reduce_x
+      n=(j-1)*reduce_x+i
+      if (my_task==ind_sub(n) .and. solve2d_chi/=0) &
+        call mpi_recv(trans_chi(1,1,reduce_x*reduce_y),mi1*mj1,mpi_dbl_kind, &
+                      ind_sub(reduce_x*reduce_y),ind_sub(reduce_x*reduce_y), &
+                      mpi_comm_world,stat,ierr)
+      if (n<reduce_x*reduce_y .and. solve2d_chi==0) &
+        call mpi_send(trans_chi(1,1,n),mi1*mj1,mpi_dbl_kind,ind_sub(n),my_task, &
+                      mpi_comm_world,ierr)
+    enddo
+    enddo
+
+    psi(2:mi1+1,2:mj1+1)=trans_psi(:,:,1)
+    chi(2:mi1+1,2:mj1+1)=trans_chi(:,:,reduce_x*reduce_y)
+
+    deallocate(gtemp_psi,trans_psi,gtemp_chi,trans_chi)
+end subroutine petsc_solve_top
+
+
 SUBROUTINE OperatorConti(jac)
 
       Mat         jac

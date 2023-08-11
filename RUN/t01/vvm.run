@@ -13,11 +13,11 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = HW20_p3_petsc
+set expname = HW20_p3_solve
 
 # set job system and compiler
-set compiler = 'aocc_mogamd'
-set jobsys = 'slurm_mogamd_aocc'
+set compiler = 'intel_mogamd'
+set jobsys = 'slurm_mogamd_intel'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
