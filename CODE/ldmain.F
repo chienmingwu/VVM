@@ -140,7 +140,7 @@ PROGRAM ldmain
                                +(j-1)*nsbdm_x+(i-1)
     enddo
     enddo
-    write(*,'(A,10I5)') "here",my_task,ind_sub(:)
+    !write(*,'(A,10I5)') "here",my_task,ind_sub(:)
 
     call timer_start('total vvm')
 

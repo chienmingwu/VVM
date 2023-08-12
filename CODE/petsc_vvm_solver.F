@@ -394,7 +394,6 @@ endif
 
     call DMDAGetCorners(da1(1),ixx2,iy2,iz2,mx2,my2,mz2,ierr)
     call DMDAGetGhostCorners(da1(1),ixg2,iyg2,izg2,mxg2,myg2,mzg2,ierr)
-    write(*,'(A,10I5)') "123",my_task,ixx2,iy2,iz2,mx2,my2,mz2
 
     call DMCreateGlobalVector(da1(1),v2,ierr)
     call DMCreateGlobalVector(da1(1),rhs2,ierr)
@@ -469,12 +468,12 @@ SUBROUTINE petsc_solver_finalize
 !    call KSPDestroy(sksp_topchi(I),ierr)
 !    enddo
     call KSPDestroy(Conti,ierr)
-    call KSPDestroy(Toppsi,ierr)
-    call KSPDestroy(Topchi,ierr)
+    if (solve2d_psi==0) call KSPDestroy(Toppsi,ierr)
+    if (solve2d_chi==0) call KSPDestroy(Topchi,ierr)
     DO I=1,nlevel
     call DMDestroy(da3(i),ierr)
-    call DMDestroy(da2(i),ierr)
-    call DMDestroy(da1(i),ierr)
+    if (solve2d_psi==0) call DMDestroy(da2(i),ierr)
+    if (solve2d_chi==0) call DMDestroy(da1(i),ierr)
     enddo
 END SUBROUTINE petsc_solver_finalize
 SUBROUTINE petsc_solve_3d(F,X)
@@ -772,7 +771,16 @@ PetscReal norm
       allocate(trans_psi(mi1,mj1,1))
     endif
 
+    if (solve2d_chi==0) then
+      allocate(gtemp_chi(reduce_x*mi1,reduce_y*mj1))
+      allocate(trans_chi(mi1,mj1,reduce_x*reduce_y))
+    else
+      allocate(gtemp_chi(1,1))
+      allocate(trans_chi(mi1,mj1,reduce_x*reduce_y:reduce_x*reduce_y))
+    endif
+
     trans_psi(:,:,1)=psi(2:mi1+1,2:mj1+1)
+    trans_chi(:,:,reduce_x*reduce_y)=chi(2:mi1+1,2:mj1+1)
 
     do j=1,reduce_y
     do i=1,reduce_x
@@ -785,16 +793,6 @@ PetscReal norm
                       mpi_comm_world,ierr)
     enddo
     enddo
-
-    if (solve2d_chi==0) then
-      allocate(gtemp_chi(reduce_x*mi1,reduce_y*mj1))
-      allocate(trans_chi(mi1,mj1,reduce_x*reduce_y))
-    else
-      allocate(gtemp_chi(1,1))
-      allocate(trans_chi(mi1,mj1,reduce_x*reduce_y:reduce_x*reduce_y))
-    endif
-
-    trans_chi(:,:,reduce_x*reduce_y)=chi(2:mi1+1,2:mj1+1)
 
     do j=1,reduce_y
     do i=1,reduce_x
