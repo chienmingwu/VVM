@@ -523,15 +523,15 @@ CONTAINS
          lST(I,J,2)       = lT1(I,J)
          lST(I,J,3)       = lT1(I,J)
          lST(I,J,4)       = lT1(I,J)
-! soil moisture on 20110811
-         lSM(I,J,1)       = 0.33418026
-         lSM(I,J,2)       = 0.33418026
-         lSM(I,J,3)       = 0.33418026
-         lSM(I,J,4)       = 0.33418026
-         lSL(I,J,1)       = 0.33418026
-         lSL(I,J,2)       = 0.33418026
-         lSL(I,J,3)       = 0.33418026
-         lSL(I,J,4)       = 0.33418026
+! soil moisture on 20120820
+         lSM(I,J,1)       = 0.33572533
+         lSM(I,J,2)       = 0.33572533
+         lSM(I,J,3)       = 0.33572533
+         lSM(I,J,4)       = 0.33572533
+         lSL(I,J,1)       = 0.33572533
+         lSL(I,J,2)       = 0.33572533
+         lSL(I,J,3)       = 0.33572533
+         lSL(I,J,4)       = 0.33572533
 !         ST(I,J,1)       = ST1(I,J)
 !         ST(I,J,2)       = ST2(I,J)
 !         ST(I,J,3)       = ST3(I,J)
@@ -544,7 +544,7 @@ CONTAINS
 !         SL(I,J,2)       = SM2(I,J)
 !         SL(I,J,3)       = SM3(I,J)
 !         SL(I,J,4)       = SM4(I,J)
-!         WTT              = -9.9999996E+35!SHEAT in NOAHLSM
+
 !         WQQ              = -9.9999996E+35!ETAKIN in NOAHLSM
   100 CONTINUE
          lCM         = -9.9999996E+35 
