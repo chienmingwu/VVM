@@ -523,15 +523,15 @@ CONTAINS
          lST(I,J,2)       = lT1(I,J)
          lST(I,J,3)       = lT1(I,J)
          lST(I,J,4)       = lT1(I,J)
-! soil moisture on 20121027
-         lSM(I,J,1)       = 0.31084185
-         lSM(I,J,2)       = 0.31084185
-         lSM(I,J,3)       = 0.31084185
-         lSM(I,J,4)       = 0.31084185
-         lSL(I,J,1)       = 0.31084185
-         lSL(I,J,2)       = 0.31084185
-         lSL(I,J,3)       = 0.31084185
-         lSL(I,J,4)       = 0.31084185
+! soil moisture on 20130529
+         lSM(I,J,1)       = 0.3372065
+         lSM(I,J,2)       = 0.3372065
+         lSM(I,J,3)       = 0.3372065
+         lSM(I,J,4)       = 0.3372065
+         lSL(I,J,1)       = 0.3372065
+         lSL(I,J,2)       = 0.3372065
+         lSL(I,J,3)       = 0.3372065
+         lSL(I,J,4)       = 0.3372065
 !         ST(I,J,1)       = ST1(I,J)
 !         ST(I,J,2)       = ST2(I,J)
 !         ST(I,J,3)       = ST3(I,J)
