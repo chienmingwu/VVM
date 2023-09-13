@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = tpe20130704cln
+set expname = tpe20130715cln
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
