@@ -72,7 +72,7 @@ CONTAINS
       REAL (KIND=real_kind) ::  RHO_s(NK3),RHOZ_s(NK2),THBAR_s(NK3),  &
              QVBAR_s(NK3),PBAR_s(NK3),PIBAR_s(NK3) 
 
-      CHARACTER(len=8) :: dateStr = '20130715'
+      CHARACTER(len=8) :: dateStr = '20130826'
       !REAL (KIND=dbl_kind) :: ZT1(10),PI1(10),TV1(10),PILOG1(10)
       !REAL (KIND=dbl_kind) :: PQ1(10),P1(10),T1(10),QV1(10),QC1(10)
       !REAL (KIND=dbl_kind) ::  PU1(10),WIND(10),DEG(10),U1(10),V1(10), WLS1(10)
