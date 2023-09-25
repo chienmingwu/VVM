@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = taiwanvvm_i_u24h
+set expname = taiwanvvm_i_tpe_u0h
 
 # set job system and compiler
 set compiler = 'intel_mogamd'

@@ -65,7 +65,7 @@ CONTAINS
       logical lf
       DATA NU1/6/,NT1/29/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
-                             es1, alphaw, pbarmb
+                             es1, alphaw, pbarmb, esi, esw
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
           ,QCBAR(NK3),QVSBAR(NK3)
       REAL (KIND=dbl_kind) :: ZT1(29),PI1(29),TV1(29),PILOG1(29)
@@ -101,7 +101,7 @@ CONTAINS
 !      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
       DATA PU1/1000.,750.,500.,100.,50.,10./
 !      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
-      DATA U1/24.,24.,24.,24.,24.,24./
+      DATA U1/6*0./
       DATA V1/6*0./
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
@@ -117,7 +117,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 300.
+      SST = 298.13 !TSA sounding
       
 !!     initialization for rcemip
 !      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
@@ -360,6 +360,43 @@ CONTAINS
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)
       VG(NK3) = VG(NK2)
+
+!ccwu Taipei TSA sounding
+
+      do  K = 1, NK3
+      IF (ZT(K) .LT. 3000.) THEN
+        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
+      ELSEIF (ZT(K) .LT. 8000.) THEN
+        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
+      ELSEIF (ZT(K) .LT. 13000.) THEN
+        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
+      ELSE
+        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
+      ENDIF
+      T(K) = THBAR(K) * PIBAR(K)
+      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
+      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
+      IF (T(K) .LE. 233.15) THEN
+        ES1 = ESI
+      ELSE IF (T(K) .LT. 273.15) THEN
+        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
+      ELSE
+        ES1 = ESW
+      ENDIF
+      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
+!CCCCCCCCCCCCCCCCCC
+      IF (ZT(K) .LE. 1500) THEN
+        H(K) = 0.82
+      ELSE IF (ZT(K) .LE. 12000) THEN
+        H(K) = (ZT(K)-8000)**2/132031250.+0.5
+      ELSE
+        H(K) = 0.50
+      END IF
+!CCCCCCCCCCCCCCCCCC
+      QVBAR(K) = H(K) * QVSBAR(K)
+
+      ENDDO
+
 
 !     OCEAN POINTS
 
