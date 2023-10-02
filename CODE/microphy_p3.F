@@ -65,7 +65,7 @@
  real, parameter    :: real_rcollsize = real(rcollsize)
 
  ! NOTE: TO DO, MAKE LOOKUP TABLE ARRAYS ALLOCATABLE SO BOTH 2-MOMENT AND 3-MOMENT NOT ALLOCATED
- real, dimension(densize,rimsize,liqsize,isize,tabsize)                     :: itab        !ice lookup table values
+ real*8, dimension(densize,rimsize,liqsize,isize,tabsize)                     :: itab        !ice lookup table values
  real, dimension(zsize,densize,rimsize,liqsize,isize,tabsize_3mom)          :: itab_3mom   !ice lookup table values
 
 !ice lookup table values for ice-rain collision/collection

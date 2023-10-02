@@ -29,8 +29,8 @@ CONTAINS
 !-------------------------
 !     Gravity Wave Damping (Rayleigh type)
 
-      DO 300 K = NK1-4, NK1
-      CGR =  CRAD*(ZZ(K)-ZT(NK2-5))/(ZT(NK2)-ZT(NK2-5))
+      DO 300 K = NK1-14, NK1
+      CGR =  CRAD*(ZZ(K)-ZT(NK2-15))/(ZT(NK2)-ZT(NK2-15))
 
       DO 310 J = 1, MJ1
       DO 310 I = 1, MI1
@@ -56,8 +56,8 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
 
-      !IF (.false.) THEN ! Der test for rcemip
-      IF (CRAD.NE.0.) THEN
+      IF (.false.) THEN ! Der test for rcemip
+      !IF (CRAD.NE.0.) THEN
 !     Gravity Wave Damping (Rayleigh type)
 !-----------------------------------------
       DO 700 K = NK2-4, NK2

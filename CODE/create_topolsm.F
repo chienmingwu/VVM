@@ -253,7 +253,7 @@ allocate(routput(mi_glob,mj_glob,7),ioutput(mi_glob,mj_glob,3),mask(mi_glob,mj_g
 
 ! initialization with ocean
 routput(:,:,1)=0.   ! height (m)
-routput(:,:,2)=8.   ! albedo (%)
+routput(:,:,2)=7.   ! albedo (%)
 routput(:,:,3)=0.   ! green vegetation fraction (%)
 routput(:,:,4)=0.   ! leaf area index (m^2/m^2)
 routput(:,:,5)=0.   ! max. GVF (%)

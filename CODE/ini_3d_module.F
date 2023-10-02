@@ -51,7 +51,7 @@ CONTAINS
          scaleq=0._dbl_kind, & !
          rkappa,             &
          rkappai,            &
-         gamfac, a0, z00, xr, yr, zr, dist,tmp
+         gamfac, a0, z00, xr, yr, zr, dist,tmp,ESW,ESI
       REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
       REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
@@ -117,189 +117,192 @@ CONTAINS
 !SST=299.88K
 
       SST = 300.
-      
-!!     initialization for rcemip
-!      filename="/home/der0318/data_rcemip/snd_rcemip_anal300_v3"
-!      OPEN(939,FILE=trim(filename))
-!      READ(939,*)
-!      DO k=1,nk2
-!        READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1)
-!        111 FORMAT(32X,3F16.4)
-!      ENDDO
-!      CLOSE(939)
+
+!     initialization for rcemip
+      PBAR(1)=1014.8*100.
+      PZERO=PZERO*100.
+      ESI=ES(SST)
+      QVBAR(1)=0.8*ESI*0.622/(PBAR(1)-ESI)
+      THBAR(1)=SST*(1+0.608*QVBAR(1))
+      DO k=2,nk3
+        IF (ZT(K)<=15000.) THEN
+          QVBAR(K)=QVBAR(1)*exp(-ZT(K)/4000.)*exp(-(ZT(K)/7500.)**2)
+          THBAR(K)=THBAR(1)-0.0067*ZT(K)
+          PBAR(K)=PBAR(1)*(THBAR(K)/THBAR(1))**(grav/(rgas*0.0067))
+          THBAR(K)=THBAR(K)/(1+0.608*QVBAR(K))*(pzero/PBAR(K))**(rgas/cp)
+        ELSE
+          QVBAR(K)=1.e-11
+          THBAR(K)=THBAR(1)-0.0067*(15000.)
+          PBAR(K)=PBAR(1)*(THBAR(K)/THBAR(1))**(grav/(rgas*0.0067))&
+                         *exp(-(grav*(ZT(K)-15000.)/(rgas*THBAR(K))))
+          THBAR(K)=THBAR(K)/(1+0.608*QVBAR(K))*(pzero/PBAR(K))**(rgas/cp)
+        ENDIF
+      ENDDO
+      THBAR(1)=THBAR(1)/(1+0.608*QVBAR(1))*(pzero/PBAR(1))**(rgas/cp)
+
+      !PBAR=PBAR*100.
+      PIBAR=(PBAR/100000.)**(2./7.)
+      RHO=PBAR/(rgas*THBAR*PIBAR)
+      DO k=1,nk2
+        RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
+      ENDDO
+      RHOZ(nk3)=RHOZ(nk2)+(RHOZ(nk2)-RHOZ(nk1))/(ZZ(nk2)-ZZ(nk1))*(ZZ(nk3)-ZZ(nk2))
+
+      IF (my_task == 0) THEN
+      WRITE(*,*) "initial profiles"
+      DO k=1,nk3
+        WRITE(*,256) pbar(k)/100.,pibar(k),thbar(k),qvbar(k)*1000.,rho(k),rhoz(k)
+        256 FORMAT(6F15.5)
+      ENDDO
+      ENDIF      
+
+!!     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
+!!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
+!!     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
+!!     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 !
-!      PBAR(1)=PBAR(2)
-!      THBAR(1)=THBAR(2)
-!      QVBAR(1)=QVBAR(2)
+!      PSFC = P1(1)
 !
-!      PBAR(nk3)=PBAR(nk2)+(PBAR(nk2)-PBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-!      THBAR(nk3)=THBAR(nk2)+(THBAR(nk2)-THBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-!      QVBAR(nk3)=QVBAR(nk2)+(QVBAR(nk2)-QVBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
+!      DO 100 K = 1, NT1
+!      T1(K) =  T1(K) !* 1.E-01 + 273.16
+!      QV1(K)= QV1(K) !* 1.E-04
+!  100 CONTINUE
 !
-!      QVBAR=QVBAR*0.001
-!      PBAR=PBAR*100.
+!      RBCP = RGAS / CP
+!      DO 110 K = 1, NT1
+!      PI1(K) = ( P1(K) / PZERO ) ** RBCP
+!  110 CONTINUE
 !
-!      PIBAR=(PBAR/100000.)**(2./7.)
-!      RHO=PBAR/(rgas*THBAR*PIBAR)
-!      DO k=1,nk2
-!        RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
-!      ENDDO
+!!     *** MIXED LAYER PROFILE ***
 !
-!      IF (my_task == 0) THEN
-!      WRITE(*,*) "initial profiles"
-!      DO k=1,nk2
-!        WRITE(*,256) pbar(k)/100.,pibar(k),thbar(k),qvbar(k)*1000.,rho(k),rhoz(k)
-!        256 FORMAT(6F15.5)
-!      ENDDO
-!      ENDIF
-
-!     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
-!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
-!     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
-!     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
-
-      PSFC = P1(1)
-
-      DO 100 K = 1, NT1
-      T1(K) =  T1(K) !* 1.E-01 + 273.16
-      QV1(K)= QV1(K) !* 1.E-04
-  100 CONTINUE
-
-      RBCP = RGAS / CP
-      DO 110 K = 1, NT1
-      PI1(K) = ( P1(K) / PZERO ) ** RBCP
-  110 CONTINUE
-
-!     *** MIXED LAYER PROFILE ***
-
-!      T1(3) = PI1(3) * T1(2) / PI1(2)
-
-!     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
-
-
-      DO 120 K = 1, NT1
-      T8  = T1(K)
-      P8  = P1(K)
-      QV8 = QV1(K)
-      QC8 = 0.D0
-      QI8 = 0.D0
-      if (my_task .eq. 0) print*, T8,P8,QV8,K
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      QV1(K) = QV8
-      QC1(K) = 0.
-  120 CONTINUE
-
-!     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
-!     UNITS ARE T : DEG K, QV : G/G.
-
-      DO 130 K = 1, NT1
-      PILOG1(K) = LOG ( PI1(K) )
-      TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
-  130 CONTINUE
-
-
-      ZT1(1) = Zz(1)
-
-      DO 140 K = 2, NT1
-      ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
-              *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
-  140 CONTINUE
-!     LOCATE J = 1 T-LEVEL AT ZW(1).
-
-      ZT(1)    = Zz(1)
-      T(1)     = T1(1)
-      QVBAR(1) = QV1(1)
-      QCBAR(1) = QC1(1)
-
-!     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
-!     FOR K = 2, NK3
-
-      DO 150 K = 2, NK3
-      K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
-      K2 = K1 + 1
-      T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
-      QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
-      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
-  150 CONTINUE
-
-!     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
-
-      GDZBCP = 2. * GRAV * DZ / CP
-      CPBR = CP / RGAS
-      RBCP = 1. / CPBR
-
-!     CONVERT PRESSURES TO PASCALS
-
-      PSFC  = PSFC * 100.
-      PZERO = PZERO * 100.
-
-      PISFC = ( PSFC / PZERO ) ** RBCP
-
-      PBAR(1)  = PSFC
-      PIBAR(1) = PISFC
-      PILOG(1) = LOG ( PIBAR(1) )
-
-      DO 160 IT = 1, 3
-
-      DO 162 K = 1, NK3
-      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) )
-  162 CONTINUE
-
-      PILOG(2)=PILOG(1)-GDZBCP/(TV(1)+TV(2))     &
-              *(ZT(2)-Zz(1))/DZ
-      DO 164 K = 3, NK3
-      PILOG(K)=PILOG(K-1)-GDZBCP/(TV(K-1)+TV(K))/FNZ(K-1)
-  164 CONTINUE
-
-      DO 166 K = 2, NK3
-      PIBAR(K)= EXP ( PILOG(K) )
-      PBAR(K) = PZERO * PIBAR(K) ** CPBR
-  166 CONTINUE
-
-!     ADJUST T, QVBAR AND QCBAR.
-
-      DO 168 K = 1, NK3
-      T8 = T(K)
-      P8 = PBAR(K) * 0.01
-      QV8 = QVBAR(K)
-      QC8 = 0.D0
-      QI8 = 0.D0
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      QVBAR(K) = QV8
-      ES1 = ES ( T(K) )
-      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
-      THBAR(K) = T(K) / PIBAR(K)
-      H(K) = QVBAR(K) / QVSBAR(K)
-      QCBAR(K) = 0.
-  168 CONTINUE
-
-  160 CONTINUE
-
-      IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
-
-
-
-!     PROFILES OF RHO, RHOz, AND GAMMA
-
-      GAMFAC = HLF / CP
-
-      DO 170 K = 2, NK3
-      GAMMA(K) = GAMFAC / PIBAR(K)
-      ALPHA(K) = RGAS * TV(K) / PBAR(K)
-  170 CONTINUE
-
-      DO 180 K = 2, NK2
-      ALPHAW = ( ALPHA(K) + ALPHA(K+1) ) / 2.
-      RHOz(K) = 1. / ALPHAW
-  180 CONTINUE
-
-!     SURFACE DENSITY
-
-      RHOz(1) = PSFC / ( RGAS * TV(1) )
-
-      DO 190 K = 2, NK3
-      RHO(K) = 1. / ALPHA(K)
-  190 CONTINUE
+!!      T1(3) = PI1(3) * T1(2) / PI1(2)
+!
+!!     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
+!
+!
+!      DO 120 K = 1, NT1
+!      T8  = T1(K)
+!      P8  = P1(K)
+!      QV8 = QV1(K)
+!      QC8 = 0.D0
+!      QI8 = 0.D0
+!      if (my_task .eq. 0) print*, T8,P8,QV8,K
+!      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+!      QV1(K) = QV8
+!      QC1(K) = 0.
+!  120 CONTINUE
+!
+!!     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
+!!     UNITS ARE T : DEG K, QV : G/G.
+!
+!      DO 130 K = 1, NT1
+!      PILOG1(K) = LOG ( PI1(K) )
+!      TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
+!  130 CONTINUE
+!
+!
+!      ZT1(1) = Zz(1)
+!
+!      DO 140 K = 2, NT1
+!      ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
+!              *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
+!  140 CONTINUE
+!!     LOCATE J = 1 T-LEVEL AT ZW(1).
+!
+!      ZT(1)    = Zz(1)
+!      T(1)     = T1(1)
+!      QVBAR(1) = QV1(1)
+!      QCBAR(1) = QC1(1)
+!
+!!     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
+!!     FOR K = 2, NK3
+!
+!      DO 150 K = 2, NK3
+!      K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
+!      K2 = K1 + 1
+!      T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
+!      QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
+!      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
+!  150 CONTINUE
+!
+!!     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
+!
+!      GDZBCP = 2. * GRAV * DZ / CP
+!      CPBR = CP / RGAS
+!      RBCP = 1. / CPBR
+!
+!!     CONVERT PRESSURES TO PASCALS
+!
+!      PSFC  = PSFC * 100.
+!      PZERO = PZERO * 100.
+!
+!      PISFC = ( PSFC / PZERO ) ** RBCP
+!
+!      PBAR(1)  = PSFC
+!      PIBAR(1) = PISFC
+!      PILOG(1) = LOG ( PIBAR(1) )
+!
+!      DO 160 IT = 1, 3
+!
+!      DO 162 K = 1, NK3
+!      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) )
+!  162 CONTINUE
+!
+!      PILOG(2)=PILOG(1)-GDZBCP/(TV(1)+TV(2))     &
+!              *(ZT(2)-Zz(1))/DZ
+!      DO 164 K = 3, NK3
+!      PILOG(K)=PILOG(K-1)-GDZBCP/(TV(K-1)+TV(K))/FNZ(K-1)
+!  164 CONTINUE
+!
+!      DO 166 K = 2, NK3
+!      PIBAR(K)= EXP ( PILOG(K) )
+!      PBAR(K) = PZERO * PIBAR(K) ** CPBR
+!  166 CONTINUE
+!
+!!     ADJUST T, QVBAR AND QCBAR.
+!
+!      DO 168 K = 1, NK3
+!      T8 = T(K)
+!      P8 = PBAR(K) * 0.01
+!      QV8 = QVBAR(K)
+!      QC8 = 0.D0
+!      QI8 = 0.D0
+!      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+!      QVBAR(K) = QV8
+!      ES1 = ES ( T(K) )
+!      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
+!      THBAR(K) = T(K) / PIBAR(K)
+!      H(K) = QVBAR(K) / QVSBAR(K)
+!      QCBAR(K) = 0.
+!  168 CONTINUE
+!
+!  160 CONTINUE
+!
+!      IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
+!
+!
+!
+!!     PROFILES OF RHO, RHOz, AND GAMMA
+!
+!      GAMFAC = HLF / CP
+!
+!      DO 170 K = 2, NK3
+!      GAMMA(K) = GAMFAC / PIBAR(K)
+!      ALPHA(K) = RGAS * TV(K) / PBAR(K)
+!  170 CONTINUE
+!
+!      DO 180 K = 2, NK2
+!      ALPHAW = ( ALPHA(K) + ALPHA(K+1) ) / 2.
+!      RHOz(K) = 1. / ALPHAW
+!  180 CONTINUE
+!
+!!     SURFACE DENSITY
+!
+!      RHOz(1) = PSFC / ( RGAS * TV(1) )
+!
+!      DO 190 K = 2, NK3
+!      RHO(K) = 1. / ALPHA(K)
+!  190 CONTINUE
 
 !     DENSITY FOR k=1/2
 
@@ -317,47 +320,47 @@ CONTAINS
       RHOW(K)=RHOZ(K)  ! This line added with removal of equivalence in constld
   102 CONTINUE
 
-      DO 200 K = 2, NK3
-      IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
-      K2 = K1 + 1
-      Q1LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
-      Q2LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
-      ELSE
-      Q1LS (K) = 0.0
-      Q2LS (K) = 0.0
-      END IF
-  200 CONTINUE
-
-!     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
-!     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
-
-      IF ( Q1Q2 ) SCALEQ = SCALE
-
-      DO 210 K = 1, NK3
-      Q1LS (K) = -1.* SCALE * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = SCALE * Q2LS (K) / (GAMFAC * SECDAY)
-  210 CONTINUE
-
-#if !defined (RADCODE)
-      DO 212 K = 1, NK3
-      Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
-  212 CONTINUE
-#endif
-
-      DO 220 K = 2, NK2
-      PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
-      K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-  220 CONTINUE
-      UG(1)   = UG(2)
-      UG(NK3) = UG(NK2)
-      VG(1)   = VG(2)
-      VG(NK3) = VG(NK2)
+!      DO 200 K = 2, NK3
+!      IF ( ZT(K) .LT. 15000. ) THEN
+!      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
+!      K2 = K1 + 1
+!      Q1LS (K) =  &
+!        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
+!      Q2LS (K) =  &
+!        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
+!      ELSE
+!      Q1LS (K) = 0.0
+!      Q2LS (K) = 0.0
+!      END IF
+!  200 CONTINUE
+!
+!!     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
+!!     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
+!
+!      IF ( Q1Q2 ) SCALEQ = SCALE
+!
+!      DO 210 K = 1, NK3
+!      Q1LS (K) = -1.* SCALE * Q1LS (K) / PIBAR(K) / SECDAY
+!      Q2LS (K) = SCALE * Q2LS (K) / (GAMFAC * SECDAY)
+!  210 CONTINUE
+!
+!#if !defined (RADCODE)
+!      DO 212 K = 1, NK3
+!      Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
+!  212 CONTINUE
+!#endif
+!
+!      DO 220 K = 2, NK2
+!      PBARMB = PBAR(K) * 0.01
+!      K1 = INDEXR(PBARMB,NU1,PU1,LF)
+!      K2 = K1 + 1
+!      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
+!      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
+!  220 CONTINUE
+!      UG(1)   = UG(2)
+!      UG(NK3) = UG(NK2)
+!      VG(1)   = VG(2)
+!      VG(NK3) = VG(NK2)
 
 !     OCEAN POINTS
 
@@ -429,14 +432,13 @@ CONTAINS
       DO 500 J = mjm,mjp
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
-      !IF (sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2&
-      !        !+((real(mi1*ni_sbdm+I)-64)/16.)**2&
-      !        +((ZT(K)-6000.)/2000.)**2)<=1)THEN
-      !  TH3D(I,J,K) = TH3D(I,J,K) - 15.*(cos(3.14159265*0.5* &
-      !                sqrt(((real(mi1*ni_sbdm+I)-mi_glob/8*3)/32.)**2+ &
-      !                     !((real(mi1*ni_sbdm+I)-64)/16.)**2+ &
-      !                     ((ZT(K)-6000.)/2000.)**2)))**2
-      !ENDIF
+      ! random perturbations for RCEMIP
+      if (k>=2 .and. k<=6) then
+        n=(my_task+1*5)*mj1*mi1*5+(k-2)*mj1*mi1+(j-1)*mi1+i
+        tmp=ran2(n)
+        tmp=(0.1+(0.02-0.1)/(zt(6)-zt(2))*(zt(k)-zt(2)))*(tmp-0.5)
+        TH3D(I,J,K) = TH3D(I,J,K) + tmp
+      endif
       QV3D(I,J,K) = QVBAR(K)
       QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
@@ -600,7 +602,7 @@ CONTAINS
       IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
 #if defined (RADCODE)
   
-      albdo = 0.30
+      albdo = 0.07
 #endif    
 #if defined (DIFFUSION)
       call turb_3d_ini

@@ -386,10 +386,6 @@ CONTAINS
                           'zt', 'yt', 'xt')
 #endif
 
-      nc_err = nfmpi_enddef(ncid_th)
-      call put_3d_coord(ncid_th,nk2,mj_glob,mi_glob,zt(1:nk2),&
-                          yt(1:mj_glob),xt(1:mi_glob))
-
 ! RAS cumulus parameterization
 #if defined (RAS)
       call fname_nc(itp1, EXPHDR, 'RAS', ITT_OUTPUT, filnam_nc)
@@ -417,6 +413,11 @@ CONTAINS
                           yt(1:mj_glob),xt(1:mi_glob))
 
 #endif
+
+      nc_err = nfmpi_enddef(ncid_th)
+      call put_3d_coord(ncid_th,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
+
 
 ! Vorticity components --------------------------------------------------------
 
@@ -2687,11 +2688,8 @@ CONTAINS
 !      real (KIND=dbl_kind), dimension(mi1,mj1,k), intent(in) :: &
           var_values
 
-      real (KIND=tm_kind), dimension(k,mj1,mi1) :: &
-          var_values_tmp
-
       real (KIND=tm_kind), dimension(:,:,:), allocatable :: &
-          out_values_tmp, out_values
+          out_values, tmp_values
 
       integer (KIND=int_kind) :: &
           time_id, &
@@ -2702,50 +2700,36 @@ CONTAINS
       integer (KIND=int_kind), dimension(3) :: var_shape
       integer (kind=mpi_offset_kind), dimension(1) :: start1, count1
       integer (kind=mpi_offset_kind), dimension(4) :: start4, count4
-      integer (kind=int_kind), dimension(ntasks) :: mpi_n, mpi_s
+      integer (KIND=int_kind) :: nsend, nrecv
+      integer :: stat(MPI_STATUS_SIZE)
 
       start4=1
-      count4=0 
-      mpi_n=0
-      mpi_s=0
+      count4=0
+       
       if (ni_sbdm==0) then
-      ! indexes for NetCDF
-      start4(1) = 1
-      start4(2) = nj_sbdm*mj1 + 1
-      start4(3) = 1
-      start4(4) = time_start(1)
-      count4(1) = mi_glob
-      count4(2) = mj1
-      count4(3) = k
-      count4(4) = 1
-      ! indexes for MPI
-      do j=my_task+1,my_task+nsbdm_x
-      !write(*,*) "0 out:", j,my_task+1,my_task+nsbdm_x,ntasks
-      mpi_s(j)=(j-(my_task+1))*mi1*mj1*k!+1
-      enddo
-      allocate(out_values(mi_glob,mj1,k))
-      allocate(out_values_tmp(k,mj1,mi_glob))
+        ! indexes for NetCDF
+        start4(1) = 1
+        start4(2) = nj_sbdm*mj1 + 1
+        start4(3) = 1
+        start4(4) = time_start(1)
+        count4(1) = mi_glob
+        count4(2) = mj1
+        count4(3) = k
+        count4(4) = 1
+        allocate(out_values(mi_glob,mj1,k),tmp_values(mi1,mj1,k))
+        out_values(1:mi1,:,:)=var_values
+        ! indexes for MPI
+        do i=1,nsbdm_x-1
+          nrecv=nj_sbdm*nsbdm_x+i
+          call mpi_recv(tmp_values(1,1,1),mi1*mj1*k,mpi_real,nrecv,nrecv,mpi_comm_world,stat,ierr)
+          out_values(i*mi1+1:(i+1)*mi1,:,:)=tmp_values
+        enddo
       else
-      allocate(out_values(1,1,1))
-      allocate(out_values_tmp(1,1,1))
+        allocate(out_values(1,1,1),tmp_values(1,1,1))
+        ! indexes for MPI
+        nsend=nj_sbdm*nsbdm_x
+        call mpi_send(var_values(1,1,1),mi1*mj1*k,mpi_real,nsend,my_task,mpi_comm_world,ierr)
       endif
-      mpi_n(int(my_task/nsbdm_x)*nsbdm_x+1:int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x)=mi1*mj1*k
-      !write(*,*) "out if:", my_task,int(my_task/nsbdm_x)*nsbdm_x+1,int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x
-
-      var_values_tmp=reshape(var_values,(/k,mj1,mi1/),order=(/3,2,1/))
-      ! recive data from ni_sbdm/=0 to ni_sbdm==0
-      do j=0,nsbdm_y-1
-      i=0
-      if (int(my_task/nsbdm_x)==j) i=mpi_n(my_task+1) 
-      !write(*,*) "do loop",my_task, int(j*nsbdm_x),i
-      !if (my_task==int(j*nsbdm_x)) then
-      !        write(*,*) "mpi_s", mpi_s
-      !        write(*,*) "mpi_n", mpi_n
-      !endif
-      call mpi_gatherv(var_values_tmp,i,mpi_real,out_values_tmp,mpi_n,mpi_s,mpi_real,int(j*nsbdm_x),mpi_comm_world,ierr)
-      call mpi_barrier(mpi_comm_world,ierr)
-      enddo
-      if (ni_sbdm==0) out_values=reshape(out_values_tmp,(/mi_glob,mj1,k/),order=(/3,2,1/))
 
 ! Inquire time id and store time
       nc_err = nfmpi_inq_varid(ncid, 'time',time_id)
@@ -2776,7 +2760,7 @@ CONTAINS
 !      nc_err = nfmpi_put_vara_double_all(ncid, var_id, start4, count4, var_values)
       !if (my_task==0) write(*,*) "before output"
       nc_err = nfmpi_put_vara_real_all(ncid, var_id, start4, count4, out_values)
-      if (ni_sbdm==0) deallocate(out_values,out_values_tmp)
+      if (ni_sbdm==0) deallocate(out_values,tmp_values)
       !if (my_task==0) write(*,*) "after output"
        
       if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
@@ -2891,11 +2875,8 @@ CONTAINS
       real (KIND=tm_kind), dimension(mi1,mj1,1), intent(inout) :: &
           var_values
 
-      real (KIND=tm_kind), dimension(1,mj1,mi1) :: &
-          var_values_tmp
-
       real (KIND=tm_kind), dimension(:,:,:), allocatable :: &
-          out_values_tmp, out_values
+          out_values, tmp_values
 
       integer (KIND=int_kind) :: &
           time_id, &
@@ -2906,48 +2887,33 @@ CONTAINS
       integer (KIND=int_kind), dimension(2) :: var_shape
       integer (kind=mpi_offset_kind), dimension(1) :: start1, count1
       integer (kind=mpi_offset_kind), dimension(3) :: start3, count3
-      integer (kind=int_kind), dimension(ntasks) :: mpi_n, mpi_s
+      integer (KIND=int_kind) :: nsend, nrecv
+      integer :: stat(MPI_STATUS_SIZE)
       
       start3=1
       count3=0
-      mpi_n=0
-      mpi_s=0
       if (ni_sbdm==0) then
-      ! indexes for NetCDF
-      start3(1) = 1
-      start3(2) = nj_sbdm*mj1 + 1
-      start3(3) = time_start(1)
-      count3(1) = mi_glob
-      count3(2) = mj1
-      count3(3) = 1
-      ! indexes for MPI
-      do j=my_task+1,my_task+nsbdm_x
-      !write(*,*) "0 out:", j,my_task+1,my_task+nsbdm_x,ntasks
-      mpi_s(j)=(j-(my_task+1))*mi1*mj1!+1
-      enddo
-      allocate(out_values(mi_glob,mj1,1))
-      allocate(out_values_tmp(1,mj1,mi_glob))
+        ! indexes for NetCDF
+        start3(1) = 1
+        start3(2) = nj_sbdm*mj1 + 1
+        start3(3) = time_start(1)
+        count3(1) = mi_glob
+        count3(2) = mj1
+        count3(3) = 1
+        allocate(out_values(mi_glob,mj1,1),tmp_values(mi1,mj1,1))
+        out_values(1:mi1,:,1)=var_values(:,:,1)
+        ! indexes for MPI
+        do i=1,nsbdm_x-1
+          nrecv=nj_sbdm*nsbdm_x+i
+          call mpi_recv(tmp_values(1,1,1),mi1*mj1*1,mpi_real,nrecv,nrecv,mpi_comm_world,stat,ierr)
+          out_values(i*mi1+1:(i+1)*mi1,:,1)=tmp_values(:,:,1)
+        enddo
       else
-      allocate(out_values(1,1,1))
-      allocate(out_values_tmp(1,1,1))
+        allocate(out_values(1,1,1),tmp_values(1,1,1))
+        ! indexes for MPI
+        nsend=nj_sbdm*nsbdm_x
+        call mpi_send(var_values(1,1,1),mi1*mj1*1,mpi_real,nsend,my_task,mpi_comm_world,ierr)
       endif
-      mpi_n(int(my_task/nsbdm_x)*nsbdm_x+1:int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x)=mi1*mj1
-      !write(*,*) "out if:", my_task,int(my_task/nsbdm_x)*nsbdm_x+1,int(my_task/nsbdm_x)*nsbdm_x+nsbdm_x
-
-      ! recive data from ni_sbdm/=0 to ni_sbdm==0
-      var_values_tmp=reshape(var_values, (/1,mj1,mi1/), order=(/3,2,1/))
-      do j=0,nsbdm_y-1
-      i=0
-      if (int(my_task/nsbdm_x)==j) i=mpi_n(my_task+1)
-      !write(*,*) "do loop",my_task, int(j*nsbdm_x),i
-      !if (my_task==int(j*nsbdm_x)) then
-      !        write(*,*) "mpi_s", mpi_s
-      !        write(*,*) "mpi_n", mpi_n
-      !endif
-      call mpi_gatherv(var_values_tmp,i,mpi_real,out_values_tmp,mpi_n,mpi_s,mpi_real,int(j*nsbdm_x),mpi_comm_world,ierr)
-      call mpi_barrier(mpi_comm_world,ierr)
-      enddo
-      if (ni_sbdm==0) out_values=reshape(out_values_tmp,(/mi_glob,mj1,1/),order=(/3,2,1/))
 
 ! Inquire time id and store time
       nc_err = nfmpi_inq_varid(ncid, 'time',time_id)
@@ -2977,7 +2943,7 @@ CONTAINS
 !      call transpose_x(var_values, var_t, 1)
 !      nc_err = nfmpi_put_vara_double_all(ncid, var_id, start3, count3, var_values)
       nc_err = nfmpi_put_vara_real_all(ncid, var_id, start3, count3, out_values)
-      deallocate(out_values,out_values_tmp)
+      if (ni_sbdm==0) deallocate(out_values,tmp_values)
 
       if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid, var_id)
 
