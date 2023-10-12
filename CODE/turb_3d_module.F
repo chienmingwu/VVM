@@ -95,7 +95,7 @@ CONTAINS
       CRITMX=0.8_dbl_kind*DELD*DELD/DT
       CRITMN=10.
 !      New Value for TWP-ICE
-!      CRITMN=1._dbl_kind !ccwu for LES run
+      CRITMN=1._dbl_kind !ccwu for LES run
 !      CRITMN=100._dbl_kind !ccwu for TCVVM
 
       RAMD0S=(0.23_dbl_kind*DELD)**2
@@ -1354,8 +1354,10 @@ CONTAINS
       DATA BUS,CRIT,MAXIT/0.74,0.003,5/
 
       STOPIT = .FALSE.
-      SPEEDM = MAX ( SPEED1, 1.E-03_dbl_kind )
-
+!ccwu      SPEEDM = MAX ( SPEED1, 1.E-03_dbl_kind )
+!for rce 
+      SPEEDM = MAX ( SPEED1, 1._dbl_kind )
+     
 !     NEUTRAL VALUES OF CU AND CT : CUN AND CTN
 
       TEM1 = LOG ( ZR / ZROUGH )

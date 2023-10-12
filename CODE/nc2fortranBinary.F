@@ -14,7 +14,7 @@
       parameter (NX = 1024, NY = 1024)
       REAL*8 data(NX,NY),lon(NX),lat(NY),XM(NX),YM(NY)
 
-      REAL XX,YY, XT(MI_GLOB),YT(MJ_GLOB), ZT1(NK3)
+      REAL XX,YY, XT(1024),YT(1024), ZT1(NK3)
       LOGICAL TWTOPO 
       parameter(TWTOPO = .FALSE.)
 
@@ -235,20 +235,20 @@ C      TMP = MAX(TMP,DATA(IP,JP))
       yt(J) = J * DYNEW - 0.5*DYNEW
 
       ! setup Chien and Wu 2016
-      TMP=abs(real(i)-real(mi_glob)/2.)*DX
-      if (TMP<=5000.) then
-      TMP = 3600. 
-      elseif (TMP>5000. .and. TMP<=20000.) then
-      TMP = -0.24*(TMP-20000.)
-      else 
-      TMP = 0.
-      endif
-      IT=1
-      DO 502 k=1,NK3
-  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
-      hx(I,J)=TOP
+!      TMP=abs(real(i)-real(mi_glob)/2.)*DX
+!      if (TMP<=5000.) then
+!      TMP = 3600. 
+!      elseif (TMP>5000. .and. TMP<=20000.) then
+!      TMP = -0.24*(TMP-20000.)
+!      else 
+!      TMP = 0.
+!      endif
+!      IT=1
+!      DO 502 k=1,NK3
+!  502 IF (TMP >= ZZ(k)) TOP=max(k,IT)
+!      hx(I,J)=TOP
 
-!      hx(I,J)= 1
+      hx(I,J)= 1
       LU(I,J) = 16
       alb(I,J) = 7.
       grf(I,J) = 10.

@@ -56,7 +56,7 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
 
-      IF (.false.) THEN ! Der test for rcemip
+      IF (.true.) THEN ! Der test for rcemip
 !      IF (CRAD.NE.0.) THEN
 !     Gravity Wave Damping (Rayleigh type)
 !-----------------------------------------

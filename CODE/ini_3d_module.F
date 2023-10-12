@@ -101,7 +101,7 @@ CONTAINS
 !      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
       DATA PU1/1000.,750.,500.,100.,50.,10./
 !      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
-      DATA U1/5.,5.,5.,5.,5.,5./
+      DATA U1/6*0./
       DATA V1/6*0./
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
