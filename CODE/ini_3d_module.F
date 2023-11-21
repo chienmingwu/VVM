@@ -102,7 +102,7 @@ CONTAINS
       DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
       DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
 
-      CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
+      CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, init_file
 
       casename= 'GATE_PHASE_III'
 
@@ -139,6 +139,18 @@ CONTAINS
         ENDIF
       ENDDO
       THBAR(1)=THBAR(1)/(1+0.608*QVBAR(1))*(pzero/PBAR(1))**(rgas/cp)
+
+ 
+      init_file='/nwpr/gfs/xb136/data_rcemip/RCEMIP_VVM_300k_init.txt'
+
+      open(unit=88,file=init_file,form='formatted',status='old')
+      DO K = 1, NK3-1
+          READ(88, 20000) PBAR(K), THBAR(K), QVBAR(K)
+          QVBAR(K) = QVBAR(K)/1000.
+      ENDDO
+      close(88)
+      20000 format(3F15.6)
+      THBAR(NK3) = THBAR(NK3-1)      
 
       !PBAR=PBAR*100.
       PIBAR=(PBAR/100000.)**(2./7.)
@@ -546,11 +558,17 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
-              &tcvvm_qobs_large_uras.L.Thermodynamic-000030.nc"
+      !thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
+      !        &tcvvm_qobs_large_uras.L.Thermodynamic-000030.nc"
 
-      dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
-              &tcvvm_qobs_large_uras.L.Dynamic-000030.nc" 
+      !dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
+      !        &tcvvm_qobs_large_uras.L.Dynamic-000030.nc" 
+      
+      thermodynamic_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_300K_d6144r3km_e1/archive/&
+               &RCE_300K_d6144r3km_e1.L.Thermodynamic-000156.nc"
+
+      dynamic_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_300K_d6144r3km_e1/archive/&
+               &RCE_300K_d6144r3km_e1.L.Dynamic-000156.nc"
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
@@ -610,8 +628,10 @@ CONTAINS
 
       TG_restart: IF (.false.)THEN
 
-      tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
-                 uras_landsea_1800.C.Surface-000192.nc"
+      !tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
+      !           uras_landsea_1800.C.Surface-000192.nc"
+      tg_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_300K_d6144r3km_e1/archive/&
+                &RCE_300K_d6144r3km_e1.C.Surface-000156.nc"
       topo_file = "TOPO.nc"
 
       call SST_RESTART(tg_file,topo_file)

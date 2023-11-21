@@ -225,7 +225,7 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
 
       ! use for rcemip (Der)
       DO k = 1, NK2-1
-      o3(:,:,k)=((3.64478*pres(k))**(0.83209))*exp(-pres(k)/11.3515)*1.e-6
+      o3(:,:,k)=(3.64478*pres(k)**(0.83209))*exp(-pres(k)/11.3515)*1.e-6
       co2(:,:,k)=348.e-6
       ch4(:,:,k)=1650.e-9
       n2o(:,:,k)=306.e-9

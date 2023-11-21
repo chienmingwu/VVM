@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = RCE_300K_d128r1km_e1
+set expname =  RCE_300K_d6144r3km_e2
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -49,9 +49,9 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
     -e 's/walltime/72:00:00/g' \
-    -e 's/np_nodes/4/g' \
-    -e 's/np_threads/64/g' \
-    -e 's/total_cores/64/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/np_nodes/22/g' \
+    -e 's/np_threads/1024/g' \
+    -e 's/total_cores/1024/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
 # pjsub run.sh

@@ -1135,7 +1135,7 @@ CONTAINS
       if(ndiag_3d > 0) then
         do nt = 1,ndiag_3d
           write(unit=trnum,fmt='(i2.2)')nt
-          call pCDF_WRITE_4D_slice(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,:,nt), nk2 )
+          call pCDF_WRITE_4D_slice(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,1:nk2,nt), nk2 )
         enddo
       endif
 #endif

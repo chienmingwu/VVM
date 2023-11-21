@@ -9,7 +9,15 @@
       use parkind, only: &
                    kind_rb ! RRTM expects reals with this kind parameter (8 byte reals) 
 
-      use const3d, only: hx 
+
+
+#if defined (DIAG)
+      use const3d, only: hx, diag3d
+#else
+      use const3d, only: hx
+#endif
+
+!      use const3d, only: hx 
 !===========================================================================
 !  Modified for use with the Lorenz grid physics model.
 !  Thomas Cram and Celal Konor, CSU, October 2009.
@@ -526,7 +534,15 @@
       iwp_3d(i, j, k:nzm)           = IWP(1,1:nzt)
       reliq_3d(i, j, k:nzm)         = liquidRe(1,1:nzt)
       reice_3d(i, j, k:nzm)         = iceRe(1,1:nzt)
-       
+#if defined (DIAG)
+      diag3d(i,j,k+1:nzm+1,1)       = lwUpClearSky(1,1:nzt)
+      diag3d(i,j,k+1:nzm+1,2)       = lwDownClearSky(1,1:nzt)
+      diag3d(i,j,k+1:nzm+1,3)       = swUpClearSky(1,1:nzt)
+      diag3d(i,j,k+1:nzm+1,4)       = swDownClearSky(1,1:nzt)
+      diag3d(i,j,k+1:nzm+1,5)       = lwHeatingRateClearSky(1,1:nzt)
+      diag3d(i,j,k+1:nzm+1,6)       = swHeatingRateClearSky(1,1:nzt)
+#endif
+ 
 !------------------------------------------------------------------------------
 ! accumulate heating rates and fluxes for horizontally-averaged statistics
 !$omp critical
