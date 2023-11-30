@@ -116,7 +116,7 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 300.
+      SST = 295.
 
 !     initialization for rcemip
       PBAR(1)=1014.8*100.
@@ -141,7 +141,7 @@ CONTAINS
       THBAR(1)=THBAR(1)/(1+0.608*QVBAR(1))*(pzero/PBAR(1))**(rgas/cp)
 
  
-      init_file='/nwpr/gfs/xb136/data_rcemip/RCEMIP_VVM_300k_init.txt'
+      init_file='/nwpr/gfs/xb136/data_rcemip/RCEMIP_VVM_305k_init.txt'
 
       open(unit=88,file=init_file,form='formatted',status='old')
       DO K = 1, NK3-1
@@ -545,7 +545,7 @@ CONTAINS
 
       CALL petsc_solver_initialize(petsc_cr)
 
-      restart_read: IF (.false.)THEN
+      restart_read: IF (.true.)THEN
 
 !   restart( thermodynamic_file (absolute path) , hydrometer , 
 !            dynamic_variables , {optional} dynamic_file (absolute path) )
@@ -564,11 +564,11 @@ CONTAINS
       !dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
       !        &tcvvm_qobs_large_uras.L.Dynamic-000030.nc" 
       
-      thermodynamic_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_300K_d6144r3km_e1/archive/&
-               &RCE_300K_d6144r3km_e1.L.Thermodynamic-000156.nc"
+      thermodynamic_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_295K_d6144r3km_e2_3/archive/&
+               &RCE_295K_d6144r3km_e2_3.L.Thermodynamic-000116.nc"
 
-      dynamic_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_300K_d6144r3km_e1/archive/&
-               &RCE_300K_d6144r3km_e1.L.Dynamic-000156.nc"
+      dynamic_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_295K_d6144r3km_e2_3/archive/&
+               &RCE_295K_d6144r3km_e2_3.L.Dynamic-000116.nc"
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
@@ -630,8 +630,8 @@ CONTAINS
 
       !tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
       !           uras_landsea_1800.C.Surface-000192.nc"
-      tg_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_300K_d6144r3km_e1/archive/&
-                &RCE_300K_d6144r3km_e1.C.Surface-000156.nc"
+      tg_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_295K_d6144r3km_e2_3/archive/&
+                &RCE_295K_d6144r3km_e2_3.C.Surface-000103.nc"
       topo_file = "TOPO.nc"
 
       call SST_RESTART(tg_file,topo_file)
