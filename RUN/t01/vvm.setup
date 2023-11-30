@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = walker_les
+set expname = walker_les_l
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -83,9 +83,9 @@ cat definesld.com
 # added domain decomposition variables, without '#define MPI' must both
 #  be 1, total subdomains/processes = product of decomposition variables
 #  - DD 2010.04.12
-sed -i 's/zonal_dimension/2048/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/16/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/4096/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/120/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
@@ -96,9 +96,9 @@ sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=86400 /
  &INPUT2 RLAT=45, RLON=120 /
- &INPUT3 DX=100.,DYNEW=100.,DZ=150.,DZ1=75.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=3600. /
+ &INPUT3 DX=100.,DYNEW=100.,DZ=150.,DZ1=75.,DT=5.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=3600. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=12,NWR11=1,NFLPRT=1,NRESTART=12 /
+ &INPUT4 NXS=1,NXSAVG=24,NWR11=1,NFLPRT=1,NRESTART=24/
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=10,ITSTOP=1200,SCALE=0.,Q1Q2=T,DTRAD=600.,petsc_cr=0 /
 #                                                              (s)

@@ -29,8 +29,8 @@ CONTAINS
 !-------------------------
 !     Gravity Wave Damping (Rayleigh type)
 
-      DO 300 K = NK1-4, NK1
-      CGR =  CRAD*(ZZ(K)-ZT(NK2-5))/(ZT(NK2)-ZT(NK2-5))
+      DO 300 K = NK1-9, NK1
+      CGR =  CRAD*(ZZ(K)-ZT(NK2-10))/(ZT(NK2)-ZT(NK2-10))
 
       DO 310 J = 1, MJ1
       DO 310 I = 1, MI1
@@ -60,8 +60,8 @@ CONTAINS
 !      IF (CRAD.NE.0.) THEN
 !     Gravity Wave Damping (Rayleigh type)
 !-----------------------------------------
-      DO 700 K = NK2-4, NK2
-      CGR =  CRAD*(ZT(K)-ZT(NK2-5))/(ZT(NK2)-ZT(NK2-5))
+      DO 700 K = NK2-9, NK2
+      CGR =  CRAD*(ZT(K)-ZT(NK2-10))/(ZT(NK2)-ZT(NK2-10))
 
       DO 702 J = 1, MJ1
       DO 702 I = 1, MI1
@@ -95,7 +95,7 @@ CONTAINS
 !CRAD1=0
 !ccwu
 
-      IF (.false.) THEN ! Der test for rcemip
+      IF (.true.) THEN ! Der test for rcemip
 !      IF (CRAD1.NE.0.) THEN
 !     Newtonian Cooling - Original Code plus thtd3d counter
 !------------------------------------------
