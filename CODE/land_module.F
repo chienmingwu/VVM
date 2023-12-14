@@ -626,8 +626,8 @@ CONTAINS
    IF (hx1 .eq. 1) THEN
       tempim=dble(mi1*ni_sbdm+i)
       pi = 4._8 * atan(1._8)
-      TG(i,j)=301.-3.0*cos(2*pi*tempim/4096.)   !512 points in x direction
-!      TG(i,j)=SST
+!      TG(i,j)=301.-3.0*cos(2*pi*tempim/4096.)   !512 points in x direction
+      TG(i,j)=SST
    ELSE
    TG(I,J) = thbar(hx1)*pibar(hx1)
    ENDIF
