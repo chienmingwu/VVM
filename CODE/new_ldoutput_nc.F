@@ -705,6 +705,65 @@ CONTAINS
       STD_TMD2(I,J,NT)=STD_TMD2(I,J,NT) + DIAG2D(I,J,NT) * dtfac 
  1987 CONTINUE
       endif
+#if defined (DIAG)
+      ! diagnostics for YH kuo
+      DO k=2,nk2
+#if defined (MICROP3)
+        DIAG3D(:,:,K,1)=0.5*GRAV*( ((TH3D(:,:,K)-THBAR(K))/THBAR(K) &
+                                     +DELTA*QV3D(:,:,K)-QC3D(:,:,K) &
+                                          -QR3D(:,:,K)-QI3D(:,:,K)) &
+                            +((TH3D(:,:,K+1)-THBAR(K+1))/THBAR(K+1) &
+                                 +DELTA*QV3D(:,:,K+1)-QC3D(:,:,K+1) &
+                                      -QR3D(:,:,K+1)-QI3D(:,:,K+1)) )
+#else
+        DIAG3D(:,:,K,1)=0.5*GRAV*( ((TH3D(:,:,K)-THBAR(K))/THBAR(K) &
+                                     +DELTA*QV3D(:,:,K)-QC3D(:,:,K) &
+                  -QR3D(:,:,K)-QI3D(:,:,K)-QS3D(:,:,K)-QG3D(:,:,K)) &
+                            +((TH3D(:,:,K+1)-THBAR(K+1))/THBAR(K+1) &
+                                 +DELTA*QV3D(:,:,K+1)-QC3D(:,:,K+1) &
+          -QR3D(:,:,K+1)-QI3D(:,:,K+1)-QS3D(:,:,K+1)-QG3D(:,:,K+1)) )
+#endif
+      enddo
+      do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
+      diag3d(i,j,k,2) =(diag3d(i+1,j,k,1)+diag3d(i-1,j,k,1)          &
+                       +diag3d(i,j+1,k,1)+diag3d(i,j-1,k,1)          &
+                           -4*diag3d(i,j,k,1))/(4*DX*DYNEW)
+        enddo
+       enddo
+      enddo
+      
+      do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
+         diag3d(i,j,k,3)=diag(i,j,k,3)+1./rhot(i,j,k)*( 
+        ((u3dx(i-1+1,j,k)+u3dx(i+1,j,k))*(w3d(i+1,j,k-1)+w3d(i+1,j,k))/4.  &
+        -(u3dx(i-1-1,j,k)+u3dx(i-1,j,k))*(w3d(i-1,j,k-1)+w3d(i-1,j,k))/4.) &
+        /(2*dx)*rhot(i,j,k)+                                           &
+        ((u3dy(i,j-1+1,k)+u3dy(i,j+1,k))*(w3d(i,j+1,k-1)+w3d(i,j+1,k))/4.  &
+        -(u3dy(i,j-1-1,k)+u3dy(i,j-1,k))*(w3d(i,j-1,k-1)+w3d(i,j-1,k))/4.) &
+        /(2*dynew)*rhot(i,j,k)+                                        &
+        (rhot(i,j,k+1)*(w3d(i,j,k-1+1)+w3d(i,j,k+1))*(w3d(i,j,k-1+1)+w3d(i,j,k+1))/4.&
+        -rhot(i,j,k-1)*(w3d(i,j,k-1-1)+w3d(i,j,k-1))*(w3d(i,j,k-1-1)+w3d(i,j,k-1))/4.)&
+        /(2*dz/fnt(k)))           
+        enddo
+       enddo
+      enddo
+
+      do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
+      diag3d(i,j,k,4) =(diag3d(i+1,j,k,3)+diag3d(i-1,j,k,3)          &
+                       +diag3d(i,j+1,k,3)+diag3d(i,j-1,k,3)          &
+                           -4*diag3d(i,j,k,3))/(4*DX*DYNEW)
+        enddo
+       enddo
+      enddo
+       
+
+       
+#endif
 
       if (ndiag_3d>0) then
       DO 1988 NT=1,ndiag_3d

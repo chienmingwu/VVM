@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = walker_les_l_q1q2
+set expname = gate_n06
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
