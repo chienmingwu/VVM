@@ -724,36 +724,40 @@ CONTAINS
           -QR3D(:,:,K+1)-QI3D(:,:,K+1)-QS3D(:,:,K+1)-QG3D(:,:,K+1)) )
 #endif
       enddo
+!laplacian of buoyancy
+
       do k=2,nk2
        do j=1,mj1
         do i=1,mi1
       diag3d(i,j,k,2) =(diag3d(i+1,j,k,1)+diag3d(i-1,j,k,1)          &
                        +diag3d(i,j+1,k,1)+diag3d(i,j-1,k,1)          &
-                           -4*diag3d(i,j,k,1))/(4*DX*DYNEW)
-        enddo
-       enddo
-      enddo
-      
-      do k=2,nk2
-       do j=1,mj1
-        do i=1,mi1
-         diag3d(i,j,k,3)=diag(i,j,k,3)+1./rhot(i,j,k)*( 
-        ((u3dx(i-1+1,j,k)+u3dx(i+1,j,k))*(w3d(i+1,j,k-1)+w3d(i+1,j,k))/4.  &
-        -(u3dx(i-1-1,j,k)+u3dx(i-1,j,k))*(w3d(i-1,j,k-1)+w3d(i-1,j,k))/4.) &
-        /(2*dx)*rhot(i,j,k)+                                           &
-        ((u3dy(i,j-1+1,k)+u3dy(i,j+1,k))*(w3d(i,j+1,k-1)+w3d(i,j+1,k))/4.  &
-        -(u3dy(i,j-1-1,k)+u3dy(i,j-1,k))*(w3d(i,j-1,k-1)+w3d(i,j-1,k))/4.) &
-        /(2*dynew)*rhot(i,j,k)+                                        &
-        (rhot(i,j,k+1)*(w3d(i,j,k-1+1)+w3d(i,j,k+1))*(w3d(i,j,k-1+1)+w3d(i,j,k+1))/4.&
-        -rhot(i,j,k-1)*(w3d(i,j,k-1-1)+w3d(i,j,k-1))*(w3d(i,j,k-1-1)+w3d(i,j,k-1))/4.)&
-        /(2*dz/fnt(k)))           
+                           -4.*diag3d(i,j,k,1))/(4*DX*DYNEW)
         enddo
        enddo
       enddo
 
-      do k=2,nk2
-       do j=1,mj1
-        do i=1,mi1
+!D term for advection
+
+      do k=3,nk1
+       do j=2,mj1
+        do i=2,mi1
+        diag3d(i,j,k,3)=-1./rho(k)*(                                               &
+        ((u3dx(i-1+1,j,k)+u3dx(i+1,j,k))*(w3d(i+1,j,k-1)+w3d(i+1,j,k))/4.         &
+        -(u3dx(i-1-1,j,k)+u3dx(i-1,j,k))*(w3d(i-1,j,k-1)+w3d(i-1,j,k))/4.)        &
+        /(2.*dx)*rho(k)+                                                           &
+        ((u3dy(i,j-1+1,k)+u3dy(i,j+1,k))*(w3d(i,j+1,k-1)+w3d(i,j+1,k))/4.         &
+        -(u3dy(i,j-1-1,k)+u3dy(i,j-1,k))*(w3d(i,j-1,k-1)+w3d(i,j-1,k))/4.)        &
+        /(2.*dynew)*rho(k)+                                                        &
+        (rho(k+1)*(w3d(i,j,k-1+1)+w3d(i,j,k+1))*(w3d(i,j,k-1+1)+w3d(i,j,k+1))/4.  &
+        -rho(k-1)*(w3d(i,j,k-1-1)+w3d(i,j,k-1))*(w3d(i,j,k-1-1)+w3d(i,j,k-1))/4.) &
+        /(2.*dz/fnt(k)))           
+        enddo
+       enddo
+      enddo
+
+      do k=3,nk1
+       do j=2,mj1
+        do i=2,mi1
       diag3d(i,j,k,4) =(diag3d(i+1,j,k,3)+diag3d(i-1,j,k,3)          &
                        +diag3d(i,j+1,k,3)+diag3d(i,j-1,k,3)          &
                            -4*diag3d(i,j,k,3))/(4*DX*DYNEW)
