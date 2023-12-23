@@ -764,6 +764,31 @@ CONTAINS
         enddo
        enddo
       enddo
+!D term for u^2+v^2
+
+      do k=2,nk1
+       do j=1,mj1
+        do i=1,mi1
+      diag3d(i,j,k,5)=0.125*((u3dx(i-1,j,k)+u3dx(i,j,k))*(u3dx(i-1,j,k)+u3dx(i,j,k)) &
+                            +(u3dy(i,j-1,k)+u3dy(i,j,k))*(u3dy(i,j-1,k)+u3dy(i,j,k)))
+        enddo
+       enddo
+      enddo
+
+      do k=2,nk1
+       do j=1,mj1
+        do i=1,mi1
+      diag3d(i,j,k,5) =(diag3d(i+1,j,k,5)+diag3d(i-1,j,k,5)          &
+                       +diag3d(i,j+1,k,5)+diag3d(i,j-1,k,5)          &
+                           -4*diag3d(i,j,k,5))/(4*DX*DYNEW)
+        enddo
+       enddo
+      enddo
+      
+      do k=2,nk1
+      diag3d(:,:,k,5)=(diag3d(:,:,k+1,5)-diag3d(:,:,k-1,5))/(2.*dz/fnt(k))
+      enddo
+
        
 
        
