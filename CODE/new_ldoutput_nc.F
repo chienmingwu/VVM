@@ -789,8 +789,28 @@ CONTAINS
       diag3d(:,:,k,5)=(diag3d(:,:,k+1,5)-diag3d(:,:,k-1,5))/(2.*dz/fnt(k))
       enddo
 
-!d term for 
-       
+!d term for vertical advection gradient
+
+     do k=2,nk1
+      do j=2,mj1
+       do i=2,mi1
+       diag3d(i,j,k,6)= (((u3dx(i-1+1,j,k+1)+u3dx(i+1,j,k+1))-(u3dx(i-1+1,j,k-1)+u3dx(i+1,j,k-1)))/(4*dz/fnt(k)) &
+                         *((w3d(i,j,k)+w3d(i,j,k-1))/2.)                                           &
+                         -((u3dx(i-1-1,j,k+1)+u3dx(i-1,j,k+1))-(u3dx(i-1-1,j,k-1)+u3dx(i-1,j,k-1)))/(4*dz/fnt(k))&
+                         *((w3d(i,j,k)+w3d(i,j,k-1))/2.))                                          &
+                         /(2.*dx)+                                                                 &
+                        (((u3dy(i,j-1+1,k+1)+u3dy(i,j+1,k+1))-(u3dy(i,j-1+1,k-1)+u3dy(i,j+1,k-1)))/(4*dz/fnt(k)) &
+                         *((w3d(i,j,k)+w3d(i,j,k-1))/2.)                                           &
+                         -((u3dy(i,j-1-1,k+1)+u3dy(i,j-1,k+1))-(u3dy(i,j-1-1,k-1)+u3dy(i,j-1,k-1)))/(4*dz/fnt(k))&
+                         *((w3d(i,j,k)+w3d(i,j,k-1))/2.))                                          &
+                         /(2.*dynew)
+       enddo
+      enddo
+     enddo
+
+      do k=2,nk1
+      diag3d(:,:,k,6)=(diag3d(:,:,k+1,6)-diag3d(:,:,k-1,6))/(2.*dz/fnt(k))
+      enddo 
 
        
 #endif
