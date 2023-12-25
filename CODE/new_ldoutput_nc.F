@@ -812,6 +812,26 @@ CONTAINS
       diag3d(:,:,k,6)=(diag3d(:,:,k+1,6)-diag3d(:,:,k-1,6))/(2.*dz/fnt(k))
       enddo 
 
+!D term for vertical vorticity gradient
+
+      do k=2,nk1
+       do j=2,mj1
+        do i=2,mi1
+         diag3d(i,j,k,7)=((z3dz(i-1+1,j-1,k)+z3dz(i-1+1,j,k)+z3dz(i+1,j-1,k)+z3dz(i+1,j,k))         &
+                         -(z3dz(i-1-1,j-1,k)+z3dz(i-1-1,j,k)+z3dz(i-1,j-1,k)+z3dz(i-1,j,k)))/(8.*dx)    &
+                        *(u3dy(i,j-1,k)+u3dy(i,j,k))/2.                                                &
+                         -((z3dz(i-1,j-1+1,k)+z3dz(i-1,j+1,k)+z3dz(i,j-1+1,k)+z3dz(i,j+1,k))            &
+                         -(z3dz(i-1,j-1-1,k)+z3dz(i-1,j-1,k)+z3dz(i,j-1-1,k)+z3dz(i,j-1,k)))/(8.*dynew)&
+                        *(u3dx(i-1,j,k)+u3dx(i,j,k))/2.                                                &
+                        +(z3dz(i-1,j-1,k)+z3dz(i-1,j,k)+z3dz(i,j-1,k)+z3dz(i,j,k))*                    &
+                         (z3dz(i-1,j-1,k)+z3dz(i-1,j,k)+z3dz(i,j-1,k)+z3dz(i,j,k))/16.
+        enddo
+       enddo
+      enddo     
+
+      do k=2,nk1
+      diag3d(:,:,k,7)=-1.*(diag3d(:,:,k+1,7)-diag3d(:,:,k-1,7))/(2.*dz/fnt(k))
+      enddo
        
 #endif
 
