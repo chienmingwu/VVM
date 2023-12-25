@@ -789,6 +789,7 @@ CONTAINS
       diag3d(:,:,k,5)=(diag3d(:,:,k+1,5)-diag3d(:,:,k-1,5))/(2.*dz/fnt(k))
       enddo
 
+!d term for 
        
 
        
