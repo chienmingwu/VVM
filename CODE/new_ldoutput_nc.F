@@ -735,7 +735,7 @@ CONTAINS
        enddo
       enddo
 
-!D term for advection
+!D term for vertical momentum flux divergence
 
       do k=3,nk1
        do j=2,mj1
@@ -762,7 +762,7 @@ CONTAINS
         enddo
        enddo
       enddo
-!D term for u^2+v^2
+!D term for u^2+v^2 KE
 
       do k=2,nk1
        do j=1,mj1
@@ -786,19 +786,19 @@ CONTAINS
       diag3d(:,:,k,5)=(diag3d(:,:,k+1,5)-diag3d(:,:,k-1,5))/((ZT(k+1)-ZT(k-1)))
       enddo
 
-!d term for vertical advection gradient
+!d term for shear 
 
      do k=2,nk1
       do j=2,mj1
        do i=2,mi1
-       diag3d(i,j,k,6)= (((u3dx(i-1+1,j,k+1)+u3dx(i+1,j,k+1))-(u3dx(i-1+1,j,k-1)+u3dx(i+1,j,k-1)))/(2.*(ZT(k+1)-ZT(k-1))) &
+       diag3d(i,j,k,6)= (((u3dx(i-1+1,j,k+1)+u3dx(i+1,j,k+1))-(u3dx(i-1+1,j,k-1)+u3dx(i+1,j,k-1)))/((ZT(k+1)-ZT(k-1))) &
                          *((w3d(i+1,j,k)+w3d(i+1,j,k-1))/2.)                                           &
-                        -((u3dx(i-1-1,j,k+1)+u3dx(i-1,j,k+1))-(u3dx(i-1-1,j,k-1)+u3dx(i-1,j,k-1)))/(2.*(ZT(k+1)-ZT(k-1))) &
+                        -((u3dx(i-1-1,j,k+1)+u3dx(i-1,j,k+1))-(u3dx(i-1-1,j,k-1)+u3dx(i-1,j,k-1)))/((ZT(k+1)-ZT(k-1))) &
                          *((w3d(i-1,j,k)+w3d(i-1,j,k-1))/2.))                                          &
                          /(2.*dx)+                                                                 &
-                        (((u3dy(i,j-1+1,k+1)+u3dy(i,j+1,k+1))-(u3dy(i,j-1+1,k-1)+u3dy(i,j+1,k-1)))/(2.*(ZT(k+1)-ZT(k-1))) &
+                        (((u3dy(i,j-1+1,k+1)+u3dy(i,j+1,k+1))-(u3dy(i,j-1+1,k-1)+u3dy(i,j+1,k-1)))/((ZT(k+1)-ZT(k-1))) &
                          *((w3d(i,j+1,k)+w3d(i,j+1,k-1))/2.)                                           &
-                        -((u3dy(i,j-1-1,k+1)+u3dy(i,j-1,k+1))-(u3dy(i,j-1-1,k-1)+u3dy(i,j-1,k-1)))/(2.*(ZT(k+1)-ZT(k-1))) &
+                        -((u3dy(i,j-1-1,k+1)+u3dy(i,j-1,k+1))-(u3dy(i,j-1-1,k-1)+u3dy(i,j-1,k-1)))/((ZT(k+1)-ZT(k-1))) &
                          *((w3d(i,j-1,k)+w3d(i,j-1,k-1))/2.))                                          &
                          /(2.*dynew)
        enddo
