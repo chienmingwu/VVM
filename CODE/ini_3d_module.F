@@ -98,11 +98,10 @@ CONTAINS
 !     PU1 (MB) , U1(M/S)
 
       REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
-!      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA PU1/1000.,750.,500.,100.,50.,10./
-!      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
-      DATA U1/6*0./
-      DATA V1/6*0./
+      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
+      DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
+      DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
+
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
       casename= 'GATE_PHASE_III'

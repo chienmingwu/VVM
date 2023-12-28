@@ -806,7 +806,7 @@ CONTAINS
      enddo
 
       do k=2,nk1
-      diag3d(:,:,k,6)=(diag3d(:,:,k+1,6)-diag3d(:,:,k-1,6))/(2.*(ZT(k+1)-ZT(k-1)))
+      diag3d(:,:,k,6)=(diag3d(:,:,k+1,6)-diag3d(:,:,k-1,6))/((ZT(k+1)-ZT(k-1)))
       enddo 
 
 !D term for vertical vorticity gradient
@@ -827,7 +827,7 @@ CONTAINS
       enddo     
 
       do k=2,nk1
-      diag3d(:,:,k,7)=-1.*(diag3d(:,:,k+1,7)-diag3d(:,:,k-1,7))/(2.*(ZT(k+1)-ZT(k-1)))
+      diag3d(:,:,k,7)=-1.*(diag3d(:,:,k+1,7)-diag3d(:,:,k-1,7))/((ZT(k+1)-ZT(k-1)))
       enddo
        
 #endif
