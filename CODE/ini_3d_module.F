@@ -100,7 +100,9 @@ CONTAINS
       REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
       DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
       DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
-      DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
+!      DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
+!      DATA U1/6*0./
+      DATA V1/6*0./
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
