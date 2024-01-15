@@ -29,8 +29,8 @@ CONTAINS
 !-------------------------
 !     Gravity Wave Damping (Rayleigh type)
 
-      DO 300 K = NK1-9, NK1
-      CGR =  CRAD*(ZZ(K)-ZT(NK2-10))/(ZT(NK2)-ZT(NK2-10))
+      DO 300 K = NK1-14, NK1
+      CGR =  CRAD*(ZZ(K)-ZT(NK2-15))/(ZT(NK2)-ZT(NK2-15))
 
       DO 310 J = 1, MJ1
       DO 310 I = 1, MI1
@@ -56,12 +56,12 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
 
-      IF (.true.) THEN ! Der test for rcemip
-!      IF (CRAD.NE.0.) THEN
+      IF (.false.) THEN ! Der test for rcemip
+      !IF (CRAD.NE.0.) THEN
 !     Gravity Wave Damping (Rayleigh type)
 !-----------------------------------------
-      DO 700 K = NK2-9, NK2
-      CGR =  CRAD*(ZT(K)-ZT(NK2-10))/(ZT(NK2)-ZT(NK2-10))
+      DO 700 K = NK2-4, NK2
+      CGR =  CRAD*(ZT(K)-ZT(NK2-5))/(ZT(NK2)-ZT(NK2-5))
 
       DO 702 J = 1, MJ1
       DO 702 I = 1, MI1
@@ -83,6 +83,9 @@ CONTAINS
       NI3D(I,J,K)  =NI3D(I,J,K)-DT*CGR*NI3D(I,J,K)
       QRIM3D(I,J,K)=QRIM3D(I,J,K)-DT*CGR*QRIM3D(I,J,K)
       BRIM3D(I,J,K)=BRIM3D(I,J,K)-DT*CGR*BRIM3D(I,J,K)
+#if defined (LIQFRACP3)
+      QILIQ3D(I,J,K)=QILIQ3D(I,J,K)-DT*CGR*QILIQ3D(I,J,K)
+#endif
 #endif      
   704 CONTINUE
 #endif
@@ -91,12 +94,8 @@ CONTAINS
 !-------------------------
       END IF
 
-!ccwu qbo case
-!CRAD1=0
-!ccwu
-
-      IF (.true.) THEN ! Der test for rcemip
-!      IF (CRAD1.NE.0.) THEN
+      IF (.false.) THEN ! Der test for rcemip
+      !IF (CRAD1.NE.0.) THEN
 !     Newtonian Cooling - Original Code plus thtd3d counter
 !------------------------------------------
 

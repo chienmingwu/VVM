@@ -50,29 +50,29 @@ CONTAINS
       ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
    50 CONTINUE
 
-!      filename="/work/peter50504/rcemip_data/snd_rcemip_anal300_v3"
-!      OPEN(939,FILE=trim(filename))
-!      READ(939,*)
-!      DO k=1,nk2
-!        READ(939,111) ZZ(k+1), ZT(k+1)
-!        111 FORMAT(2F16.4)
-!      ENDDO
-!      CLOSE(939)
-!
-!      ZZ(1)=ZB
-!      ZT(1)=ZB
-!
-!      ZZ(NK3)=2*ZZ(NK2)-ZZ(NK1)
-!      ZT(NK3)=2*ZT(NK2)-ZT(NK1)
-!
-!      DO k=1,NK2
-!        FNZ(k)=DZ/(ZT(k+1)-ZT(k))
-!      ENDDO
-!      FNZ(NK3)=FNZ(NK2)
-!      DO k=2,NK3
-!        FNT(k)=DZ/(ZZ(k)-ZZ(k-1))
-!      ENDDO
-!      FNT(1)=FNT(2)
+      filename="/home/mog/snd_rcemip_anal300_v3"
+      OPEN(939,FILE=trim(filename))
+      READ(939,*)
+      DO k=1,nk2-1
+        READ(939,111) ZZ(k+1), ZT(k+1)
+        111 FORMAT(2F16.4)
+      ENDDO
+      CLOSE(939)
+
+      ZZ(1)=ZB
+      ZT(1)=ZB
+
+      ZZ(NK3)=2*ZZ(NK2)-ZZ(NK1)
+      ZT(NK3)=2*ZT(NK2)-ZT(NK1)
+
+      DO k=1,NK2
+        FNZ(k)=DZ/(ZT(k+1)-ZT(k))
+      ENDDO
+      FNZ(NK3)=FNZ(NK2)
+      DO k=2,NK3
+        FNT(k)=DZ/(ZZ(k)-ZZ(k-1))
+      ENDDO
+      FNT(1)=FNT(2)
 
    END SUBROUTINE COORDS_2D
 
