@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = RCE_295K_d6144r3km_e2_4
+set expname = RCE_305K_d6144r3km_e2_9
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'

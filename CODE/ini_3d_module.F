@@ -116,7 +116,8 @@ CONTAINS
 !*****************************************************
 !SST=299.88K
 
-      SST = 295.
+      SST = 305.
+!      dSST = 1.25
 
 !     initialization for rcemip
       PBAR(1)=1014.8*100.
@@ -141,7 +142,7 @@ CONTAINS
       THBAR(1)=THBAR(1)/(1+0.608*QVBAR(1))*(pzero/PBAR(1))**(rgas/cp)
 
  
-      init_file='/nwpr/gfs/xb136/data_rcemip/RCEMIP_VVM_305k_init.txt'
+      init_file='/nwpr/gfs/xb136/data_rcemip/RCEMIP_VVM_300k_init.txt'
 
       open(unit=88,file=init_file,form='formatted',status='old')
       DO K = 1, NK3-1
@@ -375,11 +376,14 @@ CONTAINS
 !      VG(NK3) = VG(NK2)
 
 !     OCEAN POINTS
-
+      write(*,*) dSST, pi, dx, mip
       DO 300 J = mjm,mjp
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
+      ! SST perturbation for RCEMIP phase II
+      !TG(I,J) = SST + 0.5*dSST*cos( 2*pi/6000*(6000+dx*(I-0.5*mip)) )
+      !write(*,*) TG(I,J)
       if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
@@ -564,11 +568,11 @@ CONTAINS
       !dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
       !        &tcvvm_qobs_large_uras.L.Dynamic-000030.nc" 
       
-      thermodynamic_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_295K_d6144r3km_e2_3/archive/&
-               &RCE_295K_d6144r3km_e2_3.L.Thermodynamic-000116.nc"
+      thermodynamic_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_305K_d6144r3km_e2_8/archive/&
+               &RCE_305K_d6144r3km_e2_8.L.Thermodynamic-000363.nc"
 
-      dynamic_file = "/nwpr/gfs/xb136/VVM/DATA/RCE_295K_d6144r3km_e2_3/archive/&
-               &RCE_295K_d6144r3km_e2_3.L.Dynamic-000116.nc"
+      dynamic_file =       "/nwpr/gfs/xb136/VVM/DATA/RCE_305K_d6144r3km_e2_8/archive/&
+               &RCE_305K_d6144r3km_e2_8.L.Dynamic-000363.nc"
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
