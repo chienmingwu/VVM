@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = RRCE_3km_f00
+set expname = RRCE_3km_f05
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -74,6 +74,7 @@ cat > definesld.com << 'END1'
 #define MICROP3
 #define DIFFUSION
 #define RADCODE
+#define CORIOLIS
 #define DIAG
 'END1'
 cat definesld.com
