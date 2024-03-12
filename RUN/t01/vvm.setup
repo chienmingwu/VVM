@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20060903cln
+set expname = chem_tpe20060903cln
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -65,6 +65,9 @@ cp ${vvmdir}/CODE/LSM/VEGPARM.TBL .
 # for P3 scheme
 cp ${vvmdir}/CODE/p3_lookup_table_* .
 
+# for chemical scheme
+cp -r ${vvmdir}/CODE/CHEM/* .
+
 # create CPP list
 cat > definesld.com << 'END1'
 #define MPI
@@ -77,6 +80,8 @@ cat > definesld.com << 'END1'
 #define LSM
 #define TOPOGRAPHY
 #define AREAMN
+#define CHEM
+#define DIAG
 'END1'
 cat definesld.com
 
@@ -90,9 +95,9 @@ sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/39/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag3d_dimension/4/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'

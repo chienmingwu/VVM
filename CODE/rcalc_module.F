@@ -92,6 +92,18 @@ CONTAINS
       if (ntracer > 0)then
          do nt = 1,ntracer
             CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(1,1,1,L,nt), term4 )
+#if defined (DIAG)
+            if (nt==1) then
+            do k=2,nk2
+            do j=1,mj1
+            do i=1,mi1
+            DIAG3D(I,J,K,1)=A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt) ! total
+            DIAG3D(I,J,K,2)=term4(i,j,k)*PASS_SMALL_DT ! vertical
+            enddo
+            enddo
+            enddo
+            endif
+#endif
          enddo
       endif
 
