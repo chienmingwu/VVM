@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = chem_tpe20060626cln_c64
+set expname = chem_tpe20060626cln_water
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -77,7 +77,6 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define MICROP3
 #define RADCODE
-#define LSM
 #define TOPOGRAPHY
 #define AREAMN
 #define DIAG
@@ -92,8 +91,8 @@ cat definesld.com
 #  - DD 2010.04.12
 sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/39/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
