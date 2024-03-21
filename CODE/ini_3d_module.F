@@ -111,6 +111,36 @@ CONTAINS
 
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
+! read iniitial profile from dat file (po-yen 2022.01 add)
+      INI_FILE_PATH='/nwpr/gfs/c103/VVM/datfile_Tainan/2021040206_'
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'P.dat')
+      INQUIRE(IOLENGTH=LREC) P1
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) P1
+      CLOSE(8763)
+
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'T_new.dat')
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) T1
+      CLOSE(8763)
+
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'QV_new.dat')
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) QV1
+      CLOSE(8763)
+
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'U.dat')
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) U11
+      CLOSE(8763)
+
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'V.dat')
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) V11
+      CLOSE(8763)
+!=====================================================end
+
+
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
