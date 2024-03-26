@@ -103,7 +103,7 @@ CONTAINS
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
 ! read iniitial profile from dat file (po-yen 2022.01 add)
-      INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20190722.taiwania_'
+      INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20220530.taiwania_'
       filename=TRIM(TRIM(INI_FILE_PATH) // 'P.dat')
       INQUIRE(IOLENGTH=LREC) P1
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
