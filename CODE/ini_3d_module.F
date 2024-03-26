@@ -59,33 +59,24 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
-      CHARACTER (60) FILENAME
+      CHARACTER (200) FILENAME,INI_FILE_PATH
 
-      integer nu1, nt1, nq1, k1, k2, it
+      integer nu1, nt1, nq1, k1, k2, it, LREC
       logical lf
-      DATA NU1/6/,NT1/29/,NQ1/20/
+      INTEGER, PARAMETER :: NU1=6
+      INTEGER, PARAMETER :: NT1=71
+      INTEGER, PARAMETER :: NQ1=20
+!      DATA NU1/6/,NT1/625/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
-                             es1, alphaw, pbarmb, esi, esw
+                             es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(29),PI1(29),TV1(29),PILOG1(29)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(29),T1(29),QV1(29),QC1(29)
+          ,QCBAR(NK3),QVSBAR(NK3),U3DXbar(NT1),U3DYbar(NT1)
+      REAL (KIND=dbl_kind) :: ZT1(NT1),PI1(NT1),TV1(NT1),PILOG1(NT1)
+      REAL (KIND=dbl_kind) :: PQ1(20),P1(NT1),T1(NT1),QV1(NT1),QC1(NT1)
+      REAL (KIND=dbl_kind) :: U11(NT1),V11(NT1)
       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
               ,111.3,92.6/
-      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0,775.0 &
-             ,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0,350.0 &
-             ,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0,70.0 &
-             ,50./
-      DATA T1/301.246,299.169,297.515,296.35,295.014,293.752,292.521,291.309,290.106 &
-             ,288.867,287.545,284.466,280.821,276.82,272.996,268.835,263.996,258.415 &
-             ,251.848,243.709,233.844,228.075,221.699,214.639,206.84,198.676,191.745 &
-             ,194.587,206.771/
-      DATA QV1/0.0179026,0.0174521,0.0164586,0.0150866,0.013841,0.0124337,0.0110566 &
-              ,0.00974031,0.00858361,0.00759569,0.00676534,0.00555704,0.00457475,0.00363432 &
-              ,0.00280347,0.00208696,0.00147428,0.000984061,0.000624419,0.000359956,0.000167552 &
-              ,0.000100977,5.50747e-05,2.7595e-05,1.2715e-05,5.39508e-06,2.6389e-06,2.24212e-06 &
-              ,2.29645e-06/
       DATA QC1/29*0./
 
       REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
@@ -97,10 +88,10 @@ CONTAINS
 !     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
 !     PU1 (MB) , U1(M/S)
 
-      REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
-      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
-      DATA V1/  0.0, 0.0, 0.0, 0.0, 0.0, 0.0/
+!      REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
+!      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
+!      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
+!      DATA V1/  0.0, 0.0, 0.0, 0.0, 0.0, 0.0/
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
@@ -112,32 +103,34 @@ CONTAINS
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
 ! read iniitial profile from dat file (po-yen 2022.01 add)
-      INI_FILE_PATH='/nwpr/gfs/c103/VVM/datfile_Tainan/2021040206_'
+      INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20190722.taiwania_'
       filename=TRIM(TRIM(INI_FILE_PATH) // 'P.dat')
       INQUIRE(IOLENGTH=LREC) P1
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) P1
       CLOSE(8763)
-
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'T_new.dat')
+      print*, P1,LREC
+ 
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'T.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) T1
       CLOSE(8763)
-
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'QV_new.dat')
+      print*, T1
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'qv.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) QV1
       CLOSE(8763)
-
+      print*, QV1
       filename=TRIM(TRIM(INI_FILE_PATH) // 'U.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) U11
       CLOSE(8763)
-
+      print*, U11
       filename=TRIM(TRIM(INI_FILE_PATH) // 'V.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) V11
       CLOSE(8763)
+      print*, V11
 !=====================================================end
 
 
@@ -157,7 +150,7 @@ CONTAINS
 
       DO 100 K = 1, NT1
       T1(K) =  T1(K) !* 1.E-01 + 273.16
-      QV1(K)= QV1(K) !* 1.E-04
+      QV1(K)= QV1(K) * 1.E-03 ! g/kg to kg/kg
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -205,6 +198,10 @@ CONTAINS
       T(1)     = T1(1)
       QVBAR(1) = QV1(1)
       QCBAR(1) = QC1(1)
+!poyen add
+      U3DXbar(1)  = U11(1)
+      U3DYbar(1)  = V11(1)
+!poyen add end
 
 !     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
 !     FOR K = 2, NK3
@@ -215,6 +212,10 @@ CONTAINS
       T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
       QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
       QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
+!poyen add
+      U3DXbar(K) = FINTRP ( 1, ZT(K), ZT1(K1), U11(K1), ZT1(K2), U11(K2) )
+      U3DYbar(K) = FINTRP ( 1, ZT(K), ZT1(K1), V11(K1), ZT1(K2), V11(K2) )
+!poyen add end
   150 CONTINUE
 
 !     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
@@ -344,10 +345,10 @@ CONTAINS
 
       DO 220 K = 2, NK2
       PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
+      K1 = INDEXR(PBARMB,NU1,P1,LF)
       K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
+      UG(K) = FINTRP(1,PBARMB,P1(K1),U11(K1),P1(K2),U11(K2))
+      VG(K) = FINTRP(1,PBARMB,P1(K1),V11(K1),P1(K2),V11(K2))
   220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
@@ -356,40 +357,40 @@ CONTAINS
 
 !ccwu Taipei TSA sounding
 
-      do  K = 1, NK3
-      IF (ZT(K) .LT. 3000.) THEN
-        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
-      ELSEIF (ZT(K) .LT. 8000.) THEN
-        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
-      ELSEIF (ZT(K) .LT. 13000.) THEN
-        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
-      ELSE
-        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
-      ENDIF
+!      do  K = 1, NK3
+!      IF (ZT(K) .LT. 3000.) THEN
+!        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
+!      ELSEIF (ZT(K) .LT. 8000.) THEN
+!        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
+!      ELSEIF (ZT(K) .LT. 13000.) THEN
+!        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
+!      ELSE
+!        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
+!      ENDIF
 
-      T(K) = THBAR(K) * PIBAR(K)
-      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
-      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
-      IF (T(K) .LE. 233.15) THEN
-        ES1 = ESI
-      ELSE IF (T(K) .LT. 273.15) THEN
-        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
-      ELSE
-        ES1 = ESW
-      ENDIF
-      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
+!      T(K) = THBAR(K) * PIBAR(K)
+!      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
+!      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
+!      IF (T(K) .LE. 233.15) THEN
+!        ES1 = ESI
+!      ELSE IF (T(K) .LT. 273.15) THEN
+!        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
+!      ELSE
+!        ES1 = ESW
+!      ENDIF
+!      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
 !CCCCCCCCCCCCCCCCCC
-      IF (ZT(K) .LE. 1500) THEN
-        H(K) = 0.82
-      ELSE IF (ZT(K) .LE. 12000) THEN
-        H(K) = (ZT(K)-8000)**2/132031250.+0.5
-      ELSE
-        H(K) = 0.50
-      END IF
+!      IF (ZT(K) .LE. 1500) THEN
+!        H(K) = 0.82
+!      ELSE IF (ZT(K) .LE. 12000) THEN
+!        H(K) = (ZT(K)-8000)**2/132031250.+0.5
+!      ELSE
+!        H(K) = 0.50
+!      END IF
 !CCCCCCCCCCCCCCCCCC
-      QVBAR(K) = H(K) * QVSBAR(K)
+!      QVBAR(K) = H(K) * QVSBAR(K)
 
-      ENDDO
+!      ENDDO
 
 !     OCEAN POINTS
 
@@ -525,8 +526,8 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=3./sqrt(2.)
-      U3DY(I,J,K)=3./sqrt(2.)
+      U3DX(I,J,K)=U3DXbar(K) !UG(K)
+      U3DY(I,J,K)=U3DYbar(K) !VG(K)
   610 CONTINUE
 
       DO 660 K = 2, NK1
