@@ -60,6 +60,7 @@ CONTAINS
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
       CHARACTER (200) FILENAME,INI_FILE_PATH
+      CHARACTER (10) ENS
 
       integer nu1, nt1, nq1, k1, k2, it, LREC
       logical lf
@@ -103,30 +104,31 @@ CONTAINS
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
 ! read iniitial profile from dat file (po-yen 2022.01 add)
-      INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20220530.taiwania_'
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'P.dat')
+      INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20190722.taiwania_'
+      ENS='_W'
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'P' // TRIM(ENS) // '.dat')
       INQUIRE(IOLENGTH=LREC) P1
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) P1
       CLOSE(8763)
       print*, P1,LREC
  
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'T.dat')
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'T'// TRIM(ENS) // '.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) T1
       CLOSE(8763)
       print*, T1
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'qv.dat')
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'qv'// TRIM(ENS) // '.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) QV1
       CLOSE(8763)
       print*, QV1
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'U.dat')
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'U'// TRIM(ENS) // '.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) U11
       CLOSE(8763)
       print*, U11
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'V.dat')
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'V'// TRIM(ENS) // '.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) V11
       CLOSE(8763)

@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20220530cln
+set expname = tpe20190722cln_W
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
