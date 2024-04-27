@@ -5,7 +5,8 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20190722cln_W
+set expname = tpe20190722cln_S  
+# remember to change the ini date in time_manager.F and soil moisture in land_module.F !
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
