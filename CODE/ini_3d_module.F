@@ -105,7 +105,7 @@ CONTAINS
 
 ! read iniitial profile from dat file (po-yen 2022.01 add)
       INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20190722.taiwania_'
-      ENS='_S'
+      ENS='_08RH'
       filename=TRIM(TRIM(INI_FILE_PATH) // 'P' // TRIM(ENS) // '.dat')
       INQUIRE(IOLENGTH=LREC) P1
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
