@@ -77,6 +77,7 @@ cat > definesld.com << 'END1'
 #define LSM
 #define TOPOGRAPHY
 #define AREAMN
+#define RELAX_XY
 'END1'
 cat definesld.com
 
