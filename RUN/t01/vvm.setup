@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20190722cln_08RH  
+set expname = tpe20190722cln_W_08RH  
 # remember to change the ini date in time_manager.F and soil moisture in land_module.F !
 
 # set job system and compiler
@@ -90,7 +90,7 @@ cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=8640 /
+ &INPUT1 NEWRUN=T, ITTADD=2880 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)

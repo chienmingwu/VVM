@@ -60,7 +60,7 @@ CONTAINS
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
       CHARACTER (200) FILENAME,INI_FILE_PATH
-      CHARACTER (10) ENS
+      CHARACTER (10) ENS,ENS_dir
 
       integer nu1, nt1, nq1, k1, k2, it, LREC
       logical lf
@@ -106,6 +106,7 @@ CONTAINS
 ! read iniitial profile from dat file (po-yen 2022.01 add)
       INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20190722.taiwania_'
       ENS='_08RH'
+      ENS_dir='_W'
       filename=TRIM(TRIM(INI_FILE_PATH) // 'P' // TRIM(ENS) // '.dat')
       INQUIRE(IOLENGTH=LREC) P1
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
@@ -123,12 +124,12 @@ CONTAINS
       READ(8763,rec=1) QV1
       CLOSE(8763)
       print*, QV1
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'U'// TRIM(ENS) // '.dat')
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'U'// TRIM(ENS_dir) // '.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) U11
       CLOSE(8763)
       print*, U11
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'V'// TRIM(ENS) // '.dat')
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'V'// TRIM(ENS_dir) // '.dat')
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) V11
       CLOSE(8763)
