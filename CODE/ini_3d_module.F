@@ -495,6 +495,32 @@ CONTAINS
 
       CALL petsc_solver_initialize(petsc_cr)
 
+!iterate the wind field for initial condition with topography
+
+      DO ITER=1,10  ! iterate 10 times
+
+      CALL BOUND_3D_XY
+      CALL xyavg1(u3dx(:,:,nk2), nhalo, mi1, mj1, utmn)
+      CALL xyavg1(u3dy(:,:,nk2), nhalo, mi1, mj1, vtmn)
+      UTMN0 = UTMN
+      VTMN0 = VTMN
+
+      CALL WIND_3D(1,2)
+
+      DO K = 2, NK1
+       DO J = 1, MJ1
+        DO I = 1, MI1
+
+      Z3DY(I,J,K)=(W3D(I+1,J,K)-W3D(I,J,K))/DX    &
+                 -(U3DX(I,J,K+1)-U3DX(I,J,K))*FNZ(K)/DZ
+      Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
+                 -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
+        ENDDO
+       ENDDO
+      ENDDO !update vorticity with new wind field
+
+      ENDDO !end iteration
+
       restart_read: IF (.false.)THEN
 
 !   restart( thermodynamic_file (absolute path) , hydrometer , 

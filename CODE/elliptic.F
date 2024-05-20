@@ -19,6 +19,7 @@ PRIVATE
 
 ! public member functions
 PUBLIC ::     &
+   relax_2d,  &
    direct_3d, &
    direct_xy
 
@@ -87,6 +88,66 @@ CONTAINS
       call timer_stop('DIRECT_XY')
 
       END SUBROUTINE direct_xy
+
+      SUBROUTINE RELAX_2D (A,ANM1,RHSV,AOUT)
+
+      REAL (kind=dbl_kind),DIMENSION(MIM:MIP,MJM:MJP),INTENT(IN) :: A,ANM1
+      REAL (kind=dbl_kind),DIMENSION(MI1,MJ1),INTENT(IN) :: RHSV
+      REAL (kind=dbl_kind),DIMENSION(MIM:MIP,MJM:MJP),INTENT(OUT) :: AOUT
+
+      REAL (kind=dbl_kind) :: COEF0
+      REAL (kind=dbl_kind) :: C0,C1,C2
+      REAL (kind=dbl_kind), DIMENSION(MIM:MIP,MJM:MJP) :: ATEMP
+
+      REAL (kind=dbl_kind), DIMENSION(MI1,MJ1) :: AOUTN,DIFFA  ! test purpose
+
+      INTEGER (kind=int_kind) :: I, J, ITER
+
+        COEF0 = WRXMU
+        C1 = 1./(DX*DX)
+        C2 = 1./(DYNEW*DYNEW)
+        C0 = COEF0 + 2.*C1 + 2.*C2
+
+!     initial guess
+
+      DO J = mjm, mjp
+       DO I = mim, mip
+         AOUT(I,J)=2.*A(I,J)-ANM1(I,J)
+       ENDDO
+      ENDDO
+!=================================
+      DO ITER = 1,NITERXY
+!=================================
+
+      DO J = mjm,mjp
+       DO I = mim,mip
+         ATEMP(I,J) = AOUT(I,J)
+       ENDDO
+      ENDDO
+
+      DO J = 1,MJ1
+       DO I = 1,MI1
+         AOUT(I,J) = COEF0*ATEMP(I,J) + C1*(ATEMP(I-1,J)+ATEMP(I+1,J))  &
+                   + C2*(ATEMP(I,J-1)+ATEMP(I,J+1))  &
+                   - RHSV(I,J)
+       ENDDO
+      ENDDO
+
+      DO J = 1,MJ1
+       DO I = 1,MI1
+         AOUT(I,J) = AOUT(I,J)/C0
+       ENDDO
+      ENDDO
+!---------------------------
+      CALL BOUND_ARB(1,AOUT)
+!---------------------------
+
+!=================================
+      ENDDO    ! iteration-loop
+!=================================
+
+      end subroutine relax_2d
+
 
 END MODULE elliptic
 

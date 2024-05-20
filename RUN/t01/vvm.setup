@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20060903cln_nopert
+set expname = tpe20060903cln_nopert_relaxxy2_itt100
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -97,7 +97,7 @@ sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=8640 /
+ &INPUT1 NEWRUN=T, ITTADD=60 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)

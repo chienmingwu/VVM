@@ -154,6 +154,7 @@ CONTAINS
 
       NSFLUX  = 6
       ALADV   = 1._dbl_kind
+      WRXMU   = 1./(DX*DX)    !2.5E-7
       UVTAU   = 7200.
 
       NOTURB  = .FALSE.
@@ -169,6 +170,8 @@ CONTAINS
       NXSAVG  = 2
       NFLPRT  = 999999
       nrestart  = 999999
+      NITERW  = 10
+      NITERXY = 100
 
       DO 20 I = 10, 19
       NWRITE(I) = 999999
