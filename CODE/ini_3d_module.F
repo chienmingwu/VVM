@@ -59,7 +59,7 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
-      integer nu1, nt1, nq1, k1, k2, it
+      integer nu1, nt1, nq1, k1, k2, it, iter
       logical lf
       CHARACTER (60) FILENAME
 
