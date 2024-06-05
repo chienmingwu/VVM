@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20060903cln_nopert_relaxxy1_itt100_iter10
+set expname = tpe20060903cln_nopert_relaxxy1_itt100_iter10_8192
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -89,7 +89,7 @@ cat definesld.com
 sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/128/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
@@ -118,7 +118,7 @@ make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} CO
 cd ${expdir}
 # use pjsub to generate topo file on CWB fx1000
 #./nc2fortranBinary > topo.log
-pjsub -L "node=1" -L "elapse=00:10:00" -L "rscgrp=debug" -N topo ./nc2fortranBinary
+pjsub -L "node=1" -L "elapse=00:40:00" -L "rscgrp=small" -N topo ./nc2fortranBinary
 unset echo 
 echo '###################################################################'
 echo '###################################################################'
