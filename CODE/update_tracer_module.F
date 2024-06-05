@@ -48,16 +48,16 @@ CONTAINS
       ! tracer (total)
         TC3D(I,J,K,1)=0.
       ! NOx-CO-CH4 pollution transport 
-        TC3D(I,J,K,2)=30. ! ozone
-        TC3D(I,J,K,3)=5.  ! NO
-        TC3D(I,J,K,4)=10. ! NO2
+        TC3D(I,J,K,2)=20. ! ozone
+        TC3D(I,J,K,3)=0.  ! NO
+        TC3D(I,J,K,4)=20. ! NO2
         TC3D(I,J,K,5)=0.
         TC3D(I,J,K,6)=0.
         TC3D(I,J,K,7)=0.
         TC3D(I,J,K,8)=0.
         TC3D(I,J,K,9)=0.
         TC3D(I,J,K,10)=2010. !CH4
-        TC3D(I,J,K,11)=0.
+        TC3D(I,J,K,11)=30.
         TC3D(I,J,K,12)=0.
         TC3D(I,J,K,13)=0.
         TC3D(I,J,K,14)=0.
@@ -66,28 +66,34 @@ CONTAINS
         TC3D(I,J,K,17)=200000000. !O2
         TC3D(I,J,K,18)=800000000. !N2
         TC3D(I,J,K,19)=0.
-      ! tracer (industrail & traffic)
         TC3D(I,J,K,20)=0.
         TC3D(I,J,K,21)=0.
+        TC3D(I,J,K,22)=0.
+      ! tracer (industrail & traffic)
+        TC3D(I,J,K,23)=0.
+        TC3D(I,J,K,24)=0.
       ! chemical transport without emissions
-        TC3D(I,J,K,22)=30.
-        TC3D(I,J,K,23)=5.
-        TC3D(I,J,K,24)=10.
-        TC3D(I,J,K,25)=0.
+        TC3D(I,J,K,25)=20.
         TC3D(I,J,K,26)=0.
-        TC3D(I,J,K,27)=0.
+        TC3D(I,J,K,27)=20.
         TC3D(I,J,K,28)=0.
         TC3D(I,J,K,29)=0.
-        TC3D(I,J,K,30)=2010.
+        TC3D(I,J,K,30)=0.
         TC3D(I,J,K,31)=0.
         TC3D(I,J,K,32)=0.
-        TC3D(I,J,K,33)=0.
-        TC3D(I,J,K,34)=0.
-        TC3D(I,J,K,35)=320.
+        TC3D(I,J,K,33)=2010.
+        TC3D(I,J,K,34)=30.
+        TC3D(I,J,K,35)=0.
         TC3D(I,J,K,36)=0.
-        TC3D(I,J,K,37)=200000000.
-        TC3D(I,J,K,38)=800000000.
+        TC3D(I,J,K,37)=0.
+        TC3D(I,J,K,38)=320.
         TC3D(I,J,K,39)=0.
+        TC3D(I,J,K,40)=200000000.
+        TC3D(I,J,K,41)=800000000.
+        TC3D(I,J,K,42)=0.
+        TC3D(I,J,K,43)=0.
+        TC3D(I,J,K,44)=0.
+        TC3D(I,J,K,45)=0.
       else
         TC3D(I,J,K,1)=0.
         TC3D(I,J,K,2)=40.
@@ -110,24 +116,30 @@ CONTAINS
         TC3D(I,J,K,19)=0.
         TC3D(I,J,K,20)=0.
         TC3D(I,J,K,21)=0.
-        TC3D(I,J,K,22)=40.
+        TC3D(I,J,K,22)=0.
         TC3D(I,J,K,23)=0.
         TC3D(I,J,K,24)=0.
-        TC3D(I,J,K,25)=0.
+        TC3D(I,J,K,25)=40.
         TC3D(I,J,K,26)=0.
         TC3D(I,J,K,27)=0.
         TC3D(I,J,K,28)=0.
         TC3D(I,J,K,29)=0.
-        TC3D(I,J,K,30)=1908.
+        TC3D(I,J,K,30)=0.
         TC3D(I,J,K,31)=0.
         TC3D(I,J,K,32)=0.
-        TC3D(I,J,K,33)=0.
+        TC3D(I,J,K,33)=1908.
         TC3D(I,J,K,34)=0.
-        TC3D(I,J,K,35)=100.
+        TC3D(I,J,K,35)=0.
         TC3D(I,J,K,36)=0.
-        TC3D(I,J,K,37)=200000000.
-        TC3D(I,J,K,38)=800000000.
+        TC3D(I,J,K,37)=0.
+        TC3D(I,J,K,38)=100.
         TC3D(I,J,K,39)=0.
+        TC3D(I,J,K,40)=200000000.
+        TC3D(I,J,K,41)=800000000.
+        TC3D(I,J,K,42)=0.
+        TC3D(I,J,K,43)=0.
+        TC3D(I,J,K,44)=0.
+        TC3D(I,J,K,45)=0.
       endif
   888 CONTINUE
 
@@ -162,43 +174,43 @@ CONTAINS
       use const3d, only : hx
 
       INTEGER (KIND=int_kind) ::   &
-         i, j, k ,nt, tempim, tempjm, hxp
+         i, j, k ,nt, tempim, tempjm, hxp, tempkm
       ! do loop indices for zonal, meridional and vertical dimensions
-      REAL TCtpp, TCcsc, TCtra, TCME, TCCO !YLsnc, KHcsc, KHtpp, KHhpp, KHtra, HLhip, HLacc, TYtpp, KLhpp
-      REAL xday, xhr, xlon, xlat, sza, coszen, temp, tempME, tempCO
+      REAL xday, xhr, xlon, xlat, sza, coszen
+      REAL temp, tempME, tempCO, tempISO, tempFORM
+      integer nx, ny, nz, nt, istat
+      parameter (NX = 1024, NY = 1024, NZ = 4, NT = 24)
+      logical, save :: first=.True.
 
-      ! emssion data
-      TCtpp=9843.575
-      TCcsc=2580.682
-      TCtra=17112.22
-      TCME=8386.266
-      TCCO=53928.75
-!      YLsnc=12946.807
-!      KHcsc=6464.237
-!      KHtpp=2419.290
-!      KHhpp=5695.070
-!      KHtra=17119.496
-!      HLhip=4652.294+2429.742
-!      HLacc=4894.105
-!      TYtpp=4308.121
-!      KLhpp=2749.948
+      character*(*) FILE_NO, FILE_CO, FILE_CH4, FILE_ISO, FILE_FORM
+      parameter (FILE_NO='/nwpr/gfs/xb136/aries/cwb/EMIS_NO.dat')
+      parameter (FILE_CO='/nwpr/gfs/xb136/aries/cwb/EMIS_CO.dat')
+      parameter (FILE_CH4='/nwpr/gfs/xb136/aries/cwb/EMIS_CH4.dat')
+      parameter (FILE_ISO='/nwpr/gfs/xb136/aries/cwb/EMIS_ISO.dat')
+      parameter (FILE_FORM='/nwpr/gfs/xb136/aries/cwb/EMIS_FORM.dat')
+      real, save :: NO_emi(NX,NY,NZ,NT),CO_emi(NX,NY,NZ,NT),CH4_emi(NX,NY,NZ,NT),ISO_emi(NX,NY,NZ,NT),FORM_emi(NX,NY,NZ,NT)
 
-      ! change unit (MT/yr -> kg/yr -> kg/s)
-      TCtpp=TCtpp*1000./365./86400.
-      TCcsc=TCcsc*1000./365./86400.
-      TCtra=TCtra*1000./365./57600.
-      TCME=TCME*1000./365./57600.
-      TCCO=TCCO*1000./365./57600.
-!      YLsnc=YLsnc*1000./365./86400.
-!      KHcsc=KHcsc*1000./365./86400.
-!      KHtpp=KHtpp*1000./365./86400.
-!      KHhpp=KHhpp*1000./365./86400.
-!      KHtra=KHtra*1000./365./57600.
-!      HLhip=HLhip*1000./365./86400.
-!      HLacc=HLacc*1000./365./86400.
-!      TYtpp=TYtpp*1000./365./86400.
-!      KLhpp=KLhpp*1000./365./86400.
-      ! current time
+      if (first) then
+        OPEN (UNIT=2, FILE=FILE_NO, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
+        READ (UNIT=2, IOSTAT=istat) NO_emi
+        CLOSE(UNIT=2)
+        OPEN (UNIT=3, FILE=FILE_CO, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
+        READ (UNIT=3, IOSTAT=istat) CO_emi
+        CLOSE(UNIT=3)
+        OPEN (UNIT=4, FILE=FILE_CH4, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
+        READ (UNIT=4, IOSTAT=istat) CH4_emi
+        CLOSE(UNIT=4)
+        OPEN (UNIT=5, FILE=FILE_ISO, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
+        READ (UNIT=5, IOSTAT=istat) ISO_emi
+        CLOSE(UNIT=5)
+        OPEN (UNIT=6, FILE=FILE_FORM, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
+        READ (UNIT=6, IOSTAT=istat) FORM_emi
+        CLOSE(UNIT=6)
+        first=.False.
+        IF (my_task==0) write(*,*) maxval(NO_emi),maxval(CO_emi),maxval(CH4_emi),maxval(ISO_emi),maxval(FORM_emi),"Reading emission files."
+      endif
+
+      !current time
       xday = rjday
       xhr = utc_time
       xlon = rlon
@@ -207,154 +219,28 @@ CONTAINS
       sza = getth(xday,xlat,xlon,xhr)
       coszen = max(0.0,cos(sza)) !to avoid negative values
 
-      DO 988 J = mjm,mjp
-      DO 988 I = mim,mip
-      tempim=mi1*ni_sbdm+i
-      tempjm=mj1*nj_sbdm+j
-
-      ! source
-      IF (tempim .EQ. 228) THEN
-        IF (tempjm .EQ. 289) THEN
-          ! industrail (taichung power point)
-          ! kg/s -> ppb 1.25ug/m^3=1ppb (NO)
-          temp=TCtpp/DX/DYNEW/(DZ/FNT(4))/1.25*1.E9*Pass_small_dt
-          TC3D(I,J,4,3)=TC3D(I,J,4,3)+temp*0.9
-          TC3D(I,J,4,4)=TC3D(I,J,4,4)+temp*0.1
-          TC3D(I,J,4,1)=TC3D(I,J,4,1)+temp !tracer transport
-          TC3D(I,J,4,20)=TC3D(I,J,4,20)+temp !tracer
-         ENDIF
-       ENDIF
-       IF (tempim .EQ. 229) THEN
-        IF (tempjm .EQ. 290) THEN
-          ! industrail (dragon steel corporation)
-          ! kg/s -> ppb 1.25ug/m^3=1ppb (NO)
-          temp=TCcsc/DX/DYNEW/(DZ/FNT(3))/1.25*1.E9*Pass_small_dt
-          TC3D(I,J,3,3)=TC3D(I,J,3,3)+temp*0.9
-          TC3D(I,J,3,4)=TC3D(I,J,3,4)+temp*0.1
-          TC3D(I,J,3,1)=TC3D(I,J,3,1)+temp !tracer transport
-          TC3D(I,J,3,20)=TC3D(I,J,3,20)+temp !tracer
-        ENDIF
-      ENDIF
-!      IF (tempim .EQ. 213) THEN
-!        IF (tempjm .EQ. 267) THEN
-!          ! industrail (sixth naphtha cracker)
-!          temp=YLsnc/DX/DYNEW/(DZ/FNT(3))/1.25*1.E9*Pass_small_dt
-!          TC3D(I,J,3,3)=TC3D(I,J,3,3)+temp*0.9
-!          TC3D(I,J,3,4)=TC3D(I,J,3,4)+temp*0.1
-!          TC3D(I,J,3,1)=TC3D(I,J,3,1)+temp !tracer transport
-!          TC3D(I,J,3,22)=TC3D(I,J,3,22)+temp !tracer
-!        ENDIF
-!      ENDIF
-!      IF (tempim .EQ. 222) THEN
-!        IF (tempjm .EQ. 198) THEN
-!          ! industrail (china steel corporation)
-!          temp=KHcsc/DX/DYNEW/(DZ/FNT(2))/1.25*1.E9*Pass_small_dt
-!          TC3D(I,J,2,3)=TC3D(I,J,2,3)+temp*0.9
-!          TC3D(I,J,2,4)=TC3D(I,J,2,4)+temp*0.1
-!          TC3D(I,J,2,1)=TC3D(I,J,2,1)+temp !tracer transport
-!          TC3D(I,J,2,23)=TC3D(I,J,2,23)+temp !tracer
-!        ENDIF
-!      ENDIF
-!      IF (tempim .EQ. 221) THEN
-!        IF (tempjm .EQ. 198) THEN
-!          ! industrail (talin power plant)
-!          temp=KHtpp/DX/DYNEW/(DZ/FNT(3))/1.25*1.E9*Pass_small_dt
-!          TC3D(I,J,3,3)=TC3D(I,J,3,3)+temp*0.9
-!          TC3D(I,J,3,4)=TC3D(I,J,3,4)+temp*0.1
-!          TC3D(I,J,3,1)=TC3D(I,J,3,1)+temp !tracer transport
-!          TC3D(I,J,3,24)=TC3D(I,J,3,24)+temp !tracer
-!        ENDIF
-!      ENDIF
-!      IF (tempim .EQ. 213) THEN
-!        IF (tempjm .EQ. 215) THEN
-!          ! industrail (hsinta power plant)
-!          temp=KHhpp/DX/DYNEW/(DZ/FNT(3))/1.25*1.E9*Pass_small_dt
-!          TC3D(I,J,3,3)=TC3D(I,J,3,3)+temp*0.9
-!          TC3D(I,J,3,4)=TC3D(I,J,3,4)+temp*0.1
-!          TC3D(I,J,3,1)=TC3D(I,J,3,1)+temp !tracer transport
-!          TC3D(I,J,3,25)=TC3D(I,J,3,25)+temp !tracer
-!        ENDIF
-!      ENDIF
-!      IF (tempim .EQ. 297) THEN
-!        IF (tempjm .EQ. 294) THEN
-!          ! industrail (hoping industrial park)
-!          temp=HLhip/DX/DYNEW/(DZ/FNT(3))/1.25*1.E9*Pass_small_dt
-!          TC3D(I,J,3,3)=TC3D(I,J,3,3)+temp*0.9
-!          TC3D(I,J,3,4)=TC3D(I,J,3,4)+temp*0.1
-!          TC3D(I,J,3,1)=TC3D(I,J,3,1)+temp !tracer transport
-!          TC3D(I,J,3,26)=TC3D(I,J,3,26)+temp !tracer
-!        ENDIF
-!      ENDIF
-!      IF (tempim .EQ. 290) THEN
-!        IF (tempjm .EQ. 285) THEN
-!          ! industrail (asia cement corporation)
-!          temp=HLacc/DX/DYNEW/(DZ/FNT(3))/1.25*1.E9*Pass_small_dt
-!          TC3D(I,J,3,3)=TC3D(I,J,3,3)+temp*0.9
-!          TC3D(I,J,3,4)=TC3D(I,J,3,4)+temp*0.1
-!          TC3D(I,J,3,1)=TC3D(I,J,3,1)+temp !tracer transport
-!          TC3D(I,J,3,26)=TC3D(I,J,3,26)+temp !tracer
-!        ENDIF
-!      ENDIF
-!      IF (tempim .EQ. 259) THEN
-!        IF (tempjm .EQ. 333) THEN
-!          ! industrail (tatan power plant)
-!          temp=TYtpp/DX/DYNEW/(DZ/FNT(2))/1.25*1.E9*Pass_small_dt
-!          TC3D(I,J,2,3)=TC3D(I,J,2,3)+temp*0.9
-!          TC3D(I,J,2,4)=TC3D(I,J,2,4)+temp*0.1
-!          TC3D(I,J,2,1)=TC3D(I,J,2,1)+temp !tracer transport
-!          TC3D(I,J,2,27)=TC3D(I,J,2,27)+temp !tracer
-!        ENDIF
-!      ENDIF
-!      IF (tempim .EQ. 296) THEN
-!        IF (tempjm .EQ. 340) THEN
-!          ! industrail (hsiehho power plant)
-!          temp=KLhpp/DX/DYNEW/(DZ/FNT(3))/1.25*1.E9*Pass_small_dt
-!          TC3D(I,J,3,3)=TC3D(I,J,3,3)+temp*0.9
-!          TC3D(I,J,3,4)=TC3D(I,J,3,4)+temp*0.1
-!          TC3D(I,J,3,1)=TC3D(I,J,3,1)+temp !tracer transport
-!          TC3D(I,J,3,28)=TC3D(I,J,3,28)+temp !tracer
-!        ENDIF
-!      ENDIF
-      !IF (coszen .GT. 0.00) THEN
-      IF (xhr .GT. 22 .OR. xhr .LT. 14) THEN
-       ! traffic in Taichung (need to divide by the size of urban areas)
-       ! kg/s -> ppb 1.25ug/m^3=1ppb (NO)
-       temp=TCtra/DX/DYNEW/(DZ/FNT(2))/1.25*1.E9*Pass_small_dt/90.
-       tempME=TCME/DX/DYNEW/(DZ/FNT(2))/1.25*1.E9*Pass_small_dt/90.
-       tempCO=TCCO/DX/DYNEW/(DZ/FNT(2))/1.25*1.E9*Pass_small_dt/90.
-       IF (tempim .GE. 232 .AND. tempim .LE. 241) THEN
-        IF (tempjm .GE. 284 .AND. tempjm .LE. 292) THEN
-          hxp=hx(i,j)+1
-          TC3D(I,J,hxp,3)=TC3D(I,J,hxp,3)+temp*0.9
-          TC3D(I,J,hxp,4)=TC3D(I,J,hxp,4)+temp*0.1
-          TC3D(I,J,hxp,10)=TC3D(I,J,hxp,10)+tempME
-          TC3D(I,J,hxp,15)=TC3D(I,J,hxp,15)+tempCO
-          TC3D(I,J,hxp,1)=TC3D(I,J,hxp,1)+temp !tracer transport
-          TC3D(I,J,hxp,21)=TC3D(I,J,hxp,21)+temp !tracer
-        ENDIF
-       ENDIF
-       ! traffic in Kaohsiung (need to divide by the size of urban areas)
-       ! kg/s -> ppb 1.25ug/m^3=1ppb (NO)
-!       temp=KHtra/DX/DYNEW/(DZ/FNT(2))/1.25*1.E9*Pass_small_dt/77.
-!       IF (tempim .GE. 218 .AND. tempim .LE. 222) THEN
-!        IF (tempjm .GE. 201 .AND. tempjm .LE. 209) THEN
-!          hxp=hx(i,j)+1
-!          TC3D(I,J,hxp,3)=TC3D(I,J,hxp,3)+temp*0.9
-!          TC3D(I,J,hxp,4)=TC3D(I,J,hxp,4)+temp*0.1
-!          TC3D(I,J,hxp,1)=TC3D(I,J,hxp,1)+temp !tracer transport
-!          TC3D(I,J,hxp,21)=TC3D(I,J,hxp,21)+temp !tracer
-!        ENDIF
-!       ENDIF
-!       IF (tempim .GE. 219 .AND. tempim .LE. 226) THEN
-!        IF (tempjm .GE. 197 .AND. tempjm .LE. 200) THEN
-!          hxp=hx(i,j)+1
-!          TC3D(I,J,hxp,3)=TC3D(I,J,hxp,3)+temp*0.9
-!          TC3D(I,J,hxp,4)=TC3D(I,J,hxp,4)+temp*0.1
-!          TC3D(I,J,hxp,1)=TC3D(I,J,hxp,1)+temp !tracer transport
-!          TC3D(I,J,hxp,21)=TC3D(I,J,hxp,21)+temp !tracer
-!        ENDIF
-!       ENDIF
-      ENDIF
+      hr = int(xhr+1)
+      DO 988 J = 1,mj1
+      DO 988 I = 1,mi1
+        tempim=mi1*ni_sbdm+i
+        tempjm=mj1*nj_sbdm+j
+        hxp=hx(i,j)+1
+        do K = hxp,hxp+3
+          !mole/s -> ppb
+          tempkm=k-hxp+1
+          temp=NO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+          tempCO=CO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+          tempME=CH4_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+          tempISO=ISO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+          tempFORM=FORM_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+          TC3D(I,J,K,1)=TC3D(I,J,K,1)+temp*10/9.
+          TC3D(I,J,K,3)=TC3D(I,J,K,3)+temp
+          TC3D(I,J,K,4)=TC3D(I,J,K,4)+temp/9.
+          TC3D(I,J,K,10)=TC3D(I,J,K,10)+tempME
+          TC3D(I,J,K,15)=TC3D(I,J,K,15)+tempCO
+          TC3D(I,J,K,20)=TC3D(I,J,K,20)+tempISO
+          TC3D(I,J,K,11)=TC3D(I,J,K,11)+tempFORM
+        enddo
   988 CONTINUE
 
 
