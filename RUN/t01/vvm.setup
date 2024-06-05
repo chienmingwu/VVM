@@ -78,7 +78,6 @@ cat > definesld.com << 'END1'
 #define MICROP3
 #define RADCODE
 #define TOPOGRAPHY
-#define LSM
 #define AREAMN
 #define DIAG
 #define CHEM

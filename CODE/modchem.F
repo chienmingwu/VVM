@@ -389,7 +389,7 @@ subroutine inputchem
   integer func1,raddep,nr_chemcomp,nr_active_chemicals
   integer keff_nr, keffT_nr
   character*11 spec(NNSPEC)
-  character*255 line
+  character*999 line
   logical prod,found
   character (len=6) tempname
   character (len=6) name
@@ -1015,7 +1015,7 @@ SUBROUTINE read_chem(chem_name)
   
   integer :: CO2loc=-1
   character*6, dimension(nchsp) ::chem_name
-  character*255 scalarline
+  character*999 scalarline
   integer i,j
 
   INERT%name  = 'INERT'

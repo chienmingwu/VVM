@@ -174,7 +174,7 @@ CONTAINS
       use const3d, only : hx
 
       INTEGER (KIND=int_kind) ::   &
-         i, j, k ,nt, tempim, tempjm, hxp, tempkm
+         i, j, k, hr, tempim, tempjm, hxp, tempkm
       ! do loop indices for zonal, meridional and vertical dimensions
       REAL xday, xhr, xlon, xlat, sza, coszen
       REAL temp, tempME, tempCO, tempISO, tempFORM
@@ -226,20 +226,20 @@ CONTAINS
         tempjm=mj1*nj_sbdm+j
         hxp=hx(i,j)+1
         do K = hxp,hxp+3
-          !mole/s -> ppb
-          tempkm=k-hxp+1
-          temp=NO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-          tempCO=CO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-          tempME=CH4_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-          tempISO=ISO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-          tempFORM=FORM_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-          TC3D(I,J,K,1)=TC3D(I,J,K,1)+temp*10/9.
-          TC3D(I,J,K,3)=TC3D(I,J,K,3)+temp
-          TC3D(I,J,K,4)=TC3D(I,J,K,4)+temp/9.
-          TC3D(I,J,K,10)=TC3D(I,J,K,10)+tempME
-          TC3D(I,J,K,15)=TC3D(I,J,K,15)+tempCO
-          TC3D(I,J,K,20)=TC3D(I,J,K,20)+tempISO
-          TC3D(I,J,K,11)=TC3D(I,J,K,11)+tempFORM
+        !mole/s -> ppb
+        tempkm=k-hxp+1
+        temp=NO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+        tempCO=CO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+        tempME=CH4_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+        tempISO=ISO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+        tempFORM=FORM_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
+        TC3D(I,J,K,1)=TC3D(I,J,K,1)+temp*10/9.
+        TC3D(I,J,K,3)=TC3D(I,J,K,3)+temp
+        TC3D(I,J,K,4)=TC3D(I,J,K,4)+temp/9.
+        TC3D(I,J,K,10)=TC3D(I,J,K,10)+tempME
+        TC3D(I,J,K,15)=TC3D(I,J,K,15)+tempCO
+        TC3D(I,J,K,20)=TC3D(I,J,K,20)+tempISO
+        TC3D(I,J,K,11)=TC3D(I,J,K,11)+tempFORM
         enddo
   988 CONTINUE
 

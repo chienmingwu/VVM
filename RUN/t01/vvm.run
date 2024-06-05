@@ -39,7 +39,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/total_cores/1024/g' ${rundir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-#pjsub run.sh
+pjsub run.sh
 
 exit
 
