@@ -859,7 +859,7 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
 !     else
 !        xlai = badval
 !        xlai = lai1
-        xlai = xlai
+        xlai = laim!xlai
 !     endif
 
 !-----
