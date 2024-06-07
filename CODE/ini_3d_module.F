@@ -106,8 +106,10 @@ CONTAINS
 ! read iniitial profile from dat file (po-yen 2022.01 add)
       INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20190722.taiwania_'
       ENS='_08RH'
-      ENS_dir='_W'
+      ENS_dir=''
       filename=TRIM(TRIM(INI_FILE_PATH) // 'P' // TRIM(ENS) // '.dat')
+      filename=TRIM(filename)
+      print*, filename
       INQUIRE(IOLENGTH=LREC) P1
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) P1
@@ -115,21 +117,25 @@ CONTAINS
       print*, P1,LREC
  
       filename=TRIM(TRIM(INI_FILE_PATH) // 'T'// TRIM(ENS) // '.dat')
+      filename=TRIM(filename)
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) T1
       CLOSE(8763)
       print*, T1
       filename=TRIM(TRIM(INI_FILE_PATH) // 'qv'// TRIM(ENS) // '.dat')
+      filename=TRIM(filename)
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) QV1
       CLOSE(8763)
       print*, QV1
       filename=TRIM(TRIM(INI_FILE_PATH) // 'U'// TRIM(ENS_dir) // '.dat')
+      filename=TRIM(filename)
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) U11
       CLOSE(8763)
       print*, U11
       filename=TRIM(TRIM(INI_FILE_PATH) // 'V'// TRIM(ENS_dir) // '.dat')
+      filename=TRIM(filename)
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) V11
       CLOSE(8763)

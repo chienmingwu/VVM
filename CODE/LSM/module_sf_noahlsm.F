@@ -426,6 +426,7 @@ CONTAINS
             ENDIF
 
          ENDIF
+         print*, XLAI, LAIMIN,LAIMAX,INTERP_FRACTION,SHDFAC
 ! ----------------------------------------------------------------------
 !  INITIALIZE PRECIPITATION LOGICALS.
 ! ----------------------------------------------------------------------

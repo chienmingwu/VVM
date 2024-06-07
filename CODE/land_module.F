@@ -540,7 +540,6 @@ CONTAINS
    if (my_task==0) write(*,*) "successfully read land informations from TOPO.nc"
 
 
-
       DO 100 J = 1,MJ1
       DO 100 I = 1,MI1
 
