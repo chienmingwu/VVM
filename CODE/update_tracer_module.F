@@ -168,19 +168,24 @@ CONTAINS
    END SUBROUTINE update_tracer
 
    SUBROUTINE UPDATE_TRACER_source
-
+   
       use timeinfo, only : rjday, utc_time
       use constld, only : rlon, rlat
       use const3d, only : hx
+      use petscsys
+      use pnetcdf
 
       INTEGER (KIND=int_kind) ::   &
-         i, j, k, hr, tempim, tempjm, hxp, tempkm
+         i, j, k,t, hr, tempim, tempjm, hxp, tempkm
       ! do loop indices for zonal, meridional and vertical dimensions
       REAL xday, xhr, xlon, xlat, sza, coszen
       REAL temp, tempME, tempCO, tempISO, tempFORM
       integer nx, ny, nz, nt, istat
       parameter (NX = 1024, NY = 1024, NZ = 4, NT = 24)
       logical, save :: first=.True.
+      INTEGER :: nc_err
+      INTEGER :: ncid,varid
+      INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart,readlen
 
       character*(*) FILE_NO, FILE_CO, FILE_CH4, FILE_ISO, FILE_FORM
       parameter (FILE_NO='/nwpr/gfs/xb136/aries/cwb/EMIS_NO.dat')
@@ -188,24 +193,74 @@ CONTAINS
       parameter (FILE_CH4='/nwpr/gfs/xb136/aries/cwb/EMIS_CH4.dat')
       parameter (FILE_ISO='/nwpr/gfs/xb136/aries/cwb/EMIS_ISO.dat')
       parameter (FILE_FORM='/nwpr/gfs/xb136/aries/cwb/EMIS_FORM.dat')
-      real, save :: NO_emi(NX,NY,NZ,NT),CO_emi(NX,NY,NZ,NT),CH4_emi(NX,NY,NZ,NT),ISO_emi(NX,NY,NZ,NT),FORM_emi(NX,NY,NZ,NT)
-
+      real, save :: NO_emi(mi1,mj1,4,24),CO_emi(mi1,mj1,4,24),CH4_emi(mi1,mj1,4,24), & 
+                    ISO_emi(mi1,mj1,4,24),FORM_emi(mi1,mj1,4,24)
+      
+      IF (my_task==0) write(*,*) "before reading files, path=", FILE_NO
       if (first) then
-        OPEN (UNIT=2, FILE=FILE_NO, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
-        READ (UNIT=2, IOSTAT=istat) NO_emi
-        CLOSE(UNIT=2)
-        OPEN (UNIT=3, FILE=FILE_CO, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
-        READ (UNIT=3, IOSTAT=istat) CO_emi
-        CLOSE(UNIT=3)
-        OPEN (UNIT=4, FILE=FILE_CH4, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
-        READ (UNIT=4, IOSTAT=istat) CH4_emi
-        CLOSE(UNIT=4)
-        OPEN (UNIT=5, FILE=FILE_ISO, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
-        READ (UNIT=5, IOSTAT=istat) ISO_emi
-        CLOSE(UNIT=5)
-        OPEN (UNIT=6, FILE=FILE_FORM, STATUS='OLD', ACCESS='STREAM', FORM='UNFORMATTED')
-        READ (UNIT=6, IOSTAT=istat) FORM_emi
-        CLOSE(UNIT=6)
+        !OPEN (UNIT=2, FILE=FILE_NO, STATUS='OLD', FORM='UNFORMATTED', ACCESS='STREAM')
+        !READ (UNIT=2, IOSTAT=istat) NO_emi
+        !CLOSE(UNIT=2)
+        !OPEN (UNIT=3, FILE=FILE_CO, STATUS='OLD', FORM='UNFORMATTED', ACCESS='STREAM')
+        !READ (UNIT=3, IOSTAT=istat) CO_emi
+        !CLOSE(UNIT=3)
+        !OPEN (UNIT=4, FILE=FILE_CH4, STATUS='OLD', FORM='UNFORMATTED', ACCESS='STREAM')
+        !READ (UNIT=4, IOSTAT=istat) CH4_emi
+        !CLOSE(UNIT=4)
+        !OPEN (UNIT=5, FILE=FILE_ISO, STATUS='OLD', FORM='UNFORMATTED', ACCESS='STREAM')
+        !READ (UNIT=5, IOSTAT=istat) ISO_emi
+        !CLOSE(UNIT=5)
+        !OPEN (UNIT=6, FILE=FILE_FORM, STATUS='OLD', FORM='UNFORMATTED', ACCESS='STREAM')
+        !READ (UNIT=6, IOSTAT=istat) FORM_emi
+        !CLOSE(UNIT=6)
+        NO_emi=0.
+        CO_emi=0. 
+        CH4_emi=0.
+        ISO_emi=0.
+        FORM_emi=0.
+ 
+        nc_err = nfmpi_open(mpi_comm_world,"/nwpr/gfs/xb136/aries/cwb/EMIS_all.nc" &
+                 ,nf_nowrite,mpi_info_null,ncid)
+        IF (nc_err/=0) WRITE(*,*) "emission file doesn't exist"
+
+        arraystart(1) = (NI_SBDM)*MI1 + 1
+        arraystart(2) = (NJ_SBDM)*MJ1 + 1
+        arraystart(3) = 1
+        arraystart(4) = 1
+
+        readlen(1)    = MI1
+        readlen(2)    = MJ1
+        readlen(3)    = 4
+        readlen(4)    = 24
+
+        nc_err = nfmpi_inq_varid(ncid,'NO',varid)
+        nc_err = nfmpi_get_vara_real_all(ncid,varid,arraystart, &
+                 readlen,NO_emi(1:MI1,1:MJ1,1:4,1:24))
+        IF (nc_err/=0) WRITE(*,*) "NO read fail", nc_err
+
+        nc_err = nfmpi_inq_varid(ncid,'CO',varid)
+        nc_err = nfmpi_get_vara_real_all(ncid,varid,arraystart, &
+                 readlen,CO_emi(1:MI1,1:MJ1,1:4,1:24))
+        IF (nc_err/=0) WRITE(*,*) "CO read fail", nc_err
+
+        nc_err = nfmpi_inq_varid(ncid,'CH4',varid)
+        nc_err = nfmpi_get_vara_real_all(ncid,varid,arraystart, &
+                 readlen,CH4_emi(1:MI1,1:MJ1,1:4,1:24))
+        IF (nc_err/=0) WRITE(*,*) "CH4 read fail", nc_err
+
+        nc_err = nfmpi_inq_varid(ncid,'ISO',varid)
+        nc_err = nfmpi_get_vara_real_all(ncid,varid,arraystart, &
+                 readlen,ISO_emi(1:MI1,1:MJ1,1:4,1:24))
+        IF (nc_err/=0) WRITE(*,*) "ISO read fail", nc_err
+
+        nc_err = nfmpi_inq_varid(ncid,'FORM',varid)
+        nc_err = nfmpi_get_vara_real_all(ncid,varid,arraystart, &
+                 readlen,FORM_emi(1:MI1,1:MJ1,1:4,1:24))
+        IF (nc_err/=0) WRITE(*,*) "FORM read fail", nc_err
+      
+        nc_err= nfmpi_close(ncid)
+        IF (nc_err/=0) WRITE(*,*) "close fail", nc_err
+
         first=.False.
         IF (my_task==0) write(*,*) maxval(NO_emi),maxval(CO_emi),maxval(CH4_emi),maxval(ISO_emi),maxval(FORM_emi),"Reading emission files."
       endif
@@ -222,27 +277,24 @@ CONTAINS
       hr = int(xhr+1)
       DO 988 J = 1,mj1
       DO 988 I = 1,mi1
-        tempim=mi1*ni_sbdm+i
-        tempjm=mj1*nj_sbdm+j
         hxp=hx(i,j)+1
-        do K = hxp,hxp+3
-        !mole/s -> ppb
-        tempkm=k-hxp+1
-        temp=NO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-        tempCO=CO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-        tempME=CH4_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-        tempISO=ISO_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-        tempFORM=FORM_emi(tempim,tempjm,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(k))/0.0409*Pass_small_dt
-        TC3D(I,J,K,1)=TC3D(I,J,K,1)+temp*10/9.
-        TC3D(I,J,K,3)=TC3D(I,J,K,3)+temp
-        TC3D(I,J,K,4)=TC3D(I,J,K,4)+temp/9.
-        TC3D(I,J,K,10)=TC3D(I,J,K,10)+tempME
-        TC3D(I,J,K,15)=TC3D(I,J,K,15)+tempCO
-        TC3D(I,J,K,20)=TC3D(I,J,K,20)+tempISO
-        TC3D(I,J,K,11)=TC3D(I,J,K,11)+tempFORM
+        do tempkm=1,nz
+          K=tempkm+hxp
+          !mole/s -> ppb
+          temp=NO_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
+          tempCO=CO_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
+          tempME=CH4_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
+          tempISO=ISO_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
+          tempFORM=FORM_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
+          TC3D(I,J,K,1)=TC3D(I,J,K,1)+temp*10./9.
+          TC3D(I,J,K,3)=TC3D(I,J,K,3)+temp
+          TC3D(I,J,K,4)=TC3D(I,J,K,4)+temp/9.
+          TC3D(I,J,K,10)=TC3D(I,J,K,10)+tempME
+          TC3D(I,J,K,15)=TC3D(I,J,K,15)+tempCO
+          TC3D(I,J,K,20)=TC3D(I,J,K,20)+tempISO
+          TC3D(I,J,K,11)=TC3D(I,J,K,11)+tempFORM
         enddo
   988 CONTINUE
-
 
       ! remove around the boundaries
 !      if (ni_sbdm==0) then
