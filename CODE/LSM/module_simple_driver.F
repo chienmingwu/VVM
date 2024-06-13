@@ -532,7 +532,9 @@ DO I=1,MI1
 
 !     if ( ICE == 0 ) THEN
      if (.true.) then
-
+!ccwu
+        RDLAI2D = .FALSE.
+        
         call sflx(ILOC, JLOC, FFROZP, ISURBAN(I,J), DT, ZLVL(I,J),     &
              NSOIL(I,J), SLDPTH, LOCAL, LLANDUSE, LSOIL, LWDN,         &
              SOLDN(I,J), SOLNET, SFCPRS(I,J), PRCP(I,J), SFCTMP(I,J),  &
