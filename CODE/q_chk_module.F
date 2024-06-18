@@ -747,8 +747,9 @@ CONTAINS
       tmp = (sum(1)+sum(2))/sum(1)
       tem(1) = 0.
       if (sum(1) .lt. 1.e-16 .or. tmp .lt. 0.98) tmp = 1.
-                        
-      IF (MY_TASK .EQ. 0) PRINT*, name,tmp
+
+      ! This print is to check the conservation                  
+      !IF (MY_TASK .EQ. 0) PRINT*, name,tmp
       DO 200 K = 2,NK2
       DO 200 J = 1, MJ1
       DO 200 I = 1, MI1

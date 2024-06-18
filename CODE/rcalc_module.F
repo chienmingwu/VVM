@@ -96,6 +96,18 @@ CONTAINS
       if (ntracer > 0)then
          do nt = 1,ntracer
             CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(1,1,1,L,nt), term4 )
+#if defined (DIAG)
+            if (nt==1) then
+            do k=2,nk2
+            do j=1,mj1
+            do i=1,mi1
+            DIAG3D(I,J,K,1)=A*FTC3D(I,J,K,N2,nt)+B*FTC3D(I,J,K,N1,nt) ! total
+            DIAG3D(I,J,K,2)=term4(i,j,k)*PASS_SMALL_DT ! vertical
+            enddo
+            enddo
+            enddo
+            endif
+#endif
          enddo
       endif
 
@@ -126,12 +138,18 @@ CONTAINS
       FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
   309 CONTINUE
   SELECT CASE (TRIM(casename))
-  CASE ('TWP-ICE','BOMEX')
+  CASE ('TWP-ICE','BOMEX','GATE_PHASE_III')
       fntddz = FNT(K)/DZ
       IF (WLS(K) .LT. 0.) THEN
       
       DO 301 J = 1, MJ1
       DO 301 I = 1, MI1
+      ! add WLS to TH & QV      
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) - WLS(K)*         &
+                (TH3D(I,J,K+1)-TH3D(I,J,K))*fntddz
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) - WLS(K)*         &
+                (QV3D(I,J,K+1)-QV3D(I,J,K))*fntddz
+
       FQC3D(I,J,K,L)=FQC3D(I,J,K,L) - WLS(K)*         &
                 (QC3D(I,J,K+1)-QC3D(I,J,K))*fntddz
       FQI3D(I,J,K,L)=FQI3D(I,J,K,L) - WLS(K)*         &
@@ -180,6 +198,12 @@ CONTAINS
       ELSE
       DO 302 J = 1, MJ1
       DO 302 I = 1, MI1
+      FTH3D(I,J,K,L)=FTH3D(I,J,K,L) - WLS(K)*         &
+                (TH3D(I,J,K)-TH3D(I,J,K-1))*fntddz
+      FQV3D(I,J,K,L)=FQV3D(I,J,K,L) - WLS(K)*         &
+                (QV3D(I,J,K)-QV3D(I,J,K-1))*fntddz
+
+
       FQC3D(I,J,K,L)=FQC3D(I,J,K,L) - WLS(K)*         &
                 (QC3D(I,J,K)-QC3D(I,J,K-1))*fntddz
       FQI3D(I,J,K,L)=FQI3D(I,J,K,L) - WLS(K)*         &

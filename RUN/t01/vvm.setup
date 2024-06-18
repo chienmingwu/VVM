@@ -5,11 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = HW20_p3_dampoff
+set expname = chem_test
 
 # set job system and compiler
-set compiler = 'intel_mogamd'
-set jobsys = 'slurm_mogamd_intel'
+set compiler = 'fujitsu_cwb'
+set jobsys = 'pjm_cwb'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -54,6 +54,9 @@ ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-2momI .
 ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-3momI .
 ln -s ${vvmdir}/RUNDATA/p3_lookupTable_2.dat-v6.0 .
 
+# for chemical scheme
+cp -r ${vvmdir}/CODE/CHEM/* .
+
 # create CPP list
 cat > definesld.com << 'END1'
 #define MPI
@@ -62,7 +65,12 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define MICROP3
-#define HEATING
+#define RADCODE
+#define TOPOGRAPHY
+#define LSM
+#define AREAMN
+#define DIAG
+#define CHEM
 'END1'
 cat definesld.com
 
@@ -75,26 +83,26 @@ cat > DOMAIN << 'END3'
 #!/bin/csh
 set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
-sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/40/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag3d_dimension/4/g' ${codedir}/cdecks/PARMSLD.F90
 'END3'
 cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=900 /
+ &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=1,ITSTOP=360,SCALE=6.,Q1Q2=T,DTRAD=120.,petsc_cr=0 /
+ &INPUT5 IX=3182073,ITINIT=10,ITSTOP=360,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT

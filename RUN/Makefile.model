@@ -222,6 +222,7 @@ SRC_FREE_CODE = \
 	turb_1d_module.F \
 	update_thermo_module.F \
 	update_tracer_module.F \
+        modchem.F \
 	uvtop.F \
 	utils.F \
 	damping.F \
@@ -557,7 +558,9 @@ turb_1d_module.o: kinds.o PARMSLD.o CONSTLD.o bound.o
 
 update_thermo_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o RADOUTLD.o bound.o
 
-update_tracer_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o
+update_tracer_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o modchem.o bound.o
+
+modchem.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o
 
 utils.o: kinds.o domain_decomposition.o PARMSLD.o
 

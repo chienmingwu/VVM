@@ -1,0 +1,31 @@
+&RUN
+iexpnr     =  001
+lwarmstart =  .false.
+runtime    =  54000 
+trestart   =  36000 
+dtmax      =  2
+ladaptive  = .true.
+courant    =  1.
+irandom    =  43
+randthl    =  0.1
+randqt     =  2.5e-5
+nsv        =  20 
+timeav_glob= 60. 
+/
+&NAMCHEM
+lchem       = .true.
+tnor        = 50
+firstchem   = 1
+lastchem    = 45
+ldiuvar     = .true. 
+lchconst    = .false.
+h_ref       = 0.
+lcloudKconst= .false.
+t_ref	    = 300.
+p_ref	    = 100000.
+q_ref	    = 10.0e-3
+lchmovie    = .false.
+dtchmovie   = 60.
+lsegr       = .false.
+/
+
