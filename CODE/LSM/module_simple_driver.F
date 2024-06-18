@@ -50,7 +50,7 @@
   !
 
   use kwm_date_utilities
-
+  use module_ascii_io, only: RDLAI2D !poyen
 
 integer, parameter  :: iunit = 10 ! Fortran unit number for reading initial/forcing conditions file.
 character(len=1024) :: output_dir ! Output directory to which to write results.
@@ -279,6 +279,7 @@ CONTAINS
              SNOTIME1       ! Age of the snow on the ground.
 
   forcing_filename = "bondville.dat"
+  print*, "RDLAI2D in LSM_DRV decline @module_simple_driver.F", RDLAI2D
 !===========================================================================================
 
   !

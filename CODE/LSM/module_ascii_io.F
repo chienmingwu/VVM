@@ -247,6 +247,7 @@ contains
          max_snow_albedo, air_temperature_level, wind_level, green_vegetation_min,              &
          green_vegetation_max, usemonalb, rdlai2d, sfcdif_option, iz0tlnd, albedo_monthly,      &
          shdfac_monthly, lai_monthly, z0brd_monthly
+    print*,"RDLAI2D in open_forcing_file@module_ascii_io.F",RDLAI2D
 !==================================================================================================
 
     !
@@ -267,7 +268,6 @@ contains
     !  Dummy values, which we can later test on to make sure a namelist with this information 
     !  is being used.
     !
-
     urban_veg_category = ibadval
 
     glacial_veg_category = ibadval

@@ -426,7 +426,9 @@ CONTAINS
             ENDIF
 
          ENDIF
-         print*, XLAI, LAIMIN,LAIMAX,INTERP_FRACTION,SHDFAC
+         !print*, XLAI, LAIMIN,LAIMAX,INTERP_FRACTION,SHDFAC
+         print*, " RDLAI2D in SLFX@module_sf_noahlsm : ",RDLAI2D
+
 ! ----------------------------------------------------------------------
 !  INITIALIZE PRECIPITATION LOGICALS.
 ! ----------------------------------------------------------------------

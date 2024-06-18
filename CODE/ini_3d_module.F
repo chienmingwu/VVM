@@ -109,37 +109,37 @@ CONTAINS
       ENS_dir=''
       filename=TRIM(TRIM(INI_FILE_PATH) // 'P' // TRIM(ENS) // '.dat')
       filename=TRIM(filename)
-      print*, filename
+      !print*, filename
       INQUIRE(IOLENGTH=LREC) P1
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) P1
       CLOSE(8763)
-      print*, P1,LREC
+      !print*, P1,LREC
  
       filename=TRIM(TRIM(INI_FILE_PATH) // 'T'// TRIM(ENS) // '.dat')
       filename=TRIM(filename)
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) T1
       CLOSE(8763)
-      print*, T1
+      !print*, T1
       filename=TRIM(TRIM(INI_FILE_PATH) // 'qv'// TRIM(ENS) // '.dat')
       filename=TRIM(filename)
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) QV1
       CLOSE(8763)
-      print*, QV1
+      !print*, QV1
       filename=TRIM(TRIM(INI_FILE_PATH) // 'U'// TRIM(ENS_dir) // '.dat')
       filename=TRIM(filename)
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) U11
       CLOSE(8763)
-      print*, U11
+      !print*, U11
       filename=TRIM(TRIM(INI_FILE_PATH) // 'V'// TRIM(ENS_dir) // '.dat')
       filename=TRIM(filename)
       open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
       READ(8763,rec=1) V11
       CLOSE(8763)
-      print*, V11
+      !print*, V11
 !=====================================================end
 
 
