@@ -51,7 +51,6 @@
 
   use kwm_date_utilities
 
-
 integer, parameter  :: iunit = 10 ! Fortran unit number for reading initial/forcing conditions file.
 character(len=1024) :: output_dir ! Output directory to which to write results.
 character(len=256)  :: forcing_filename ! The name of the initial/forcing conditions file, as found
@@ -245,17 +244,20 @@ CONTAINS
 
 ! -----------------------------------------------------------------------------
 ! Local varibles
-  logical :: LOCAL,        &
-             USEMONALB,    &! If USEMONALB == .TRUE., then the ALB value passed to
-                            ! SFLX will be used as the background snow-free albedo term.
-                            ! If USEMONALB == .FALSE., then ALB will be computed within SFLX
-                            ! from minimum and maximum values in VEGPARM.TBL, and
-                            ! the current Green Vegetation Fraction 
-             RDLAI2D        ! If RDLAI2D == .TRUE., then the XLAI value 
-                            ! that we pass to SFLX will be used.
-                            ! If RDLAI2d == .FALSE., then XLAI will be computed
-                            ! within SFLX, from table minimum and maximum values in VEGPARM.TBL, 
-                            ! and the current Green Vegetation Fraction.
+  logical :: LOCAL!,        &
+
+!poyen chen remove the redeclined variables
+!             USEMONALB      ! If USEMONALB == .TRUE., then the ALB value passed to
+!                            ! SFLX will be used as the background snow-free albedo term.
+!                            ! If USEMONALB == .FALSE., then ALB will be computed within SFLX
+!                            ! from minimum and maximum values in VEGPARM.TBL, and
+!                            ! the current Green Vegetation Fraction 
+!             RDLAI2D        ! If RDLAI2D == .TRUE., then the XLAI value 
+!                            ! that we pass to SFLX will be used.
+!                            ! If RDLAI2d == .FALSE., then XLAI will be computed
+!                            ! within SFLX, from table minimum and maximum values in VEGPARM.TBL, 
+!                            ! and the current Green Vegetation Fraction.
+!==================
   integer :: iloc,jloc
 
   real    :: FFROZP,       &! Fraction of precip which is frozen (0.0 - 1.0).
@@ -279,6 +281,7 @@ CONTAINS
              SNOTIME1       ! Age of the snow on the ground.
 
   forcing_filename = "bondville.dat"
+  !print*, "RDLAI2D in LSM_DRV decline @module_simple_driver.F", RDLAI2D
 !===========================================================================================
 
   !
@@ -532,7 +535,9 @@ DO I=1,MI1
 
 !     if ( ICE == 0 ) THEN
      if (.true.) then
-
+!ccwu
+        !RDLAI2D = .FALSE.
+        
         call sflx(ILOC, JLOC, FFROZP, ISURBAN(I,J), DT, ZLVL(I,J),     &
              NSOIL(I,J), SLDPTH, LOCAL, LLANDUSE, LSOIL, LWDN,         &
              SOLDN(I,J), SOLNET, SFCPRS(I,J), PRCP(I,J), SFCTMP(I,J),  &
@@ -858,8 +863,8 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
 !        xlai = month_d(lai_monthly, nowdate)
 !     else
 !        xlai = badval
-!        xlai = lai1
-        xlai = xlai
+        xlai = lai1
+!        xlai = LAIM1!xlai
 !     endif
 
 !-----

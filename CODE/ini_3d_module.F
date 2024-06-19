@@ -59,63 +59,43 @@ CONTAINS
       REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
-      CHARACTER (60) FILENAME
+      CHARACTER (200) FILENAME,INI_FILE_PATH
+      CHARACTER (10) ENS,ENS_dir
 
-      integer nu1, nt1, nq1, k1, k2, it
+      integer nu1, nt1, nq1, k1, k2, it, LREC
       logical lf
-      DATA NU1/6/,NT1/6/,NQ1/6/
+      INTEGER, PARAMETER :: NU1=6
+      INTEGER, PARAMETER :: NT1=71
+      INTEGER, PARAMETER :: NQ1=20
+!      DATA NU1/6/,NT1/625/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(10),PI1(10),TV1(10),PILOG1(10)
-      REAL (KIND=dbl_kind) :: PQ1(10),P1(10),T1(10),QV1(10),QC1(10)
-      REAL (KIND=dbl_kind) ::  PU1(10),WIND(10),DEG(10),U1(10),V1(10), WLS1(10)
-      !DATA P1/1021.,905.,720.,600.,490.,285./
-      !DATA T1/295.,295.,310.5,310.5,325.,340./
-      !DATA QV1/12.,12.,2.5,2.5,0.,0./
-      !DATA QC1/6*0./
-      !DATA PU1/1021.,905.,800.,285.,250.,200./
-      !DATA U1/-7.5,-7.5,0.,10.,10.,10./
-      !DATA V1/-7.5,-7.5,0.,0.,0.,0./
+          ,QCBAR(NK3),QVSBAR(NK3),U3DXbar(NT1),U3DYbar(NT1)
+      REAL (KIND=dbl_kind) :: ZT1(NT1),PI1(NT1),TV1(NT1),PILOG1(NT1)
+      REAL (KIND=dbl_kind) :: PQ1(20),P1(NT1),T1(NT1),QV1(NT1),QC1(NT1)
+      REAL (KIND=dbl_kind) :: U11(NT1),V11(NT1)
+      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
+              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
+              ,111.3,92.6/
+      DATA QC1/29*0./
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(10),Q2OBS(10)
-      !DATA WIND/8.,19.,31.,31.,15*12./
-      !DATA DEG/140.,140.,140.,140.,15*275./
-      ! DATA DEG/110.,110.,110.,110.,15*275./
-      !DATA DEG/80.,80.,80.,100.,15*275./
-      !DATA DEG/50.,50.,50.,100.,15*275./
-      !DATA DEG/20.,20.,20.,100.,15*275./
-      CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file, &
-                        tracer_file
-      CHARACTER(len=8) :: dateStr = '20160107'
-      CHARACTER(len=5) :: stno = '47918'
-      !CHARACTER(len=5) :: stno = '46692'
-      CHARACTER(len=80) :: fname
+      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
+      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
+                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
+      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
+                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
+!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
+!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
+!     PU1 (MB) , U1(M/S)
 
-      
-      ! Read ideal sounding (RAW) from file
-      !fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/'//stno//'.'//dateStr//'.SHL.txt'
-      !Ish.ideal2.H3D50S8.RAW.txt
-      !fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/Ish.ideal.H2D20S8.CLOSE.txt'
-      fname='/nwpr/gfs/xb136/taiwanvvm_large/ideal_IC/Ish.ideal.20221025.txt'     
+!      REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
+!      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
+!      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
+!      DATA V1/  0.0, 0.0, 0.0, 0.0, 0.0, 0.0/
 
-      open(unit=88,file=fname,form='formatted',status='old')
-      DO i = 1, 8
-      READ(88, 20000) P1(i), T1(i), QV1(i), PU1(i), U1(i), V1(i), WLS1(i)
-      ENDDO
-      close(88)
-      20000 format(7F11.2)
+      CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
-
-      PQ1=P1
-      T1 = T1*(p1/1000.)**(287./1004.)
-      QV1 = QV1*1E-3    ! g/kg to kg/kg
-      WLS1 = WLS1*0.01  ! cm/s to m/s
-      Q1OBS=0.
-      Q2OBS=0.
-
-      !print *, t1
       casename= 'GATE_PHASE_III'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
@@ -123,21 +103,62 @@ CONTAINS
 
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
+! read iniitial profile from dat file (po-yen 2022.01 add)
+      INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20190722.taiwania_'
+      ENS=''
+      ENS_dir=''
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'P' // TRIM(ENS) // '.dat')
+      filename=TRIM(filename)
+      !print*, filename
+      INQUIRE(IOLENGTH=LREC) P1
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) P1
+      CLOSE(8763)
+      !print*, P1,LREC
+ 
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'T'// TRIM(ENS) // '.dat')
+      filename=TRIM(filename)
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) T1
+      CLOSE(8763)
+      !print*, T1
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'qv'// TRIM(ENS) // '.dat')
+      filename=TRIM(filename)
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) QV1
+      CLOSE(8763)
+      !print*, QV1
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'U'// TRIM(ENS_dir) // '.dat')
+      filename=TRIM(filename)
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) U11
+      CLOSE(8763)
+      !print*, U11
+      filename=TRIM(TRIM(INI_FILE_PATH) // 'V'// TRIM(ENS_dir) // '.dat')
+      filename=TRIM(filename)
+      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
+      READ(8763,rec=1) V11
+      CLOSE(8763)
+      !print*, V11
+!=====================================================end
+
+
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
 !SST=299.88K
-      SST = T1(1)
-      PSFC = p1(1)
+      SST = 298.13
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
 !     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 
+      PSFC = P1(1)
+
       DO 100 K = 1, NT1
       T1(K) =  T1(K) !* 1.E-01 + 273.16
-      QV1(K)= QV1(K) !* 1.E-04
+      QV1(K)= QV1(K) * 1.E-03 ! g/kg to kg/kg
   100 CONTINUE
 
       RBCP = RGAS / CP
@@ -156,12 +177,12 @@ CONTAINS
       T8  = T1(K)
       P8  = P1(K)
       QV8 = QV1(K)
-      QC8 = QC1(K)
+      QC8 = 0.D0
       QI8 = 0.D0
       if (my_task .eq. 0) print*, T8,P8,QV8,K
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
-      QC1(K) = QC8
+      QC1(K) = 0.
   120 CONTINUE
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
@@ -185,6 +206,10 @@ CONTAINS
       T(1)     = T1(1)
       QVBAR(1) = QV1(1)
       QCBAR(1) = QC1(1)
+!poyen add
+      U3DXbar(1)  = U11(1)
+      U3DYbar(1)  = V11(1)
+!poyen add end
 
 !     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
 !     FOR K = 2, NK3
@@ -195,14 +220,11 @@ CONTAINS
       T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
       QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
       QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
+!poyen add
+      U3DXbar(K) = FINTRP ( 1, ZT(K), ZT1(K1), U11(K1), ZT1(K2), U11(K2) )
+      U3DYbar(K) = FINTRP ( 1, ZT(K), ZT1(K1), V11(K1), ZT1(K2), V11(K2) )
+!poyen add end
   150 CONTINUE
-
-      if (my_task==0) then
-        print *, 'initial profile'
-        print *, t
-        print *, qvbar
-      endif
-
 
 !     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
 
@@ -244,15 +266,15 @@ CONTAINS
       T8 = T(K)
       P8 = PBAR(K) * 0.01
       QV8 = QVBAR(K)
-      QC8 = QCBAR(K)
+      QC8 = 0.D0
       QI8 = 0.D0
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QVBAR(K) = QV8
-      QCBAR(K) = QC8
       ES1 = ES ( T(K) )
       QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
       THBAR(K) = T(K) / PIBAR(K)
       H(K) = QVBAR(K) / QVSBAR(K)
+      QCBAR(K) = 0.
   168 CONTINUE
 
   160 CONTINUE
@@ -300,19 +322,17 @@ CONTAINS
   102 CONTINUE
 
       DO 200 K = 2, NK3
-      !IF ( ZT(K) .LT. 15000. ) THEN
+      IF ( ZT(K) .LT. 15000. ) THEN
       K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
       K2 = K1 + 1
-      WLS (K) = &
-         FINTRP(1,PBAR(K)*0.01,PQ1(K1),WLS1(K1),PQ1(K2),WLS1(K2)) 
-      !Q1LS (K) =  &
-      !  FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
-      !Q2LS (K) =  &
-      !  FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
-      !ELSE
+      Q1LS (K) =  &
+        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
+      Q2LS (K) =  &
+        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
+      ELSE
       Q1LS (K) = 0.0
       Q2LS (K) = 0.0
-      !END IF
+      END IF
   200 CONTINUE
 
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
@@ -333,15 +353,52 @@ CONTAINS
 
       DO 220 K = 2, NK2
       PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
+      K1 = INDEXR(PBARMB,NU1,P1,LF)
       K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
+      UG(K) = FINTRP(1,PBARMB,P1(K1),U11(K1),P1(K2),U11(K2))
+      VG(K) = FINTRP(1,PBARMB,P1(K1),V11(K1),P1(K2),V11(K2))
   220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)
       VG(NK3) = VG(NK2)
+
+!ccwu Taipei TSA sounding
+
+!      do  K = 1, NK3
+!      IF (ZT(K) .LT. 3000.) THEN
+!        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
+!      ELSEIF (ZT(K) .LT. 8000.) THEN
+!        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
+!      ELSEIF (ZT(K) .LT. 13000.) THEN
+!        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
+!      ELSE
+!        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
+!      ENDIF
+
+!      T(K) = THBAR(K) * PIBAR(K)
+!      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
+!      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
+!      IF (T(K) .LE. 233.15) THEN
+!        ES1 = ESI
+!      ELSE IF (T(K) .LT. 273.15) THEN
+!        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
+!      ELSE
+!        ES1 = ESW
+!      ENDIF
+!      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
+!CCCCCCCCCCCCCCCCCC
+!      IF (ZT(K) .LE. 1500) THEN
+!        H(K) = 0.82
+!      ELSE IF (ZT(K) .LE. 12000) THEN
+!        H(K) = (ZT(K)-8000)**2/132031250.+0.5
+!      ELSE
+!        H(K) = 0.50
+!      END IF
+!CCCCCCCCCCCCCCCCCC
+!      QVBAR(K) = H(K) * QVSBAR(K)
+
+!      ENDDO
 
 !     OCEAN POINTS
 
@@ -393,14 +450,6 @@ CONTAINS
       endif
 
 
-      !! isentropic environment
-      !THBAR=THBAR(2)
-      !RHO=1.
-      !RHOZ=1.
-      !RHOU=1.
-      !RHOT=1.
-      !RHOW=1.
-
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZT(K),DZ/FNT(K),K=1,NK2)
 !      IF (MY_TASK .EQ. 0) PRINT*,(K,ZZ(K),DZ/FNZ(K),K=1,NK2)
 
@@ -414,7 +463,7 @@ CONTAINS
       DO 500 I = mim,mip
       TH3D(I,J,K) = THBAR(K)
       QV3D(I,J,K) = QVBAR(K)
-      QC3D(I,J,K) = QCBAR(K)
+      QC3D(I,J,K) = 0.
       QI3D(I,J,K) = 0.
       QR3D(I,J,K) = 0.
 #if defined (MICROP3)
@@ -490,8 +539,8 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=UG(K)
-      U3DY(I,J,K)=VG(K)
+      U3DX(I,J,K)=U3DXbar(K) !UG(K)
+      U3DY(I,J,K)=U3DYbar(K) !VG(K)
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -609,7 +658,7 @@ CONTAINS
       ITYPEV = 1
       ITYPEW = 1
 
-#if defined (TOPOGRAPHY) 
+#if defined (TOPOGRAPHY)
       ! read topo from TOPO.nc (Der 14 Jan 2023)
       ierr = nfmpi_open(mpi_comm_world,"TOPO.nc",nf_nowrite,mpi_info_null,ncid)
       IF (ierr/=0) stop "opentopo"
@@ -994,4 +1043,5 @@ CONTAINS
 !^^^^^endif for #if !defined (RESTART)
 
 
-END MODULE ini_3d_module
+      END MODULE ini_3d_module
+

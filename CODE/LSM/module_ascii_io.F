@@ -267,7 +267,6 @@ contains
     !  Dummy values, which we can later test on to make sure a namelist with this information 
     !  is being used.
     !
-
     urban_veg_category = ibadval
 
     glacial_veg_category = ibadval

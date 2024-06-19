@@ -540,7 +540,6 @@ CONTAINS
    if (my_task==0) write(*,*) "successfully read land informations from TOPO.nc"
 
 
-
       DO 100 J = 1,MJ1
       DO 100 I = 1,MI1
 
@@ -561,15 +560,17 @@ CONTAINS
          lST(I,J,2)       = lT1(I,J)
          lST(I,J,3)       = lT1(I,J)
          lST(I,J,4)       = lT1(I,J)
-! soil moisture on 20130804
-         lSM(I,J,1)       = 0.32824974
-         lSM(I,J,2)       = 0.32824974
-         lSM(I,J,3)       = 0.32824974
-         lSM(I,J,4)       = 0.32824974
-         lSL(I,J,1)       = 0.32824974
-         lSL(I,J,2)       = 0.32824974
-         lSL(I,J,3)       = 0.32824974
-         lSL(I,J,4)       = 0.32824974
+! soil moisture on Oct 1991-2010
+         lSM(I,J,1)       = 0.3233905
+         lSM(I,J,2)       = 0.3233905
+         lSM(I,J,3)       = 0.3233905
+         lSM(I,J,4)       = 0.3233905
+         lSL(I,J,1)       = 0.3233905
+         lSL(I,J,2)       = 0.3233905
+         lSL(I,J,3)       = 0.3233905
+         lSL(I,J,4)       = 0.3233905
+         lSM(I,J,:)       = 0.343039 ! 20190722
+         lSL(I,J,:)       = 0.343039
 !         ST(I,J,1)       = ST1(I,J)
 !         ST(I,J,2)       = ST2(I,J)
 !         ST(I,J,3)       = ST3(I,J)
