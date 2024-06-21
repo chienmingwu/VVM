@@ -61,8 +61,7 @@ CONTAINS
       REAL (KIND=int_kind) :: temp(NK3)
       CHARACTER (200) FILENAME,INI_FILE_PATH
       CHARACTER (10) ENS,ENS_dir
-
-      integer nu1, nt1, nq1, k1, k2, it, LREC
+      integer nu1, nt1, nq1, k1, k2, it, iter, LREC
       logical lf
       INTEGER, PARAMETER :: NU1=6
       INTEGER, PARAMETER :: NT1=71

@@ -196,7 +196,10 @@ PRIVATE
 
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), PUBLIC ::       &
       psi,   &  ! stream function (m**2/s)
-      chi       ! velocity potential (m**2/s)
+      chi,   &  ! velocity potential (m**2/s)
+      psinm1, & ! stream function (m**2/s) at (n-1) timestep
+      chinm1    ! velocity potential (m**2/s) at (n-1) timestep
+
 ! Mainly used in UVTMN_3D.
    REAL (KIND=dbl_kind), PUBLIC ::       &
       utmn,   &  ! area mean zonal velocity at k=NK2 (m/s)
