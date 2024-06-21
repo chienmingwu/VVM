@@ -933,7 +933,7 @@ CONTAINS
       time_start(1) =  1
      
       if(my_task == 0) then
-        print *,' L, R, C file output this timestep'
+        print *,' L, R, C file output this timestep:',ITT,INT(ITT/NXSAVG)
 #if defined (OUTPUTGRIDA)
         print *," A-grid output (regrid)"
 #else
@@ -1135,7 +1135,7 @@ CONTAINS
       if(ndiag_3d > 0) then
         do nt = 1,ndiag_3d
           write(unit=trnum,fmt='(i2.2)')nt
-          call pCDF_WRITE_4D_slice(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,:,nt), nk2 )
+          call pCDF_WRITE_4D_slice(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,1:nk2,nt), nk2 )
         enddo
       endif
 #endif
@@ -1263,50 +1263,50 @@ CONTAINS
 !     FT10: Dataset P: real-time field various mean profiles.
 
 ! *** TEST FOR NEW FILE (GENERAL CODE)
-      OPENF = IWRITE (ITP5) .EQ. 0
-      
-      if(my_task == 0) then  
-        CALL FNAME_2D ( IFILE(ITP5), ITP5, EXPHDR, FILNAM )
-        inquire(file=filnam, exist=fexist)
-
-        if(openf) then
-! *** INCREMENT FILE COUNTER
-          IFILE(ITP5) = IFILE(ITP5) + 1
-          if(my_task == 0) write(6,*)'ifile',ifile(itp5)
-
-        endif  
-
-        if(openf .or. fexist) then  
-          CALL FNAME_2D ( IFILE(ITP5), ITP5, EXPHDR, FILNAM )
-          OPEN (ITP5,FILE=FILNAM, STATUS='UNKNOWN',FORM='UNFORMATTED',position='APPEND')
-          write(6,*) 'fnam5=',FILNAM,'TIME_P=',TIME_P
-        endif
-
-! *** WRITE HEADER ***
-        if(openf) then
-          write(F_HEADER,'(a4,a)') EXPHDR(1:4),' MEAN PROFILES (dataset P)'
-          WRITE(ITP5) F_HEADER
-        endif  
-
-      if(my_task == 0) print *,' P file output this timestep'
-        WRITE(ITP5) TIME_P
-        WRITE(ITP5) OUT_TM9
-      
-! *** GENERAL CODE TO TEST FOR COPYING FILE
-! *** INCREMENT WRITE COUNTER
-        IWRITE(ITP5)= IWRITE(ITP5) + 1
-        COPYF = IWRITE(ITP5) .EQ. NWRITE(ITP5)
-        IF ( .NOT. COPYF ) GO TO 3501
-        CLOSE (UNIT=ITP5)
-! *** RESET WRITE COUNTER
-        IWRITE(ITP5) = 0
-
- 3501 CONTINUE
-
-
-      endif  ! if (my_task == 0)
-      CALL MPI_BCAST( iwrite(itp5), 1, MPI_INTEGER, 0, MPI_COMM_WORLD, mpierr)
-      CALL MPI_BCAST( ifile(itp5), 1, MPI_INTEGER, 0, MPI_COMM_WORLD, mpierr)
+!      OPENF = IWRITE (ITP5) .EQ. 0
+!      
+!      if(my_task == 0) then  
+!        CALL FNAME_2D ( IFILE(ITP5), ITP5, EXPHDR, FILNAM )
+!        inquire(file=filnam, exist=fexist)
+!
+!        if(openf) then
+!! *** INCREMENT FILE COUNTER
+!          IFILE(ITP5) = IFILE(ITP5) + 1
+!          if(my_task == 0) write(6,*)'ifile',ifile(itp5)
+!
+!        endif  
+!
+!        if(openf .or. fexist) then  
+!          CALL FNAME_2D ( IFILE(ITP5), ITP5, EXPHDR, FILNAM )
+!          OPEN (ITP5,FILE=FILNAM, STATUS='UNKNOWN',FORM='UNFORMATTED',position='APPEND')
+!          write(6,*) 'fnam5=',FILNAM,'TIME_P=',TIME_P
+!        endif
+!
+!! *** WRITE HEADER ***
+!        if(openf) then
+!          write(F_HEADER,'(a4,a)') EXPHDR(1:4),' MEAN PROFILES (dataset P)'
+!          WRITE(ITP5) F_HEADER
+!        endif  
+!
+!      if(my_task == 0) print *,' P file output this timestep'
+!        WRITE(ITP5) TIME_P
+!        WRITE(ITP5) OUT_TM9
+!      
+!! *** GENERAL CODE TO TEST FOR COPYING FILE
+!! *** INCREMENT WRITE COUNTER
+!        IWRITE(ITP5)= IWRITE(ITP5) + 1
+!        COPYF = IWRITE(ITP5) .EQ. NWRITE(ITP5)
+!        IF ( .NOT. COPYF ) GO TO 3501
+!        CLOSE (UNIT=ITP5)
+!! *** RESET WRITE COUNTER
+!        IWRITE(ITP5) = 0
+!
+! 3501 CONTINUE
+!
+!
+!      endif  ! if (my_task == 0)
+!      CALL MPI_BCAST( iwrite(itp5), 1, MPI_INTEGER, 0, MPI_COMM_WORLD, mpierr)
+!      CALL MPI_BCAST( ifile(itp5), 1, MPI_INTEGER, 0, MPI_COMM_WORLD, mpierr)
 
 #endif
 

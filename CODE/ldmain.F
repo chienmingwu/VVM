@@ -146,7 +146,7 @@ PROGRAM ldmain
 
 
     ITT = ITT + 1
-    CALL XSEC_CDF ( ITT )
+    !CALL XSEC_CDF ( ITT )
     if(my_task == 0) write(6,*) 'ITT=',ITT
 
     !  USE FORWARD SCHEME TO INITIALIZE
@@ -163,10 +163,12 @@ PROGRAM ldmain
     PASS_SMALL_DT = DT
 
     CALL AB_3D ( N1, N2, ITT )
-    call timer_start('output')
 
-    IF ( lc35 ) CALL XSEC_CDF ( ITT )
-        call timer_stop('output')
+    call timer_start('output')
+    !IF ( lc35 ) CALL XSEC_CDF ( ITT )
+    CALL XSEC_CDF ( ITT )
+    call timer_stop('output')
+
     ENDIF
 
 !     ADAMS - BASHFORTH TWO - LEVEL SCHEME
@@ -174,7 +176,7 @@ PROGRAM ldmain
     A =   3. / 2. * DT
     B = - 1. / 2. * DT
 
-    ITTNOW = ITT  + 1
+    ITTNOW = ITT  !+ 1
     origin_dt = DT   !  Mars (20141225) add conserve DT
     if ( my_task == 0 ) open(unit=12345,file='iter_record.txt',status='unknown')
 
