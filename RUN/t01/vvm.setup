@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20190722cln_4096core
+set expname = tpe20230711cln_new
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -69,9 +69,9 @@ cat > definesld.com << 'END1'
 #define TOPOGRAPHY
 #define LSM
 #define AREAMN
+#define RELAX_XY
 #define DIAG
 #define CHEM
-#define RELAX_XY
 'END1'
 cat definesld.com
 
