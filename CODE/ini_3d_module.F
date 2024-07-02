@@ -150,23 +150,15 @@ CONTAINS
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
-!SST=299.88K
-!      SST = 298.13
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
 !     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 
+!      SST = 298.13
       SST = t1(1)
       PSFC = p1(1)
-
-
-! convert unit
-!!      DO 100 K = 1, NT1
-!!      T1(K) =  T1(K) !* 1.E-01 + 273.16
-!!      QV1(K)= QV1(K) * 1.E-03 ! g/kg to kg/kg
-!!  100 CONTINUE
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -174,11 +166,7 @@ CONTAINS
   110 CONTINUE
 
 !     *** MIXED LAYER PROFILE ***
-
-!      T1(3) = PI1(3) * T1(2) / PI1(2)
-
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
-
 
       DO 120 K = 1, NT1
       T8  = T1(K)
@@ -201,9 +189,7 @@ CONTAINS
   130 CONTINUE
 
 
-! prepare  interpolate - shao
       ZT1(1) = Zz(1)
-
       DO 140 K = 2, NT1
       ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
               *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
@@ -216,7 +202,6 @@ CONTAINS
       QCBAR(1) = QC1(1)
 
 !     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
-!     FOR K = 2, NK3
 
       DO 150 K = 2, NK3
       K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
@@ -233,9 +218,6 @@ CONTAINS
       RBCP = 1. / CPBR
 
 !     CONVERT PRESSURES TO PASCALS
-
-      !PSFC  = PSFC * 100.
-      !PZERO = PZERO * 100.
 
       PISFC = ( PSFC / PZERO ) ** RBCP
 
