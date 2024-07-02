@@ -74,9 +74,10 @@ CONTAINS
           ,QCBAR(NK3),QVSBAR(NK3)
       REAL (KIND=dbl_kind) :: ZT1(NT1),PI1(NT1),TV1(NT1),PILOG1(NT1)
 
-      REAL (KIND=dbl_kind) :: PQ1(NQ1),P1(NT1),T1(NT1),QV1(NT1),QC1(NT1)
+      REAL (KIND=dbl_kind) :: PQ1(NQ1),PU1(NU1), P1(NT1),T1(NT1),QV1(NT1),QC1(NT1)
       REAL (KIND=dbl_kind) :: Q1OBS(NQ1),Q2OBS(NQ1),wls1(NQ1)
       REAL (KIND=dbl_kind) :: U1(NU1),V1(NU1)
+#define RELAX_XY
 !!       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
 !!               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
 !!               ,111.3,92.6/
@@ -114,14 +115,14 @@ CONTAINS
       read(88,rec=4) qv1(:)
       read(88,rec=5) p1(:)
       if ( my_task .eq. 0) then 
-        print *, 'read data in u:',  U1(1),  U1(NK3-1), U1(NK3), NK3
-        print *, 'read data in v:',  V1(1),  V1(NK3-1), V1(NK3), NK3
-        print *, 'read data in t:',  t1(1),  t1(NK3-1), t1(NK3), NK3
-        print *, 'read data in qv:', qv1(1), qv1(NK3-1),qv1(NK3), NK3
-        print *, 'read data in p:',  p1(1),  p1(NK3-1), p1(NK3), NK3
+        print *, 'read data in u:',  U1(1),  U1(NU1-1),  U1(NU1), NU1
+        print *, 'read data in v:',  V1(1),  V1(NU1-1),  V1(NU1), NU1
+        print *, 'read data in t:',  t1(1),  t1(NT1-1),  t1(NT1), NT1
+        print *, 'read data in qv:', qv1(1), qv1(NT1-1),qv1(NT1), NT1
+        print *, 'read data in p:',  p1(1),  p1(NT1-1),  p1(NT1), NT1
       endif
       if (noWind) then
-        do k=1,NK3
+        do k=1,NU1
           U1(k)=0.
           V1(k)=0.
         enddo
@@ -129,14 +130,16 @@ CONTAINS
 
       wls1=0.
 
-      do k=1,NK3
+      do k=1,NT1
         p1(k) = p1(k)*100.
         qv1(k) = qv1(k)/1000.
       enddo
 
       close(88)
-      Q1OBS = 0.
-      Q2OBS = 0.
+      PQ1      = p1
+      PU1      = p1
+      Q1OBS(:) = 0.
+      Q2OBS(:) = 0.
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
@@ -155,7 +158,7 @@ CONTAINS
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
 !     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 
-      SST = T(1)
+      SST = t1(1)
       PSFC = p1(1)
 
 
@@ -320,12 +323,12 @@ CONTAINS
 
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
+      K1 = INDEXR(PBAR(K),NQ1,PQ1,LF)
       K2 = K1 + 1
       Q1LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
+        FINTRP(1,PBAR(K),PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
       Q2LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
+        FINTRP(1,PBAR(K),PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
       ELSE
       Q1LS (K) = 0.0
       Q2LS (K) = 0.0
@@ -349,11 +352,11 @@ CONTAINS
 #endif
 
       DO 220 K = 2, NK2
-      PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,P1,LF)
+      PBARMB = PBAR(K)
+      K1 = INDEXR(PBARMB,NU1,PU1,LF)
       K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,P1(K1),U1(K1),P1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,P1(K1),V1(K1),P1(K2),V1(K2))
+      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
+      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
   220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
@@ -702,8 +705,8 @@ CONTAINS
       call bound_int_arb(NK2,ITYPEW)
 
       DO K=2,NK2
-      DO J=mjm,mjp
-      DO I=mim,mip
+      DO J=1,MJP
+      DO I=1,MIP
       NN=ITYPEW(I,J,K)
       IF(NN .EQ. 0) THEN
       ITYPEU(I-1,J,K)=0
