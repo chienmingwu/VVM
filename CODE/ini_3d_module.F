@@ -74,9 +74,9 @@ CONTAINS
           ,QCBAR(NK3),QVSBAR(NK3)
       REAL (KIND=dbl_kind) :: ZT1(NT1),PI1(NT1),TV1(NT1),PILOG1(NT1)
 
-      REAL (KIND=dbl_kind) :: PQ1(NQ1),PU1(NU1), P1(NT1),T1(NT1),QV1(NT1),QC1(NT1)
-      REAL (KIND=dbl_kind) :: Q1OBS(NQ1),Q2OBS(NQ1),wls1(NQ1)
-      REAL (KIND=dbl_kind) :: U1(NU1),V1(NU1)
+      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1), QV1(NT1), QC1(NT1)
+      REAL (KIND=dbl_kind) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), wls1(NQ1)
+      REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
 #define RELAX_XY
 !!       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
 !!               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
@@ -108,7 +108,7 @@ CONTAINS
       ! Read sounding data from binary file
       fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.taiwania.dat'
       if (my_task==0) write(*,*) "fname:", trim(fname)
-      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NK3*dbl_kind)
+      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NT1*dbl_kind)
       read(88,rec=1) U1(:)
       read(88,rec=2) V1(:)
       read(88,rec=3) t1(:)
