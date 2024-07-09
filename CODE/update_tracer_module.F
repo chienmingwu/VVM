@@ -179,7 +179,7 @@ CONTAINS
          i, j, k,t, hr, tempim, tempjm, hxp, tempkm
       ! do loop indices for zonal, meridional and vertical dimensions
       REAL xday, xhr, xlon, xlat, sza, coszen
-      REAL temp, tempME, tempCO, tempISO, tempFORM
+      REAL tempNO, tempME, tempCO, tempISO, tempFORM, tempNO_SAT
       integer nx, ny, nz, nt, istat
       parameter (NX = 1024, NY = 1024, NZ = 4, NT = 24)
       logical, save :: first=.True.
@@ -194,9 +194,9 @@ CONTAINS
       parameter (FILE_ISO='/nwpr/gfs/xb136/aries/cwb/EMIS_ISO.dat')
       parameter (FILE_FORM='/nwpr/gfs/xb136/aries/cwb/EMIS_FORM.dat')
       real, save :: NO_emi(mi1,mj1,4,24),CO_emi(mi1,mj1,4,24),CH4_emi(mi1,mj1,4,24), & 
-                    ISO_emi(mi1,mj1,4,24),FORM_emi(mi1,mj1,4,24)
+                    ISO_emi(mi1,mj1,4,24),FORM_emi(mi1,mj1,4,24),NO_SAT_emi(mi1,mj1)
       
-      IF (my_task==0) write(*,*) "before reading files, path=", FILE_NO
+      !IF (my_task==0) write(*,*) "before reading files, path=", FILE_NO
       if (first) then
         !OPEN (UNIT=2, FILE=FILE_NO, STATUS='OLD', FORM='UNFORMATTED', ACCESS='STREAM')
         !READ (UNIT=2, IOSTAT=istat) NO_emi
@@ -218,6 +218,7 @@ CONTAINS
         CH4_emi=0.
         ISO_emi=0.
         FORM_emi=0.
+        NO_SAT_emi=0.
  
         nc_err = nfmpi_open(mpi_comm_world,"/nwpr/gfs/xb136/aries/cwb/EMIS_all.nc" &
                  ,nf_nowrite,mpi_info_null,ncid)
@@ -257,12 +258,20 @@ CONTAINS
         nc_err = nfmpi_get_vara_real_all(ncid,varid,arraystart, &
                  readlen,FORM_emi(1:MI1,1:MJ1,1:4,1:24))
         IF (nc_err/=0) WRITE(*,*) "FORM read fail", nc_err
+
+        readlen(3)    = 0
+        readlen(4)    = 0
+
+        nc_err = nfmpi_inq_varid(ncid,'NO_SAT',varid)
+        nc_err = nfmpi_get_vara_real_all(ncid,varid,arraystart, &
+                 readlen,NO_SAT_emi(1:MI1,1:MJ1))
+        IF (nc_err/=0) WRITE(*,*) "NO_SAT read fail", nc_err
       
         nc_err= nfmpi_close(ncid)
         IF (nc_err/=0) WRITE(*,*) "close fail", nc_err
 
         first=.False.
-        IF (my_task==0) write(*,*) maxval(NO_emi),maxval(CO_emi),maxval(CH4_emi),maxval(ISO_emi),maxval(FORM_emi),"Reading emission files."
+        IF (my_task==0) write(*,*) maxval(NO_emi),maxval(CO_emi),maxval(CH4_emi),maxval(ISO_emi),maxval(FORM_emi),maxval(NO_SAT_emi),"Reading emission files."
       endif
 
       !current time
@@ -270,6 +279,10 @@ CONTAINS
       xhr = utc_time
       xlon = rlon
       xlat = rlat
+!!      ! SHAO - time bug examine
+!!      IF(my_task==0) then
+!!        WRITE(*,*) '(update_tracer) xday=',xday,'xhr=',xhr,'xlon=',xlon, 'xlat=',xlat
+!!      ENDIF
 
       sza = getth(xday,xlat,xlon,xhr)
       coszen = max(0.0,cos(sza)) !to avoid negative values
@@ -278,21 +291,33 @@ CONTAINS
       DO 988 J = 1,mj1
       DO 988 I = 1,mi1
         hxp=hx(i,j)+1
+        !unit: ppb*m/s
+        tempNO_SAT=NO_SAT_emi(I,J)/100.*Pass_small_dt
+        TC3D(I,J,hxp,1)=TC3D(I,J,hxp,1)+tempNO_SAT
+        TC3D(I,J,hxp,3)=TC3D(I,J,hxp,3)+tempNO_SAT*0.9
+        TC3D(I,J,hxp,4)=TC3D(I,J,hxp,4)+tempNO_SAT*0.1
         do tempkm=1,nz
           K=tempkm+hxp
-          !mole/s -> ppb
-          temp=NO_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
-          tempCO=CO_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
-          tempME=CH4_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
-          tempISO=ISO_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
-          tempFORM=FORM_emi(I,J,tempkm,hr)*1.E6/DX/DYNEW/(DZ/FNT(K))/0.0409*Pass_small_dt
-          TC3D(I,J,K,1)=TC3D(I,J,K,1)+temp*10./9.
-          TC3D(I,J,K,3)=TC3D(I,J,K,3)+temp
-          TC3D(I,J,K,4)=TC3D(I,J,K,4)+temp/9.
+          !unit: ppb/s
+          tempNO=NO_emi(I,J,tempkm,hr)*Pass_small_dt
+          tempCO=CO_emi(I,J,tempkm,hr)*Pass_small_dt
+          tempME=CH4_emi(I,J,tempkm,hr)*Pass_small_dt
+          tempISO=ISO_emi(I,J,tempkm,hr)*Pass_small_dt
+          tempFORM=FORM_emi(I,J,tempkm,hr)*Pass_small_dt
+          !TC3D(I,J,K,1)=TC3D(I,J,K,1)+temp*10./9.
+          !TC3D(I,J,K,3)=TC3D(I,J,K,3)+temp
+          !TC3D(I,J,K,4)=TC3D(I,J,K,4)+temp/9.
           TC3D(I,J,K,10)=TC3D(I,J,K,10)+tempME
           TC3D(I,J,K,15)=TC3D(I,J,K,15)+tempCO
           TC3D(I,J,K,20)=TC3D(I,J,K,20)+tempISO
           TC3D(I,J,K,11)=TC3D(I,J,K,11)+tempFORM
+          !comparison with emission inventories 
+          TC3D(I,J,K,26)=TC3D(I,J,K,26)+tempNO
+          TC3D(I,J,K,27)=TC3D(I,J,K,27)+tempNO/9.
+          TC3D(I,J,K,33)=TC3D(I,J,K,33)+tempME
+          TC3D(I,J,K,38)=TC3D(I,J,K,38)+tempCO
+          TC3D(I,J,K,43)=TC3D(I,J,K,43)+tempISO
+          TC3D(I,J,K,34)=TC3D(I,J,K,34)+tempFORM
         enddo
   988 CONTINUE
 

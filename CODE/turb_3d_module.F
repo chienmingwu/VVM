@@ -626,14 +626,6 @@ CONTAINS
                    *(TC3D(I,J,K+1,nt)-TC3D(I,J,K,nt))*DHWW1(I,J,K)                 &
                    -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1))  &
                    *(TC3D(I,J,K,nt)-TC3D(I,J,K-1,nt))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
-#if defined (DIAG)
-      if (nt==1) then
-      DIAG3D(I,J,K,4)=0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))      &
-                   *(TC3D(I,J,K+1,nt)-TC3D(I,J,K,nt))*DHWW1(I,J,K) &
-                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1))  &
-                   *(TC3D(I,J,K,nt)-TC3D(I,J,K-1,nt))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)*pass_small_dt ! vertical
-      endif
-#endif
   621 CONTINUE
 
       DO 631 J=1,MJ1
@@ -642,12 +634,6 @@ CONTAINS
       DDX(I,J,NK2)=DDX(I,J,NK2)                                       &
        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1))  &
                    *(TC3D(I,J,NK2,nt)-TC3D(I,J,NK1,nt)))/(RHOU(NK2)*DZSQ)
-#if defined (DIAG)
-      if (nt==1) then
-      DIAG3D(I,J,NK2,4)=-0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1))  &
-                   *(TC3D(I,J,NK2,nt)-TC3D(I,J,NK1,nt)))/(RHOU(NK2)*DZSQ)*pass_small_dt ! vertical
-      endif
-#endif
   631 CONTINUE
 
       DO 651 K=2,NK2

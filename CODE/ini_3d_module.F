@@ -56,34 +56,38 @@ CONTAINS
       REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
       REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
       REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
-      REAL (KIND=dbl_kind) :: pzero = 1000._dbl_kind      
+      REAL (KIND=dbl_kind) :: pzero = 100000._dbl_kind      
       REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
       REAL (KIND=int_kind) :: temp(NK3)
       CHARACTER (200) FILENAME,INI_FILE_PATH
       CHARACTER (10) ENS,ENS_dir
       integer nu1, nt1, nq1, k1, k2, it, iter, LREC
       logical lf
-      INTEGER, PARAMETER :: NU1=6
-      INTEGER, PARAMETER :: NT1=71
-      INTEGER, PARAMETER :: NQ1=20
+      INTEGER, PARAMETER :: NU1=35
+      INTEGER, PARAMETER :: NT1=35
+      INTEGER, PARAMETER :: NQ1=35
+
 !      DATA NU1/6/,NT1/625/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3),U3DXbar(NT1),U3DYbar(NT1)
+          ,QCBAR(NK3),QVSBAR(NK3)
       REAL (KIND=dbl_kind) :: ZT1(NT1),PI1(NT1),TV1(NT1),PILOG1(NT1)
-      REAL (KIND=dbl_kind) :: PQ1(20),P1(NT1),T1(NT1),QV1(NT1),QC1(NT1)
-      REAL (KIND=dbl_kind) :: U11(NT1),V11(NT1)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA QC1/29*0./
 
-      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
+      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1), QV1(NT1), QC1(NT1)
+      REAL (KIND=dbl_kind) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), wls1(NQ1)
+      REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
+#define RELAX_XY
+!!       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
+!!               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
+!!               ,111.3,92.6/
+!!       DATA QC1/29*0./
+
+!!!      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
+!!!      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
+!!!                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
+!!!      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
+!!!                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
 !     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
 !     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
 !     PU1 (MB) , U1(M/S)
@@ -94,71 +98,70 @@ CONTAINS
 !      DATA V1/  0.0, 0.0, 0.0, 0.0, 0.0, 0.0/
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
+      !CHARACTER(len=8) :: dateStr = '20230711'
+      !CHARACTER(len=5) :: stno = '46692'
+      CHARACTER(len=8) :: dateStr = '20140107'
+      CHARACTER(len=5) :: stno = '47918'
+      CHARACTER(len=80) :: fname
+      LOGICAL(kind=2) :: noWind = .FALSE.
+      
+      casename='tpe_summer'
 
-      casename= 'GATE_PHASE_III'
+      ! Read sounding data from binary file
+      !fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.taiwania.dat'
+      fname='/nwpr/gfs/xb136/aries/sounding/'//stno//'.'//dateStr//'.taiwania.dat' 
+      if (my_task==0) write(*,*) "fname:", trim(fname)
+      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NT1*dbl_kind)
+      read(88,rec=1) U1(:)
+      read(88,rec=2) V1(:)
+      read(88,rec=3) t1(:)
+      read(88,rec=4) qv1(:)
+      read(88,rec=5) p1(:)
+      if ( my_task .eq. 0) then 
+        print *, 'read data in u:',  U1(1),  U1(NU1-1),  U1(NU1), NU1
+        print *, 'read data in v:',  V1(1),  V1(NU1-1),  V1(NU1), NU1
+        print *, 'read data in t:',  t1(1),  t1(NT1-1),  t1(NT1), NT1
+        print *, 'read data in qv:', qv1(1), qv1(NT1-1),qv1(NT1), NT1
+        print *, 'read data in p:',  p1(1),  p1(NT1-1),  p1(NT1), NT1
+      endif
+      if (noWind) then
+        do k=1,NU1
+          U1(k)=0.
+          V1(k)=0.
+        enddo
+      end if
+
+      wls1=0.
+
+      do k=1,NT1
+        p1(k) = p1(k)*100.
+        qv1(k) = qv1(k)/1000.
+      enddo
+
+      close(88)
+      PQ1      = p1
+      PU1      = p1
+      Q1OBS(:) = 0.
+      Q2OBS(:) = 0.
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
       CZ1 = 1. - CZ2 * DOMAIN
 
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
-! read iniitial profile from dat file (po-yen 2022.01 add)
-      INI_FILE_PATH='/nwpr/gfs/c103/VVM/ini_datfile/46692.20190722.taiwania_'
-      ENS=''
-      ENS_dir=''
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'P' // TRIM(ENS) // '.dat')
-      filename=TRIM(filename)
-      !print*, filename
-      INQUIRE(IOLENGTH=LREC) P1
-      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
-      READ(8763,rec=1) P1
-      CLOSE(8763)
-      !print*, P1,LREC
- 
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'T'// TRIM(ENS) // '.dat')
-      filename=TRIM(filename)
-      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
-      READ(8763,rec=1) T1
-      CLOSE(8763)
-      !print*, T1
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'qv'// TRIM(ENS) // '.dat')
-      filename=TRIM(filename)
-      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
-      READ(8763,rec=1) QV1
-      CLOSE(8763)
-      !print*, QV1
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'U'// TRIM(ENS_dir) // '.dat')
-      filename=TRIM(filename)
-      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
-      READ(8763,rec=1) U11
-      CLOSE(8763)
-      !print*, U11
-      filename=TRIM(TRIM(INI_FILE_PATH) // 'V'// TRIM(ENS_dir) // '.dat')
-      filename=TRIM(filename)
-      open(unit=8763,file=filename,access='direct',form='unformatted',recl=LREC)
-      READ(8763,rec=1) V11
-      CLOSE(8763)
-      !print*, V11
-!=====================================================end
-
 
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
-!SST=299.88K
-      SST = 298.13
       
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
 !     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
 !     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 
-      PSFC = P1(1)
-
-      DO 100 K = 1, NT1
-      T1(K) =  T1(K) !* 1.E-01 + 273.16
-      QV1(K)= QV1(K) * 1.E-03 ! g/kg to kg/kg
-  100 CONTINUE
+!      SST = 298.13
+      SST = t1(1)
+      PSFC = p1(1)
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -166,19 +169,15 @@ CONTAINS
   110 CONTINUE
 
 !     *** MIXED LAYER PROFILE ***
-
-!      T1(3) = PI1(3) * T1(2) / PI1(2)
-
 !     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
-
 
       DO 120 K = 1, NT1
       T8  = T1(K)
-      P8  = P1(K)
+      P8  = P1(K)*0.01
       QV8 = QV1(K)
       QC8 = 0.D0
       QI8 = 0.D0
-      if (my_task .eq. 0) print*, T8,P8,QV8,K
+      if (my_task .eq. 0) print*, 'T8=',T8,'P8=',P8,'QV8=',QV8,'K=',K
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
       QC1(K) = 0.
@@ -194,7 +193,6 @@ CONTAINS
 
 
       ZT1(1) = Zz(1)
-
       DO 140 K = 2, NT1
       ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
               *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
@@ -205,13 +203,8 @@ CONTAINS
       T(1)     = T1(1)
       QVBAR(1) = QV1(1)
       QCBAR(1) = QC1(1)
-!poyen add
-      U3DXbar(1)  = U11(1)
-      U3DYbar(1)  = V11(1)
-!poyen add end
 
 !     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
-!     FOR K = 2, NK3
 
       DO 150 K = 2, NK3
       K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
@@ -219,10 +212,6 @@ CONTAINS
       T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
       QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
       QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
-!poyen add
-      U3DXbar(K) = FINTRP ( 1, ZT(K), ZT1(K1), U11(K1), ZT1(K2), U11(K2) )
-      U3DYbar(K) = FINTRP ( 1, ZT(K), ZT1(K1), V11(K1), ZT1(K2), V11(K2) )
-!poyen add end
   150 CONTINUE
 
 !     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
@@ -232,9 +221,6 @@ CONTAINS
       RBCP = 1. / CPBR
 
 !     CONVERT PRESSURES TO PASCALS
-
-      PSFC  = PSFC * 100.
-      PZERO = PZERO * 100.
 
       PISFC = ( PSFC / PZERO ) ** RBCP
 
@@ -322,12 +308,12 @@ CONTAINS
 
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K)*0.01,NQ1,PQ1,LF)
+      K1 = INDEXR(PBAR(K),NQ1,PQ1,LF)
       K2 = K1 + 1
       Q1LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
+        FINTRP(1,PBAR(K),PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
       Q2LS (K) =  &
-        FINTRP(1,PBAR(K)*0.01,PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
+        FINTRP(1,PBAR(K),PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
       ELSE
       Q1LS (K) = 0.0
       Q2LS (K) = 0.0
@@ -351,11 +337,11 @@ CONTAINS
 #endif
 
       DO 220 K = 2, NK2
-      PBARMB = PBAR(K) * 0.01
-      K1 = INDEXR(PBARMB,NU1,P1,LF)
+      PBARMB = PBAR(K)
+      K1 = INDEXR(PBARMB,NU1,PU1,LF)
       K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,P1(K1),U11(K1),P1(K2),U11(K2))
-      VG(K) = FINTRP(1,PBARMB,P1(K1),V11(K1),P1(K2),V11(K2))
+      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
+      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
   220 CONTINUE
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
@@ -538,8 +524,8 @@ CONTAINS
       DO 610 J = mjm,mjp
       DO 610 I = mim,mip
       Z3DZ(I,J,K)=0.
-      U3DX(I,J,K)=U3DXbar(K) !UG(K)
-      U3DY(I,J,K)=U3DYbar(K) !VG(K)
+      U3DX(I,J,K)=UG(K)
+      U3DY(I,J,K)=VG(K)
   610 CONTINUE
 
       DO 660 K = 2, NK1
@@ -704,8 +690,8 @@ CONTAINS
       call bound_int_arb(NK2,ITYPEW)
 
       DO K=2,NK2
-      DO J=mjm,mjp
-      DO I=mim,mip
+      DO J=1,MJP
+      DO I=1,MIP
       NN=ITYPEW(I,J,K)
       IF(NN .EQ. 0) THEN
       ITYPEU(I-1,J,K)=0

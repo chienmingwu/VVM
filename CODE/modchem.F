@@ -334,6 +334,8 @@ SUBROUTINE initchem
   PL_scheme(1)%rtol = 0.
   PL_scheme(1)%chem_number = 0
   PL_scheme(1)%nr_PL = 0
+  !debug undefined
+  PL_scheme(1)%active = .False.
 
   do i=1,mrpcc
     PL_scheme(1)%PL(i)%formula = 0
@@ -347,6 +349,8 @@ SUBROUTINE initchem
     PL_scheme(1)%PL(i)%exp3 = 0
     PL_scheme(1)%PL(i)%comp4 = 0
     PL_scheme(1)%PL(i)%exp4 = 0
+    !debug undefined
+    PL_scheme(1)%PL(i)%PorL = 0
   enddo
 
   do i=2, nchsp
@@ -1766,7 +1770,6 @@ implicit none
         keffT(:,:,RC(i)%Kindex) = RC(i)%A * convppb(:,:)
       case(2) !temperature depence of K
         keffT(:,:,RC(i)%Kindex) = RC(i)%A * exp(RC(i)%B / T_abs(:,:)) * convppb(:,:)
-        IF (myid==0 .and. k==2) write(*,*) keffT(1,1,RC(i)%Kindex),RC(i)%A,RC(i)%B,T_abs(1,1),convppb(1,1)
       case (3) !more complex temperature dependence
         keffT(:,:,RC(i)%Kindex) = RC(i)%A * (T_abs(:,:)/RC(i)%B)**RC(i)%C * exp(RC(i)%D / T_abs(:,:))* convppb(:,:)
       case(4:5) !use Lindemann-Hinshelwood equation  4 = second order 5 = first order so no conv_XXX factor
@@ -1880,6 +1883,10 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
   xhr = utc_time
   xlon = rlon
   xlat = rlat
+!!  ! SHAO  time debug
+!!  IF(myid==0) then
+!!    WRITE(*,*) '(modchem) xday=',xday,'xhr=',xhr,'xlon=',xlon, 'xlat=',xlat
+!!  ENDIF
 
 !   --------------------------
 !   Calculating reaction rates
