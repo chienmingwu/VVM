@@ -279,6 +279,10 @@ CONTAINS
       xhr = utc_time
       xlon = rlon
       xlat = rlat
+!!      ! SHAO - time bug examine
+!!      IF(my_task==0) then
+!!        WRITE(*,*) '(update_tracer) xday=',xday,'xhr=',xhr,'xlon=',xlon, 'xlat=',xlat
+!!      ENDIF
 
       sza = getth(xday,xlat,xlon,xhr)
       coszen = max(0.0,cos(sza)) !to avoid negative values

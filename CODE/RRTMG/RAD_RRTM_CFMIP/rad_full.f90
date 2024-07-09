@@ -11,11 +11,7 @@
 
 
 
-#if defined (DIAG)
-      use const3d, only: hx, diag3d
-#else
       use const3d, only: hx
-#endif
 
 !      use const3d, only: hx 
 !===========================================================================
@@ -534,14 +530,6 @@
       iwp_3d(i, j, k:nzm)           = IWP(1,1:nzt)
       reliq_3d(i, j, k:nzm)         = liquidRe(1,1:nzt)
       reice_3d(i, j, k:nzm)         = iceRe(1,1:nzt)
-#if defined (DIAG)
-      diag3d(i,j,k+1:nzm+1,1)       = lwUpClearSky(1,1:nzt)
-      diag3d(i,j,k+1:nzm+1,2)       = lwDownClearSky(1,1:nzt)
-      diag3d(i,j,k+1:nzm+1,3)       = swUpClearSky(1,1:nzt)
-      diag3d(i,j,k+1:nzm+1,4)       = swDownClearSky(1,1:nzt)
-      diag3d(i,j,k+1:nzm+1,5)       = lwHeatingRateClearSky(1,1:nzt)
-      diag3d(i,j,k+1:nzm+1,6)       = swHeatingRateClearSky(1,1:nzt)
-#endif
  
 !------------------------------------------------------------------------------
 ! accumulate heating rates and fluxes for horizontally-averaged statistics

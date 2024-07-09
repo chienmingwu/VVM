@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20230711cln_new
+set expname = tpe20140107cln_4096core
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
@@ -70,11 +70,11 @@ cat > definesld.com << 'END1'
 #define LSM
 #define AREAMN
 #define RELAX_XY
+#define CHEM
+#define DIAG
 'END1'
 cat definesld.com
 #define DIRECT
-#define CHEM
-#define DIAG
 
 # Grid parameter declarations.
 # changed from 'cat' to 'sed' - DD 2010.02.09
@@ -90,9 +90,9 @@ sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag3d_dimension/4/g' ${codedir}/cdecks/PARMSLD.F90
 'END3'
 cat DOMAIN
 

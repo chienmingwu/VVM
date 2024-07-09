@@ -654,6 +654,11 @@ CONTAINS
       DO 651 J=1,MJ1
       DO 651 I=1,MI1
       TCAD3(I,J,K,nt)=DDX(I,J,K)
+#if defined (DIAG)
+      if (nt==1) then
+      DIAG3D(I,J,K,3)=pass_small_dt*TCAD3(I,J,K,nt) ! total
+      endif
+#endif
   651 CONTINUE
       enddo
   
