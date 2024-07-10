@@ -109,9 +109,9 @@ CONTAINS
 
       ! Read sounding data from binary file
       !fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.taiwania.dat'
-      fname='/nwpr/gfs/xb136/aries/sounding/'//stno//'.'//dateStr//'.taiwania.dat' 
+      fname='/data/aries/sounding/'//stno//'.'//dateStr//'.taiwania.dat' 
       if (my_task==0) write(*,*) "fname:", trim(fname)
-      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NT1*dbl_kind)
+      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NT1*2)
       read(88,rec=1) U1(:)
       read(88,rec=2) V1(:)
       read(88,rec=3) t1(:)
