@@ -5,11 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20140107cln_4096core_nodiag
+set expname = channel
 
 # set job system and compiler
-set compiler = 'fujitsu_cwb'
-set jobsys = 'pjm_cwb'
+set compiler = 'intel_mogamd'
+set jobsys = 'slurm_mogamd'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
