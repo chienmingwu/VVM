@@ -77,7 +77,6 @@ CONTAINS
       REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1), QV1(NT1), QC1(NT1)
       REAL (KIND=dbl_kind) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), wls1(NQ1)
       REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
-#define RELAX_XY
 !!       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
 !!               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
 !!               ,111.3,92.6/
@@ -103,20 +102,18 @@ CONTAINS
       CHARACTER(len=8) :: dateStr = '20140107'
       CHARACTER(len=5) :: stno = '47918'
       CHARACTER(len=80) :: fname
-      LOGICAL(kind=2) :: noWind = .FALSE.
       
       casename='tpe_summer'
 
       ! Read sounding data from binary file
-      !fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.taiwania.dat'
-      fname='/nwpr/gfs/xb136/aries/sounding/'//stno//'.'//dateStr//'.taiwania.dat' 
+      fname = '/nwpr/gfs/xb117/shao//'//stno//'.'//dateStr//'.sounding.txt'
+      OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
       if (my_task==0) write(*,*) "fname:", trim(fname)
-      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NT1*dbl_kind)
-      read(88,rec=1) U1(:)
-      read(88,rec=2) V1(:)
-      read(88,rec=3) t1(:)
-      read(88,rec=4) qv1(:)
-      read(88,rec=5) p1(:)
+      READ(88, *) ! read first line
+      DO i=1,NT1
+        READ(88, *) U1(i), V1(i), t1(i), qv1(i), p1(i)
+      ENDDO
+
       if ( my_task .eq. 0) then 
         print *, 'read data in u:',  U1(1),  U1(NU1-1),  U1(NU1), NU1
         print *, 'read data in v:',  V1(1),  V1(NU1-1),  V1(NU1), NU1
@@ -124,12 +121,6 @@ CONTAINS
         print *, 'read data in qv:', qv1(1), qv1(NT1-1),qv1(NT1), NT1
         print *, 'read data in p:',  p1(1),  p1(NT1-1),  p1(NT1), NT1
       endif
-      if (noWind) then
-        do k=1,NU1
-          U1(k)=0.
-          V1(k)=0.
-        enddo
-      end if
 
       wls1=0.
 
