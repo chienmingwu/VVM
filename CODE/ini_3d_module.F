@@ -63,7 +63,7 @@ CONTAINS
       CHARACTER (10) ENS,ENS_dir
       integer k1, k2, it, iter, LREC
       logical lf
-      INTEGER, PARAMETER :: NT1=6993
+      INTEGER, PARAMETER :: NT1=4797
       INTEGER, PARAMETER :: NU1=NT1
       INTEGER, PARAMETER :: NQ1=NT1
 
@@ -95,7 +95,6 @@ CONTAINS
       READ(88, *) ! read first line
       DO i=1,NT1
         READ(88, *) sounding(:)
-        IF (my_task .eq. 0) print*, 'i=',i, ', sounding => ', sounding(:)
         ! Pressure [Pa]
         P1(i) = sounding(3) * 100.
         ! Temperature [K]
@@ -103,14 +102,20 @@ CONTAINS
         ! Qv from RH, mixing ratio [kg/kg]
         ES1 = sounding(5) * 0.01 * ES ( T1(i) )  ! vapor pressure [Pa]
         QV1(i) = ES1 * 0.622 / ( P1(i) - ES1 )
+        if(my_task .eq. 0)  PRINT*, 'i, E, P1, QV, RH = ', i, ES1, QV1(i), P1(i), sounding(5)
         ! U, V from Wind Speed and Wind Direction [m/s]
         U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
         V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
-        IF (my_task .eq. 0) THEN
-           print*, 'i=',i, P1(i), T1(i), QV1(i), U1(i), V1(i)
-        ENDIF
       ENDDO
       close(88)
+
+      ! shao, sounding_debug -----------
+      if (my_task .eq. 0) THEN
+        DO i=1,NT1
+          WRITE(*,*) i, P1(i), T1(i), QV1(i), U1(i), V1(i)
+        ENDDO
+      ENDIF
+
 
       if ( my_task .eq. 0) then 
         print *, 'read data in u:',  U1(1),  U1(NU1-1),  U1(NU1), NU1
@@ -119,6 +124,8 @@ CONTAINS
         print *, 'read data in qv:', qv1(1), qv1(NT1-1),qv1(NT1), NT1
         print *, 'read data in p:',  p1(1),  p1(NT1-1),  p1(NT1), NT1
       endif
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpierr)
+      ! shao, sounding_debug -----------
 
       wls1=0.
       PQ1      = p1
@@ -159,11 +166,17 @@ CONTAINS
       QV8 = QV1(K)
       QC8 = 0.D0
       QI8 = 0.D0
+
+      ! shao, sounding_debug -----------
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpierr)  !shao, sounding debug
       if (my_task .eq. 0) print*, 'T8=',T8,'P8=',P8,'QV8=',QV8,'K=',K
+      ! shao, sounding_debug -----------
+
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
       QC1(K) = 0.
   120 CONTINUE
+      if (my_task.eq.0) print*, 'obs saturation done !!!' ! shao, sounding debug
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
 !     UNITS ARE T : DEG K, QV : G/G.
@@ -195,6 +208,11 @@ CONTAINS
       QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
       QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
   150 CONTINUE
+       
+      ! shao, sounding_debug -----------
+      if ( my_task .eq. 0 ) print*, 'linear interpolation done !!'
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpierr)
+      ! shao, sounding_debug -----------
 
 !     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
 
@@ -235,6 +253,12 @@ CONTAINS
       QV8 = QVBAR(K)
       QC8 = 0.D0
       QI8 = 0.D0
+
+      ! shao, sounding_debug -----------
+      CALL MPI_BARRIER(MPI_COMM_WORLD, mpierr)
+      if (my_task .eq. 0) print*, 'IT=',IT,'K=',K,'T8=',T8,'P8=',P8,'QV8=',QV8
+      ! shao, sounding_debug -----------
+
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QVBAR(K) = QV8
       ES1 = ES ( T(K) )
