@@ -83,6 +83,8 @@ CONTAINS
       CHARACTER(len=8) :: dateStr = '20140107'
       CHARACTER(len=5) :: stno = '47918'
       CHARACTER(len=300) :: fname
+
+      INTEGER(kind=int_kind) :: ik1
       
       casename='tpe_summer'
 
@@ -93,6 +95,7 @@ CONTAINS
       READ(88, *) ! read first line
       READ(88, *) ! read first line
       READ(88, *) ! read first line
+      ik1 = -1
       DO i=1,NT1
         READ(88, *) sounding(:)
         ! Pressure [Pa]
@@ -106,6 +109,12 @@ CONTAINS
         ! U, V from Wind Speed and Wind Direction [m/s]
         U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
         V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
+        ! set constant U, V when >= 6km
+        IF ( sounding(2) >= 6000. .and. ik1 <= 0 )  ik1 = i
+        IF ( ik1 > 0 ) THEN
+          U1(i) = U1(ik1)
+          V1(i) = V1(ik1)
+        ENDIF
       ENDDO
       close(88)
 

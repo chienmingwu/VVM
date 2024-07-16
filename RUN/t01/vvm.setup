@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = fcast46695_20240621
+set expname = fcast46695_20240621_constUV
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'
