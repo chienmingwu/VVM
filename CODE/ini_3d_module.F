@@ -61,13 +61,12 @@ CONTAINS
       REAL (KIND=int_kind) :: temp(NK3)
       CHARACTER (200) FILENAME,INI_FILE_PATH
       CHARACTER (10) ENS,ENS_dir
-      integer nu1, nt1, nq1, k1, k2, it, iter, LREC
+      integer k1, k2, it, iter, LREC
       logical lf
-      INTEGER, PARAMETER :: NU1=35
-      INTEGER, PARAMETER :: NT1=35
-      INTEGER, PARAMETER :: NQ1=35
+      INTEGER, PARAMETER :: NT1=6993
+      INTEGER, PARAMETER :: NU1=NT1
+      INTEGER, PARAMETER :: NQ1=NT1
 
-!      DATA NU1/6/,NT1/625/,NQ1/20/
       REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
                              es1, alphaw, pbarmb
       REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
@@ -77,42 +76,41 @@ CONTAINS
       REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1), QV1(NT1), QC1(NT1)
       REAL (KIND=dbl_kind) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), wls1(NQ1)
       REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
-!!       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-!!               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-!!               ,111.3,92.6/
-!!       DATA QC1/29*0./
 
-!!!      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-!!!      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-!!!                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-!!!      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-!!!                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
-
-!      REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
-!      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-!      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
-!      DATA V1/  0.0, 0.0, 0.0, 0.0, 0.0, 0.0/
+      REAL (KIND=dbl_kind) :: sounding(8)
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
-      !CHARACTER(len=8) :: dateStr = '20230711'
-      !CHARACTER(len=5) :: stno = '46692'
       CHARACTER(len=8) :: dateStr = '20140107'
       CHARACTER(len=5) :: stno = '47918'
-      CHARACTER(len=80) :: fname
+      CHARACTER(len=300) :: fname
       
       casename='tpe_summer'
 
       ! Read sounding data from binary file
-      fname = '/nwpr/gfs/xb117/shao//'//stno//'.'//dateStr//'.sounding.txt'
+      fname = '/nwpr/gfs/c103/VVM/CWA_sounding/46695-2024062100.edt.txt'
       OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
       if (my_task==0) write(*,*) "fname:", trim(fname)
       READ(88, *) ! read first line
+      READ(88, *) ! read first line
+      READ(88, *) ! read first line
       DO i=1,NT1
-        READ(88, *) U1(i), V1(i), t1(i), qv1(i), p1(i)
+        READ(88, *) sounding(:)
+        IF (my_task .eq. 0) print*, 'i=',i, ', sounding => ', sounding(:)
+        ! Pressure [Pa]
+        P1(i) = sounding(3) * 100.
+        ! Temperature [K]
+        T1(i) = sounding(4) + 273.15
+        ! Qv from RH, mixing ratio [kg/kg]
+        ES1 = sounding(5) * 0.01 * ES ( T1(i) )  ! vapor pressure [Pa]
+        QV1(i) = ES1 * 0.622 / ( P1(i) - ES1 )
+        ! U, V from Wind Speed and Wind Direction [m/s]
+        U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
+        V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
+        IF (my_task .eq. 0) THEN
+           print*, 'i=',i, P1(i), T1(i), QV1(i), U1(i), V1(i)
+        ENDIF
       ENDDO
+      close(88)
 
       if ( my_task .eq. 0) then 
         print *, 'read data in u:',  U1(1),  U1(NU1-1),  U1(NU1), NU1
@@ -123,13 +121,6 @@ CONTAINS
       endif
 
       wls1=0.
-
-      do k=1,NT1
-        p1(k) = p1(k)*100.
-        qv1(k) = qv1(k)/1000.
-      enddo
-
-      close(88)
       PQ1      = p1
       PU1      = p1
       Q1OBS(:) = 0.
