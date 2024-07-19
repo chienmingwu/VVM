@@ -3,7 +3,7 @@ MODULE force_3d_module
 USE kinds
 USE parmsld
 USE const3d
-USE constld, only: dt, zt, casename
+USE constld, only: ix, dt, zt, casename
 USE utils
 USE domain_decomposition
 
@@ -35,7 +35,7 @@ CONTAINS
      &   nstep,   & !
      &   k1,      & !
      &   k2,      & !
-     &   ix,      & !
+!     &   ix,      & !
      &   lo,      & !
      &   nn         !
       REAL (KIND=dbl_kind) :: & 
@@ -155,7 +155,7 @@ CONTAINS
 
       IF ( MOD ( ISTEP, NSTEP ) == 0 ) THEN
 
-      ix = my_task*mip*mjp
+      ix = ix-(my_task+1)*mip*mjp
       DO 10 NN = 1, NPERT
       YFL = RAN2( IX )
       PERT(NN) = TEM * ( YFL - 0.5 ) * 2.

@@ -213,12 +213,12 @@ MODULE utils
             m1, m2, m3, mfac
          REAL (KIND=dbl_kind) :: tmp, rfac
       
-         m1=mod(IA*IDUM,m)
-         m2=mod(IB*IDUM,m)
-         m3=mod(IC*IDUM,m)
+         m1=modulo(IA*IDUM,m)
+         m2=modulo(IB*IDUM,m)
+         m3=modulo(IC*IDUM,m)
          mfac=(m1+m2+m3)/3
          if(mfac .eq. 0) mfac=1
-         tmp=mod(m1*m2+m3, mfac)
+         tmp=modulo(m1*m2+m3, mfac)
          rfac = mfac
          ran2_result=tmp/rfac
          IDUM=IDUM+1
