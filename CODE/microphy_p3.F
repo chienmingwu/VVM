@@ -2261,6 +2261,9 @@ END subroutine p3_init
        if (global_status /= STATUS_OK) return
     endif
 
+
+
+
     log_hydrometeorsPresent = .false.
     log_nucleationPossible  = .false.
 
@@ -2389,6 +2392,12 @@ END subroutine p3_init
        endif
        if (global_status /= STATUS_OK) return
     endif
+
+   ! check NaN 
+   force_abort  =.True.
+   tmparr1(i,:) = th(i,:)*(pres(i,:)*1.e-5)**(rd*inv_cp)
+   call check_temp(tmparr1(i,:),i,it,debug_ABORT,900)
+   if (global_status /= STATUS_OK) return
 
    !first call to compute_SCPF
     call compute_SCPF(Qc(i,:)+sum(Qitot(i,:,:),dim=2),Qr(i,:),Qv(i,:),Qvi(i,:),          &
@@ -11785,6 +11794,55 @@ SUBROUTINE access_lookup_table_coll_3mom_LF(dumzz,dumjj,dumii,dumll,dumj,dumi,in
   end function p3_iwc
 
 #endif
+
+!===========================================================================================
+
+ subroutine check_temp(T,i,timestepcount,force_abort,source_ind)
+
+!------------------------------------------------------------------------------------
+!
+! Thie subroutine is modified from check_values to check temperature for VVM.
+!
+!------------------------------------------------------------------------------------
+
+  implicit none
+
+ !Calling parameters:
+  real, dimension(:),   intent(in) :: T
+  integer,              intent(in) :: source_ind,i,timestepcount
+  logical,              intent(in) :: force_abort         !.TRUE. = forces abort if value violation is detected
+                                                                             !Local variables:
+  real, parameter :: T_low  = 173.
+  real, parameter :: T_high = 323.
+  integer         :: k,iice,ni,nk,ncat
+  logical         :: badvalue_found
+
+  badvalue_found = .false.
+  nk = size(T,1)
+
+  k_loop: do k = 1,nk
+
+   ! check unrealistic values T
+     if (.not.(T(k)>T_low .and. T(k)<T_high)) then
+        write(*,*) "unrealistic values T :", T(k)
+        badvalue_found = .true.
+     endif
+   ! check for NANs:
+      if (.not.(T(k)  == T(k))) then
+        write(*,*) "found Nan"
+        badvalue_found = .true.
+     endif
+
+  enddo k_loop
+
+
+  if (badvalue_found .and. force_abort) then
+     global_status = STATUS_ERROR
+     return
+  endif
+
+ end subroutine check_temp
+
 
 !======================================================================================!
  END MODULE microphy_p3
