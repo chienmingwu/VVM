@@ -168,7 +168,7 @@ CONTAINS
       CALL WIND_3D  ( N1, N2 )
       call timer_stop('WIND_3D')
       call timer_start('UPDATE_TRACER')
-      if (ntracer > 0) CALL UPDATE_TRACER
+      if (ntracer > 0) CALL UPDATE_TRACER ( ITT )
       call timer_stop('UPDATE_TRACER')
       call timer_start('make_prof')
       CALL MAKE_PROFILES

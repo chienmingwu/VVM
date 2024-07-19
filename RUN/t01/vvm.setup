@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = tpe20140107cln_4096core_nodiag
+set expname = chem20190119
 
 # set job system and compiler
 set compiler = 'fujitsu_cwb'

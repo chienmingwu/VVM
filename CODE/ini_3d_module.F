@@ -61,7 +61,7 @@ CONTAINS
       REAL (KIND=int_kind) :: temp(NK3)
       CHARACTER (200) FILENAME,INI_FILE_PATH
       CHARACTER (10) ENS,ENS_dir
-      integer nu1, nt1, nq1, k1, k2, it, iter, LREC
+      integer k1, k2, it, iter, LREC
       logical lf
       INTEGER, PARAMETER :: NU1=35
       INTEGER, PARAMETER :: NT1=35
@@ -100,12 +100,12 @@ CONTAINS
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
       !CHARACTER(len=8) :: dateStr = '20230711'
       !CHARACTER(len=5) :: stno = '46692'
-      CHARACTER(len=8) :: dateStr = '20140107'
+      CHARACTER(len=8) :: dateStr = '20190119'
       CHARACTER(len=5) :: stno = '47918'
       CHARACTER(len=80) :: fname
       LOGICAL(kind=2) :: noWind = .FALSE.
       
-      casename='tpe_summer'
+      casename='chem_ish_winter'
 
       ! Read sounding data from binary file
       !fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.taiwania.dat'
