@@ -148,20 +148,20 @@ CONTAINS
    END SUBROUTINE update_tracer_init
 
 !=======================================================================
-   SUBROUTINE UPDATE_TRACER
+   SUBROUTINE UPDATE_TRACER ( ITT )
 
 !  This subroutine updates the tracer field with sources or sinks
 !  Default is no source or sink
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
-
+      INTEGER (KIND=int_kind),intent(in) :: ITT
 
       call update_tracer_source
 
 #if defined (CHEM)
       ! chemical reactions
       IF (my_task==0) WRITE(*,*) "update chemistry"
-      call twostep()
+      call twostep(ITT)
       IF (my_task==0) WRITE(*,*) "chemistry update successfully"
 #endif
 

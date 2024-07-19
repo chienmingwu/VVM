@@ -100,18 +100,18 @@ CONTAINS
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
       !CHARACTER(len=8) :: dateStr = '20230711'
       !CHARACTER(len=5) :: stno = '46692'
-      CHARACTER(len=8) :: dateStr = '20140107'
+      CHARACTER(len=8) :: dateStr = '20190119'
       CHARACTER(len=5) :: stno = '47918'
       CHARACTER(len=80) :: fname
       LOGICAL(kind=2) :: noWind = .FALSE.
       
-      casename='tpe_summer'
+      casename='chem_ish_winter'
 
       ! Read sounding data from binary file
       !fname='/nwpr/gfs/xb136/taiwanvvm/semirealistic_IC/summerAT/'//stno//'.'//dateStr//'.taiwania.dat'
-      fname='/data/aries/sounding/'//stno//'.'//dateStr//'.taiwania.dat' 
+      fname='/nwpr/gfs/xb136/aries/sounding/'//stno//'.'//dateStr//'.taiwania.dat' 
       if (my_task==0) write(*,*) "fname:", trim(fname)
-      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NT1*2)
+      open(unit=88,file=trim(fname),form='unformatted',status='old',access='direct',recl=NT1*dbl_kind)
       read(88,rec=1) U1(:)
       read(88,rec=2) V1(:)
       read(88,rec=3) t1(:)

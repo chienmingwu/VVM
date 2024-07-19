@@ -197,7 +197,7 @@ CONTAINS
       DTHMAX = 0.5_dbl_kind 
       DTPERT = 300._dbl_kind
       Z1PERT = 0.
-      Z2PERT = 1000._dbl_kind
+      Z2PERT = 100._dbl_kind
 
       CRAD   = 1. / 3600._dbl_kind
       CRAD1  = 1. / 86400._dbl_kind  !only used for newtownian cooling

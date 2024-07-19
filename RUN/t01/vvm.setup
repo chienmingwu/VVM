@@ -5,11 +5,11 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = channel
+set expname = chem20190119
 
 # set job system and compiler
-set compiler = 'intel_mogamd'
-set jobsys = 'slurm_mogamd_intel'
+set compiler = 'fujitsu_cwb'
+set jobsys = 'pjm_cwb'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -c 9- | rev `
@@ -66,15 +66,15 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define MICROP3
 #define RADCODE
+#define TOPOGRAPHY
+#define LSM
+#define AREAMN
 #define RELAX_XY
-#define DIAG
+#define CHEM
 'END1'
 cat definesld.com
-#define CHEM
-#define AREAMN
-#define LSM
-#define TOPOGRAPHY
 #define DIRECT
+#define DIAG
 
 # Grid parameter declarations.
 # changed from 'cat' to 'sed' - DD 2010.02.09
@@ -85,12 +85,12 @@ cat > DOMAIN << 'END3'
 #!/bin/csh
 set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
-sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/16/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 'END3'
@@ -98,13 +98,13 @@ cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=86400 /
+ &INPUT1 NEWRUN=T, ITTADD=17280 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=40000.,DYNEW=40000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=5.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120 /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=7777777,ITINIT=10,ITSTOP=30,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
+ &INPUT5 IX=3182073,ITINIT=10,ITSTOP=360,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT
