@@ -69,19 +69,6 @@ CONTAINS
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
-      INTEGER, PARAMETER :: NU1=35
-      REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
-
-      logical lf
-      REAL(kind=dbl_kind) :: pbarmb
-      CHARACTER(len=300) :: fname
-
-
-      REAL (KIND=dbl_kind) :: P1(NU1)
-      REAL (KIND=dbl_kind) :: tempr8_1, tempr8_2, tempr8_3
-      REAL (KIND=dbl_kind) :: GAMFAC
-      integer k1, k2
-      
       casename='chem_ish_winter'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
@@ -90,28 +77,6 @@ CONTAINS
 
       SST = 300.
       CALL USER_create_profile
-
-     ! 47918.20140107.sounding.txt
-      fname='/data/C.shaoyu/aries/sounding_txt/47918.20190119.taiwania.txt'
-      if (my_task==0) write(*,*) "fname:", trim(fname)
-      open(unit=88, file=trim(fname), form='formatted', status='old')
-      read(88, *)   ! header
-      DO i=1,NU1
-        READ(88, *) U1(i), V1(i), tempr8_1, tempr8_2, P1(i)
-      ENDDO
-      CLOSE(88)
-
-      if ( my_task .eq. 0) then
-        print *, 'read data in u:',  U1(1),  U1(NU1-1),  U1(NU1), NU1
-        print *, 'read data in v:',  V1(1),  V1(NU1-1),  V1(NU1), NU1
-        print *, 'read data in p:',  p1(1),  p1(NU1-1),  p1(NU1), NU1
-      endif
-      
-      do k=1,NU1
-        P1(k)  = P1(k)*100.
-      enddo
-      PU1      = P1
-
 
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
@@ -122,7 +87,6 @@ CONTAINS
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
 !     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 
-!      SST = 298.13
 
 
 !     DENSITY FOR k=1/2
@@ -141,13 +105,7 @@ CONTAINS
       RHOW(K)=RHOZ(K)  ! This line added with removal of equivalence in constld
   102 CONTINUE
 
-      DO 220 K = 2, NK2
-      PBARMB = PBAR(K)
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
-      K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-  220 CONTINUE
+!     ensure the wind at model bottom and top is same
       UG(1)   = UG(2)
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)

@@ -21,58 +21,110 @@ CONTAINS
 
   SUBROUTINE USER_create_profile
       IMPLICIT NONE
-
-      ! GIVEN PBAR(NK3)  [Pa],     PIBAR(NK3)
-      ! GIVEN THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
-      ! GIVEN RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
-      CALL USER_given_thermoal_profile
-
-      ! GIVEN Q1LS(NK3), Q2LS(NK3), WLS1(NK3)
-      CALL USER_given_forcing_profile
-
-      ! GIVEN UG, VG
-
-
-
-  ENDSUBROUTINE USER_create_profile
-
-  SUBROUTINE USER_given_forcing_profile
-      IMPLICIT NONE
-      !! PBAR must be geven before this interpolate function
-      !! given Q1LS(NK3), Q2LS(NK3), WLS1(NK3)
-
-      REAL (KIND=dbl_kind) ::  scaleq=0._dbl_kind
-      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
-      REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
+      INTEGER (KIND=int_kind), PARAMETER :: NT1=35
+      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), QC1(NT1)
 
       INTEGER (KIND=int_kind), PARAMETER :: NQ1=35
-      REAL (KIND=dbl_kind) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), WLS1(NQ1)
-
-      REAL (KIND=dbl_kind) :: GAMFAC
-      integer ::  K1, K2, K
-      logical lf
+      REAL (KIND=dbl_kind) :: PQ1(NQ1),  Q1OBS(NQ1),  Q2OBS(NQ1), WLS1(NQ1)
       
-      CHARACTER(len=300) :: fname
-      INTEGER :: i
-      REAL (KIND=dbl_kind) :: tempr8_5arr(5)
+      INTEGER, PARAMETER :: NU1=35
+      REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
 
-      GAMFAC = HLF / CP
+      INTEGER (KIND=int_kind) :: i, j, k
+
+      CHARACTER(len=300) :: fname
 
      ! 47918.20140107.sounding.txt
       fname='/data/C.shaoyu/aries/sounding_txt/47918.20190119.taiwania.txt'
       if (my_task==0) write(*,*) "fname:", trim(fname)
       open(unit=88, file=trim(fname), form='formatted', status='old')
       read(88, *)   ! header
-      DO i=1,NQ1
-        READ(88, *) tempr8_5arr
-        PQ1(i) = tempr8_5arr(5) * 100.
+      DO i=1,NT1
+        READ(88, *) U1(i), V1(i), T1(i), QV1(i), P1(i)
       ENDDO
       CLOSE(88)
-      
-      WLS1=0.
 
-      Q1OBS(:) = 0.
-      Q2OBS(:) = 0.
+      if ( my_task .eq. 0) then
+        print *, 'read data in t:',  u1(1),  u1(NT1-1),  u1(NT1), NT1
+        print *, 'read data in t:',  v1(1),  v1(NT1-1),  v1(NT1), NT1
+        print *, 'read data in t:',  t1(1),  t1(NT1-1),  t1(NT1), NT1
+        print *, 'read data in qv:', qv1(1), qv1(NT1-1),qv1(NT1), NT1
+        print *, 'read data in p:',  p1(1),  p1(NT1-1),  p1(NT1), NT1
+      endif
+      
+      do k=1,NT1
+        P1(k)  = P1(k)*100.
+        QV1(k) = QV1(k)/1000.
+      enddo
+      PQ1      = P1
+      PU1      = P1
+      Q1OBS    = 0.
+      Q2OBS    = 0.
+
+
+      ! GIVEN PBAR(NK3)  [Pa],     PIBAR(NK3)
+      ! GIVEN THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
+      ! GIVEN RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+      CALL USER_interpolate_thermoal_profile( &
+           NT1, P1, T1, QV1 &
+           )
+
+      ! GIVEN Q1LS(NK3), Q2LS(NK3), WLS1(NK3)
+      CALL USER_interpolate_forcing_profile( &
+           NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
+           )
+
+      ! GIVEN UG(NK3)[m/s], VG(NK3)[m/s]
+      CALL USER_interpolate_wind_profile( &
+           NU1, PU1, U1, V1 &
+           )
+
+  ENDSUBROUTINE USER_create_profile
+
+  SUBROUTINE USER_interpolate_wind_profile(NU1, PU1, U1, V1)
+      IMPLICIT NONE
+      ! given UG(NK3), VG(NK3) [m/s]
+
+      INTEGER (KIND=int_kind), INTENT(IN) :: NU1
+      REAL (KIND=dbl_kind), INTENT(IN) :: PU1(NU1), U1(NU1), V1(NU1)
+
+      REAL(kind=dbl_kind) :: pbarmb
+
+      INTEGER(kind=int_kind) :: i, K1, K2, K
+      logical lf
+
+      DO 220 K = 2, NK2
+      PBARMB = PBAR(K)
+      K1 = INDEXR(PBARMB,NU1,PU1,LF)
+      K2 = K1 + 1
+      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
+      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
+  220 CONTINUE
+      UG(1)   = UG(2)
+      UG(NK3) = UG(NK2)
+      VG(1)   = VG(2)
+      VG(NK3) = VG(NK2)
+  ENDSUBROUTINE USER_interpolate_wind_profile
+
+
+  SUBROUTINE USER_interpolate_forcing_profile(NQ1, PQ1, Q1OBS, Q2OBS, WLS1)
+      IMPLICIT NONE
+      !! PBAR must be geven before this interpolate function
+      !! given Q1LS(NK3), Q2LS(NK3), WLS1(NK3)
+
+      INTEGER (KIND=int_kind), INTENT(IN) :: NQ1
+      REAL (KIND=dbl_kind), INTENT(IN) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), WLS1(NQ1)
+
+
+      REAL (KIND=dbl_kind) ::  scaleq=0._dbl_kind
+      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
+      REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
+
+      REAL (KIND=dbl_kind) :: GAMFAC
+      integer ::  K1, K2, K
+      logical lf
+      
+      GAMFAC = HLF / CP
 
       DO 200 K = 2, NK3
       IF ( ZT(K) .LT. 15000. ) THEN
@@ -103,9 +155,10 @@ CONTAINS
 #endif
 
       
-  ENDSUBROUTINE USER_given_forcing_profile
+  ENDSUBROUTINE USER_interpolate_forcing_profile
 
-  SUBROUTINE  USER_given_thermoal_profile
+  SUBROUTINE  USER_interpolate_thermoal_profile(NT1, P1, T1, QV_in)
+              
       IMPLICIT NONE
       !! given THBAR(NK3), QVBAR(NK3)
       !! given PBAR(NK3),  PIBAR(NK3), RHO(NK3), RHOZ(NK3)
@@ -113,11 +166,11 @@ CONTAINS
       REAL (KIND=dbl_kind), PARAMETER :: RGAS = 287.04     
 
 
-      INTEGER (KIND=int_kind), PARAMETER :: NT1=35
-      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), QC1(NT1)
-      REAL (KIND=dbl_kind) :: ZT1(NT1), PI1(NT1), TV1(NT1), PILOG1(NT1)
+      INTEGER (KIND=int_kind), INTENT(in) :: NT1
+      REAL (KIND=dbl_kind), INTENT(in) :: P1(NT1),  T1(NT1),  QV_in(NT1)
 
-      CHARACTER(len=300) :: fname
+      REAL (KIND=dbl_kind) :: ZT1(NT1), PI1(NT1), TV1(NT1), PILOG1(NT1)
+      REAL (KIND=dbl_kind) :: QV1(NT1), QC1(NT1)
 
       REAL(kind=dbl_kind) :: T8, P8, QV8, QC8, QI8, &
                              RBCP, DUMMY, GDZBCP, CPBR, &
@@ -135,28 +188,8 @@ CONTAINS
       REAL (KIND=dbl_kind) :: tempr8_1, tempr8_2
  
       
-     ! 47918.20140107.sounding.txt
-      fname='/data/C.shaoyu/aries/sounding_txt/47918.20190119.taiwania.txt'
-      if (my_task==0) write(*,*) "fname:", trim(fname)
-      open(unit=88, file=trim(fname), form='formatted', status='old')
-      read(88, *)   ! header
-      DO i=1,NT1
-        READ(88, *) tempr8_1, tempr8_2, T1(i), QV1(i), P1(i)
-      ENDDO
-      CLOSE(88)
-
-      if ( my_task .eq. 0) then
-        print *, 'read data in t:',  t1(1),  t1(NT1-1),  t1(NT1), NT1
-        print *, 'read data in qv:', qv1(1), qv1(NT1-1),qv1(NT1), NT1
-        print *, 'read data in p:',  p1(1),  p1(NT1-1),  p1(NT1), NT1
-      endif
-      
-      do k=1,NT1
-        P1(k)  = P1(k)*100.
-        QV1(k) = QV1(k)/1000.
-      enddo
-
       PSFC = p1(1)
+      QV1(:) = QV_in(:)
 
       RBCP = RGAS / CP
       DO 110 K = 1, NT1
@@ -174,7 +207,7 @@ CONTAINS
       if (my_task .eq. 0) print*, 'T8=',T8,'P8=',P8,'QV8=',QV8,'K=',K
       CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
-      QC1(K) = 0.
+      QC1(K) = QC8 
   120 CONTINUE
 
 !     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
@@ -194,7 +227,7 @@ CONTAINS
       ZT(1)    = Zz(1)
       T(1)     = T1(1)
       QVBAR(1) = QV1(1)
-      QCBAR(1) = QC1(1)
+      QCBAR(1) = 0.D0
 
 !     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
       DO 150 K = 2, NK3
@@ -249,7 +282,7 @@ CONTAINS
       QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
       THBAR(K) = T(K) / PIBAR(K)
       H(K) = QVBAR(K) / QVSBAR(K)
-      QCBAR(K) = 0.
+      QCBAR(K) = 0.D0
   168 CONTINUE
 
   160 CONTINUE
@@ -273,7 +306,6 @@ CONTAINS
 !     SURFACE DENSITY
 
       RHOz(1) = PSFC / ( RGAS * TV(1) )
-
       DO 190 K = 2, NK3
       RHO(K) = 1. / ALPHA(K)
   190 CONTINUE
@@ -287,7 +319,7 @@ CONTAINS
       ENDIF
 
 
-  ENDSUBROUTINE  USER_given_thermoal_profile
+  ENDSUBROUTINE  USER_interpolate_thermoal_profile
   
   SUBROUTINE USER_TPE_sounding
        IMPLICIT NONE
