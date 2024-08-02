@@ -56,18 +56,11 @@ CONTAINS
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
       SST = 300.
-      CALL USER_create_profile_from_keyin
-
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
+      CALL USER_create_profile_from_keyin
       
-!     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
-!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
-!     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
-!     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
-
-
 
 !     DENSITY FOR k=1/2
 
@@ -90,6 +83,15 @@ CONTAINS
       UG(NK3) = UG(NK2)
       VG(1)   = VG(2)
       VG(NK3) = VG(NK2)
+
+!     PREPARE Q1, Q2 scale
+
+      IF ( Q1Q2 ) SCALEQ = SCALE
+      DO 210 K = 1, NK3
+      Q1LS (K) = SCALEQ * Q1LS (K)
+      Q2LS (K) = SCALEQ * Q2LS (K)
+  210 continue
+
 
 !     OCEAN POINTS
 

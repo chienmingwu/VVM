@@ -71,7 +71,7 @@ CONTAINS
            NT1, P1, T1, QV1 &
            )
 
-      ! GIVEN Q1LS(NK3), Q2LS(NK3), WLS1(NK3)
+      ! GIVEN Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS1(NK3)
       CALL USER_interpolate_forcing_profile( &
            NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
            )
@@ -148,6 +148,21 @@ CONTAINS
   SUBROUTINE USER_interpolate_wind_profile(NU1, PU1, U1, V1)
       IMPLICIT NONE
       ! given UG(NK3), VG(NK3) [m/s]
+! ********************
+!     This function is interpolate the sounding data
+!     to the model data at the model levels with pressure.
+!      
+!     [INPUT] ------
+!     NU1       : number of sounding layer
+!     PU1(NU1)  : Pressure [Pa]
+!     U1(NU1)   : u-conpont wind of sounding [m/s]
+!     V1(NU1)   : v-conpont wind of sounding [m/s]
+!
+!     [GIVEN], in public variables, NK3 is number of model levels
+!     UG(NK3)   : u-conpont wind of sounding [m/s]
+!     VG(NK3)   : v-conpont wind of sounding [m/s]
+! ********************
+
 
       INTEGER (KIND=int_kind), INTENT(IN) :: NU1
       REAL (KIND=dbl_kind), INTENT(IN) :: PU1(NU1), U1(NU1), V1(NU1)
@@ -173,8 +188,21 @@ CONTAINS
 
   SUBROUTINE USER_interpolate_forcing_profile(NQ1, PQ1, Q1OBS, Q2OBS, WLS1)
       IMPLICIT NONE
-      !! PBAR must be geven before this interpolate function
-      !! given Q1LS(NK3), Q2LS(NK3), WLS1(NK3)
+! ********************
+!     This function is convert and interpolate the sounding data
+!     to the model data at the model levels with pressure.
+!      
+!     [INPUT] ------
+!     NQ1       : number of sounding layer
+!     PQ1(NQ1)  : Pressure [Pa]
+!     Q1OBS(NQ1): Q1 profile [K/day]
+!     Q2OBS(NQ1): Q2 profile [K/day]
+!     WLS(NQ1)  : large scale subsidence [???]
+
+!     [GIVEN], in public variables, NK3 is number of model levels
+!     Q1LS(NK3): Q1 profile [K/s] [multptile -1]
+!     Q2LS(NK3): Q2 profile [g/g/s]
+! ********************
 
       INTEGER (KIND=int_kind), INTENT(IN) :: NQ1
       REAL (KIND=dbl_kind), INTENT(IN) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), WLS1(NQ1)
@@ -205,11 +233,9 @@ CONTAINS
 !     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
 !     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
 
-      IF ( Q1Q2 ) SCALEQ = SCALE
-
       DO 210 K = 1, NK3
-      Q1LS (K) = -1.* SCALEQ * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = SCALEQ * Q2LS (K) / (GAMFAC * SECDAY)
+      Q1LS (K) = -1. * Q1LS (K) / PIBAR(K) / SECDAY
+      Q2LS (K) = Q2LS (K) / (GAMFAC * SECDAY)
   210 CONTINUE
 
 #if !defined (RADCODE)
@@ -223,6 +249,29 @@ CONTAINS
 
   SUBROUTINE  USER_interpolate_thermoal_profile(NT1, P1, T1, QV_in)
       IMPLICIT NONE
+!     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
+!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
+!     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
+!     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
+
+! ********************
+!     This function is convert and interpolate the sounding data (t, qv)
+!     to the model data at the model levels with height. modify the 
+!     profile through the saturatied adjustment. the QC, QI is set zeros.
+!      
+!     [INPUT] ------
+!     NT1: number of sounding layer
+!     P1(NT1):  Pressure [Pa]
+!     T1(NT1):  Temperature [K]
+!     Qv_in(NT1): mixing ratio of water vapor [kg/kg]
+
+!     [GIVEN], in public variables, NK3 is number of model levels
+!     THBAR(NK3): Potential temperature [K]
+!     QVBAR(NK3): mixing ratio of water vapor [kg/kg]
+!     PIBAR(NK3)
+!     RHO(NK3), RHOZ(NK3): air density [kg/m3]
+!     GAMMA(NK3): not used !?
+! ********************
 
       !! given THBAR(NK3), QVBAR(NK3)
       !! given PBAR(NK3),  PIBAR(NK3), RHO(NK3), RHOZ(NK3), GAMMA(NK3)
