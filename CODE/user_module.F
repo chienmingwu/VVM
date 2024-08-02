@@ -149,8 +149,8 @@ CONTAINS
       IMPLICIT NONE
       ! given UG(NK3), VG(NK3) [m/s]
 ! ********************
-!     This function is interpolate the sounding data
-!     to the model data at the model levels with pressure.
+!     This function will convert the sounding data (u1, v1)
+!     to the model input with pressure interpolation.
 !      
 !     [INPUT] ------
 !     NU1       : number of sounding layer
@@ -189,8 +189,8 @@ CONTAINS
   SUBROUTINE USER_interpolate_forcing_profile(NQ1, PQ1, Q1OBS, Q2OBS, WLS1)
       IMPLICIT NONE
 ! ********************
-!     This function is convert and interpolate the sounding data
-!     to the model data at the model levels with pressure.
+!     This function will convert the sounding data (q1obs, q2obs)
+!     to the model input with pressure interpolation.
 !      
 !     [INPUT] ------
 !     NQ1       : number of sounding layer
@@ -208,7 +208,6 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(IN) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), WLS1(NQ1)
 
 
-      REAL (KIND=dbl_kind) ::  scaleq=0._dbl_kind
       REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
       REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
 
@@ -255,8 +254,8 @@ CONTAINS
 !     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 
 ! ********************
-!     This function is convert and interpolate the sounding data (t, qv)
-!     to the model data at the model levels with height. modify the 
+!     This function will convert and interpolate the sounding data (t, qv)
+!     to the model input with height interpolation and modify the 
 !     profile through the saturatied adjustment. the QC, QI is set zeros.
 !      
 !     [INPUT] ------

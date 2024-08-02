@@ -42,6 +42,8 @@ CONTAINS
 
       integer (kind=int_kind), intent(in) :: itt
 
+      REAL (KIND=dbl_kind) ::  scaleq=0._dbl_kind
+
       INTEGER (KIND=int_kind) :: &
          i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
          n          ! time level index
@@ -119,6 +121,10 @@ CONTAINS
       temp=pibar
       write(99,rec=4) temp
       temp=rho
+      write(99,rec=5) temp
+      temp=Q1LS
+      write(99,rec=5) temp
+      temp=Q2LS
       write(99,rec=5) temp
       CLOSE(99)
       endif
