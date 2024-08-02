@@ -21,7 +21,7 @@ USE petscsys
 USE pnetcdf
 USE wind_module
 USE petsc_vvm_solver, only: petsc_solver_initialize
-USE user_module, only: USER_create_profile
+USE user_module, only: USER_create_profile_from_keyin
 
 
 IMPLICIT NONE
@@ -47,26 +47,6 @@ CONTAINS
          n          ! time level index
       REAL (KIND=int_kind) :: temp(NK3)
 
-!      DATA NU1/6/,NT1/625/,NQ1/20/
-!!       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-!!               ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-!!               ,111.3,92.6/
-!!       DATA QC1/29*0./
-
-!!!      REAL (KIND=dbl_kind) ::  Q1OBS(20),Q2OBS(20)
-!!!      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-!!!                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-!!!      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-!!!                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
-
-!      REAL (KIND=dbl_kind) ::  PU1(6),U1(6),V1(6)
-!      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-!      DATA U1/  5.0, 4.0, 0.0,  -1.0, -1.0, -1.0/
-!      DATA V1/  0.0, 0.0, 0.0, 0.0, 0.0, 0.0/
-
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
       casename='chem_ish_winter'
@@ -76,7 +56,7 @@ CONTAINS
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
       SST = 300.
-      CALL USER_create_profile
+      CALL USER_create_profile_from_keyin
 
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
