@@ -19,10 +19,96 @@ PUBLIC :: \
 
 CONTAINS
 
-  SUBROUTINE  USER_create_profile
+  SUBROUTINE USER_create_profile
       IMPLICIT NONE
-      !! return THBAR, QVBAR on model levels
-      !! return PBAR,PIBAR, RHO, RHOZ
+
+      ! GIVEN PBAR(NK3)  [Pa],     PIBAR(NK3)
+      ! GIVEN THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
+      ! GIVEN RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+      CALL USER_given_thermoal_profile
+
+      ! GIVEN Q1LS(NK3), Q2LS(NK3), WLS1(NK3)
+      CALL USER_given_forcing_profile
+
+      ! GIVEN UG, VG
+
+
+
+  ENDSUBROUTINE USER_create_profile
+
+  SUBROUTINE USER_given_forcing_profile
+      IMPLICIT NONE
+      !! PBAR must be geven before this interpolate function
+      !! given Q1LS(NK3), Q2LS(NK3), WLS1(NK3)
+
+      REAL (KIND=dbl_kind) ::  scaleq=0._dbl_kind
+      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
+      REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
+
+      INTEGER (KIND=int_kind), PARAMETER :: NQ1=35
+      REAL (KIND=dbl_kind) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), WLS1(NQ1)
+
+      REAL (KIND=dbl_kind) :: GAMFAC
+      integer ::  K1, K2, K
+      logical lf
+      
+      CHARACTER(len=300) :: fname
+      INTEGER :: i
+      REAL (KIND=dbl_kind) :: tempr8_5arr(5)
+
+      GAMFAC = HLF / CP
+
+     ! 47918.20140107.sounding.txt
+      fname='/data/C.shaoyu/aries/sounding_txt/47918.20190119.taiwania.txt'
+      if (my_task==0) write(*,*) "fname:", trim(fname)
+      open(unit=88, file=trim(fname), form='formatted', status='old')
+      read(88, *)   ! header
+      DO i=1,NQ1
+        READ(88, *) tempr8_5arr
+        PQ1(i) = tempr8_5arr(5) * 100.
+      ENDDO
+      CLOSE(88)
+      
+      WLS1=0.
+
+      Q1OBS(:) = 0.
+      Q2OBS(:) = 0.
+
+      DO 200 K = 2, NK3
+      IF ( ZT(K) .LT. 15000. ) THEN
+      K1 = INDEXR(PBAR(K),NQ1,PQ1,LF)
+      K2 = K1 + 1
+      Q1LS (K) =  &
+        FINTRP(1,PBAR(K),PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
+      Q2LS (K) =  &
+        FINTRP(1,PBAR(K),PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
+      ELSE
+      END IF
+  200 CONTINUE
+
+!     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
+!     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
+
+      IF ( Q1Q2 ) SCALEQ = SCALE
+
+      DO 210 K = 1, NK3
+      Q1LS (K) = -1.* SCALEQ * Q1LS (K) / PIBAR(K) / SECDAY
+      Q2LS (K) = SCALEQ * Q2LS (K) / (GAMFAC * SECDAY)
+  210 CONTINUE
+
+#if !defined (RADCODE)
+      DO 212 K = 1, NK3
+      Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
+  212 CONTINUE
+#endif
+
+      
+  ENDSUBROUTINE USER_given_forcing_profile
+
+  SUBROUTINE  USER_given_thermoal_profile
+      IMPLICIT NONE
+      !! given THBAR(NK3), QVBAR(NK3)
+      !! given PBAR(NK3),  PIBAR(NK3), RHO(NK3), RHOZ(NK3)
       REAL (KIND=dbl_kind) :: PZERO = 100000._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: RGAS = 287.04     
 
@@ -201,7 +287,7 @@ CONTAINS
       ENDIF
 
 
-  ENDSUBROUTINE USER_create_profile
+  ENDSUBROUTINE  USER_given_thermoal_profile
   
   SUBROUTINE USER_TPE_sounding
        IMPLICIT NONE

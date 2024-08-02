@@ -45,12 +45,7 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
          n          ! time level index
-      REAL (KIND=dbl_kind) ::  scaleq=0._dbl_kind
-      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
-      REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
       REAL (KIND=int_kind) :: temp(NK3)
-
-
 
 !      DATA NU1/6/,NT1/625/,NQ1/20/
 !!       DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
@@ -74,13 +69,7 @@ CONTAINS
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
-
-
-
-      INTEGER (KIND=int_kind), PARAMETER :: NQ1=35
-      REAL (KIND=dbl_kind) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), WLS1(NQ1)
-
-      INTEGER (KIND=int_kind), PARAMETER :: NU1=35
+      INTEGER, PARAMETER :: NU1=35
       REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
 
       logical lf
@@ -100,7 +89,6 @@ CONTAINS
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
       SST = 300.
-
       CALL USER_create_profile
 
      ! 47918.20140107.sounding.txt
@@ -119,16 +107,10 @@ CONTAINS
         print *, 'read data in p:',  p1(1),  p1(NU1-1),  p1(NU1), NU1
       endif
       
-      wls1=0.
-
       do k=1,NU1
         P1(k)  = P1(k)*100.
       enddo
-
-      PQ1      = P1
       PU1      = P1
-      Q1OBS(:) = 0.
-      Q2OBS(:) = 0.
 
 
 !*****************************************************
@@ -142,7 +124,6 @@ CONTAINS
 
 !      SST = 298.13
 
-      GAMFAC = HLF / CP
 
 !     DENSITY FOR k=1/2
 
@@ -159,36 +140,6 @@ CONTAINS
       DO 102 K=1,NK2
       RHOW(K)=RHOZ(K)  ! This line added with removal of equivalence in constld
   102 CONTINUE
-
-      DO 200 K = 2, NK3
-      IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K),NQ1,PQ1,LF)
-      K2 = K1 + 1
-      Q1LS (K) =  &
-        FINTRP(1,PBAR(K),PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
-      Q2LS (K) =  &
-        FINTRP(1,PBAR(K),PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
-      ELSE
-      Q1LS (K) = 0.0
-      Q2LS (K) = 0.0
-      END IF
-  200 CONTINUE
-
-!     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
-!     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
-
-      IF ( Q1Q2 ) SCALEQ = SCALE
-
-      DO 210 K = 1, NK3
-      Q1LS (K) = -1.* SCALE * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = SCALE * Q2LS (K) / (GAMFAC * SECDAY)
-  210 CONTINUE
-
-#if !defined (RADCODE)
-      DO 212 K = 1, NK3
-      Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
-  212 CONTINUE
-#endif
 
       DO 220 K = 2, NK2
       PBARMB = PBAR(K)
