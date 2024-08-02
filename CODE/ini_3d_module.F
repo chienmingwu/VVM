@@ -124,25 +124,6 @@ CONTAINS
       locean = .true.
       psfx = .false.
 
-!!        WRITE(95,*) '************* INITIAL PROFILE ****************'
-!!        WRITE(95,401)
-!!        WRITE(95,402) (ZT(K),PBAR(K),T(K),THBAR(K),QVBAR(K),UG(K),  &
-!!                       K=2,NK2)
-!!        WRITE(95,*) 
-!!        WRITE(95,*) 
-!!        WRITE(95,*) '************* LS FORCING **********************'
-!!        WRITE(95,403)
-!!        WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),WLS(K),K=2,NK2)
-!!  
-!!  
-!!    401 FORMAT (7X,'Z(m)',2X,'PBAR(mb)',4X,'T(K)',4X,'THBAR(K)',2X,  &
-!!         'QVBAR(g/kg)',2X,'U(m/s)'//)
-!!  
-!!    402 FORMAT ( 0PF10.0,-2PF10.1,0PF10.2,0PF10.2,3PF10.1,0PF10.1)
-!!  
-!!    403 FORMAT (7X,'Z(m)',3X,'Q1LS(K/day)',1X,'Q2LS(K/day)'//)
-!!    404 FORMAT (0PF10.0,0PE12.3,0PE12.3,0PE12.3)
-
       if(my_task == 0) then
       INQUIRE(iolength=k) temp
       OPEN(UNIT=99,FILE='bar.dat',FORM='unformatted',STATUS='unknown', &
