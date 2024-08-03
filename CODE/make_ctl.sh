@@ -538,6 +538,36 @@ cd ../${outdir}
 set expname = ` echo ${thermo} | cut -d"." -f 1 `
 
 # produce ctl 
+# =================bar.ctl============================
+echo 'DSET ^../bar.dat \
+TITLE BAR profile \
+UNDEF 99999. \
+CACHESIZE 10000000 \
+XDEF 1 LINEAR '${xst}' '${xlen}' \
+YDEF 1 LINEAR '${yst}' '${ylen}' \
+ZDEF '${nz}' LEVELS ' > bar.ctl
+
+set n = 0
+while ( ${n} < $#zc )
+@ n++
+echo ${zc[${n}]} >> bar.ctl
+end
+
+echo 'TDEF 1 LINEAR 00:00Z01JAN2000 1mn \
+VARS 10 \
+ pbar   '${nz}' 99 pbar  [Pa]  \
+ pibar  '${nz}' 99 pibar  \
+ rho    '${nz}' 99 rho   [kg/m3] \
+ thbar  '${nz}' 99 thbar [K] \
+ qvbar  '${nz}' 99 qvbar [kg/kg] \
+ UG     '${nz}' 99 UG    [m/s] \
+ VG     '${nz}' 99 VG    [m/s] \
+ Q1LS   '${nz}' 99 Q1LS  [K/s] \
+ Q2LS   '${nz}' 99 Q2LS  [g/g/s] \
+ WLS    '${nz}' 99 WLS   [m/s] \
+ENDVARS \
+' >> bar.ctl
+
 # =================Thermodynamic============================
 echo 'DSET ^../archive/'${expname}'.L.Thermodynamic-%tm6'${tail}' \
 DTYPE netcdf \

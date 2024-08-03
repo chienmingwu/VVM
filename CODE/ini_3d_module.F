@@ -47,7 +47,7 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
          n          ! time level index
-      REAL (KIND=int_kind) :: temp(NK3)
+      REAL (KIND=int_kind) :: temp(NK2)
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
@@ -124,20 +124,26 @@ CONTAINS
       INQUIRE(iolength=k) temp
       OPEN(UNIT=99,FILE='bar.dat',FORM='unformatted',STATUS='unknown', &
       access='direct',recl=k)
-      temp=thbar
+      temp=pbar(1:NK2)
       write(99,rec=1) temp
-      temp=qvbar
+      temp=pibar(1:NK2)
       write(99,rec=2) temp
-      temp=pbar
+      temp=rho(1:NK2)
       write(99,rec=3) temp
-      temp=pibar
+      temp=thbar(1:NK2)
       write(99,rec=4) temp
-      temp=rho
+      temp=qvbar(1:NK2)
       write(99,rec=5) temp
-      temp=Q1LS
-      write(99,rec=5) temp
-      temp=Q2LS
-      write(99,rec=5) temp
+      temp=UG(1:NK2)
+      write(99,rec=6) temp
+      temp=VG(1:NK2)
+      write(99,rec=7) temp
+      temp=Q1LS(1:NK2)
+      write(99,rec=8) temp
+      temp=Q2LS(1:NK2)
+      write(99,rec=9) temp
+      temp=WLS(1:NK2)
+      write(99,rec=10) temp
       CLOSE(99)
       endif
 
