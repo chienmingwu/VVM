@@ -66,7 +66,7 @@ CONTAINS
 
       ! GIVEN PBAR(NK3)  [Pa],     PIBAR(NK3)
       ! GIVEN THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
-      ! GIVEN RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3], GAMMA(NK3)
+      ! GIVEN RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
       CALL USER_interpolate_thermoal_profile( &
            NT1, P1, T1, QV1 &
            )
@@ -128,7 +128,7 @@ CONTAINS
 
       ! GIVEN PBAR(NK3)  [Pa],     PIBAR(NK3)
       ! GIVEN THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
-      ! GIVEN RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3], GAMMA(NK3)
+      ! GIVEN RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
       CALL USER_interpolate_thermoal_profile( &
            NT1, P1, T1, QV1 &
            )
@@ -269,11 +269,10 @@ CONTAINS
 !     QVBAR(NK3): mixing ratio of water vapor [kg/kg]
 !     PIBAR(NK3)
 !     RHO(NK3), RHOZ(NK3): air density [kg/m3]
-!     GAMMA(NK3): not used !?
 ! ********************
 
       !! given THBAR(NK3), QVBAR(NK3)
-      !! given PBAR(NK3),  PIBAR(NK3), RHO(NK3), RHOZ(NK3), GAMMA(NK3)
+      !! given PBAR(NK3),  PIBAR(NK3), RHO(NK3), RHOZ(NK3)
       REAL (KIND=dbl_kind) :: PZERO = 100000._dbl_kind      
       REAL (KIND=dbl_kind), PARAMETER :: RGAS = 287.04     
 
@@ -396,12 +395,11 @@ CONTAINS
 
       IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
 
-!     PROFILES OF RHO, RHOz, AND GAMMA
+!     PROFILES OF RHO, RHOz
 
       GAMFAC = HLF / CP
 
       DO 170 K = 2, NK3
-      GAMMA(K) = GAMFAC / PIBAR(K)
       ALPHA(K) = RGAS * TV(K) / PBAR(K)
   170 CONTINUE
 

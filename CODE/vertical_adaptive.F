@@ -113,7 +113,7 @@ PUBLIC  ::  init_origin_tree , print_linked_list
             !! [11] qvbar,     ! mean profile of water vapor mixing ratio (kg/kg)
             !! [12] pbar,      ! pressure at the layer position (Pa)
             !! [13] pibar,     ! Exner function at the layer position, T=TH3D*PIBAR
-            !! [14] gamma,     ! not used
+            !! [14] gamma,     ! not used , SHAO, gamma(NK3) removed, 2024.08.03!
             !! [15] wls,       ! large scale profiles of w (m/s
             !! [16] thls,      ! large scale forcing for potential temperature (K/hr)
             !! [17] qvls,      ! large scale forcing for water vapor (g/kg/hr)
@@ -214,7 +214,7 @@ CONTAINS
         comp_buffer%G_nk3(11,in_k)          =  qvbar(out_k)
         comp_buffer%G_nk3(12,in_k)          =  pbar(out_k)
         comp_buffer%G_nk3(13,in_k)          =  pibar(out_k)
-        comp_buffer%G_nk3(14,in_k)          =  gamma(out_k)
+        comp_buffer%G_nk3(14,in_k)          =  0. ! gamma(out_k) !SHAO, gamma(NK3) removed, 2024.08.03!
         comp_buffer%G_nk3(15,in_k)          =  wls(out_k)
         comp_buffer%G_nk3(16,in_k)          =  thls(out_k)
         comp_buffer%G_nk3(17,in_k)          =  qvls(out_k)
@@ -317,7 +317,7 @@ CONTAINS
         qvbar(out_k)         =        comp_buffer%G_nk3(11,in_k)          
         pbar(out_k)          =        comp_buffer%G_nk3(12,in_k)          
         pibar(out_k)         =        comp_buffer%G_nk3(13,in_k)          
-        gamma(out_k)         =        comp_buffer%G_nk3(14,in_k)          
+        !gamma(out_k)         =        comp_buffer%G_nk3(14,in_k)   !SHAO, gamma(NK3) removed, 2024.08.03!
         wls(out_k)           =        comp_buffer%G_nk3(15,in_k)          
         thls(out_k)          =        comp_buffer%G_nk3(16,in_k)          
         qvls(out_k)          =        comp_buffer%G_nk3(17,in_k)          
