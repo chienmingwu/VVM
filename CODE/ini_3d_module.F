@@ -21,7 +21,7 @@ USE petscsys
 USE pnetcdf
 USE wind_module
 USE petsc_vvm_solver, only: petsc_solver_initialize
-USE user_module, only: USER_create_profile_from_keyin
+USE user_module, only: USER_create_bar_profile
 
 
 IMPLICIT NONE
@@ -51,6 +51,11 @@ CONTAINS
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
+#if !defined (RADCODE)
+      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.
+      REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
+#endif
+
       casename='chem_ish_winter'
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
@@ -61,7 +66,7 @@ CONTAINS
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
-      CALL USER_create_profile_from_keyin
+      CALL USER_create_bar_profile
       
 
 !     DENSITY FOR k=1/2
@@ -86,13 +91,20 @@ CONTAINS
       VG(1)   = VG(2)
       VG(NK3) = VG(NK2)
 
-!     PREPARE Q1, Q2 scale
+!     PREPARE Q1, Q2 scale and check the RADCODE default
 
       IF ( Q1Q2 ) SCALEQ = SCALE
       DO 210 K = 1, NK3
       Q1LS (K) = SCALEQ * Q1LS (K)
       Q2LS (K) = SCALEQ * Q2LS (K)
   210 continue
+
+#if !defined (RADCODE)
+      DO 212 K = 1, NK3
+      Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
+  212 CONTINUE
+#endif
+
 
 
 !     OCEAN POINTS

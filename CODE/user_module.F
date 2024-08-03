@@ -15,11 +15,24 @@ IMPLICIT NONE
 PRIVATE
 
 PUBLIC :: \
-  USER_create_profile_from_keyin, &
-  USER_create_profile_from_sounding
+  USER_create_bar_profile
 
 CONTAINS
-
+  SUBROUTINE USER_create_bar_profile
+      !! Object of this function give the BAR profile at model levels
+      !! using the template subrountine.
+      !! 
+      !! BAR profile declare in cdesk and include
+      !! PBAR(NK3)  [Pa],    PIBAR(NK3)
+      !! THBAR(NK3) [K] ,    QVBAR(NK3) [kg/kg]
+      !! RHO(NK3)   [kg/m3], RHOZ(NK3)  [kg/m3]
+      !! Q1LS(NK3)  [K/s],   Q2LS(NK3)  [g/g/s], WLS(NK3)  [m/s]
+      !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
+  
+      CALL USER_create_profile_from_keyin
+      ! CALL USER_create_profile_from_txt
+  ENDSUBROUTINE USER_create_bar_profile
+ 
   SUBROUTINE USER_create_profile_from_keyin
       IMPLICIT NONE
 
@@ -71,8 +84,8 @@ CONTAINS
            NT1, P1, T1, QV1 &
            )
 
-      ! GIVEN Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS1(NK3)
-      CALL USER_interpolate_forcing_profile( &
+      ! GIVEN Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
+      CALL USER_interpolate_largescale_profile( &
            NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
            )
 
@@ -80,10 +93,9 @@ CONTAINS
       CALL USER_interpolate_wind_profile( &
            NU1, PU1, U1, V1 &
            )
-
   ENDSUBROUTINE USER_create_profile_from_keyin
 
-  SUBROUTINE USER_create_profile_from_sounding
+  SUBROUTINE USER_create_profile_from_txt
       IMPLICIT NONE
       INTEGER (KIND=int_kind), PARAMETER :: NT1=35
       REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), QC1(NT1)
@@ -133,8 +145,8 @@ CONTAINS
            NT1, P1, T1, QV1 &
            )
 
-      ! GIVEN Q1LS(NK3), Q2LS(NK3), WLS1(NK3)
-      CALL USER_interpolate_forcing_profile( &
+      ! GIVEN Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
+      CALL USER_interpolate_largescale_profile( &
            NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
            )
 
@@ -143,7 +155,7 @@ CONTAINS
            NU1, PU1, U1, V1 &
            )
 
-  ENDSUBROUTINE USER_create_profile_from_sounding
+  ENDSUBROUTINE USER_create_profile_from_txt
 
   SUBROUTINE USER_interpolate_wind_profile(NU1, PU1, U1, V1)
       IMPLICIT NONE
@@ -186,7 +198,7 @@ CONTAINS
   ENDSUBROUTINE USER_interpolate_wind_profile
 
 
-  SUBROUTINE USER_interpolate_forcing_profile(NQ1, PQ1, Q1OBS, Q2OBS, WLS1)
+  SUBROUTINE USER_interpolate_largescale_profile(NQ1, PQ1, Q1OBS, Q2OBS, WLS1)
       IMPLICIT NONE
 ! ********************
 !     This function will convert the sounding data (q1obs, q2obs)
@@ -197,11 +209,12 @@ CONTAINS
 !     PQ1(NQ1)  : Pressure [Pa]
 !     Q1OBS(NQ1): Q1 profile [K/day]
 !     Q2OBS(NQ1): Q2 profile [K/day]
-!     WLS(NQ1)  : large scale subsidence [???]
+!     WLS1(NQ1)  : large scale profiles of w [m/s]
 
 !     [GIVEN], in public variables, NK3 is number of model levels
 !     Q1LS(NK3): Q1 profile [K/s] [multptile -1]
 !     Q2LS(NK3): Q2 profile [g/g/s]
+!     WLS(NK3)  : large scale profiles of w [m/s]
 ! ********************
 
       INTEGER (KIND=int_kind), INTENT(IN) :: NQ1
@@ -225,7 +238,12 @@ CONTAINS
         FINTRP(1,PBAR(K),PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
       Q2LS (K) =  &
         FINTRP(1,PBAR(K),PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
+      WLS (K) =  &
+        FINTRP(1,PBAR(K),PQ1(K1),WLS1(K1), PQ1(K2),WLS1(K2) )
       ELSE
+      Q1LS (K) = 0.0
+      Q2LS (K) = 0.0
+      WLS  (K) = 0.0
       END IF
   200 CONTINUE
 
@@ -237,14 +255,8 @@ CONTAINS
       Q2LS (K) = Q2LS (K) / (GAMFAC * SECDAY)
   210 CONTINUE
 
-#if !defined (RADCODE)
-      DO 212 K = 1, NK3
-      Q1LS (K) = Q1LS (K) + RAD1 / PIBAR(K) / SECDAY
-  212 CONTINUE
-#endif
-
       
-  ENDSUBROUTINE USER_interpolate_forcing_profile
+  ENDSUBROUTINE USER_interpolate_largescale_profile
 
   SUBROUTINE  USER_interpolate_thermoal_profile(NT1, P1, T1, QV_in)
       IMPLICIT NONE
