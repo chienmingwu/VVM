@@ -719,8 +719,6 @@ CONTAINS
 
       ENDSUBROUTINE SST_RESTART
 
-!^^^^^endif for #if !defined (RESTART)
-
 
       END MODULE ini_3d_module
 
