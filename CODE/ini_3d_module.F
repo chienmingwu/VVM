@@ -62,7 +62,6 @@ CONTAINS
       CZ1 = 1. - CZ2 * DOMAIN
       CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
 
-      SST = 300.
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************

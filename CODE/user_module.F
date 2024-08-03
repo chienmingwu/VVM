@@ -29,6 +29,7 @@ CONTAINS
       !! Q1LS(NK3)  [K/s],   Q2LS(NK3)  [g/g/s], WLS(NK3)  [m/s]
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
   
+      SST = 300.
       CALL USER_create_profile_from_keyin
       ! CALL USER_create_profile_from_txt
   ENDSUBROUTINE USER_create_bar_profile
