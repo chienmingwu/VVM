@@ -548,7 +548,7 @@ rcalc_module.o: kinds.o timer.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o workco
 
 time_interp_module.o: kinds.o PARMSLD.o TIMEINTERP.o CONST3D.o CONSTLD.o workcom.o utils.o domain_decomposition.o
 
-time_manager_module.o: kinds.o PARMSLD.o TIMEINFO.o CONSTLD.o ldinput.o TIMEINTERP.o CONST3D.o workcom.o domain_decomposition.o
+time_manager_module.o: kinds.o PARMSLD.o TIMEINFO.o CONSTLD.o ldinput.o TIMEINTERP.o CONST3D.o workcom.o domain_decomposition.o user_module.o
 
 land_module.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o module_simple_driver.o workcom.o kpp_module.o
 

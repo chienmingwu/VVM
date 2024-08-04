@@ -16,7 +16,8 @@ PRIVATE
 
 PUBLIC :: &
   USER_set_bar_profile, &
-  USER_set_vertical_coordinate
+  USER_set_vertical_coordinate, &
+  USER_set_start_time
 
 CONTAINS
   SUBROUTINE USER_set_bar_profile
@@ -34,8 +35,23 @@ CONTAINS
       CALL USER_create_profile_from_keyin
       ! CALL USER_create_profile_from_txt
   ENDSUBROUTINE USER_set_bar_profile
+ 
+  SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
+      IMPLICIT NONE
+! Specify hour in fractional UTC time (Greenwich)
+      INTEGER (KIND=int_kind), INTENT(out) ::  &
+         iyear0,imonth0,iday0
+      REAL (KIND=dbl_kind), INTENT(out)    ::  &
+         hour0
+  
+      iyear0 = 2019
+      imonth0 = 1
+      iday0 = 18
+      hour0 = 22.0 !06(UTC+8)
+  ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_vertical_coordinate
+      IMPLICIT NONE
 ! local variables
       INTEGER (KIND=int_kind) :: k,kk,kt,kt1  ! vertical loop index
 
