@@ -21,7 +21,8 @@ USE petscsys
 USE pnetcdf
 USE wind_module
 USE petsc_vvm_solver, only: petsc_solver_initialize
-USE user_module, only: USER_create_bar_profile
+USE user_module, only: USER_set_bar_profile, &
+                       USER_set_vertical_coordinate
 
 
 IMPLICIT NONE
@@ -58,14 +59,15 @@ CONTAINS
 
       casename='chem_ish_winter'
 
-      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
-      CZ1 = 1. - CZ2 * DOMAIN
-      CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
+!      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
+!      CZ1 = 1. - CZ2 * DOMAIN
+!      CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
+      CALL USER_set_vertical_coordinate
 
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
-      CALL USER_create_bar_profile
+      CALL USER_set_bar_profile
       
 
 !     DENSITY FOR k=1/2
