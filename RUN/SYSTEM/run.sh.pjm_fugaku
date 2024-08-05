@@ -23,6 +23,7 @@ export LD_LIBRARY_PATH=${spack_opt}${opt_hdf5}/lib:${spack_opt}${opt_netcdf}/lib
 export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
+mpirun -np 1 ./create_topolsm
 mpiexec -n total_cores ./vvm 
 date >> runtime
 
