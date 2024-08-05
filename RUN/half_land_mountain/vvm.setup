@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = half_land_mountain
+set expname = half_land_mountain_moist
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `

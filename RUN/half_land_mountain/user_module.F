@@ -69,7 +69,6 @@ CONTAINS
       DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
 
       P1(:) = P1*100.
-      QV1(:) = QV1(:)*0.001
 
       !! PU1(:) = PU1(:)*100.
       !! U1(:)  = 3.
@@ -164,10 +163,10 @@ CONTAINS
 
       if(I .lt. MI_GLOB*7/8) then
       routput_user(i,j,1) = &
-                 (I-MI_GLOB*3/4)*1000./(256./8.)
+                 (I-MI_GLOB*3/4)*1000./(MI_GLOB/8.)
       else
       routput_user(i,j,1) = &
-                 1000.+(MI_GLOB*7/8-I)*1000/(256./8.)
+                 1000.+(MI_GLOB*7/8-I)*1000/(MI_GLOB/8.)
       endif
 
   501 CONTINUE
