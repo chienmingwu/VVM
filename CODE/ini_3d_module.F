@@ -20,7 +20,7 @@ USE petscsys
 USE pnetcdf
 USE wind_module
 USE petsc_vvm_solver, only: petsc_solver_initialize
-USE user_module, only: USER_set_bar_profile_and_SST, &
+USE user_module, only: USER_set_mean_profile_and_SST, &
                        USER_set_vertical_coordinate
 
 
@@ -63,7 +63,7 @@ CONTAINS
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
-      CALL USER_set_bar_profile_and_SST
+      CALL USER_set_mean_profile_and_SST
       
 
 !     DENSITY FOR k=1/2

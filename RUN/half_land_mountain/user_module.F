@@ -14,17 +14,17 @@ IMPLICIT NONE
 PRIVATE
 
 PUBLIC :: &
-  USER_set_bar_profile_and_SST, &
+  USER_set_mean_profile_and_SST, &
   USER_set_vertical_coordinate, &
   USER_set_start_time, &
   USER_set_topography_and_land_type
 
 CONTAINS
-  SUBROUTINE USER_set_bar_profile_and_SST
-      !! Object of this function give the BAR profile at model levels
+  SUBROUTINE USER_set_mean_profile_and_SST
+      !! Object of this function give the MEAN profile at model levels
       !! using the template subrountine.
       !! 
-      !! BAR profile declare in cdesk and they include
+      !! MEAN profile declare in cdesk and they include
       !! SST [K] 
       !! PBAR(NK3)  [Pa],    PIBAR(NK3)
       !! THBAR(NK3) [K] ,    QVBAR(NK3) [kg/kg]
@@ -106,7 +106,7 @@ CONTAINS
       !!       )
 
   
-  ENDSUBROUTINE USER_set_bar_profile_and_SST
+  ENDSUBROUTINE USER_set_mean_profile_and_SST
  
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
       !! This module is used in time_manager_module.F 
