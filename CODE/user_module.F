@@ -38,8 +38,9 @@ CONTAINS
   ENDSUBROUTINE USER_set_bar_profile_and_SST
  
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
+      !! This module is used in time_manager_module.F 
+      !! set the start time.
       IMPLICIT NONE
-! Specify hour in fractional UTC time (Greenwich)
       INTEGER (KIND=int_kind), INTENT(out) ::  &
          iyear0,imonth0,iday0
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
@@ -48,19 +49,28 @@ CONTAINS
       iyear0 = 2019
       imonth0 = 1
       iday0 = 18
+! Specify hour in fractional UTC time (Greenwich)
       hour0 = 22.0 !06(UTC+8)
   ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_topography_and_land_type(&
                                      taiwanvvm_flag, ioutput_user, routput_user)
       IMPLICIT NONE
+      !!!!!!!!!!!!!!!!!!
+      !! This module is used in create_topolsm.F
+      !! --
+      !! if taiwanvvm_flag is True, land surface data
+      !! automatically input in create_topolsm.F.
+      !! --
+      !! if taiwanvvm_flag is .False., prescibe idealized 
+      !! land surface data through routput_user and ioutput_user.
+      !!!!!!!!!!!!!!!!!!
       integer(kind=int_kind), dimension(mi_glob,mj_glob,3), intent(out) :: ioutput_user
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
       logical, intent(out) :: taiwanvvm_flag
 
       taiwanvvm_flag = .True.
 
-      ! if taiwanvvm_flag == .False., prescibe idealized land surface data.
       ! initialization with ocean
       routput_user(:,:,1)=0.   ! height (m)
       routput_user(:,:,2)=8.   ! albedo (%)
@@ -76,7 +86,8 @@ CONTAINS
 
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE
-! local variables
+      !! This vertical coordinate setting is for TaiwanVVM
+
       INTEGER (KIND=int_kind) :: k,kk,kt,kt1  ! vertical loop index
 
       CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
@@ -186,19 +197,19 @@ CONTAINS
       PU1(:) = PU1(:)*100.
       WLS1(:) = 0.
 
-      ! GIVEN PBAR(NK3)  [Pa],     PIBAR(NK3)
-      ! GIVEN THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
-      ! GIVEN RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+      ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
+      ! SET THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
+      ! SET RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
       CALL USER_interpolate_thermoal_profile( &
            NT1, P1, T1, QV1 &
            )
 
-      ! GIVEN Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
+      ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
       CALL USER_interpolate_largescale_profile( &
            NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
            )
 
-      ! GIVEN UG(NK3)[m/s], VG(NK3)[m/s]
+      ! SET UG(NK3)[m/s], VG(NK3)[m/s]
       CALL USER_interpolate_wind_profile( &
            NU1, PU1, U1, V1 &
            )
@@ -247,19 +258,19 @@ CONTAINS
       Q2OBS    = 0.
 
 
-      ! GIVEN PBAR(NK3)  [Pa],     PIBAR(NK3)
-      ! GIVEN THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
-      ! GIVEN RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+      ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
+      ! SET THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
+      ! SET RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
       CALL USER_interpolate_thermoal_profile( &
            NT1, P1, T1, QV1 &
            )
 
-      ! GIVEN Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
+      ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
       CALL USER_interpolate_largescale_profile( &
            NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
            )
 
-      ! GIVEN UG(NK3)[m/s], VG(NK3)[m/s]
+      ! SET UG(NK3)[m/s], VG(NK3)[m/s]
       CALL USER_interpolate_wind_profile( &
            NU1, PU1, U1, V1 &
            )
@@ -279,7 +290,7 @@ CONTAINS
 !     U1(NU1)   : u-conpont wind of sounding [m/s]
 !     V1(NU1)   : v-conpont wind of sounding [m/s]
 !
-!     [GIVEN], in public variables, NK3 is number of model levels
+!     [SET], in public variables, NK3 is number of model levels
 !     UG(NK3)   : u-conpont wind of sounding [m/s]
 !     VG(NK3)   : v-conpont wind of sounding [m/s]
 ! ********************
@@ -320,7 +331,7 @@ CONTAINS
 !     Q2OBS(NQ1): Q2 profile [K/day]
 !     WLS1(NQ1)  : large scale profiles of w [m/s]
 
-!     [GIVEN], in public variables, NK3 is number of model levels
+!     [SET], in public variables, NK3 is number of model levels
 !     Q1LS(NK3): Q1 profile [K/s] [multptile -1]
 !     Q2LS(NK3): Q2 profile [g/g/s]
 !     WLS(NK3)  : large scale profiles of w [m/s]
@@ -370,7 +381,7 @@ CONTAINS
   SUBROUTINE  USER_interpolate_thermoal_profile(NT1, P1, T1, QV_in)
       IMPLICIT NONE
 !     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
-!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
+!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE SET IN DATA
 !     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
 !     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 
@@ -385,7 +396,7 @@ CONTAINS
 !     T1(NT1):  Temperature [K]
 !     Qv_in(NT1): mixing ratio of water vapor [kg/kg]
 
-!     [GIVEN], in public variables, NK3 is number of model levels
+!     [SET], in public variables, NK3 is number of model levels
 !     THBAR(NK3): Potential temperature [K]
 !     QVBAR(NK3): mixing ratio of water vapor [kg/kg]
 !     PIBAR(NK3)
