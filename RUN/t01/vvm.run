@@ -25,7 +25,7 @@ set datadir = ${vvmdir}'/DATA'
 set rundir = ${vvmdir}'/RUN'
 set expdir = ${datadir}'/'${expname}
 set codedir = ${datadir}'/'${expname}'/CODE'
-set blddir = ${vvmdir}'/RUN/BUILD'
+set blddir = ${vvmdir}'/RUN/SYSTEM'
 
 # prepare for compiling code
 cd ${expdir}
