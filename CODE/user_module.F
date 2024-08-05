@@ -8,7 +8,6 @@ USE workcom
 USE const3d
 USE utils
 USE bound
-USE z_coord
 use domain_decomposition, only : my_task
 
 IMPLICIT NONE

@@ -242,7 +242,17 @@ NOCHECK = petsc_vvm_solver.F
 
 # Der (7 Jan 2023)
 TOPOCODE = create_topolsm.F 
-TOPODEP = $(TOPOCODE) z_coord.F kinds.F PARMSLD.F90 CONSTLD.F90
+TOPODEP = $(TOPOCODE) \
+	kinds.F \
+	PARMSLD.F90 \
+	CONSTLD.F90 \
+	user_module.F \
+	CONST3D.F90 \
+	utils.F \
+	workcom.F90 \
+	bound.F \
+	domain_decomposition.F \
+	physics_v10d.f90 \
 
 ####hchun###
 SRC_FREE = $(SRC_FREE_CDECKS) $(SRC_FREE_RRTMG) $(SRC_FREE_CODE) $(SRC_FREE_LSM) $(SRC_FREE_RAD_RRTM_OPT)
@@ -518,9 +528,9 @@ z_coord.o: kinds.o PARMSLD.o CONSTLD.o
 
 ldinput.o: kinds.o PARMSLD.o RADOUTLD.o CONSTLD.o CONST3D.o workcom.o ldoutput.o ini_3d_module.o gather_scatter.o domain_decomposition.o bound.o TIMEINTERP.o new_output_nc.o wind_module.o
 
-ini_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o TIMEINTERP.o bound.o time_interp_module.o update_tracer_module.o ldoutput.o z_coord.o domain_decomposition.o turb_1d_module.o turb_3d_module.o wind_module.o user_module.o
+ini_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o TIMEINTERP.o bound.o time_interp_module.o update_tracer_module.o ldoutput.o domain_decomposition.o turb_1d_module.o turb_3d_module.o wind_module.o user_module.o
 
-user_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o bound.o z_coord.o
+user_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o bound.o domain_decomposition.o physics_v10d.o
 
 ldoutput.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o gather_scatter.o domain_decomposition.o TIMEINTERP.o 
 
@@ -588,6 +598,6 @@ ras_module.o: ras_module.F kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decompos
 vertical_adaptive.o: CONST3D.o CONSTLD.o PARMSLD.o kinds.o domain_decomposition.o
 #-----------------------------------------------------------------------------
 # Der (7 Jan 2023)
-create_topolsm.o: CONSTLD.o PARMSLD.o kinds.o z_coord.o
+create_topolsm.o: CONSTLD.o PARMSLD.o kinds.o user_module.o
 
 

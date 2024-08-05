@@ -182,10 +182,11 @@ topography :
 newtopo : $(TOPO)
 
 TOPOOBJT = $(TOPODEP:.F=.o)
-TOPOOBJ = $(TOPOOBJT:.F90=.o)
+TOPOOBJU = $(TOPOOBJT:.F90=.o)
+TOPOOBJ  = $(TOPOOBJU:.f90=.o)
 TOPOLSM = $(TOPOCODE:.F=.o)
 $(TOPOLSM)  : FORM = $(FREE)
-$(TOPOLSM): %.o: %.F
+$(TOPOLSM): %.o: %.F 
 	$(CPP) $(CPPFLAGS) $(CPP_OPTS) $< > ./$*.$(SUF)
 	$(FC) -c $(CH) $(FFLAGS) $(FORM) $(PRECISION) $(TARGET_ARCH) ./$*.$(SUF)
 

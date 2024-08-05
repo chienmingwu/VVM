@@ -9,7 +9,6 @@ USE const3d
 USE utils
 USE bound
 USE update_tracer_module
-USE z_coord
 USE domain_decomposition
 #if defined (DIFFUSION)
 USE TURB_3D_module
@@ -59,9 +58,6 @@ CONTAINS
 
       casename='chem_ish_winter'
 
-!      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
-!      CZ1 = 1. - CZ2 * DOMAIN
-!      CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
       CALL USER_set_vertical_coordinate
 
 !*****************************************************

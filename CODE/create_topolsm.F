@@ -1,8 +1,8 @@
 program create_topolsm
 use netcdf
-use z_coord
 use parmsld
 use constld
+use user_module, only : USER_set_vertical_coordinate
 implicit none
 
 integer :: i,j,k,m,n,o,ii,jj,kk,is,js
@@ -143,10 +143,7 @@ open(unit=15,file='INPUT',form='formatted')
 read(15, INPUT3)
 close(15)
 
-CZ2=(DZ-DZ1)/(DZ*(DOMAIN-DZ))
-CZ1=1.-CZ2*DOMAIN
-
-call coords_2d(CZ1,CZ2,DZ,ZB)
+call USER_set_vertical_coordinate
 
 if (taiwanvvm) then
   ! read TaiwanVVM data
