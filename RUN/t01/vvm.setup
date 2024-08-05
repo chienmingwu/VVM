@@ -7,10 +7,6 @@
 set echo  # echoes the commands
 set expname = chem20190119
 
-# set job system and compiler
-set compiler = 'intel_mogamd'
-set jobsys   = 'slurm_mogamd_intel'
-
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
 set datadir = ${vvmdir}'/DATA'

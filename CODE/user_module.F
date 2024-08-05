@@ -15,16 +15,17 @@ IMPLICIT NONE
 PRIVATE
 
 PUBLIC :: &
-  USER_set_bar_profile, &
+  USER_set_bar_profile_and_SST, &
   USER_set_vertical_coordinate, &
   USER_set_start_time
 
 CONTAINS
-  SUBROUTINE USER_set_bar_profile
+  SUBROUTINE USER_set_bar_profile_and_SST
       !! Object of this function give the BAR profile at model levels
       !! using the template subrountine.
       !! 
       !! BAR profile declare in cdesk and they include
+      !! SST [K] 
       !! PBAR(NK3)  [Pa],    PIBAR(NK3)
       !! THBAR(NK3) [K] ,    QVBAR(NK3) [kg/kg]
       !! RHO(NK3)   [kg/m3], RHOZ(NK3)  [kg/m3]
@@ -32,9 +33,9 @@ CONTAINS
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
   
       SST = 300.
-      CALL USER_create_profile_from_keyin
-      ! CALL USER_create_profile_from_txt
-  ENDSUBROUTINE USER_set_bar_profile
+      !CALL USER_create_profile_from_keyin
+      CALL USER_create_profile_from_txt
+  ENDSUBROUTINE USER_set_bar_profile_and_SST
  
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
       IMPLICIT NONE
