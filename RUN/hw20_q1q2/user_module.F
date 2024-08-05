@@ -50,7 +50,7 @@ CONTAINS
       SST = 300.
 
 !     initialization for rcemip
-      filename="/home/der0318/data_rcemip/snd_rcemip_anal300_v3"
+      filename="./user_files/snd_rcemip_anal300_v3"
       OPEN(939,FILE=trim(filename))
       READ(939,*)
       DO k=1,nk2
@@ -139,7 +139,7 @@ CONTAINS
       INTEGER (KIND=int_kind) :: k  ! vertical loop index
       CHARACTER(100) :: filename
 
-      filename="/home/der0318/data_rcemip/snd_rcemip_anal300_v3"
+      filename="./user_files/snd_rcemip_anal300_v3"
       OPEN(939,FILE=trim(filename))
       READ(939,*)
       DO k=1,nk2

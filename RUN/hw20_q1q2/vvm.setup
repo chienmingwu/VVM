@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = hw20_q1q2
+set expname = hw20_q1q2_small
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -13,7 +13,7 @@ set datadir = ${vvmdir}'/DATA'
 set rundir = ${vvmdir}'/RUN'
 set expdir = ${datadir}'/'${expname}
 set codedir = ${datadir}'/'${expname}'/CODE'
-set casedir = ` dir `
+set casedir = ` pwd `
 
 if( ! -d ${datadir} ) then      # if ${datadir} is not found, create it!
   mkdir ${datadir}                
@@ -54,6 +54,9 @@ ln -s ${vvmdir}/RUNDATA/p3_lookupTable_2.dat-v6.0 .
 # for chemical scheme
 cp -r ${vvmdir}/CODE/CHEM/* .
 
+# for user files
+cp -r ${casedir}/user_files .
+
 # create CPP list
 cat > definesld.com << 'END1'
 #define MPI
@@ -83,10 +86,10 @@ cat > DOMAIN << 'END3'
 #!/bin/csh
 set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
-sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/50/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
@@ -98,7 +101,7 @@ cat DOMAIN
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
 #         ( case output frequency)   ( result could be seen in ncfile)
