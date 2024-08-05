@@ -1,11 +1,12 @@
 #! /bin/bash -x
-#PJM -g hp200271
+#PJM -g hp230108
 #PJM -L rscgrp="small"
 #PJM -L node=np_nodes
 #PJM -L elapse=walltime
 #PJM --mpi "max-proc-per-node=48"
-#PJM --mpi proc=np_threads
+#PJM --mpi proc=total_cores
 #PJM -N expname 
+#PJM -x PJM_LLIO_GFSCACHE=/vol0005
 #PJM --no-stging
 #PJM -j
 #PJM -s
@@ -19,11 +20,19 @@ export FLIB_BARRIER=HARD
 
 source ~/.bashrc
 
-export LD_LIBRARY_PATH=${spack_opt}${opt_hdf5}/lib:${spack_opt}${opt_netcdf}/lib:${spack_opt}${opt_netcdff}/lib:${spack_opt}${opt_pnetcdf}/lib:${HOME}/.local/lib:$LD_LIBRARY_PATH
+export spack_opt=/vol0500/data/hp230108/u12035
+
+export opt_hdf5=vvmlibs
+export opt_netcdf=vvmlibs
+export opt_netcdff=vvmlibs
+export opt_pnetcdf=vvmlibs
+export opt_petsc=petsc-3.14
+
+export LD_LIBRARY_PATH=${spack_opt}/${opt_hdf5}/lib:${spack_opt}/${opt_netcdf}/lib:${spack_opt}/${opt_netcdff}/lib:${spack_opt}/${opt_pnetcdf}/lib:${spack_opt}/${opt_petsc}/lib:$LD_LIBRARY_PATH
 export EXPHDR_tmp='expname ../../DATA/expname'
 
 date > runtime
-mpirun -np 1 ./create_topolsm
+mpiexec -n 1 ./create_topolsm
 mpiexec -n total_cores ./vvm 
 date >> runtime
 

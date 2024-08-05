@@ -57,7 +57,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/total_cores/4096/g' ${blddir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-sbatch run.sh
+pjsub run.sh
 
 exit
 
