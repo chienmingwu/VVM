@@ -49,7 +49,7 @@ CONTAINS
       CHARACTER(len=300) :: fname
 
       ! 47918.20140107.sounding.txt
-      fname='/data/C.shaoyu/VVM/RUN/taiwanvvm/47918.20190119.taiwania.txt'
+      fname='./user_files/47918.20190119.taiwania.txt'
       if (my_task==0) write(*,*) "fname:", trim(fname)
       open(unit=88, file=trim(fname), form='formatted', status='old')
       read(88, *)   ! header

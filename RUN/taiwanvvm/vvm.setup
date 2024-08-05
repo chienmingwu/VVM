@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = chem20190119
+set expname = taiwanvvm20190119
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -13,7 +13,7 @@ set datadir = ${vvmdir}'/DATA'
 set rundir = ${vvmdir}'/RUN'
 set expdir = ${datadir}'/'${expname}
 set codedir = ${datadir}'/'${expname}'/CODE'
-set casedir = ` dir `
+set casedir = ` pwd `
 
 if( ! -d ${datadir} ) then      # if ${datadir} is not found, create it!
   mkdir ${datadir}                
@@ -54,6 +54,11 @@ ln -s ${vvmdir}/RUNDATA/p3_lookupTable_2.dat-v6.0 .
 # for chemical scheme
 cp -r ${vvmdir}/CODE/CHEM/* .
 
+# for user files
+if( -d ${casedir}/user_files ) then 
+  cp -r ${casedir}/user_files .
+endif
+
 # create CPP list
 cat > definesld.com << 'END1'
 #define MPI
@@ -67,11 +72,11 @@ cat > definesld.com << 'END1'
 #define LSM
 #define AREAMN
 #define RELAX_XY
-#define CHEM
 'END1'
 cat definesld.com
 #define DIRECT
 #define DIAG
+#define CHEM
 
 # Grid parameter declarations.
 # changed from 'cat' to 'sed' - DD 2010.02.09
@@ -87,7 +92,7 @@ sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/45/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 'END3'
