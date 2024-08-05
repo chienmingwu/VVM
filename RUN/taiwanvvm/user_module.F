@@ -83,10 +83,13 @@ CONTAINS
            NT1, P1, T1, QV1 &
            )
 
-      ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
-      CALL USER_interpolate_largescale_profile( &
-           NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
-           )
+      !! ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
+      !! CALL USER_interpolate_largescale_profile( &
+      !!      NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
+      !!      )
+      Q1LS(:) = 0.
+      Q2LS(:) = 0.
+      WLS(:)  = 0.
 
       ! SET UG(NK3)[m/s], VG(NK3)[m/s]
       CALL USER_interpolate_wind_profile( &
