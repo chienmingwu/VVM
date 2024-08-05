@@ -141,6 +141,10 @@ CONTAINS
       write(99,rec=9) temp
       temp=WLS(1:NK2)
       write(99,rec=10) temp
+      DO k=1,nk2
+        temp(k) = DZ/FNT(K)
+      ENDDO
+      write(99,rec=11) temp
       CLOSE(99)
       endif
 
