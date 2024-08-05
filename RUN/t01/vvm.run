@@ -21,6 +21,7 @@ set jobsys   = 'slurm_mogamd_intel'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
+set casedir = ` pwd `
 set datadir = ${vvmdir}'/DATA'
 set rundir = ${vvmdir}'/RUN'
 set expdir = ${datadir}'/'${expname}
@@ -30,6 +31,7 @@ set blddir = ${vvmdir}'/RUN/SYSTEM'
 # prepare for compiling code
 cd ${expdir}
 rsync -av ${vvmdir}'/CODE' .
+cp ${casedir}/user_module.F ${codedir}/
 csh DOMAIN
 
 if( ! -d ${expdir}'/compile_code' ) then
