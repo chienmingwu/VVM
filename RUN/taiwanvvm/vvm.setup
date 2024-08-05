@@ -13,6 +13,7 @@ set datadir = ${vvmdir}'/DATA'
 set rundir = ${vvmdir}'/RUN'
 set expdir = ${datadir}'/'${expname}
 set codedir = ${datadir}'/'${expname}'/CODE'
+set casedir = ` dir `
 
 if( ! -d ${datadir} ) then      # if ${datadir} is not found, create it!
   mkdir ${datadir}                
@@ -31,7 +32,7 @@ mkdir RUNDATA
 mkdir archive
 
 # prepare tables for model
-cp ${rundir}/t01/vvm.setup .
+cp ${casedir}/vvm.setup .
 cp ${vvmdir}/CODE/make_ctl.sh .
 
 # for NOAH LSM

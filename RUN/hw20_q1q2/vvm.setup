@@ -13,6 +13,7 @@ set datadir = ${vvmdir}'/DATA'
 set rundir = ${vvmdir}'/RUN'
 set expdir = ${datadir}'/'${expname}
 set codedir = ${datadir}'/'${expname}'/CODE'
+set casedir = ` dir `
 
 if( ! -d ${datadir} ) then      # if ${datadir} is not found, create it!
   mkdir ${datadir}                
@@ -31,7 +32,7 @@ mkdir RUNDATA
 mkdir archive
 
 # prepare tables for model
-cp ${rundir}/t01/vvm.setup .
+cp ${casedir}/vvm.setup .
 cp ${vvmdir}/CODE/make_ctl.sh .
 
 # for NOAH LSM
@@ -97,7 +98,7 @@ cat DOMAIN
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=2000.,DYNEW=2000.,DZ=100.,DZ1=10.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
 #         ( case output frequency)   ( result could be seen in ncfile)
