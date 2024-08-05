@@ -55,7 +55,9 @@ ln -s ${vvmdir}/RUNDATA/p3_lookupTable_2.dat-v6.0 .
 cp -r ${vvmdir}/CODE/CHEM/* .
 
 # for user files
-cp -r ${casedir}/user_files .
+if( -d ${casedir}/user_files ) then 
+  cp -r ${casedir}/user_files .
+endif
 
 # create CPP list
 cat > definesld.com << 'END1'
