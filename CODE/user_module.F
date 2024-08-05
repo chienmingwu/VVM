@@ -16,7 +16,8 @@ PRIVATE
 PUBLIC :: &
   USER_set_bar_profile_and_SST, &
   USER_set_vertical_coordinate, &
-  USER_set_start_time
+  USER_set_start_time, &
+  USER_set_topography_and_land_type
 
 CONTAINS
   SUBROUTINE USER_set_bar_profile_and_SST
@@ -49,6 +50,29 @@ CONTAINS
       iday0 = 18
       hour0 = 22.0 !06(UTC+8)
   ENDSUBROUTINE USER_set_start_time
+
+  SUBROUTINE USER_set_topography_and_land_type(&
+                                     taiwanvvm_flag, ioutput_user, routput_user)
+      IMPLICIT NONE
+      integer(kind=int_kind), dimension(mi_glob,mj_glob,3), intent(out) :: ioutput_user
+      real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
+      logical, intent(out) :: taiwanvvm_flag
+
+      taiwanvvm_flag = .True.
+
+      ! if taiwanvvm_flag == .False., prescibe idealized land surface data.
+      ! initialization with ocean
+      routput_user(:,:,1)=0.   ! height (m)
+      routput_user(:,:,2)=8.   ! albedo (%)
+      routput_user(:,:,3)=0.   ! green vegetation fraction (%)
+      routput_user(:,:,4)=0.   ! leaf area index (m^2/m^2)
+      routput_user(:,:,5)=0.   ! max. GVF (%)
+      routput_user(:,:,6)=0.   ! min. GVF (%)
+      ioutput_user(:,:,1)=16   ! land type 
+      ioutput_user(:,:,2)=0    ! slope type
+      ioutput_user(:,:,3)=14   ! soil type
+
+  ENDSUBROUTINE USER_set_topography_and_land_type
 
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE
