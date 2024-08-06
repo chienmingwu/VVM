@@ -54,14 +54,16 @@ CONTAINS
       OPEN(939,FILE=trim(filename))
       READ(939,*)
       DO k=1,nk2
-        READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1)
-        111 FORMAT(32X,3F16.4)
+        READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1), UG(k+1), VG(k+1)
+        111 FORMAT(32X,5F16.4)
       ENDDO
       CLOSE(939)
 
       PBAR(1)=PBAR(2)
       THBAR(1)=THBAR(2)
       QVBAR(1)=QVBAR(2)
+      VG(1) = VG(2)
+      UG(1) = UG(2)
 
       PBAR(nk3)=PBAR(nk2)+(PBAR(nk2)-PBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
       THBAR(nk3)=THBAR(nk2)+(THBAR(nk2)-THBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
@@ -75,9 +77,6 @@ CONTAINS
       DO k=1,nk2
         RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
       ENDDO
-
-      UG = 0.
-      VG = 0.
 
       ! GIVEN Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
       CALL USER_interpolate_largescale_profile( &

@@ -34,76 +34,48 @@ CONTAINS
       IMPLICIT NONE
 
       INTEGER (KIND=int_kind), PARAMETER :: NT1=29
-      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1)
-      DATA P1/1000.0,975.0,950.0,925.0,900.0,875.0,850.0,825.0,800.0,775.0 &
-             ,750.0,700.0,650.0,600.0,550.0,500.0,450.0,400.0,350.0 &
-             ,300.0,250.0,225.0,200.0,175.0,150.0,125.0,100.0,70.0 &
-             ,50./
-      DATA T1/301.246,299.169,297.515,296.35,295.014,293.752,292.521,291.309,290.106 &
-             ,288.867,287.545,284.466,280.821,276.82,272.996,268.835,263.996,258.415 &
-             ,251.848,243.709,233.844,228.075,221.699,214.639,206.84,198.676,191.745 &
-             ,194.587,206.771/
-      DATA QV1/0.0179026,0.0174521,0.0164586,0.0150866,0.013841,0.0124337,0.0110566 &
-              ,0.00974031,0.00858361,0.00759569,0.00676534,0.00555704,0.00457475,0.00363432 &
-              ,0.00280347,0.00208696,0.00147428,0.000984061,0.000624419,0.000359956,0.000167552 &
-              ,0.000100977,5.50747e-05,2.7595e-05,1.2715e-05,5.39508e-06,2.6389e-06,2.24212e-06 &
-              ,2.29645e-06/
+      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), U1(NT1), V1(NT1)
+      CHARACTER(len=300)   :: fname
+      INTEGER              :: k
+      
+      fname = './user_files/profile_sounding.txt'
+      OPEN(10, FILE=trim(fname))
+      READ(10,*)  ! read header
+      DO k=1,NT1
+        READ(10,*) P1(k), T1(k), QV1(k), U1(k), V1(k)
+      ENDDO
+    
+      P1(:)  = P1*100.
+      QV1(:) = QV1*1e-3
 
-      INTEGER (KIND=int_kind), PARAMETER :: NQ1=20
-      REAL (KIND=dbl_kind) :: PQ1(NQ1),  Q1OBS(NQ1),  Q2OBS(NQ1), WLS1(NQ1)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-!     U1 IS FOR CASE C4, 11 SEP 1974, DURING GATE, A SQUALL CLUSTER
-!     SEE FIG. 17, SUI & YANAI, JAS, 43, 1618-1642.
-!     PU1 (MB) , U1(M/S)
-
-      INTEGER (KIND=int_kind), PARAMETER :: NU1=6
-      REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
-      DATA PU1/1006.7, 993.8, 828.5, 581.3, 543.9, 161.6 /
-      DATA U1/  8.0, 8.0, 15.0,  0.0, -0.5, 4.0/
-      DATA V1/ -2.0, -2.0, 7.0, 0.0, 0.0, 0.0/
-
-      P1(:) = P1*100.
-
-      !! PU1(:) = PU1(:)*100.
-      !! U1(:)  = 3.
-      !! V1(:)  = 0.
-
-      !! PQ1(:) = PQ1(:)*100.
-      !! Q1OBS(:) = 0.
-      !! Q2OBS(:) = 0.
-      !! WLS1(:) = 0.
-
-      UG(:)  = 3.
-      VG(:)  = 0.
-      WLS(:) = 0.
-      Q1LS(:)   = 0.
-      Q2LS(:)   = 0.
-
-      SST = 300.
-
+      ! interpolate thermoaldynamics profile
       ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
       ! SET THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
       ! SET RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+
       CALL USER_interpolate_thermoal_profile( &
            NT1, P1, T1, QV1 &
            )
 
+      ! interpolate dynamics profile
+      ! SET UG(NK3)[m/s], VG(NK3)[m/s]
+
+      CALL USER_interpolate_wind_profile( &
+           NT1, P1, U1, V1 &
+           )
+
+
+      ! interpolate large-scale profile
       !!  ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
+
       !!  CALL USER_interpolate_largescale_profile( &
       !!       NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
       !!       )
 
-      !!  ! SET UG(NK3)[m/s], VG(NK3)[m/s]
-      !!  CALL USER_interpolate_wind_profile( &
-      !!       NU1, PU1, U1, V1 &
-      !!       )
-
+      WLS(:)    = 0.
+      Q1LS(:)   = 0.
+      Q2LS(:)   = 0.
+      SST       = 300.
   
   ENDSUBROUTINE USER_set_mean_profile_and_SST
  
