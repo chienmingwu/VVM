@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = half_land_mountain_moist
+set expname = half_land_mountain
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -87,8 +87,8 @@ cat > DOMAIN << 'END3'
 #!/bin/csh
 set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
-sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/34/g' ${codedir}/cdecks/PARMSLD.F90
