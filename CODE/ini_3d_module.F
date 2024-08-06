@@ -63,7 +63,7 @@ CONTAINS
       CHARACTER (10) ENS,ENS_dir
       integer k1, k2, it, iter, LREC
       logical lf
-      INTEGER, PARAMETER :: NT1=4797
+      INTEGER, PARAMETER :: NT1=4302
       INTEGER, PARAMETER :: NU1=NT1
       INTEGER, PARAMETER :: NQ1=NT1
 
@@ -89,7 +89,7 @@ CONTAINS
       casename='tpe_summer'
 
       ! Read sounding data from binary file
-      fname = '/nwpr/gfs/c103/VVM/CWA_sounding/46695-2024062100.edt.txt'
+      fname = '/nwpr/gfs/c103/VVM/CWA_sounding/46692-2024071700.edt.txt'
       OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
       if (my_task==0) write(*,*) "fname:", trim(fname)
       READ(88, *) ! read first line
@@ -158,7 +158,8 @@ CONTAINS
 !     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
 
 !      SST = 298.13
-      SST = t1(1)
+!      SST = t1(1)
+      SST = 303.906     
       PSFC = p1(1)
 
       RBCP = RGAS / CP
