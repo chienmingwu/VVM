@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = taiwanvvm
+set expname = tpe20240801
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
