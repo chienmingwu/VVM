@@ -31,72 +31,80 @@ CONTAINS
       !! RHO(NK3)   [kg/m3], RHOZ(NK3)  [kg/m3]
       !! Q1LS(NK3)  [K/s],   Q2LS(NK3)  [g/g/s], WLS(NK3)  [m/s]
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
-
-      !! read file template
-  
       IMPLICIT NONE
-      INTEGER (KIND=int_kind), PARAMETER :: NT1=35
-      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), QC1(NT1)
 
-      INTEGER (KIND=int_kind), PARAMETER :: NQ1=35
-      REAL (KIND=dbl_kind) :: PQ1(NQ1),  Q1OBS(NQ1),  Q2OBS(NQ1), WLS1(NQ1)
-      
-      INTEGER (KIND=int_kind), PARAMETER :: NU1=35
-      REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
+      INTEGER (KIND=int_kind), PARAMETER :: NT1=51
+      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), U1(NT1), V1(NT1)
+      REAL (KIND=dbl_kind) :: sounding(8), ES1
+      CHARACTER(len=300)   :: fname
+      INTEGER              :: k, ik1
 
-      INTEGER (KIND=int_kind) :: i, j, k
 
-      CHARACTER(len=300) :: fname
-
-      ! 47918.20140107.sounding.txt
-      fname='./user_files/47918.20190119.taiwania.txt'
-      if (my_task==0) write(*,*) "fname:", trim(fname)
-      open(unit=88, file=trim(fname), form='formatted', status='old')
-      read(88, *)   ! header
+      ! Read sounding data with edt format
+      ! convert data into P1, T1, QV1, U1, V1
+      fname = './user_files/46692-2024080100_short.edt.txt'
+      OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
+      READ(88, *) ! read first line
+      READ(88, *) ! read second line
+      READ(88, *) ! read third line
+      ik1 = -1
       DO i=1,NT1
-        READ(88, *) U1(i), V1(i), T1(i), QV1(i), P1(i)
+        READ(88, *) sounding(:)
+        ! Pressure [Pa]
+        P1(i) = sounding(3) * 100.
+        ! Temperature [K]
+        T1(i) = sounding(4) + 273.15
+        ! Qv from RH, mixing ratio [kg/kg]
+        ES1 = sounding(5) * 0.01 * ES ( T1(i) )  ! vapor pressure [Pa]
+        QV1(i) = ES1 * 0.622 / ( P1(i) - ES1 )
+        !if(my_task .eq. 0)  PRINT*, 'i, E, P1, QV, RH = ', i, ES1, QV1(i), P1(i), sounding(5)
+        ! U, V from Wind Speed and Wind Direction [m/s]
+        U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
+        V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
+        ! set constant U, V when >= 6km
+        IF ( sounding(2) >= 6000. .and. ik1 <= 0 )  ik1 = i
+        IF ( ik1 > 0 ) THEN
+          U1(i) = U1(ik1)
+          V1(i) = V1(ik1)
+        ENDIF
       ENDDO
-      CLOSE(88)
+      close(88)
 
-      if ( my_task .eq. 0) then
-        print *, 'read data in t:',  u1(1),  u1(NT1-1),  u1(NT1), NT1
-        print *, 'read data in t:',  v1(1),  v1(NT1-1),  v1(NT1), NT1
-        print *, 'read data in t:',  t1(1),  t1(NT1-1),  t1(NT1), NT1
-        print *, 'read data in qv:', qv1(1), qv1(NT1-1),qv1(NT1), NT1
-        print *, 'read data in p:',  p1(1),  p1(NT1-1),  p1(NT1), NT1
+      if (my_task.eq.1) then
+        DO i=1,NT1
+          WRITE(*,*) P1(i), T1(i), QV1(i), U1(i), V1(i)
+        ENDDO
       endif
-      
-      do k=1,NT1
-        P1(k)  = P1(k)*100.
-        QV1(k) = QV1(k)/1000.
-      enddo
-      PQ1      = P1
-      PU1      = P1
-      Q1OBS    = 0.
-      Q2OBS    = 0.
 
-
+      ! interpolate thermoaldynamics profile
       ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
       ! SET THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
       ! SET RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+
       CALL USER_interpolate_thermoal_profile( &
            NT1, P1, T1, QV1 &
            )
 
-      !! ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
-      !! CALL USER_interpolate_largescale_profile( &
-      !!      NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
-      !!      )
-      Q1LS(:) = 0.
-      Q2LS(:) = 0.
-      WLS(:)  = 0.
-
+      ! interpolate dynamics profile
       ! SET UG(NK3)[m/s], VG(NK3)[m/s]
+
       CALL USER_interpolate_wind_profile( &
-           NU1, PU1, U1, V1 &
+           NT1, P1, U1, V1 &
            )
 
-      SST = 300.
+
+      ! interpolate large-scale profile
+      !!  ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
+
+      !!  CALL USER_interpolate_largescale_profile( &
+      !!       NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
+      !!       )
+
+      WLS(:)    = 0.
+      Q1LS(:)   = 0.
+      Q2LS(:)   = 0.
+      SST       = T1(1)
+
 
   ENDSUBROUTINE USER_set_mean_profile_and_SST
  
