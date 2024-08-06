@@ -1,0 +1,87 @@
+#-----------------------------------------------------------------------------
+# Makefile.host:  defines processor-dependent information
+# This file is intended to be read by GNUmakefile.
+# See the comments in GNUmakefile for more information.
+#
+# This Makefile should define the following variables:
+#
+#     CPP	full path name of the C preprocessor
+#     FC	full path name of the Fortran compiler
+#     LD	full path name of the loader (usually the same as FC)
+#     AR	full path name of the archiver 
+#
+# The following variables may also be defined.  However, you may choose
+# to override these on the make command line (e.g., make 'FFLAGS=-i8' ).
+# You may want to set some of these differently based on whether or not
+# the variable DEBUG is defined (see examples below).
+#
+#     CPPFLAGS	flags to be passed to CPP (for .F files)
+#     SUF	suffix to use for files generated from .F via CPP
+#     FFLAGS	flags to be passed to FC
+#     FIXED	extra option(s) passed to FC to specify fixed source
+#     FREE	extra option(s) passed to FC to specify free  source
+#     LDLIBS	libraries to pass to the loader
+#     LDFLAGS	other flags to pass to the loader
+#
+# You must also define one of the processor flags identifying the 
+# system which will be passed to CPP (see further comments below).
+#
+# This version of Makefile.host uses the name (OS) of the operating system
+# (as returned by the system command uname) to identify which system we're 
+# running on.  The whole file could simply be replaced by a hard-coded 
+# version specific to your current system, or you could check ($HOST), etc.
+#
+# Notes:
+#
+#     Values for OS (operating system) other than Linux and SunOS are 
+#     guesses based on values found in the original makefile (not tested).
+#     This will probably need some tweaking to run on those systems.
+#
+# Author:  Scott R. Fulton
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
+# Identify the operating system
+#-----------------------------------------------------------------------------
+OS := $(shell uname)
+
+#-----------------------------------------------------------------------------
+# Linux Cluster, optimized for saddleback
+#-----------------------------------------------------------------------------
+
+spack_opt=/vol0500/data/hp230108/u12035
+
+opt_hdf5=vvmlibs
+opt_netcdf=vvmlibs
+opt_netcdff=vvmlibs
+opt_pnetcdf=vvmlibs
+opt_petsc=petsc-3.14
+
+include_hdf5=-I${spack_opt}/${opt_hdf5}/include
+include_netcdf=-I${spack_opt}/${opt_netcdf}/include
+include_netcdff=-I${spack_opt}/${opt_netcdff}/include
+include_pnetcdf=-I${spack_opt}/${opt_pnetcdf}/include
+include_petsc=-I${spack_opt}/${opt_petsc}/include
+
+link_hdf5=-L${spack_opt}/${opt_hdf5}/lib -lhdf5 -lhdf5_hl -lhdf5hl_fortran -lhdf5_fortran -lsz
+link_netcdf=-L${spack_opt}/${opt_netcdf}/lib -lnetcdf
+link_netcdff=-L${spack_opt}/${opt_netcdff}/lib -lnetcdff
+link_pnetcdf=-L${spack_opt}/${opt_pnetcdf}/lib -lpnetcdf
+link_petsc=-L${spack_opt}/${opt_petsc}/lib -lpetsc -lflapack -lfblas
+
+CPP 	 = /usr/bin/cpp
+CPPFLAGS = -P -traditional -I$(EXPDIR) $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5) $(include_petsc)
+
+SUF      = f
+
+INC = -I$(CDECKS) -I$(EXPDIR) $(include_netcdf) $(include_netcdff) $(include_pnetcdf) $(include_hdf5) $(include_petsc)
+
+FC = mpifrtpx -O3 -fw -KPIC,ocl,preex,optmsg=2,loop_fission,auto,threadsafe -X03 -Ncompdisp -x-
+
+LDLIBS = $(link_petsc) $(link_netcdff) $(link_netcdf) $(link_pnetcdf) $(link_hdf5) -L/opt/FJSVxtclanga/tcsds-1.2.37/lib64 -lfjprofmpi -lmpi_cxx -lfjcrt -lfjc++ -lfjc++abi
+
+FFLAGS    = $(INC)
+FIXED     = -Fixed 
+FREE      = -Free
+LD        = $(FC)
+

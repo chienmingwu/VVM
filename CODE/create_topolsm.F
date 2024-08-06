@@ -1,8 +1,11 @@
 program create_topolsm
+use kinds
 use netcdf
-use z_coord
 use parmsld
 use constld
+use user_module, only : &
+    USER_set_vertical_coordinate, &
+    USER_set_topography_and_land_type
 implicit none
 
 integer :: i,j,k,m,n,o,ii,jj,kk,is,js
@@ -16,6 +19,9 @@ real, dimension(:), allocatable :: tlon_tw,tlat_tw,lon_tw,lat_tw,olon,olat
 integer :: ierr,ncid1,varid1,dimid1,dimid2,dimid3,dimid4,dim2d(2),dim3d(3),chunk(2)
 logical :: taiwanvvm
 integer :: f_coarse_taiwanvvm,xs_tw,ys_tw
+
+integer(kind=int_kind), dimension(mi_glob,mj_glob,3) :: ioutput_user
+real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6) :: routput_user
 
 !==============================================================================!
 ! This program generates nc file including topography and land type for
@@ -120,7 +126,11 @@ integer :: f_coarse_taiwanvvm,xs_tw,ys_tw
 
 
 ! options for taiwanvvm
-taiwanvvm=.true.       ! read taiwanvvm information (500 m spatial resolution)
+!taiwanvvm=.true.       ! read taiwanvvm information (500 m spatial resolution)
+
+CALL USER_set_topography_and_land_type(taiwanvvm, ioutput_user, routput_user)
+write(*,*) "TOPO: Is taiwanvvm ... ", taiwanvvm
+
 f_coarse_taiwanvvm=1   ! The coarsening factor for taiwanvvm should be aliquot part of 1024
                        ! (1 is 0.5 km, 2 is 1 km, 4 is 2 km, and so on)
 xs_tw=0                ! displacement (grids) of taiwan in x direction (0: placing against west boundary)
@@ -143,10 +153,7 @@ open(unit=15,file='INPUT',form='formatted')
 read(15, INPUT3)
 close(15)
 
-CZ2=(DZ-DZ1)/(DZ*(DOMAIN-DZ))
-CZ1=1.-CZ2*DOMAIN
-
-call coords_2d(CZ1,CZ2,DZ,ZB)
+call USER_set_vertical_coordinate
 
 if (taiwanvvm) then
   ! read TaiwanVVM data
@@ -309,6 +316,8 @@ else
   olon=(olon-0.5*(dx*mi_glob))/6.37E6/(2.*tripi)*360.
   olat=(olat-0.5*(dynew*mj_glob))/6.37E6/(2.*tripi)*360.
 
+  ioutput(:,:,:) = ioutput_user(:,:,:)
+  routput(:,:,1:6) = routput_user(:,:,:)
 
 endif
 

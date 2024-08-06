@@ -45,7 +45,7 @@ PRIVATE
       qvbar,      &  ! mean profile of water vapor mixing ratio (kg/kg)
       pbar,       &  ! pressure at the layer position (Pa)
       pibar,      &  ! Exner function at the layer position, T=TH3D*PIBAR
-      gamma,      &  ! not used
+      ! gamma,      &  ! not used, !SHAO, removed 2024.08.03 !
       wls,        &  ! large scale profiles of w (m/s
       thls,       &  ! large scale forcing for potential temperature (K/hr)
       qvls,       &  ! large scale forcing for water vapor (g/kg/hr)

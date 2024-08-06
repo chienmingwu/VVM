@@ -40,108 +40,108 @@ CONTAINS
       call initchem
 #endif
 
-!  Initialize tracer
-      DO 888 K = 1,NK2
-      DO 888 J = mjm,mjp
-      DO 888 I = mim,mip
-      if (K .LT. 7) THEN
-      ! tracer (total)
-        TC3D(I,J,K,1)=0.
-      ! NOx-CO-CH4 pollution transport 
-        TC3D(I,J,K,2)=20. ! ozone
-        TC3D(I,J,K,3)=0.  ! NO
-        TC3D(I,J,K,4)=20. ! NO2
-        TC3D(I,J,K,5)=0.
-        TC3D(I,J,K,6)=0.
-        TC3D(I,J,K,7)=0.
-        TC3D(I,J,K,8)=0.
-        TC3D(I,J,K,9)=0.
-        TC3D(I,J,K,10)=2010. !CH4
-        TC3D(I,J,K,11)=30.
-        TC3D(I,J,K,12)=0.
-        TC3D(I,J,K,13)=0.
-        TC3D(I,J,K,14)=0.
-        TC3D(I,J,K,15)=320.  !CO
-        TC3D(I,J,K,16)=0.
-        TC3D(I,J,K,17)=200000000. !O2
-        TC3D(I,J,K,18)=800000000. !N2
-        TC3D(I,J,K,19)=0.
-        TC3D(I,J,K,20)=0.
-        TC3D(I,J,K,21)=0.
-        TC3D(I,J,K,22)=0.
-      ! tracer (industrail & traffic)
-        TC3D(I,J,K,23)=0.
-        TC3D(I,J,K,24)=0.
-      ! chemical transport without emissions
-        TC3D(I,J,K,25)=20.
-        TC3D(I,J,K,26)=0.
-        TC3D(I,J,K,27)=20.
-        TC3D(I,J,K,28)=0.
-        TC3D(I,J,K,29)=0.
-        TC3D(I,J,K,30)=0.
-        TC3D(I,J,K,31)=0.
-        TC3D(I,J,K,32)=0.
-        TC3D(I,J,K,33)=2010.
-        TC3D(I,J,K,34)=30.
-        TC3D(I,J,K,35)=0.
-        TC3D(I,J,K,36)=0.
-        TC3D(I,J,K,37)=0.
-        TC3D(I,J,K,38)=320.
-        TC3D(I,J,K,39)=0.
-        TC3D(I,J,K,40)=200000000.
-        TC3D(I,J,K,41)=800000000.
-        TC3D(I,J,K,42)=0.
-        TC3D(I,J,K,43)=0.
-        TC3D(I,J,K,44)=0.
-        TC3D(I,J,K,45)=0.
-      else
-        TC3D(I,J,K,1)=0.
-        TC3D(I,J,K,2)=40.
-        TC3D(I,J,K,3)=0.
-        TC3D(I,J,K,4)=0.
-        TC3D(I,J,K,5)=0.
-        TC3D(I,J,K,6)=0.
-        TC3D(I,J,K,7)=0.
-        TC3D(I,J,K,8)=0.
-        TC3D(I,J,K,9)=0.
-        TC3D(I,J,K,10)=1908.
-        TC3D(I,J,K,11)=0.
-        TC3D(I,J,K,12)=0.
-        TC3D(I,J,K,13)=0.
-        TC3D(I,J,K,14)=0.
-        TC3D(I,J,K,15)=100.
-        TC3D(I,J,K,16)=0.
-        TC3D(I,J,K,17)=200000000.
-        TC3D(I,J,K,18)=800000000.
-        TC3D(I,J,K,19)=0.
-        TC3D(I,J,K,20)=0.
-        TC3D(I,J,K,21)=0.
-        TC3D(I,J,K,22)=0.
-        TC3D(I,J,K,23)=0.
-        TC3D(I,J,K,24)=0.
-        TC3D(I,J,K,25)=40.
-        TC3D(I,J,K,26)=0.
-        TC3D(I,J,K,27)=0.
-        TC3D(I,J,K,28)=0.
-        TC3D(I,J,K,29)=0.
-        TC3D(I,J,K,30)=0.
-        TC3D(I,J,K,31)=0.
-        TC3D(I,J,K,32)=0.
-        TC3D(I,J,K,33)=1908.
-        TC3D(I,J,K,34)=0.
-        TC3D(I,J,K,35)=0.
-        TC3D(I,J,K,36)=0.
-        TC3D(I,J,K,37)=0.
-        TC3D(I,J,K,38)=100.
-        TC3D(I,J,K,39)=0.
-        TC3D(I,J,K,40)=200000000.
-        TC3D(I,J,K,41)=800000000.
-        TC3D(I,J,K,42)=0.
-        TC3D(I,J,K,43)=0.
-        TC3D(I,J,K,44)=0.
-        TC3D(I,J,K,45)=0.
-      endif
-  888 CONTINUE
+!!   !  Initialize tracer
+!!         DO 888 K = 1,NK2
+!!         DO 888 J = mjm,mjp
+!!         DO 888 I = mim,mip
+!!         if (K .LT. 7) THEN
+!!         ! tracer (total)
+!!           TC3D(I,J,K,1)=0.
+!!         ! NOx-CO-CH4 pollution transport 
+!!           TC3D(I,J,K,2)=20. ! ozone
+!!           TC3D(I,J,K,3)=0.  ! NO
+!!           TC3D(I,J,K,4)=20. ! NO2
+!!           TC3D(I,J,K,5)=0.
+!!           TC3D(I,J,K,6)=0.
+!!           TC3D(I,J,K,7)=0.
+!!           TC3D(I,J,K,8)=0.
+!!           TC3D(I,J,K,9)=0.
+!!           TC3D(I,J,K,10)=2010. !CH4
+!!           TC3D(I,J,K,11)=30.
+!!           TC3D(I,J,K,12)=0.
+!!           TC3D(I,J,K,13)=0.
+!!           TC3D(I,J,K,14)=0.
+!!           TC3D(I,J,K,15)=320.  !CO
+!!           TC3D(I,J,K,16)=0.
+!!           TC3D(I,J,K,17)=200000000. !O2
+!!           TC3D(I,J,K,18)=800000000. !N2
+!!           TC3D(I,J,K,19)=0.
+!!           TC3D(I,J,K,20)=0.
+!!           TC3D(I,J,K,21)=0.
+!!           TC3D(I,J,K,22)=0.
+!!         ! tracer (industrail & traffic)
+!!           TC3D(I,J,K,23)=0.
+!!           TC3D(I,J,K,24)=0.
+!!         ! chemical transport without emissions
+!!           TC3D(I,J,K,25)=20.
+!!           TC3D(I,J,K,26)=0.
+!!           TC3D(I,J,K,27)=20.
+!!           TC3D(I,J,K,28)=0.
+!!           TC3D(I,J,K,29)=0.
+!!           TC3D(I,J,K,30)=0.
+!!           TC3D(I,J,K,31)=0.
+!!           TC3D(I,J,K,32)=0.
+!!           TC3D(I,J,K,33)=2010.
+!!           TC3D(I,J,K,34)=30.
+!!           TC3D(I,J,K,35)=0.
+!!           TC3D(I,J,K,36)=0.
+!!           TC3D(I,J,K,37)=0.
+!!           TC3D(I,J,K,38)=320.
+!!           TC3D(I,J,K,39)=0.
+!!           TC3D(I,J,K,40)=200000000.
+!!           TC3D(I,J,K,41)=800000000.
+!!           TC3D(I,J,K,42)=0.
+!!           TC3D(I,J,K,43)=0.
+!!           TC3D(I,J,K,44)=0.
+!!           TC3D(I,J,K,45)=0.
+!!         else
+!!           TC3D(I,J,K,1)=0.
+!!           TC3D(I,J,K,2)=40.
+!!           TC3D(I,J,K,3)=0.
+!!           TC3D(I,J,K,4)=0.
+!!           TC3D(I,J,K,5)=0.
+!!           TC3D(I,J,K,6)=0.
+!!           TC3D(I,J,K,7)=0.
+!!           TC3D(I,J,K,8)=0.
+!!           TC3D(I,J,K,9)=0.
+!!           TC3D(I,J,K,10)=1908.
+!!           TC3D(I,J,K,11)=0.
+!!           TC3D(I,J,K,12)=0.
+!!           TC3D(I,J,K,13)=0.
+!!           TC3D(I,J,K,14)=0.
+!!           TC3D(I,J,K,15)=100.
+!!           TC3D(I,J,K,16)=0.
+!!           TC3D(I,J,K,17)=200000000.
+!!           TC3D(I,J,K,18)=800000000.
+!!           TC3D(I,J,K,19)=0.
+!!           TC3D(I,J,K,20)=0.
+!!           TC3D(I,J,K,21)=0.
+!!           TC3D(I,J,K,22)=0.
+!!           TC3D(I,J,K,23)=0.
+!!           TC3D(I,J,K,24)=0.
+!!           TC3D(I,J,K,25)=40.
+!!           TC3D(I,J,K,26)=0.
+!!           TC3D(I,J,K,27)=0.
+!!           TC3D(I,J,K,28)=0.
+!!           TC3D(I,J,K,29)=0.
+!!           TC3D(I,J,K,30)=0.
+!!           TC3D(I,J,K,31)=0.
+!!           TC3D(I,J,K,32)=0.
+!!           TC3D(I,J,K,33)=1908.
+!!           TC3D(I,J,K,34)=0.
+!!           TC3D(I,J,K,35)=0.
+!!           TC3D(I,J,K,36)=0.
+!!           TC3D(I,J,K,37)=0.
+!!           TC3D(I,J,K,38)=100.
+!!           TC3D(I,J,K,39)=0.
+!!           TC3D(I,J,K,40)=200000000.
+!!           TC3D(I,J,K,41)=800000000.
+!!           TC3D(I,J,K,42)=0.
+!!           TC3D(I,J,K,43)=0.
+!!           TC3D(I,J,K,44)=0.
+!!           TC3D(I,J,K,45)=0.
+!!         endif
+!!     888 CONTINUE
 
 !       call update_tracer
 
@@ -288,39 +288,39 @@ CONTAINS
       coszen = max(0.0,cos(sza)) !to avoid negative values
 
       hr = int(xhr+1)
-      DO 988 J = 1,mj1
-      DO 988 I = 1,mi1
-        hxp=hx(i,j)+1
-        !unit: ppb*m/s
-        tempNO_SAT=NO_SAT_emi(I,J)/100.*Pass_small_dt
-        TC3D(I,J,hxp,1)=TC3D(I,J,hxp,1)+tempNO_SAT
-        TC3D(I,J,hxp,3)=TC3D(I,J,hxp,3)+tempNO_SAT*0.9
-        TC3D(I,J,hxp,4)=TC3D(I,J,hxp,4)+tempNO_SAT*0.1
-        do tempkm=1,nz
-          K=tempkm+hxp
-          !unit: ppb/s
-          tempNO=NO_emi(I,J,tempkm,hr)*Pass_small_dt
-          tempCO=CO_emi(I,J,tempkm,hr)*Pass_small_dt
-          tempME=CH4_emi(I,J,tempkm,hr)*Pass_small_dt
-          tempISO=ISO_emi(I,J,tempkm,hr)*Pass_small_dt
-          tempFORM=FORM_emi(I,J,tempkm,hr)*Pass_small_dt
-          !TC3D(I,J,K,1)=TC3D(I,J,K,1)+temp*10./9.
-          !TC3D(I,J,K,3)=TC3D(I,J,K,3)+temp
-          !TC3D(I,J,K,4)=TC3D(I,J,K,4)+temp/9.
-          TC3D(I,J,K,10)=TC3D(I,J,K,10)+tempME
-          TC3D(I,J,K,15)=TC3D(I,J,K,15)+tempCO
-          TC3D(I,J,K,20)=TC3D(I,J,K,20)+tempISO
-          TC3D(I,J,K,11)=TC3D(I,J,K,11)+tempFORM
-          !comparison with emission inventories 
-          TC3D(I,J,K,26)=TC3D(I,J,K,26)+tempNO
-          TC3D(I,J,K,27)=TC3D(I,J,K,27)+tempNO/9.
-          TC3D(I,J,K,33)=TC3D(I,J,K,33)+tempME
-          TC3D(I,J,K,38)=TC3D(I,J,K,38)+tempCO
-          TC3D(I,J,K,43)=TC3D(I,J,K,43)+tempISO
-          TC3D(I,J,K,34)=TC3D(I,J,K,34)+tempFORM
-        enddo
-  988 CONTINUE
-
+!!       DO 988 J = 1,mj1
+!!       DO 988 I = 1,mi1
+!!         hxp=hx(i,j)+1
+!!         !unit: ppb*m/s
+!!         tempNO_SAT=NO_SAT_emi(I,J)/100.*Pass_small_dt
+!!         TC3D(I,J,hxp,1)=TC3D(I,J,hxp,1)+tempNO_SAT
+!!         TC3D(I,J,hxp,3)=TC3D(I,J,hxp,3)+tempNO_SAT*0.9
+!!         TC3D(I,J,hxp,4)=TC3D(I,J,hxp,4)+tempNO_SAT*0.1
+!!         do tempkm=1,nz
+!!           K=tempkm+hxp
+!!           !unit: ppb/s
+!!           tempNO=NO_emi(I,J,tempkm,hr)*Pass_small_dt
+!!           tempCO=CO_emi(I,J,tempkm,hr)*Pass_small_dt
+!!           tempME=CH4_emi(I,J,tempkm,hr)*Pass_small_dt
+!!           tempISO=ISO_emi(I,J,tempkm,hr)*Pass_small_dt
+!!           tempFORM=FORM_emi(I,J,tempkm,hr)*Pass_small_dt
+!!           !TC3D(I,J,K,1)=TC3D(I,J,K,1)+temp*10./9.
+!!           !TC3D(I,J,K,3)=TC3D(I,J,K,3)+temp
+!!           !TC3D(I,J,K,4)=TC3D(I,J,K,4)+temp/9.
+!!           TC3D(I,J,K,10)=TC3D(I,J,K,10)+tempME
+!!           TC3D(I,J,K,15)=TC3D(I,J,K,15)+tempCO
+!!           TC3D(I,J,K,20)=TC3D(I,J,K,20)+tempISO
+!!           TC3D(I,J,K,11)=TC3D(I,J,K,11)+tempFORM
+!!           !comparison with emission inventories 
+!!           TC3D(I,J,K,26)=TC3D(I,J,K,26)+tempNO
+!!           TC3D(I,J,K,27)=TC3D(I,J,K,27)+tempNO/9.
+!!           TC3D(I,J,K,33)=TC3D(I,J,K,33)+tempME
+!!           TC3D(I,J,K,38)=TC3D(I,J,K,38)+tempCO
+!!           TC3D(I,J,K,43)=TC3D(I,J,K,43)+tempISO
+!!           TC3D(I,J,K,34)=TC3D(I,J,K,34)+tempFORM
+!!         enddo
+!!   988 CONTINUE
+!! 
       ! remove around the boundaries
 !      if (ni_sbdm==0) then
 !        TC3D(1:3,:,:,1)=0.
