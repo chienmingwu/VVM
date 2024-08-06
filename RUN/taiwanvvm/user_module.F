@@ -37,7 +37,7 @@ CONTAINS
       REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), U1(NT1), V1(NT1)
       REAL (KIND=dbl_kind) :: sounding(8), ES1
       CHARACTER(len=300)   :: fname
-      INTEGER              :: k, ik1
+      INTEGER              :: i, k, ik1
 
 
       ! Read sounding data with edt format
@@ -117,11 +117,11 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
          hour0
   
-      iyear0 = 2019
-      imonth0 = 1
-      iday0 = 18
+      iyear0 = 2024
+      imonth0 = 7
+      iday0 = 31
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 22.0 !06(UTC+8)
+      hour0 = 16.0
   ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_topography_and_land_type(&
