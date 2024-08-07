@@ -120,7 +120,7 @@ CONTAINS
       if(my_task == 0) then
       INQUIRE(iolength=k) temp
       OPEN(UNIT=99,FILE='bar.dat',FORM='unformatted',STATUS='unknown', &
-      access='direct',recl=k)
+      access='direct',recl=k,CONVERT="LITTLE_ENDIAN")
       temp=pbar(1:NK2)
       write(99,rec=1) temp
       temp=pibar(1:NK2)
