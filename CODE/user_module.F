@@ -15,12 +15,14 @@ PRIVATE
 
 PUBLIC :: &
   USER_set_mean_profile_and_SST, &
+  USER_set_3D_perturbation, &
   USER_set_vertical_coordinate, &
   USER_set_start_time, &
   USER_set_topography_and_land_type
 
 CONTAINS
   SUBROUTINE USER_set_mean_profile_and_SST
+      !! --------------------
       !! Object of this function give the MEAN profile at model levels
       !! using the template subrountine.
       !! 
@@ -31,6 +33,7 @@ CONTAINS
       !! RHO(NK3)   [kg/m3], RHOZ(NK3)  [kg/m3]
       !! Q1LS(NK3)  [K/s],   Q2LS(NK3)  [g/g/s], WLS(NK3)  [m/s]
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
+      !! --------------------
 
       SST=300.
 
@@ -49,10 +52,52 @@ CONTAINS
       VG=0.
   
   ENDSUBROUTINE USER_set_mean_profile_and_SST
+
+
+  ENDSUBROUTINE USER_set_3D_perturbation
+      !! --------------------
+      !! this subroutine can modify the 3D fields after
+      !! setting mean_profile. if you dont's want to add
+      !! additional perturbation, just set continue and 
+      !! skip it.
+
+      !! The 3d vortorcity fields are automatically calculated
+      !! from 3d wind fields after this subroutine
+      !! 
+
+      !! common 3d variables and corrsponding name are as follows:
+      !! --- diension(mim:mip,mjm:mjp,nk3) --
+      !! TH3D      ! potential temperature (K)
+      !! QV3D      ! water vapor mixing ratio (kg/kg)
+      !! u3dx      ! zonal velocity, u (m/s)
+      !! u3dy      ! meridional velocity, v (m/s)
+      !! --- diension(mim:mip,mjm:mjp,nk2) --- 
+      !! w3d       ! vertical velocity, w (m/s)
+
+      !! index variables you may be used
+      !! MI_glob   ! the zonal domain size (no halo points)
+      !! MJ_glob   ! the meridional domain size (no halo points)
+      !! -- related to subdomain, nhalo=1 (default) --
+      !! nsbdm_x   ! number of subdomains in zonal direction
+      !! nsbdm_y   ! number of subdomains in meridional direction
+      !! mi1       ! zonal dimension of subdomain
+      !! mj1       ! meridional dimension of subdomain 
+      !! mim = 1 - nhalo       ! starting zonal index
+      !! mip = mi1 + nhalo     ! ending zonal index
+      !! mjm = 1 - nhalo       ! starting meridional index
+      !! mjp = mj1 + nhalo     ! ending meridional index
+      !! --------------------
+
+      continue
+
+  ENDSUBROUTINE USER_set_3D_perturbation
+
  
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
+      !! --------------------
       !! This module is used in time_manager_module.F 
       !! set the start time.
+      !! --------------------
       IMPLICIT NONE
       INTEGER (KIND=int_kind), INTENT(out) ::  &
          iyear0,imonth0,iday0
@@ -69,7 +114,7 @@ CONTAINS
   SUBROUTINE USER_set_topography_and_land_type(&
                                      taiwanvvm_flag, ioutput_user, routput_user)
       IMPLICIT NONE
-      !!!!!!!!!!!!!!!!!!
+      !! --------------------
       !! This module is used in create_topolsm.F
       !! --
       !! if taiwanvvm_flag is True, land surface data
@@ -77,12 +122,12 @@ CONTAINS
       !! --
       !! if taiwanvvm_flag is .False., prescibe idealized 
       !! land surface data through routput_user and ioutput_user.
-      !!!!!!!!!!!!!!!!!!
+      !! --------------------
       integer(kind=int_kind), dimension(mi_glob,mj_glob,3), intent(out) :: ioutput_user
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
       logical, intent(out) :: taiwanvvm_flag
 
-      taiwanvvm_flag = .True.
+      taiwanvvm_flag = .False.
 
       ! initialization with ocean
       routput_user(:,:,1)=0.   ! height (m)
@@ -99,7 +144,9 @@ CONTAINS
 
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE
-      !! This vertical coordinate setting is for TaiwanVVM
+      !! --------------------
+      !! This vertical coordinate setting is for stretching grid
+      !! --------------------
 
       INTEGER (KIND=int_kind) :: k,kk,kt,kt1  ! vertical loop index
 
@@ -127,48 +174,21 @@ CONTAINS
       ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
    40 CONTINUE
 
-      KT = INT((1-CZ1)/CZ2/2/DZ)
-      KT1 = INT(ZZ(KT)/DZ1+0.999)
-
-      !PRINT*,KT,KT1,ZZ(KT)
-
-      ZZ(1) = ZB
-      FNZ(1) = DZ/DZ1
-
-      DO 42 K = 2,KT1-1
-      DO 43 KK = NK3,K+1,-1
-      FNZ(KK) = FNZ(KK-1)
-      ZZ(KK) = ZZ(KK-1) + DZ1
-   43 CONTINUE
-      FNZ(K) = DZ/DZ1
-      ZZ(K) = ZZ(K-1) + DZ1
-   42 CONTINUE
-
       DO 50 K = 1, NK3
       FNT(K) = 1. / ( CZ1 + 2. * CZ2 * ZT(K) )
       ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
    50 CONTINUE
 
-      ZT(1) = ZB
-      FNT(1) = DZ/DZ1
-      ZT(2) = ZZ(1) + DZ1/2
-      FNT(2) = DZ/DZ1
-      DO 52 K = 3,KT1
-      DO 53 KK = NK3,K+1,-1
-      FNT(KK) = FNT(KK-1)
-      ZT(KK) = ZT(KK-1) +DZ1
-   53 CONTINUE
-      FNT(K) = DZ/DZ1
-      ZT(K) = ZT(K-1) + DZ1
-   52 CONTINUE
-
-      FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
-
   ENDSUBROUTINE USER_set_vertical_coordinate
+ 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!                                      !!!!
+!!!!  privite subroutine for this module  !!!!
+!!!!                                      !!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
  
   SUBROUTINE USER_interpolate_wind_profile(NU1, PU1, U1, V1)
       IMPLICIT NONE
-      ! given UG(NK3), VG(NK3) [m/s]
 ! ********************
 !     This function will convert the sounding data (u1, v1)
 !     to the model input with pressure interpolation.

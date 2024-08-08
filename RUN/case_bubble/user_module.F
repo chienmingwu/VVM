@@ -24,6 +24,7 @@ PUBLIC :: &
 
 CONTAINS
   SUBROUTINE USER_set_mean_profile_and_SST
+      IMPLICIT NONE
       !! --------------------
       !! Object of this function give the MEAN profile at model levels
       !! using the template subrountine.
@@ -36,83 +37,37 @@ CONTAINS
       !! Q1LS(NK3)  [K/s],   Q2LS(NK3)  [g/g/s], WLS(NK3)  [m/s]
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
-      IMPLICIT NONE
 
-      INTEGER (KIND=int_kind), PARAMETER :: NT1=51
-      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), U1(NT1), V1(NT1)
-      REAL (KIND=dbl_kind) :: sounding(8), ES1
-      CHARACTER(len=300)   :: fname
-      INTEGER              :: i, k, ik1
+      INTEGER(KIND=int_kind), PARAMETER :: nt1=3
+      REAL(KIND=dbl_kind),    DIMENSION(nt1) :: P1(nt1), T1(nt1), QV1(nt1)
 
+      ! stable enviroment
+      DATA P1/1000., 100., 86/
+      DATA T1/300.,  280., 190/
+      DATA QV1/3*1.e-15/
 
-      ! Read sounding data with edt format
-      ! convert data into P1, T1, QV1, U1, V1
-      fname = './user_files/46692-2024080100_short.edt.txt'
-      OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
-      READ(88, *) ! read first line
-      READ(88, *) ! read second line
-      READ(88, *) ! read third line
-      ik1 = -1
-      DO i=1,NT1
-        READ(88, *) sounding(:)
-        ! Pressure [Pa]
-        P1(i) = sounding(3) * 100.
-        ! Temperature [K]
-        T1(i) = sounding(4) + 273.15
-        ! Qv from RH, mixing ratio [kg/kg]
-        ES1 = sounding(5) * 0.01 * ES ( T1(i) )  ! vapor pressure [Pa]
-        QV1(i) = ES1 * 0.622 / ( P1(i) - ES1 )
-        !if(my_task .eq. 0)  PRINT*, 'i, E, P1, QV, RH = ', i, ES1, QV1(i), P1(i), sounding(5)
-        ! U, V from Wind Speed and Wind Direction [m/s]
-        U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
-        V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
-        ! set constant U, V when >= 6km
-        IF ( sounding(2) >= 6000. .and. ik1 <= 0 )  ik1 = i
-        IF ( ik1 > 0 ) THEN
-          U1(i) = U1(ik1)
-          V1(i) = V1(ik1)
-        ENDIF
-      ENDDO
-      close(88)
+      SST=300.
+      P1 = P1*100.
+      CALL USER_interpolate_thermoal_profile(NT1, P1, T1, QV1)
 
-      if (my_task.eq.1) then
-        DO i=1,NT1
-          WRITE(*,*) P1(i), T1(i), QV1(i), U1(i), V1(i)
-        ENDDO
-      endif
+      !! ! stable environment
+      !! do k=2,nk2
+      !!   THBAR(k)=300.+0.0015*zt(k)
+      !! enddo
+      !! thbar(1)=thbar(2)
+      !! thbar(nk3)=thbar(nk2)
+      !! QVBAR=1e-15
 
-      ! interpolate thermoaldynamics profile
-      ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
-      ! SET THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
-      ! SET RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+      Q1LS=0.
+      Q2LS=0.
+      WLS=0.
 
-      CALL USER_interpolate_thermoal_profile( &
-           NT1, P1, T1, QV1 &
-           )
-
-      ! interpolate dynamics profile
-      ! SET UG(NK3)[m/s], VG(NK3)[m/s]
-
-      CALL USER_interpolate_wind_profile( &
-           NT1, P1, U1, V1 &
-           )
-
-
-      ! interpolate large-scale profile
-      !!  ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
-
-      !!  CALL USER_interpolate_largescale_profile( &
-      !!       NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
-      !!       )
-
-      WLS(:)    = 0.
-      Q1LS(:)   = 0.
-      Q2LS(:)   = 0.
-      SST       = T1(1)
-
+      UG=0.
+      VG=0.
 
   ENDSUBROUTINE USER_set_mean_profile_and_SST
- 
+
+
   SUBROUTINE USER_set_3D_perturbation
       IMPLICIT NONE
       !! --------------------
@@ -147,10 +102,34 @@ CONTAINS
       !! mjm = 1 - nhalo       ! starting meridional index
       !! mjp = mj1 + nhalo     ! ending meridional index
       !! --------------------
-      
-      continue
+
+      INTEGER(int_kind) :: i, j, k
+      REAL(dbl_kind)    :: glob_idx_i, glob_idx_j
+      REAL(dbl_kind)    :: radius_norm
+   
+
+      !! bubble example
+      DO K = 1, NK3
+      DO J = mjm,mjp
+      DO I = mim,mip
+        glob_idx_j = real(mj1*nj_sbdm+j)
+        glob_idx_i = real(mi1*ni_sbdm+i)
+
+        radius_norm = sqrt( &
+                             ((glob_idx_i-mi_glob/2)*DX/5000.)**2 &
+                          !+  ((glob_idx_j-mj_glob/2)*DYNEW/5000.)**2 &
+                          + ((ZT(K)-1500.)/1000.)**2 &
+                          )
+        IF ( radius_norm <= 1 ) THEN
+          TH3D(I,J,K) = TH3D(I,J,K) &
+                        + 10.*(cos(3.14159265*0.5*radius_norm))
+        ENDIF
+      ENDDO
+      ENDDO
+      ENDDO
 
   ENDSUBROUTINE USER_set_3D_perturbation
+
  
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
       !! --------------------
@@ -163,11 +142,11 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
          hour0
   
-      iyear0 = 2024
-      imonth0 = 7
-      iday0 = 31
+      iyear0 = 2019
+      imonth0 = 1
+      iday0 = 18
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 16.0
+      hour0 = 22.0 !06(UTC+8)
   ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_topography_and_land_type(&
@@ -186,7 +165,7 @@ CONTAINS
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
       logical, intent(out) :: taiwanvvm_flag
 
-      taiwanvvm_flag = .True.
+      taiwanvvm_flag = .False.
 
       ! initialization with ocean
       routput_user(:,:,1)=0.   ! height (m)
@@ -233,45 +212,13 @@ CONTAINS
       ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
    40 CONTINUE
 
-      KT = INT((1-CZ1)/CZ2/2/DZ)
-      KT1 = INT(ZZ(KT)/DZ1+0.999)
-
-      !PRINT*,KT,KT1,ZZ(KT)
-
-      ZZ(1) = ZB
-      FNZ(1) = DZ/DZ1
-
-      DO 42 K = 2,KT1-1
-      DO 43 KK = NK3,K+1,-1
-      FNZ(KK) = FNZ(KK-1)
-      ZZ(KK) = ZZ(KK-1) + DZ1
-   43 CONTINUE
-      FNZ(K) = DZ/DZ1
-      ZZ(K) = ZZ(K-1) + DZ1
-   42 CONTINUE
-
       DO 50 K = 1, NK3
       FNT(K) = 1. / ( CZ1 + 2. * CZ2 * ZT(K) )
       ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
    50 CONTINUE
 
-      ZT(1) = ZB
-      FNT(1) = DZ/DZ1
-      ZT(2) = ZZ(1) + DZ1/2
-      FNT(2) = DZ/DZ1
-      DO 52 K = 3,KT1
-      DO 53 KK = NK3,K+1,-1
-      FNT(KK) = FNT(KK-1)
-      ZT(KK) = ZT(KK-1) +DZ1
-   53 CONTINUE
-      FNT(K) = DZ/DZ1
-      ZT(K) = ZT(K-1) + DZ1
-   52 CONTINUE
-
-      FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
-
   ENDSUBROUTINE USER_set_vertical_coordinate
-
+ 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!                                      !!!!
 !!!!  privite subroutine for this module  !!!!
@@ -548,6 +495,49 @@ CONTAINS
       RHO(K) = 1. / ALPHA(K)
   190 CONTINUE
 
+
   ENDSUBROUTINE  USER_interpolate_thermoal_profile
   
+  SUBROUTINE USER_TPE_sounding
+       IMPLICIT NONE
+!ccwu Taipei TSA sounding
+
+!      do  K = 1, NK3
+!      IF (ZT(K) .LT. 3000.) THEN
+!        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
+!      ELSEIF (ZT(K) .LT. 8000.) THEN
+!        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
+!      ELSEIF (ZT(K) .LT. 13000.) THEN
+!        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
+!      ELSE
+!        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
+!      ENDIF
+
+!      T(K) = THBAR(K) * PIBAR(K)
+!      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
+!      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
+!      IF (T(K) .LE. 233.15) THEN
+!        ES1 = ESI
+!      ELSE IF (T(K) .LT. 273.15) THEN
+!        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
+!      ELSE
+!        ES1 = ESW
+!      ENDIF
+!      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
+!CCCCCCCCCCCCCCCCCC
+!      IF (ZT(K) .LE. 1500) THEN
+!        H(K) = 0.82
+!      ELSE IF (ZT(K) .LE. 12000) THEN
+!        H(K) = (ZT(K)-8000)**2/132031250.+0.5
+!      ELSE
+!        H(K) = 0.50
+!      END IF
+!CCCCCCCCCCCCCCCCCC
+!      QVBAR(K) = H(K) * QVSBAR(K)
+
+!      ENDDO
+
+  ENDSUBROUTINE USER_TPE_sounding
+
+
 ENDMODULE user_module

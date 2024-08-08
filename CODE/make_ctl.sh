@@ -554,18 +554,20 @@ echo ${zc[${n}]} >> bar.ctl
 end
 
 echo 'TDEF 1 LINEAR 00:00Z01JAN2000 1mn \
-VARS 11 \
+VARS 13 \
  pbar   '${nz}' 99 pbar  [Pa]  \
  pibar  '${nz}' 99 pibar  \
  rho    '${nz}' 99 rho   [kg/m3] \
- thbar  '${nz}' 99 thbar [K] \
- qvbar  '${nz}' 99 qvbar [kg/kg] \
- UG     '${nz}' 99 UG    [m/s] \
- VG     '${nz}' 99 VG    [m/s] \
- Q1LS   '${nz}' 99 Q1LS  [K/s] \
- Q2LS   '${nz}' 99 Q2LS  [g/g/s] \
- WLS    '${nz}' 99 WLS   [m/s] \
- DZT    '${nz}' 99 delta ZT [m] \
+ thbar  '${nz}' 99 thbar     [K] \
+ qvbar  '${nz}' 99 qvbar     [kg/kg] \
+ UG     '${nz}' 99 UG        [m/s] \
+ VG     '${nz}' 99 VG        [m/s] \
+ Q1LS   '${nz}' 99 Q1LS      [K/s] \
+ Q2LS   '${nz}' 99 Q2LS      [g/g/s] \
+ WLS    '${nz}' 99 WLS       [m/s] \
+ DZT    '${nz}' 99 delta ZT  [m] \
+ the    '${nz}' 99 th_e bar  [K] \
+ thes   '${nz}' 99 th_es bar [K] \
 ENDVARS \
 ' >> bar.ctl
 

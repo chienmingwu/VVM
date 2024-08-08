@@ -21,7 +21,8 @@ USE pnetcdf
 USE wind_module
 USE petsc_vvm_solver, only: petsc_solver_initialize
 USE user_module, only: USER_set_mean_profile_and_SST, &
-                       USER_set_vertical_coordinate
+                       USER_set_vertical_coordinate, &
+                       USER_set_3D_perturbation
 
 
 IMPLICIT NONE
@@ -43,6 +44,7 @@ CONTAINS
       integer (kind=int_kind), intent(in) :: itt
 
       REAL (KIND=dbl_kind) ::  scaleq=0._dbl_kind
+      REAL (KIND=dbl_kind) ::  dum1, dum2, dum3
 
       INTEGER (KIND=int_kind) :: &
          i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
@@ -141,10 +143,25 @@ CONTAINS
       write(99,rec=9) temp
       temp=WLS(1:NK2)
       write(99,rec=10) temp
+      ! dzt
       DO k=1,nk2
         temp(k) = DZ/FNT(K)
       ENDDO
       write(99,rec=11) temp
+      ! theta_e bar
+      DO k=1,nk2
+        dum1 = THBAR(K)*PIBAR(K) ! temperature
+        temp(k) = THBAR(k)*(1+2.5e6*QVBAR(k) / (1004.*dum1 ) )
+      ENDDO
+      write(99,rec=12) temp
+      ! theta_es bar
+      DO k=1,nk2
+        dum1 = THBAR(K)*PIBAR(K) ! temperature [K]
+        dum3 = ES ( dum1 ) ! es[Pa]
+        dum2 = dum3 * 0.622 / ( PBAR(K) - dum3 ) ! qvs [kg/kg]
+        temp(k) = THBAR(k)*(1+2.5e6*dum2 / (1004.*dum1) ) 
+      ENDDO
+      write(99,rec=13) temp
       CLOSE(99)
       endif
 
@@ -241,6 +258,8 @@ CONTAINS
       U3DX(I,J,K)=UG(K)
       U3DY(I,J,K)=VG(K)
   610 CONTINUE
+
+      CALL USER_set_3D_perturbation
 
       DO 660 K = 2, NK1
       DO 660 J = 1, MJ1

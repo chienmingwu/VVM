@@ -8,19 +8,23 @@ USE workcom
 USE const3d
 USE utils
 USE bound
-use domain_decomposition, only : my_task
+use domain_decomposition, only : my_task, &
+                                 nj_sbdm, &
+                                 ni_sbdm
 
 IMPLICIT NONE
 PRIVATE
 
 PUBLIC :: &
   USER_set_mean_profile_and_SST, &
+  USER_set_3D_perturbation, &
   USER_set_vertical_coordinate, &
   USER_set_start_time, &
   USER_set_topography_and_land_type
 
 CONTAINS
   SUBROUTINE USER_set_mean_profile_and_SST
+      !! --------------------
       !! Object of this function give the MEAN profile at model levels
       !! using the template subrountine.
       !! 
@@ -31,6 +35,7 @@ CONTAINS
       !! RHO(NK3)   [kg/m3], RHOZ(NK3)  [kg/m3]
       !! Q1LS(NK3)  [K/s],   Q2LS(NK3)  [g/g/s], WLS(NK3)  [m/s]
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
+      !! --------------------
 
       REAL (KIND=dbl_kind), PARAMETER :: RGAS = 287.04
       INTEGER (KIND=int_kind), PARAMETER :: NQ1=20
@@ -85,9 +90,50 @@ CONTAINS
   
   ENDSUBROUTINE USER_set_mean_profile_and_SST
  
+  SUBROUTINE USER_set_3D_perturbation
+      IMPLICIT NONE
+      !! --------------------
+      !! this subroutine can modify the 3D fields after
+      !! setting mean_profile. if you don't want to add
+      !! additional perturbation, just set continue and 
+      !! skip it.
+
+      !! The 3d vortorcity fields are automatically calculated
+      !! from 3d wind fields after this subroutine
+      !! 
+
+      !! common 3d variables and corrsponding name are as follows:
+      !! --- diension(mim:mip,mjm:mjp,nk3) --
+      !! TH3D      ! potential temperature (K)
+      !! QV3D      ! water vapor mixing ratio (kg/kg)
+      !! u3dx      ! zonal velocity, u (m/s)
+      !! u3dy      ! meridional velocity, v (m/s)
+      !! --- diension(mim:mip,mjm:mjp,nk2) --- 
+      !! w3d       ! vertical velocity, w (m/s)
+
+      !! index variables you may be used
+      !! MI_glob   ! the zonal domain size (no halo points)
+      !! MJ_glob   ! the meridional domain size (no halo points)
+      !! -- related to subdomain, nhalo=1 (default) --
+      !! nsbdm_x   ! number of subdomains in zonal direction
+      !! nsbdm_y   ! number of subdomains in meridional direction
+      !! mi1       ! zonal dimension of subdomain
+      !! mj1       ! meridional dimension of subdomain 
+      !! mim = 1 - nhalo       ! starting zonal index
+      !! mip = mi1 + nhalo     ! ending zonal index
+      !! mjm = 1 - nhalo       ! starting meridional index
+      !! mjp = mj1 + nhalo     ! ending meridional index
+      !! --------------------
+      
+      continue
+
+  ENDSUBROUTINE USER_set_3D_perturbation
+ 
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
+      !! --------------------
       !! This module is used in time_manager_module.F 
       !! set the start time.
+      !! --------------------
       IMPLICIT NONE
       INTEGER (KIND=int_kind), INTENT(out) ::  &
          iyear0,imonth0,iday0
@@ -104,7 +150,7 @@ CONTAINS
   SUBROUTINE USER_set_topography_and_land_type(&
                                      taiwanvvm_flag, ioutput_user, routput_user)
       IMPLICIT NONE
-      !!!!!!!!!!!!!!!!!!
+      !! --------------------
       !! This module is used in create_topolsm.F
       !! --
       !! if taiwanvvm_flag is True, land surface data
@@ -112,7 +158,7 @@ CONTAINS
       !! --
       !! if taiwanvvm_flag is .False., prescibe idealized 
       !! land surface data through routput_user and ioutput_user.
-      !!!!!!!!!!!!!!!!!!
+      !! --------------------
       integer(kind=int_kind), dimension(mi_glob,mj_glob,3), intent(out) :: ioutput_user
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
       logical, intent(out) :: taiwanvvm_flag
@@ -134,7 +180,9 @@ CONTAINS
 
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE
+      !! --------------------
       !! This vertical coordinate setting is from file
+      !! --------------------
       INTEGER (KIND=int_kind) :: k  ! vertical loop index
       CHARACTER(100) :: filename
 
