@@ -67,16 +67,24 @@ CONTAINS
          tctot,    & !
          tcneg,    & !
          tcpos
+#if defined (CHEM)
+      REAL (KIND=dbl_kind), DIMENSION(nchem) :: &
+         chemtot,    & !
+         chemneg,    & !
+         chempos
+#endif
       REAL (KIND=dbl_kind) :: tstar, qvstar, qcstar,qistar,qfreeze,   &
           area, qtottem 
 
-      INTEGER (KIND=int_kind), PARAMETER :: nb = 5+ntracer
+      INTEGER (KIND=int_kind), PARAMETER :: nb = 5+ntracer+nchem
       REAL (KIND=dbl_kind), DIMENSION(2*nb) :: qsendbuf,qrecvbuf
       INTEGER (KIND=int_kind), DIMENSION(nb) :: isendbuf,irecvbuf
 
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp) :: qntem
       INTEGER (KIND=int_kind), DIMENSION(ntracer) :: &
          nnegt
+      INTEGER (KIND=int_kind), DIMENSION(nchem) :: &
+         nnegt_chem
 
       REAL (KIND=dbl_kind):: tini,tend
 
@@ -108,6 +116,13 @@ CONTAINS
          TCNEG = 0.
          TCTOT = 0.
       endif
+
+#if defined (CHEM)
+         NNEGT_CHEM = 0
+         CHEMNEG = 0.
+         CHEMTOT = 0.
+#endif
+
       
       area = mi_glob*mj_glob
 
@@ -159,6 +174,20 @@ CONTAINS
             endif
           enddo
         endif
+
+#if defined (CHEM)
+          do nt = 1,nchem
+            chemtot(nt) = chemtot(nt) + sum(chem3d(1:mi1,1:mj1,k,nt)) * invfnt
+            if (minval(CHEM3D(1:mi1,1:mj1,k,nt)) < 0._dbl_kind ) then
+               nnegt_chem(nt) = 1
+               qntem(:,:) = min(0.0_dbl_kind, CHEM3D(:,:,k,nt))
+               qtottem = sum(qntem(1:mi1,1:mj1))
+               chemneg(nt) = chemneg(nt) + qtottem * invfnt
+            endif
+          enddo
+#endif
+
+
    5  CONTINUE
 
       qsendbuf(1) = qctot
@@ -185,6 +214,14 @@ CONTAINS
           isendbuf(5+nt) = nnegt(nt)
         enddo
       endif
+#if defined (CHEM)
+        do nt = 1,nchem
+          qsendbuf(10+ntracer*2+nt*2-1) = chemtot(nt)
+          qsendbuf(10+ntracer*2+nt*2)   = chemneg(nt)
+          isendbuf(5+ntracer+nt) = nnegt_chem(nt)
+        enddo
+#endif
+
 
       CALL MPI_ALLREDUCE(qsendbuf,qrecvbuf,2*nb,MPI_dbl_kind, MPI_SUM, MPI_COMM_WORLD, mpierr)
       CALL MPI_ALLREDUCE(isendbuf,irecvbuf,nb,MPI_INTEGER, MPI_MAX, MPI_COMM_WORLD, mpierr)
@@ -213,6 +250,14 @@ CONTAINS
           nnegt(nt) = irecvbuf(5+nt)
         enddo
       endif 
+
+#if defined (CHEM)
+        do nt = 1,nchem
+          chemtot(nt) = qrecvbuf(10+2*ntracer+2*nt-1)
+          chemneg(nt) = qrecvbuf(10+2*ntracer+2*nt)
+          nnegt_chem(nt) = irecvbuf(5+ntracer+nt)
+        enddo
+#endif
 
 !      DO 201 K=2,NK2
 !      invfnt = RHOU(K)/fnt(k)
@@ -270,6 +315,10 @@ CONTAINS
           IF ( NNEGT(nt) .GT. 0 ) CALL FILL_GLO_3D(TC3D(:,:,:,nt),'     TC1' )
         enddo
       endif
+#if defined (CHEM)
+        do nt = 1,nchem
+          IF ( NNEGT_CHEM(nt) .GT. 0 ) CALL FILL_GLO_3D(CHEM3D(:,:,:,nt),'     CHEM1' )
+#endif
 
 !     DO K=2,NK2
 !      invfnt = fnt(k)/RHOU(K)
@@ -337,6 +386,19 @@ CONTAINS
           ENDIF
         enddo  
       endif
+
+#if defined (CHEM)
+        do nt = 1,nchem
+          CHEMPOS(nt) = CHEMTOT(nt) + CHEMNEG(nt)
+          IF ( CHEMPOS(nt) .GT. 0. ) THEN
+            CHEMNEG(nt) = CHEMNEG(nt) / CHEMPOS(nt)
+          ELSE
+            CHEMNEG(nt) = 999.
+          ENDIF
+        enddo  
+#endif
+
+
 
 #if defined (MICROP3)
 ! Saturation adjustment is done in P3
@@ -407,6 +469,12 @@ CONTAINS
             WRITE (21,102) ITT,nt,NNEGT(nt),nt,nt,TCNEG(nt)
           enddo
         endif
+#if defined (CHEM)
+          do nt = 1,nchem
+            WRITE (21,102) ITT,nt,NNEGT_CHEM(nt),nt,nt,CHEMNEG(nt)
+          enddo
+#endif
+
  
       ENDIF
     endif

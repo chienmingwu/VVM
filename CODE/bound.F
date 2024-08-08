@@ -48,25 +48,25 @@ CONTAINS
 #if defined (MICROP3)
 #if defined (LIQFRACP3)
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
-         buff_c(nhalo, nhalo,nk1,11+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
-         buff_ns(1:mi1,nhalo,nk1,11+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
+         buff_c(nhalo, nhalo,nk1,11+ntracer+nchem,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
+         buff_ns(1:mi1,nhalo,nk1,11+ntracer+nchem,4), &  ! last dimension - 1 recv from s, 2 recv from n
                                           !                  3 send to n, 4 send to south
-         buff_ew(nhalo,1:mj1,nk1,11+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
+         buff_ew(nhalo,1:mj1,nk1,11+ntracer+nchem,4)  ! last dimension - 1 recv from w, 2 recv from e
                                           !                  3 send to e, 4 send to w
 #else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
-         buff_c(nhalo, nhalo,nk1,10+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
-         buff_ns(1:mi1,nhalo,nk1,10+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
+         buff_c(nhalo, nhalo,nk1,10+ntracer+nchem,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
+         buff_ns(1:mi1,nhalo,nk1,10+ntracer+nchem,4), &  ! last dimension - 1 recv from s, 2 recv from n
                                           !                  3 send to n, 4 send to south
-         buff_ew(nhalo,1:mj1,nk1,10+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
+         buff_ew(nhalo,1:mj1,nk1,10+ntracer+nchem,4)  ! last dimension - 1 recv from w, 2 recv from e
                                           !                  3 send to e, 4 send to w
 #endif
 #else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
-         buff_c(nhalo, nhalo,nk1,7+ntracer,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
-         buff_ns(1:mi1,nhalo,nk1,7+ntracer,4), &  ! last dimension - 1 recv from s, 2 recv from n
+         buff_c(nhalo, nhalo,nk1,7+ntracer+nchem,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
+         buff_ns(1:mi1,nhalo,nk1,7+ntracer+nchem,4), &  ! last dimension - 1 recv from s, 2 recv from n
                                           !                  3 send to n, 4 send to south
-         buff_ew(nhalo,1:mj1,nk1,7+ntracer,4)  ! last dimension - 1 recv from w, 2 recv from e
+         buff_ew(nhalo,1:mj1,nk1,7+ntracer+nchem,4)  ! last dimension - 1 recv from w, 2 recv from e
                                           !                  3 send to e, 4 send to w
 #endif
 
@@ -86,18 +86,18 @@ CONTAINS
 
 #if defined (MICROP3)
 #if defined (LIQFRACP3)
-      size_ns = nhalo*(11+ntracer)*(nk2-1)*(mi1)
-      size_ew = nhalo*(11+ntracer)*(nk2-1)*(mj1)
-      size_c = (11+ntracer)*(nk2-1)*nhalo*nhalo
+      size_ns = nhalo*(11+ntracer+nchem)*(nk2-1)*(mi1)
+      size_ew = nhalo*(11+ntracer+nchem)*(nk2-1)*(mj1)
+      size_c = (11+ntracer+nchem)*(nk2-1)*nhalo*nhalo
 #else
-      size_ns = nhalo*(10+ntracer)*(nk2-1)*(mi1)
-      size_ew = nhalo*(10+ntracer)*(nk2-1)*(mj1)
-      size_c = (10+ntracer)*(nk2-1)*nhalo*nhalo
+      size_ns = nhalo*(10+ntracer+nchem)*(nk2-1)*(mi1)
+      size_ew = nhalo*(10+ntracer+nchem)*(nk2-1)*(mj1)
+      size_c = (10+ntracer+nchem)*(nk2-1)*nhalo*nhalo
 #endif
 #else
-      size_ns = nhalo*(7+ntracer)*(nk2-1)*(mi1)
-      size_ew = nhalo*(7+ntracer)*(nk2-1)*(mj1)
-      size_c = (7+ntracer)*(nk2-1)*nhalo*nhalo
+      size_ns = nhalo*(7+ntracer+nchem)*(nk2-1)*(mi1)
+      size_ew = nhalo*(7+ntracer+nchem)*(nk2-1)*(mj1)
+      size_c = (7+ntracer+nchem)*(nk2-1)*nhalo*nhalo
 #endif
 
 #else
@@ -176,6 +176,13 @@ CONTAINS
               buff_ns(1:mi1,j,k-1,11+nt,4) = tc3d(1:mi1,j,k,nt)
             enddo
           endif
+#if defined (CHEM)
+            DO nt = 1,nchem
+              buff_ns(1:mi1,j,k-1,11+ntracer+nt,3) = chem3d(1:mi1,mj1-nhalo+j,k,nt)
+              buff_ns(1:mi1,j,k-1,11+ntracer+nt,4) = chem3d(1:mi1,j,k,nt)
+            enddo
+#endif
+
 #else
           if (ntracer > 0)then
             DO nt = 1,ntracer
@@ -183,6 +190,14 @@ CONTAINS
               buff_ns(1:mi1,j,k-1,10+nt,4) = tc3d(1:mi1,j,k,nt)
             enddo
           endif
+
+#if defined (CHEM)
+            DO nt = 1,nchem
+              buff_ns(1:mi1,j,k-1,10+ntracer+nt,3) = chem3d(1:mi1,mj1-nhalo+j,k,nt)
+              buff_ns(1:mi1,j,k-1,10+ntracer+nt,4) = chem3d(1:mi1,j,k,nt)
+            enddo
+#endif
+
 #endif
 #else
           buff_ns(1:mi1,j,k-1,6,3) = qs3d(1:mi1,mj1-nhalo+j,k)
@@ -196,6 +211,14 @@ CONTAINS
               buff_ns(1:mi1,j,k-1,7+nt,4) = tc3d(1:mi1,j,k,nt)
             enddo
           endif
+
+#if defined (CHEM)
+            DO nt = 1,nchem
+              buff_ns(1:mi1,j,k-1,7+ntracer+nt,3) = chem3d(1:mi1,mj1-nhalo+j,k,nt)
+              buff_ns(1:mi1,j,k-1,7+ntracer+nt,4) = chem3d(1:mi1,j,k,nt)
+            enddo
+#endif
+
 #endif
 
 #endif
@@ -234,6 +257,14 @@ CONTAINS
               buff_ew(i,1:mj1,k-1,11+nt,4) = tc3d(i,1:mj1,k,nt)
             enddo
           endif
+
+#if defined (CHEM)
+            DO nt = 1,nchem
+              buff_ew(i,1:mj1,k-1,11+ntracer+nt,3) = chem3d(mi1-nhalo+i,1:mj1,k,nt)
+              buff_ew(i,1:mj1,k-1,11+ntracer+nt,4) = chem3d(i,1:mj1,k,nt)
+            enddo
+#endif
+
 #else
           if (ntracer > 0)then
             DO nt = 1,ntracer
@@ -241,6 +272,14 @@ CONTAINS
               buff_ew(i,1:mj1,k-1,10+nt,4) = tc3d(i,1:mj1,k,nt)
             enddo
           endif
+
+#if defined (CHEM)
+            DO nt = 1,nchem
+              buff_ew(i,1:mj1,k-1,10+ntracer+nt,3) = chem3d(mi1-nhalo+i,1:mj1,k,nt)
+              buff_ew(i,1:mj1,k-1,10+ntracer+nt,4) = chem3d(i,1:mj1,k,nt)
+            enddo
+#endif
+
 #endif
 #else
           buff_ew(i,1:mj1,k-1,6,3) = qs3d(mi1-nhalo+i,1:mj1,k)
@@ -254,6 +293,14 @@ CONTAINS
               buff_ew(i,1:mj1,k-1,7+nt,4) = tc3d(i,1:mj1,k,nt)
             enddo
           endif
+#if defined (CHEM)
+            DO nt = 1,nchem
+              buff_ew(i,1:mj1,k-1,7+ntracer+nt,3) = chem3d(mi1-nhalo+i,1:mj1,k,nt)
+              buff_ew(i,1:mj1,k-1,7+ntracer+nt,4) = chem3d(i,1:mj1,k,nt)
+            enddo
+#endif
+
+
 #endif
 
 #endif
@@ -368,6 +415,14 @@ CONTAINS
               tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,11+nt,2)
             enddo
           endif
+
+#if defined(CHEM)
+            DO nt = 1,nchem
+              chem3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,11+ntracer+nt,1)
+              chem3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,11+ntracer+nt,2)
+            enddo
+#endif
+
 #else
           if (ntracer > 0)then
             DO nt = 1,ntracer
@@ -375,6 +430,14 @@ CONTAINS
               tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,10+nt,2)
             enddo
           endif
+
+#if defined(CHEM)
+            DO nt = 1,nchem
+              chem3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,10+ntracer+nt,1)
+              chem3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,10+ntracer+nt,2)
+            enddo
+#endif
+
 #endif
 #else
           qs3d(1:mi1,j-nhalo,k) = buff_ns(1:mi1,j,k-1,6,1)
@@ -388,6 +451,14 @@ CONTAINS
               tc3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,7+nt,2)
             enddo
           endif
+
+#if defined (CHEM)
+            DO nt = 1,nchem
+              chem3d(1:mi1,j-nhalo,k,nt) = buff_ns(1:mi1,j,k-1,7+ntracer+nt,1)
+              chem3d(1:mi1,mj1+j,k,nt)   = buff_ns(1:mi1,j,k-1,7+ntracer+nt,2)
+            enddo
+#endif
+
 #endif
 
 #endif
@@ -429,6 +500,13 @@ CONTAINS
               tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,11+nt,2)
             enddo
           endif
+#if defined (CHEM)
+            DO nt = 1,nchem
+              chem3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,11+ntracer+nt,1)
+              chem3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,11+ntracer+nt,2)
+            enddo
+#endif
+
 #else
           if (ntracer > 0)then
             DO nt = 1,ntracer
@@ -436,7 +514,13 @@ CONTAINS
               tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,10+nt,2)
             enddo
           endif
+#if defined (CHEM)
+            DO nt = 1,nchem
+              chem3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,10+ntracer+nt,1)
+              chem3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,10+ntracer+nt,2)
+            enddo
 #endif
+
 #else
           qs3d(i-nhalo,1:mj1,k) = buff_ew(i,1:mj1,k-1,6,1)
           qs3d(mi1+i,1:mj1,k)   = buff_ew(i,1:mj1,k-1,6,2)
@@ -449,6 +533,13 @@ CONTAINS
               tc3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,7+nt,2)
             enddo
           endif
+#if defined (CHEM)
+            DO nt = 1,nchem
+              chem3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,7+ntracer+nt,1)
+              chem3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,7+ntracer+nt,2)
+            enddo
+#endif
+
 #endif
 
 #endif
@@ -560,6 +651,17 @@ CONTAINS
  
       endif
 
+#if defined (CHEM)
+      DO 1102 nt = 1,nchem
+      DO 1102 K=2,NK2
+      DO 1102 J=1,MJ1
+      DO 1102 i=1,nhalo
+      CHEM3D(1-i,J,K,nt)  =CHEM3D(MI1+1-i,J,K,nt)
+      CHEM3D(MI1+i,J,K,nt)=CHEM3D(i,J,K,nt)
+ 1102 CONTINUE
+#endif
+
+
       DO 1200 K=2,NK2
       DO 1200 j=1,nhalo
       im = 1-j
@@ -620,6 +722,17 @@ CONTAINS
 
       endif
 
+#if defined (CHEM)
+      DO 1202 nt = 1,nchem
+      DO 1202 K=2,NK2
+      DO 1202 j=1,nhalo
+      DO 1202 i=mim,mip
+      CHEM3D(I,1-j,K,nt)  =CHEM3D(I,mj1+1-j,K,nt)
+      CHEM3D(I,mj1+j,K,nt)=CHEM3D(I,j,K,nt)
+ 1202 CONTINUE
+#endif
+
+
 #endif
 
 #endif
@@ -678,6 +791,15 @@ CONTAINS
  1301 CONTINUE
 
       endif
+
+#if defined (CHEM)
+      DO 1302 nt = 1,nchem
+      DO 1302 J=mjm,mjp
+      DO 1302 I=mim,mip
+      CHEM3D(I,J,1,nt)=CHEM3D (I,J,2,nt)
+      CHEM3D(I,J,NK3,nt)= 0.
+ 1302 CONTINUE
+#endif
 
       END SUBROUTINE bound_3d
 

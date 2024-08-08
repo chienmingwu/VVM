@@ -28,6 +28,9 @@ PRIVATE
         ndiag_3d = diag3d_dimension ,   &  ! the number for 3d diagnostics
 #endif
         ntracer = tracer_dimension         ! the number of passive tracers
+#if defined (CHEM)
+        nchem = chemical_dimension ,   &  ! the number for 2d diagnostics
+#endif
       
     ! Define the depth of the halo region, later will preprocess depending on operator order
     INTEGER(KIND=int_kind),PARAMETER, PUBLIC :: &

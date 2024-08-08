@@ -43,6 +43,10 @@ PRIVATE
       QG3D        ! graupel mixing ratio (kg/kg)
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3,ntracer), PUBLIC ::       &
       TC3D        ! passive tracer mixing ratio (kg/kg)
+#if defined (CHEM)
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3,nchem), PUBLIC ::       &
+      CHEM3D        ! passive chemicals mixing ratio (ppb)
+#endif
 
 #if defined (DIAG)
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,ndiag_2d), PUBLIC ::       &
@@ -111,6 +115,10 @@ PRIVATE
                    ! falling with terminal velocity (kg/kg/s)
    REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,nk2,2,ntracer), PUBLIC ::     &
       ftc3d      ! tendency of passive tracer due to advection (kg/kg/s)
+#if defined (CHEM)
+   REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,nk2,2,nchem), PUBLIC ::     &
+      rchem3d      ! tendency of passive chemicals due to advection (kg/kg/s)
+#endif
 
 !*****************************
 ! Vorticity tendencies used in Adams-Bashforth 2nd-order time scheme.
@@ -167,6 +175,10 @@ PRIVATE
       qgad3         ! not used
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk2,ntracer), PUBLIC ::       &
       tcad3       ! tendency of passive tracer due to turbulence (kg/kg/s)  
+#if defined (CHEM)
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk2,nchem), PUBLIC ::       &
+      chemad3       ! tendency of passive chemicals due to turbulence (ppb/s)  
+#endif
 
 !*****************************
 ! Tendencies due to microphysics.

@@ -594,6 +594,7 @@ CONTAINS
 ! Calculate diffusion component FOR THE TRACERS
 !=============================================================
 
+      IF(ntracer>0) THEN !ntracer>0
       do nt = 1,ntracer
 !ccwu
       DO 601 K=2,NK2
@@ -642,6 +643,66 @@ CONTAINS
       TCAD3(I,J,K,nt)=DDX(I,J,K)
   651 CONTINUE
       enddo
+
+      ENDIF 
+
+
+#if defined (CHEM)
+!==============================================================
+! Calculate diffusion component FOR THE CHEMICALs
+!=============================================================
+
+      do nt = 1,nchem
+!ccwu
+      DO 601 K=2,NK2
+      DO 601 J=1,MJ1
+      DO 601 I=1,MI1
+      DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))        &
+                      *(CHEM3D(I+1,J,K,nt)-CHEM3D(I,J,K,nt))*DHWU1(I,J,K)    &
+                     - (RKH(I,J,K)+RKH(I-1,J,K))        &
+                      *(CHEM3D(I,J,K,nt)-CHEM3D(I-1,J,K,nt))*DHWU2(I,J,K) )/DXSQ
+  601 CONTINUE
+
+!ccwu
+      DO 611 K=2,NK2
+      DO 611 J=1,MJ1
+      DO 611 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                          &
+                +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))     &
+                      *(CHEM3D(I,J+1,K,nt)-CHEM3D(I,J,K,nt))*DHWV1(I,J,K) &
+                     - (RKH(I,J,K)+RKH(I,J-1,K))     &
+                      *(CHEM3D(I,J,K,nt)-CHEM3D(I,J-1,K,nt))*DHWV2(I,J,K) )/DYSQ
+  611 CONTINUE
+
+!ccwu
+!easy RKH -> RKQ
+      DO 621 K=2,NK1
+      DO 621 J=1,MJ1
+      DO 621 I=1,MI1
+      DDX(I,J,K)=DDX(I,J,K)                                       &
+       +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))      &
+                   *(CHEM3D(I,J,K+1,nt)-CHEM3D(I,J,K,nt))*DHWW1(I,J,K)                 &
+                   -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1))  &
+                   *(CHEM3D(I,J,K,nt)-CHEM3D(I,J,K-1,nt))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
+  621 CONTINUE
+
+      DO 631 J=1,MJ1
+      DO 631 I=1,MI1
+
+      DDX(I,J,NK2)=DDX(I,J,NK2)                                       &
+       -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1))  &
+                   *(CHEM3D(I,J,NK2,nt)-CHEM3D(I,J,NK1,nt)))/(RHOU(NK2)*DZSQ)
+  631 CONTINUE
+
+      DO 651 K=2,NK2
+      DO 651 J=1,MJ1
+      DO 651 I=1,MI1
+      CHEMAD3(I,J,K,nt)=DDX(I,J,K)
+  651 CONTINUE
+      enddo
+
+#endif
+
   
 
   
