@@ -24,6 +24,7 @@ PUBLIC :: &
 
 CONTAINS
   SUBROUTINE USER_set_mean_profile_and_SST
+      IMPLICIT NONE
       !! --------------------
       !! Object of this function give the MEAN profile at model levels
       !! using the template subrountine.
