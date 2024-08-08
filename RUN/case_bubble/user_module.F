@@ -8,7 +8,9 @@ USE workcom
 USE const3d
 USE utils
 USE bound
-use domain_decomposition, only : my_task
+use domain_decomposition, only : my_task, &
+                                 nj_sbdm, &
+                                 ni_sbdm
 
 IMPLICIT NONE
 PRIVATE
@@ -35,14 +37,25 @@ CONTAINS
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
 
-      SST=300.
+      INTEGER(KIND=int_kind), PARAMETER :: nt1=3
+      REAL(KIND=dbl_kind),    DIMENSION(nt1) :: P1(nt1), T1(nt1), QV1(nt1)
 
-      PBAR=0.
-      PIBAR=0.
-      THBAR=0.
-      QVBAR=0.
-      RHO=0.
-      RHOZ=0.
+      ! stable enviroment
+      DATA P1/1000., 100., 86/
+      DATA T1/300.,  280., 190/
+      DATA QV1/3*1.e-15/
+
+      SST=300.
+      P1 = P1*100.
+      CALL USER_interpolate_thermoal_profile(NT1, P1, T1, QV1)
+
+      !! ! stable environment
+      !! do k=2,nk2
+      !!   THBAR(k)=300.+0.0015*zt(k)
+      !! enddo
+      !! thbar(1)=thbar(2)
+      !! thbar(nk3)=thbar(nk2)
+      !! QVBAR=1e-15
 
       Q1LS=0.
       Q2LS=0.
@@ -50,14 +63,15 @@ CONTAINS
 
       UG=0.
       VG=0.
-  
+
   ENDSUBROUTINE USER_set_mean_profile_and_SST
 
 
-  ENDSUBROUTINE USER_set_3D_perturbation
+  SUBROUTINE USER_set_3D_perturbation
+      IMPLICIT NONE
       !! --------------------
       !! this subroutine can modify the 3D fields after
-      !! setting mean_profile. if you dont's want to add
+      !! setting mean_profile. if you don't want to add
       !! additional perturbation, just set continue and 
       !! skip it.
 
@@ -88,7 +102,30 @@ CONTAINS
       !! mjp = mj1 + nhalo     ! ending meridional index
       !! --------------------
 
-      continue
+      INTEGER(int_kind) :: i, j, k
+      REAL(dbl_kind)    :: glob_idx_i, glob_idx_j
+      REAL(dbl_kind)    :: radius_norm
+   
+
+      !! bubble example
+      DO K = 1, NK3
+      DO J = mjm,mjp
+      DO I = mim,mip
+        glob_idx_j = real(mj1*nj_sbdm+j)
+        glob_idx_i = real(mi1*ni_sbdm+i)
+
+        radius_norm = sqrt( &
+                             ((glob_idx_i-mi_glob/2)*DX/5000.)**2 &
+                          !+  ((glob_idx_j-mj_glob/2)*DYNEW/5000.)**2 &
+                          + ((ZT(K)-1500.)/1000.)**2 &
+                          )
+        IF ( radius_norm <= 1 ) THEN
+          TH3D(I,J,K) = TH3D(I,J,K) &
+                        + 10.*(cos(3.14159265*0.5*radius_norm))
+        ENDIF
+      ENDDO
+      ENDDO
+      ENDDO
 
   ENDSUBROUTINE USER_set_3D_perturbation
 
@@ -145,7 +182,7 @@ CONTAINS
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE
       !! --------------------
-      !! This vertical coordinate setting is for stretching grid
+      !! This vertical coordinate setting is for TaiwanVVM
       !! --------------------
 
       INTEGER (KIND=int_kind) :: k,kk,kt,kt1  ! vertical loop index
@@ -189,6 +226,7 @@ CONTAINS
  
   SUBROUTINE USER_interpolate_wind_profile(NU1, PU1, U1, V1)
       IMPLICIT NONE
+      ! given UG(NK3), VG(NK3) [m/s]
 ! ********************
 !     This function will convert the sounding data (u1, v1)
 !     to the model input with pressure interpolation.
