@@ -183,7 +183,7 @@ CONTAINS
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE
       !! --------------------
-      !! This vertical coordinate setting is for TaiwanVVM
+      !! stretching z-coordinate
       !! --------------------
 
       INTEGER (KIND=int_kind) :: k,kk,kt,kt1  ! vertical loop index
