@@ -48,6 +48,7 @@ CONTAINS
       DO I = 1, MI1
       IF(ITYPEW(I,J,K) .NE. 1) THEN
       TH3D(I,J,K) = THBAR(K)
+        IF(ntracer.gt.0) TC3D(I,J,K,:) = 0.
       ENDIF
       ENDDO
       ENDDO
