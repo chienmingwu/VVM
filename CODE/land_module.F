@@ -112,6 +112,8 @@ CONTAINS
    SUBROUTINE land_interface(T2,Q2,swD,lwD,SPREC,WT,WQ,VNE2D,SFCSPD,  &
                              ZROUGH,TG,TD,QD,GWET,swU,lwU) 
 
+      use timeinfo, only : rjday, utc_time
+      use constld, only : rlon, rlat
 !=======================================================================
 ! land model interface for LSM_DRV 
 ! with input  surface temperature      T2 = TH3D(I,J,hxp)*PIBAR(hxp)          
@@ -163,6 +165,8 @@ CONTAINS
          i, j       ! do loop indices for zonal, meridional and vertical dimensions
       REAL (KIND=dbl_kind) ::  USTAR,VENTFC(2),MOLEN,zzz,ttt,ES1,QSFC,TS
       REAL (KIND=dbl_kind) :: tempim,tempjm !global index
+
+      REAL xday, xhr, xlon, xlat, sza, coszen
 
 #if defined (LSM)
       
@@ -281,6 +285,20 @@ CONTAINS
       sstxy(I,J) = lT1(I,J)
       TG(I,J) = lT1(I,J)
       ELSE
+
+
+      !current time
+      xday = rjday
+      xhr = utc_time
+      xlon = rlon
+      xlat = rlat
+
+      sza = getth(xday,xlat,xlon,xhr)
+      coszen = max(0.0,cos(sza)) !to avoid negative values
+      
+      xday=xday+1./3.
+      if (xday>=1.) xday=xday-1.
+      TG(i,j) = SST+0.4*max(sin((xday*24.-6.)*3.14159265/12.),0.)
 
       CALL SFLUX_2D (0._dbl_kind,TB(I,J),THVSMD(I,J),SFCSPD(I,J), &
                      ZD(I,J),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
@@ -712,5 +730,29 @@ CONTAINS
 #endif
 
    END SUBROUTINE land_ini
+
+!c
+!c ---- Function to calculate solar zenith angle
+!c
+real function getth(daynr,lat,lon,xhr)
+implicit none
+  real daynr, lat, lon, xhr
+  real  houra
+  real  obliq,deday,delta,lonr,latr
+  real  piby,pi
+
+  pi = acos(-1.)
+  piby = pi/ 180.
+  lonr = lon*piby
+  latr = lat*piby
+  obliq = 23.45 * piby
+  deday = 4.88 + 2*pi/365  * daynr
+  delta = asin(sin(obliq)*sin(deday))
+  houra = lonr - pi + xhr * (2.*pi/24.)
+  getth = acos(sin(delta)*sin(latr) + cos(delta)*cos(latr)*cos(houra))
+
+  return
+end function getth
+
 
 END MODULE land_module

@@ -83,8 +83,8 @@ CONTAINS
   CASE DEFAULT
 ! TWP-ICE comparison study (16Z 20160617)
       iyear0 = 2024
-      imonth0 = 6
-      iday0 = 21
+      imonth0 = 7
+      iday0 = 30
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 16.0  !00(UTC+8)
 !      hour0 = 21.0 !05(UTC+8)
