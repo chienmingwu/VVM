@@ -171,7 +171,7 @@ CONTAINS
       NFLPRT  = 999999
       nrestart  = 999999
       NITERW  = 10
-      NITERXY = 100
+      NITERXY = 1000
 
       DO 20 I = 10, 19
       NWRITE(I) = 999999

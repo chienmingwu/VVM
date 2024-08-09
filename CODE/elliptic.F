@@ -86,8 +86,9 @@ CONTAINS
       REAL (kind=dbl_kind),DIMENSION(MIM:MIP,MJM:MJP),INTENT(OUT) :: AOUT
 
       REAL (kind=dbl_kind) :: COEF0
+      REAL (kind=dbl_kind) :: dum1(1)
       REAL (kind=dbl_kind) :: C0,C1,C2
-      REAL (kind=dbl_kind), DIMENSION(MIM:MIP,MJM:MJP) :: ATEMP
+      REAL (kind=dbl_kind), DIMENSION(MIM:MIP,MJM:MJP) :: ATEMP,temp
 
       REAL (kind=dbl_kind), DIMENSION(MI1,MJ1) :: AOUTN,DIFFA  ! test purpose
 
@@ -131,6 +132,11 @@ CONTAINS
 !---------------------------
       CALL BOUND_ARB(1,AOUT)
 !---------------------------
+
+      temp=(aout-atemp) 
+      call XYmax2(temp,nhalo,mi1,mj1,1,1,1,dum1)
+
+      if (my_task==0) write(*,*) iter,dum1,dum1*WRXMU
 
 !=================================
       ENDDO    ! iteration-loop
