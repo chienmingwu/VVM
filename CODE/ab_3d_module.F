@@ -173,7 +173,7 @@ CONTAINS
       call timer_stop('UPDATE_TRACER')
 #if defined (CHEM)
       call timer_start('UPDATE_CHEMICAL')
-      call UPDATA_CHAMICAL ( ITT )
+      call UPDATE_CHEMICAL ( ITT )
       call timer_stop('UPDATE_CHEMICAL')
 #endif
 

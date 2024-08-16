@@ -131,7 +131,7 @@ use petscsys, comm3d=>MPI_COMM_WORLD
 implicit none
 
 private
-PUBLIC :: lchem, initchem,inputchem, twostep, PL_scheme, nchsp, firstchem, lastchem, RH, choffset, CO2
+PUBLIC :: lchem, initchem,inputchem, twostep, PL_scheme, nchsp, firstchem, lastchem, RH, choffset, CO2, chem_name_list
 save
 
   ! namoptions
@@ -214,6 +214,7 @@ save
   real, allocatable :: atol(:),rtol(:)  ! nchsp
   real, allocatable :: rk1(:,:),rk2(:,:),rk(:,:),kreact(:,:)
   real, allocatable :: T_abs(:,:),convppb(:,:)
+  character*6, allocatable :: chem_name_list(:) !nchsp
 
   real, allocatable :: ynew(:,:,:),yold(:,:,:),ysum(:,:,:)
   real, allocatable,target :: yl(:,:,:),yp(:,:,:)
@@ -259,6 +260,8 @@ SUBROUTINE initchem
 
   logical :: lCHon= .false.
   integer i, ierr
+
+  character*999 :: line
 
   namelist/NAMCHEM/ lchem, lcloudKconst, tnor, firstchem,lastchem,ldiuvar,h_ref,lchconst, t_ref, q_ref, p_ref,lchmovie, dtchmovie,lsegr
 
@@ -323,6 +326,7 @@ SUBROUTINE initchem
 
   allocate(PL_scheme(nchsp))
   allocate (atol(nchsp), rtol(nchsp))
+  allocate (chem_name_list(nchsp))
 
   allocate (ynew(1:i1,1:j1,nchsp),yold(1:i1,1:j1,nchsp),ysum(1:i1,1:j1,nchsp))
   allocate (yl(1:i1,1:j1,nchsp),yp(1:i1,1:j1,nchsp))
@@ -370,6 +374,19 @@ SUBROUTINE initchem
   !    close(ifoutput)
   !  endif !Output for segregation
   endif
+
+
+  ! read chem_name_list from list
+  open (unit=10,file='chem.inp.'//cexpnr,status='old',form='formatted')
+  do while(.true.)
+    read(10,'(a)') line
+    if (line(1:1) == '@') then
+      read(10,'(a)') line
+      read(line,*)(chem_name_list(i),i=1,nchsp)
+      exit
+    endif
+  enddo
+  close(10)
 
   call inputchem
 
@@ -1088,7 +1105,7 @@ SUBROUTINE read_chem(chem_name)
     if (myid == 0)  print*, i,'  ',chem_name(i),atol(i),rtol(i)
   enddo
 
-  print *,' '
+  if (myid ==0 ) print *,' '
 
 RETURN
 

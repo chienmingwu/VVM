@@ -76,15 +76,23 @@ CONTAINS
       REAL (KIND=dbl_kind) :: tstar, qvstar, qcstar,qistar,qfreeze,   &
           area, qtottem 
 
+#if defined (CHEM)
       INTEGER (KIND=int_kind), PARAMETER :: nb = 5+ntracer+nchem
+#else
+      INTEGER (KIND=int_kind), PARAMETER :: nb = 5+ntracer
+#endif
+
       REAL (KIND=dbl_kind), DIMENSION(2*nb) :: qsendbuf,qrecvbuf
       INTEGER (KIND=int_kind), DIMENSION(nb) :: isendbuf,irecvbuf
 
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp) :: qntem
       INTEGER (KIND=int_kind), DIMENSION(ntracer) :: &
          nnegt
+
+#if defined (CHEM)
       INTEGER (KIND=int_kind), DIMENSION(nchem) :: &
          nnegt_chem
+#endif
 
       REAL (KIND=dbl_kind):: tini,tend
 
@@ -318,6 +326,7 @@ CONTAINS
 #if defined (CHEM)
         do nt = 1,nchem
           IF ( NNEGT_CHEM(nt) .GT. 0 ) CALL FILL_GLO_3D(CHEM3D(:,:,:,nt),'     CHEM1' )
+        enddo
 #endif
 
 !     DO K=2,NK2

@@ -20,6 +20,7 @@ USE modchem
 IMPLICIT NONE
 PRIVATE
 
+#if defined (CHEM)
 PUBLIC :: update_chemical,  &
           update_chemical_init
 
@@ -184,6 +185,7 @@ implicit none
 
   return
 end function getth
+#endif
 
 END MODULE update_chemical_module
 

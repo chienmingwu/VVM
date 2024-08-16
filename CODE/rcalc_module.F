@@ -101,7 +101,7 @@ CONTAINS
 
 #if defined (CHEM)
          do nt = 1,nchem
-            CALL ADVEC_3D ( CHEM3D(mim,mjm,1,nt), CHEM3D(1,1,1,L,nt), term4 )
+            CALL ADVEC_3D ( CHEM3D(mim,mjm,1,nt), FCHEM3D(1,1,1,L,nt), term4 )
          enddo
 #endif
 

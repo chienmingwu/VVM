@@ -204,23 +204,33 @@ CONTAINS
       QG3D(I,J,K) = 0.
 #endif
 
-#if defined(CHEM)
-      DO N = 1, nchem
-      CHEM3D(I,J,K,N) = 0.
-      ENDDO
-#endif
       ENDIF
       ENDDO
       ENDDO
       ENDDO
 
-
-IF (ntracer.gt.0) THEN
-      DO N=1,ntracer
+#if defined(CHEM)
+      DO NT = 1, nchem
       DO K = 2, maxtopo
       DO J = 1, MJ1
       DO I = 1, MI1
-          TC3D(I,J,J,N) = 0.
+      IF(ITYPEW(I,J,K) .NE. 1) THEN
+      CHEM3D(I,J,K,NT) = 0.
+      ENDIF
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDDO
+#endif
+
+IF (ntracer.gt.0) THEN
+      DO NT=1,ntracer
+      DO K = 2, maxtopo
+      DO J = 1, MJ1
+      DO I = 1, MI1
+      IF(ITYPEW(I,J,K) .NE. 1) THEN
+          TC3D(I,J,K,NT) = 0.
+      ENDIF
       ENDDO
       ENDDO
       ENDDO

@@ -40,6 +40,12 @@ CONTAINS
          i, j, k, nt, & ! do loop indices for zonal, meridional and vertical dimensions
          ip, im, ii         ! high index, low index, intermediate index
 
+#if defined (CHEM)
+      INTEGER (KIND=int_kind), PARAMETER :: ndum=ntracer+nchem
+#else
+      INTEGER (KIND=int_kind), PARAMETER :: ndum=ntracer
+#endif
+
 #if defined (PERIODIC)
 #if defined (MPI)
 
@@ -47,26 +53,27 @@ CONTAINS
 
 #if defined (MICROP3)
 #if defined (LIQFRACP3)
+
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
-         buff_c(nhalo, nhalo,nk1,11+ntracer+nchem,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
-         buff_ns(1:mi1,nhalo,nk1,11+ntracer+nchem,4), &  ! last dimension - 1 recv from s, 2 recv from n
+         buff_c(nhalo, nhalo,nk1,11+ndum,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
+         buff_ns(1:mi1,nhalo,nk1,11+ndum,4), &  ! last dimension - 1 recv from s, 2 recv from n
                                           !                  3 send to n, 4 send to south
-         buff_ew(nhalo,1:mj1,nk1,11+ntracer+nchem,4)  ! last dimension - 1 recv from w, 2 recv from e
+         buff_ew(nhalo,1:mj1,nk1,11+ndum,4)  ! last dimension - 1 recv from w, 2 recv from e
                                           !                  3 send to e, 4 send to w
 #else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
-         buff_c(nhalo, nhalo,nk1,10+ntracer+nchem,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
-         buff_ns(1:mi1,nhalo,nk1,10+ntracer+nchem,4), &  ! last dimension - 1 recv from s, 2 recv from n
+         buff_c(nhalo, nhalo,nk1,10+ndum,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
+         buff_ns(1:mi1,nhalo,nk1,10+ndum,4), &  ! last dimension - 1 recv from s, 2 recv from n
                                           !                  3 send to n, 4 send to south
-         buff_ew(nhalo,1:mj1,nk1,10+ntracer+nchem,4)  ! last dimension - 1 recv from w, 2 recv from e
+         buff_ew(nhalo,1:mj1,nk1,10+ndum,4)  ! last dimension - 1 recv from w, 2 recv from e
                                           !                  3 send to e, 4 send to w
 #endif
 #else
       REAL (KIND=dbl_kind) :: &   !message buffers, 4th dimension field index
-         buff_c(nhalo, nhalo,nk1,7+ntracer+nchem,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
-         buff_ns(1:mi1,nhalo,nk1,7+ntracer+nchem,4), &  ! last dimension - 1 recv from s, 2 recv from n
+         buff_c(nhalo, nhalo,nk1,7+ndum,8),  & ! 1 from nw, 2 from ne, 3 from se, 4 from sw, 5 to se, 6 to sw, 7, to nw, 8 to ne
+         buff_ns(1:mi1,nhalo,nk1,7+ndum,4), &  ! last dimension - 1 recv from s, 2 recv from n
                                           !                  3 send to n, 4 send to south
-         buff_ew(nhalo,1:mj1,nk1,7+ntracer+nchem,4)  ! last dimension - 1 recv from w, 2 recv from e
+         buff_ew(nhalo,1:mj1,nk1,7+ndum,4)  ! last dimension - 1 recv from w, 2 recv from e
                                           !                  3 send to e, 4 send to w
 #endif
 
@@ -86,18 +93,18 @@ CONTAINS
 
 #if defined (MICROP3)
 #if defined (LIQFRACP3)
-      size_ns = nhalo*(11+ntracer+nchem)*(nk2-1)*(mi1)
-      size_ew = nhalo*(11+ntracer+nchem)*(nk2-1)*(mj1)
-      size_c = (11+ntracer+nchem)*(nk2-1)*nhalo*nhalo
+      size_ns = nhalo*(11+ndum)*(nk2-1)*(mi1)
+      size_ew = nhalo*(11+ndum)*(nk2-1)*(mj1)
+      size_c = (11+ndum)*(nk2-1)*nhalo*nhalo
 #else
-      size_ns = nhalo*(10+ntracer+nchem)*(nk2-1)*(mi1)
-      size_ew = nhalo*(10+ntracer+nchem)*(nk2-1)*(mj1)
-      size_c = (10+ntracer+nchem)*(nk2-1)*nhalo*nhalo
+      size_ns = nhalo*(10+ndum)*(nk2-1)*(mi1)
+      size_ew = nhalo*(10+ndum)*(nk2-1)*(mj1)
+      size_c = (10+ndum)*(nk2-1)*nhalo*nhalo
 #endif
 #else
-      size_ns = nhalo*(7+ntracer+nchem)*(nk2-1)*(mi1)
-      size_ew = nhalo*(7+ntracer+nchem)*(nk2-1)*(mj1)
-      size_c = (7+ntracer+nchem)*(nk2-1)*nhalo*nhalo
+      size_ns = nhalo*(7+ndum)*(nk2-1)*(mi1)
+      size_ew = nhalo*(7+ndum)*(nk2-1)*(mj1)
+      size_c = (7+ndum)*(nk2-1)*nhalo*nhalo
 #endif
 
 #else
@@ -519,6 +526,8 @@ CONTAINS
               chem3d(i-nhalo,1:mj1,k,nt) = buff_ew(i,1:mj1,k-1,10+ntracer+nt,1)
               chem3d(mi1+i,1:mj1,k,nt)   = buff_ew(i,1:mj1,k-1,10+ntracer+nt,2)
             enddo
+#endif
+
 #endif
 
 #else

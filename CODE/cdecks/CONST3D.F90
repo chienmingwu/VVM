@@ -117,7 +117,7 @@ PRIVATE
       ftc3d      ! tendency of passive tracer due to advection (kg/kg/s)
 #if defined (CHEM)
    REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,nk2,2,nchem), PUBLIC ::     &
-      rchem3d      ! tendency of passive chemicals due to advection (kg/kg/s)
+      fchem3d      ! tendency of passive chemicals due to advection (kg/kg/s)
 #endif
 
 !*****************************
