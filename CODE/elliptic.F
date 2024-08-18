@@ -82,7 +82,7 @@ CONTAINS
       call xyavg1(psi,nhalo,mi1,mj1,dum1)
       psi = psi - dum1
       !call SOR(tmp_psi,psi,1.5_dbl_kind,50000,1.e-6_dbl_kind,idum1)
-      call CG(tmp_psi,psi,1.e-6_dbl_kind,50000,idum1)
+      call CG(tmp_psi,psi,1.e-6_dbl_kind,10000,idum1)
       if (my_task==0) write(*,*) "psi iter = ", idum1
 #if defined (DIAG)
       DIAG2D(:,:,3)=tmp_psi(:,:)
@@ -90,7 +90,7 @@ CONTAINS
       call xyavg1(chi,nhalo,mi1,mj1,dum1)
       chi = chi - dum1
       !call SOR(tmp_chi,chi,1.5_dbl_kind,50000,1.e-6_dbl_kind,idum1)
-      call CG(tmp_chi,chi,1.e-6_dbl_kind,50000,idum1)
+      call CG(tmp_chi,chi,1.e-6_dbl_kind,10000,idum1)
       if (my_task==0) write(*,*) "chi iter = ", idum1
 #if defined (DIAG)
       DIAG2D(:,:,4)=tmp_chi(:,:)
@@ -234,7 +234,7 @@ CONTAINS
       call laplacian(phi,ap) 
       r = f - ap
       p = r
-      call xysum1(r**2._dbl_kind,nhalo,mi1,mj1,dum1)
+      call xysum1(r*r,nhalo,mi1,mj1,dum1)
       rs_old=dum1
       if (sqrt(rs_old) < tol) return
  
@@ -247,7 +247,7 @@ CONTAINS
         phi = phi + alpha * p
         r = r - alpha * ap
 
-        call xysum1(r**2._dbl_kind,nhalo,mi1,mj1,dum1)
+        call xysum1(r*r,nhalo,mi1,mj1,dum1)
         rs_new=dum1
         if (my_task==0) write(*,*)  iter,sqrt(rs_new)
         if (sqrt(rs_new) < tol) exit
@@ -265,8 +265,8 @@ CONTAINS
 
       do j=1,mj1
       do i=1,mi1
-        f(i,j) = (phi(i+1,j)-2._dbl_kind*phi(i,j)-phi(i-1,j))/dx**2._dbl_kind &
-                +(phi(i,j+1)-2._dbl_kind*phi(i,j)-phi(i,j-1))/dynew**2._dbl_kind
+        f(i,j) = (phi(i+1,j)-2._dbl_kind*phi(i,j)+phi(i-1,j))/(dx*dx) &
+                +(phi(i,j+1)-2._dbl_kind*phi(i,j)+phi(i,j-1))/(dynew*dynew)
       enddo
       enddo
 
