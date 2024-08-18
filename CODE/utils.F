@@ -26,6 +26,7 @@ MODULE utils
      ssum,   &
      cvmgp,  &
      cvmgn,  &
+     xysum1, &
      xyavg1, &
      xyavg2, &
      xymin2, &
@@ -213,12 +214,12 @@ MODULE utils
             m1, m2, m3, mfac
          REAL (KIND=dbl_kind) :: tmp, rfac
       
-         m1=mod(IA*IDUM,m)
-         m2=mod(IB*IDUM,m)
-         m3=mod(IC*IDUM,m)
+         m1=modulo(IA*IDUM,m)
+         m2=modulo(IB*IDUM,m)
+         m3=modulo(IC*IDUM,m)
          mfac=(m1+m2+m3)/3
          if(mfac .eq. 0) mfac=1
-         tmp=mod(m1*m2+m3, mfac)
+         tmp=modulo(m1*m2+m3, mfac)
          rfac = mfac
          ran2_result=tmp/rfac
          IDUM=IDUM+1
@@ -281,6 +282,40 @@ MODULE utils
          ENDIF
 
       END FUNCTION cvmgn
+
+      SUBROUTINE XYSUM1(VAB,nhalo,IFI,JFI,AVGV)
+! this routine returns the summation of one horizontal slice
+
+! argument list
+         INTEGER (KIND=int_kind), INTENT(IN) ::   &
+            nhalo,  & ! size of halo about slice
+            ifi,    & !  unique size of first dimension
+            jfi       !  unique size of second dimension
+         REAL (KIND=dbl_kind), INTENT(IN) ::    &
+             VAB(1-nhalo:ifi+nhalo,1-nhalo:jfi+nhalo)
+         REAL (KIND=dbl_kind), INTENT(OUT) :: AVGV
+
+! local variables
+         REAL (KIND=dbl_kind) :: SUM
+         INTEGER (KIND=int_kind) :: i, j ! do loop indices
+         INTEGER (KIND=int_kind) :: iend, jend ! actual do loop termination
+
+         iend = ifi
+         jend = jfi
+         SUM = 0.
+         DO J=1,jend
+            DO I=1,iend
+               SUM = SUM + VAB(I,J)
+            ENDDO
+         ENDDO
+#if defined (MPI)
+        CALL MPI_ALLREDUCE(sum, avgv,1,               &
+                           mpi_dbl_kind, MPI_SUM, MPI_COMM_WORLD, mpierr)
+#else
+        AVGV = SUM
+#endif
+
+      END SUBROUTINE xysum1
       
 
       SUBROUTINE XYAVG1(VAB,nhalo,IFI,JFI,AVGV)

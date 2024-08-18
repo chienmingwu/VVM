@@ -89,7 +89,7 @@ CONTAINS
       casename='tpe_summer'
 
       ! Read sounding data from binary file
-      fname = '/nwpr/gfs/c103/VVM/CWA_sounding/46692-2024073100.edt.txt'
+      fname = '/home/der0318/46692-2024073100.edt.txt'
       OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
       if (my_task==0) write(*,*) "fname:", trim(fname)
       READ(88, *) ! read first line
