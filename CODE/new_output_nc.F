@@ -16,6 +16,9 @@ USE pnetcdf
 #if defined (KPP)
 use land_module, only: olev, depth
 #endif
+#if defined (CHEM)
+use modchem, only: chem_name_list
+#endif
       
 IMPLICIT NONE
 PRIVATE
@@ -558,8 +561,11 @@ CONTAINS
 
         do nt = 1,nchem
           write(unit=trnum,fmt='(i2.2)')nt
-          CALL pCDF_INI_4DVAR (ncid_chem, 'chem'//trnum, 'passive chemicals mixing ratio '//trnum, &
-                          'chemicals_mixing_ratio '//trnum, 'mg kg-1', &
+          !! CALL pCDF_INI_4DVAR (ncid_chem, 'chem'//trnum, 'passive chemicals mixing ratio '//trnum, &
+          !!                 'chemicals_mixing_ratio '//trnum, 'ppb', &
+          !!                 'zt', 'yt', 'xt')
+          CALL pCDF_INI_4DVAR (ncid_chem, trim(chem_name_list(nt)), trim(chem_name_list(nt)), &
+                          trim(chem_name_list(nt)), 'ppb', &
                           'zt', 'yt', 'xt')
         enddo
 
@@ -3684,7 +3690,7 @@ CONTAINS
         nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst, 'standard_name', 19_mpi_offset_kind, 'chemicals_mixing_ratio')
         if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
-        nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst, 'units', 7_mpi_offset_kind, 'mg kg-1')
+        nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst, 'units', 7_mpi_offset_kind, 'ppb')
         if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
        
         nc_err = nfmpi_put_att_double(ncid, chem3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
@@ -4951,7 +4957,7 @@ CONTAINS
         nc_err = nfmpi_put_att_text(ncid, fchem3d_id_rst, 'standard_name', 24_mpi_offset_kind, 'chemicals_tendency_dynamics')
         if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
-        nc_err = nfmpi_put_att_text(ncid, fchem3d_id_rst, 'units', 11_mpi_offset_kind, 'mg kg-1 s-1')
+        nc_err = nfmpi_put_att_text(ncid, fchem3d_id_rst, 'units', 11_mpi_offset_kind, 'ppb s-1')
         if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_double(ncid, fchem3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))

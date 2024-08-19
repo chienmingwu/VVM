@@ -32,6 +32,9 @@ USE land_module
 #endif
 #endif
 USE petscsys
+#if defined (CHEM)
+use modchem, only: chem_name_list
+#endif
 
 
       
@@ -1145,7 +1148,8 @@ CONTAINS
       do nt = 1,nchem
         OUT_tm1(:,:,1:nk2) = chem3d(1:mi1,1:mj1,1:nk2,nt)
         write(unit=trnum,fmt='(i2.2)')nt
-        call pCDF_WRITE_4D_slice(ncid_chem, 'chem'//trnum, TIME_L, time_start, out_tm1, nk2 )
+        !! call pCDF_WRITE_4D_slice(ncid_chem, 'chem'//trnum, TIME_L, time_start, out_tm1, nk2 )
+        call pCDF_WRITE_4D_slice(ncid_chem, trim(chem_name_list(nt)), TIME_L, time_start, out_tm1, nk2 )
       enddo
 #endif
 
