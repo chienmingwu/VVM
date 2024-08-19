@@ -480,7 +480,7 @@ CONTAINS
         endif
 #if defined (CHEM)
           do nt = 1,nchem
-            WRITE (21,102) ITT,nt,NNEGT_CHEM(nt),nt,nt,CHEMNEG(nt)
+            WRITE (21,103) ITT,nt,NNEGT_CHEM(nt),nt,nt,CHEMNEG(nt)
           enddo
 #endif
 
@@ -495,6 +495,8 @@ CONTAINS
                               ' NNEGQG = ',I6,' QGNEG/QGPOS = ',E10.3)
   102 FORMAT (' ','ITT = ',I6,   &
               ' NNEGT',i1,' = ',I6,' TCNEG',i1,'/TCPOS',i1,' = ',E10.3)
+  103 FORMAT (' ','ITT = ',I6,   &
+              ' NNEGT_CHEM',i1,' = ',I6,' TCNEG',i1,'/TCPOS',i1,' = ',E10.3)
 
 #endif
    END SUBROUTINE q_chk_3d

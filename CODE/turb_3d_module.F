@@ -654,51 +654,51 @@ CONTAINS
 
       do nt = 1,nchem
 !ccwu
-      DO 701 K=2,NK2
-      DO 701 J=1,MJ1
-      DO 701 I=1,MI1
+      DO 3001 K=2,NK2
+      DO 3001 J=1,MJ1
+      DO 3001 I=1,MI1
       DDX(I,J,K)=0.5*( (RKH(I+1,J,K)+RKH(I,J,K))        &
                       *(CHEM3D(I+1,J,K,nt)-CHEM3D(I,J,K,nt))*DHWU1(I,J,K)    &
                      - (RKH(I,J,K)+RKH(I-1,J,K))        &
                       *(CHEM3D(I,J,K,nt)-CHEM3D(I-1,J,K,nt))*DHWU2(I,J,K) )/DXSQ
-  701 CONTINUE
+ 3001 CONTINUE
 
 !ccwu
-      DO 711 K=2,NK2
-      DO 711 J=1,MJ1
-      DO 711 I=1,MI1
+      DO 3011 K=2,NK2
+      DO 3011 J=1,MJ1
+      DO 3011 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                          &
                 +0.5*( (RKH(I,J+1,K)+RKH(I,J,K))     &
                       *(CHEM3D(I,J+1,K,nt)-CHEM3D(I,J,K,nt))*DHWV1(I,J,K) &
                      - (RKH(I,J,K)+RKH(I,J-1,K))     &
                       *(CHEM3D(I,J,K,nt)-CHEM3D(I,J-1,K,nt))*DHWV2(I,J,K) )/DYSQ
-  711 CONTINUE
+ 3011 CONTINUE
 
 !ccwu
 !easy RKH -> RKQ
-      DO 721 K=2,NK1
-      DO 721 J=1,MJ1
-      DO 721 I=1,MI1
+      DO 3021 K=2,NK1
+      DO 3021 J=1,MJ1
+      DO 3021 I=1,MI1
       DDX(I,J,K)=DDX(I,J,K)                                       &
        +0.5*FNU(K)*(FNZ(K)*RHOZ(K)*(RKQ(I,J,K+1)+RKQ(I,J,K))      &
                    *(CHEM3D(I,J,K+1,nt)-CHEM3D(I,J,K,nt))*DHWW1(I,J,K)                 &
                    -FNZ(K-1)*RHOZ(K-1)*(RKQ(I,J,K)+RKQ(I,J,K-1))  &
                    *(CHEM3D(I,J,K,nt)-CHEM3D(I,J,K-1,nt))*DHWW2(I,J,K) )/(RHOU(K)*DZSQ)
-  721 CONTINUE
+ 3021 CONTINUE
 
-      DO 731 J=1,MJ1
-      DO 731 I=1,MI1
+      DO 3031 J=1,MJ1
+      DO 3031 I=1,MI1
 
       DDX(I,J,NK2)=DDX(I,J,NK2)                                       &
        -0.5*FNU(NK2)*(FNZ(NK1)*RHOZ(NK1)*(RKQ(I,J,NK2)+RKQ(I,J,NK1))  &
                    *(CHEM3D(I,J,NK2,nt)-CHEM3D(I,J,NK1,nt)))/(RHOU(NK2)*DZSQ)
-  731 CONTINUE
+ 3031 CONTINUE
 
-      DO 751 K=2,NK2
-      DO 751 J=1,MJ1
-      DO 751 I=1,MI1
+      DO 3051 K=2,NK2
+      DO 3051 J=1,MJ1
+      DO 3051 I=1,MI1
       CHEMAD3(I,J,K,nt)=DDX(I,J,K)
-  751 CONTINUE
+ 3051 CONTINUE
       enddo
 
 #endif

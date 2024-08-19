@@ -1,3 +1,4 @@
+#include "definesld.com"
 module modchem
 
 use kinds 
@@ -129,6 +130,7 @@ use petscsys, comm3d=>MPI_COMM_WORLD
 ! This module is modified for VVM. (Der and Fan 2020.09.16) 
 
 implicit none
+#if defined (CHEM)
 
 private
 PUBLIC :: lchem, initchem,inputchem, twostep, PL_scheme, nchsp, firstchem, lastchem, RH, choffset, CO2, chem_name_list
@@ -1139,7 +1141,7 @@ real, dimension(1:k1) :: rho, exnf, pres, zf, dzf
     zf(k)=ZT(k+1)
     dzf(k)=dz/fnt(k+1)
     qv(1:i1,1:j1,k)=QV3D(1:i1,1:j1,k+1) ! qv
-    svm(1:i1,1:j1,k,firstchem:lastchem)=TC3D(1:i1,1:j1,k+1,firstchem:lastchem) ! tracers
+    svm(1:i1,1:j1,k,firstchem:lastchem)=CHEM3D(1:i1,1:j1,k+1,firstchem:lastchem) ! tracers
     ql(1:i1,1:j1,k)=QC3D(1:i1,1:j1,k+1)+QR3D(1:i1,1:j1,k+1) ! ql
     thl(1:i1,1:j1,k)=TH3D(1:i1,1:j1,k+1)-(rlv/cp)*ql(1:i1,1:j1,k)*(1/exnf(k)) ! th_l
     do j=1,j1
@@ -1170,9 +1172,9 @@ real, dimension(1:k1) :: rho, exnf, pres, zf, dzf
   !  tnextwrite = tnextwrite + itimeav
   !endif
 
-  ! return to TC3D
+  ! return to CHEM3D
   DO k=1,k1
-    TC3D(1:i1,1:j1,k+1,firstchem:lastchem)=svm(1:i1,1:j1,k,firstchem:lastchem)
+    CHEM3D(1:i1,1:j1,k+1,firstchem:lastchem)=svm(1:i1,1:j1,k,firstchem:lastchem)
   ENDDO
 
 end subroutine twostep
@@ -2526,5 +2528,6 @@ implicit none
   endif !if myid==0
 
 end subroutine write_chem_scheme
+#endif
 
 end module modchem
