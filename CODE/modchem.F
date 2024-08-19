@@ -288,7 +288,7 @@ SUBROUTINE initchem
   lsegr    = .false.
 
   if(myid==0) then
-    open(ifnamopt,file=trim(fname_options)//"."//trim(cexpnr),status='old',iostat=ierr)
+    open(ifnamopt,file='./user_files/'//trim(fname_options)//"."//trim(cexpnr),status='old',iostat=ierr)
     read (ifnamopt,NAMCHEM,iostat=ierr)
     if (ierr > 0) then
       print *, 'Problem in namoptions NAMCHEM'
@@ -379,7 +379,7 @@ SUBROUTINE initchem
 
 
   ! read chem_name_list from list
-  open (unit=10,file='chem.inp.'//cexpnr,status='old',form='formatted')
+  open (unit=10,file='./user_files/chem.inp.'//cexpnr,status='old',form='formatted')
   do while(.true.)
     read(10,'(a)') line
     if (line(1:1) == '@') then
@@ -480,7 +480,7 @@ subroutine inputchem
     reactions(:)%outp(i)%index_sv0 = 999
   enddo
 
-  open (unit=10,file='chem.inp.'//cexpnr,err=100,status='old',form='formatted')
+  open (unit=10,file='./user_files/chem.inp.'//cexpnr,err=100,status='old',form='formatted')
 
   do while(.true.)
     read(10,'(a)',err=100) line

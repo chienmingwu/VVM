@@ -51,9 +51,6 @@ ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-2momI .
 ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-3momI .
 ln -s ${vvmdir}/RUNDATA/p3_lookupTable_2.dat-v6.0 .
 
-# for chemical scheme
-cp -r ${vvmdir}/CODE/CHEM/* .
-
 # for user files
 if( -d ${casedir}/user_files ) then 
   cp -r ${casedir}/user_files .
@@ -90,7 +87,7 @@ set codedir = ${expdir}'/CODE'
 sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/80/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90

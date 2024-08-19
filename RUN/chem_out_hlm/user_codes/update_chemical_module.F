@@ -37,29 +37,29 @@ CONTAINS
       ! initiation of chemistry module
       call initchem
 
-!!!  !  Initialize tracer
-!!!        CHEM3D(:,:,:,:) = 0.
-!!!        DO 888 K = 1,NK2
-!!!        DO 888 J = mjm,mjp
-!!!        DO 888 I = mim,mip
-!!!            IF (ZT(K) .LT. 1000.) THEN
-!!!               CHEM3D(I,J,K,2) = 20.     ! Ozone
-!!!               CHEM3D(I,J,K,4) = 20.     ! NO2
-!!!               CHEM3D(I,J,K,10) = 2010.  ! CH4
-!!!               CHEM3D(I,J,K,11) = 30.    ! CH2O
-!!!               CHEM3D(I,J,K,15) = 320.   ! CO
-!!!               CHEM3D(I,J,K,17) = 2.e8   ! O2
-!!!               CHEM3D(I,J,K,18) = 8.e8   ! N2
-!!!            ELSE
-!!!               CHEM3D(I,J,K,2) = 40.     ! Ozone
-!!!               CHEM3D(I,J,K,4) = 0.     ! NO2
-!!!               CHEM3D(I,J,K,10) = 1908.  ! CH4
-!!!               CHEM3D(I,J,K,11) = 0.    ! CH2O
-!!!               CHEM3D(I,J,K,15) = 100.   ! CO
-!!!               CHEM3D(I,J,K,17) = 2.e8   ! O2
-!!!               CHEM3D(I,J,K,18) = 8.e8   ! N2
-!!!            ENDIF
-!!!    888 CONTINUE
+!  Initialize tracer
+      CHEM3D(:,:,:,:) = 0.
+      DO 888 K = 1,NK2
+      DO 888 J = mjm,mjp
+      DO 888 I = mim,mip
+          IF (ZT(K) .LT. 1000.) THEN
+             CHEM3D(I,J,K,2) = 20.     ! Ozone
+             CHEM3D(I,J,K,4) = 20.     ! NO2
+             CHEM3D(I,J,K,10) = 2010.  ! CH4
+             CHEM3D(I,J,K,11) = 30.    ! CH2O
+             CHEM3D(I,J,K,15) = 320.   ! CO
+             CHEM3D(I,J,K,17) = 2.e8   ! O2
+             CHEM3D(I,J,K,18) = 8.e8   ! N2
+          ELSE
+             CHEM3D(I,J,K,2) = 40.     ! Ozone
+             CHEM3D(I,J,K,4) = 0.     ! NO2
+             CHEM3D(I,J,K,10) = 1908.  ! CH4
+             CHEM3D(I,J,K,11) = 0.    ! CH2O
+             CHEM3D(I,J,K,15) = 100.   ! CO
+             CHEM3D(I,J,K,17) = 2.e8   ! O2
+             CHEM3D(I,J,K,18) = 8.e8   ! N2
+          ENDIF
+  888 CONTINUE
 
    END SUBROUTINE update_chemical_init
 
@@ -95,51 +95,51 @@ CONTAINS
       REAL xday, xhr, xlon, xlat, sza, coszen
       REAL :: TCtpp
 
-!!       !current time
-!!       xday = rjday
-!!       xhr = utc_time
-!!       xlon = rlon
-!!       xlat = rlat
-!! 
-!!       sza = getth(xday,xlat,xlon,xhr)
-!!       coszen = max(0.0,cos(sza)) !to avoid negative values
-!! 
-!!       ! find specific height
-!!       idxkm = 0
-!!       DO k=1,nk2
-!!         IF(ZT(k)>=300.) THEN
-!!           idxkm = k
-!!           EXIT
-!!         ENDIF
-!!       ENDDO
-!! 
-!!       ! emssion data [MT/yr]
-!!       TCtpp = 9843.575 ! NOx
-!! 
-!!       ! change unit (MT/yr -> kg/yr -> kg/s)
-!!       TCtpp = TCtpp * 1000. / 365. / 86400.
-!! 
-!!       ! change unit 2 (kg/s -> kg/m^3/s -> ug/m^3/s -> ppb/s)
-!!       TCtpp = TCtpp / DX / DYNEW / (DZ/FNT(idxkm)) * 1e9 / 1.25
-!! 
-!!       ! source
-!!       DO 988 J = mjm, mjp
-!!       DO 988 I = mim, mip
-!!         tempim = mi1*ni_sbdm+i
-!!         tempjm = mj1*nj_sbdm+j
-!!         IF ( (tempim .EQ. INT(mi_glob/2)+1) .and. &
-!!              (tempjm .EQ. INT(mj_glob/2)  ) &
-!!            ) THEN
-!! 
-!!              CHEM3D(I,J,idxkm,1) = CHEM3D(I,J,idxkm,1) + &
-!!                                      TCtpp * Pass_small_dt  ! tracer
-!!              CHEM3D(I,J,idxkm,3) = CHEM3D(I,J,idxkm,3) + &
-!!                                      TCtpp * Pass_small_dt * 0.9 ! NO
-!!              CHEM3D(I,J,idxkm,4) = CHEM3D(I,J,idxkm,4) + &
-!!                                      TCtpp * Pass_small_dt * 0.1 ! NO2 
-!!         ENDIF
-!!         
-!!  988 ENDDO
+      !current time
+      xday = rjday
+      xhr = utc_time
+      xlon = rlon
+      xlat = rlat
+
+      sza = getth(xday,xlat,xlon,xhr)
+      coszen = max(0.0,cos(sza)) !to avoid negative values
+
+      ! find specific height
+      idxkm = 0
+      DO k=1,nk2
+        IF(ZT(k)>=300.) THEN
+          idxkm = k
+          EXIT
+        ENDIF
+      ENDDO
+
+      ! emssion data [MT/yr]
+      TCtpp = 9843.575 ! NOx
+
+      ! change unit (MT/yr -> kg/yr -> kg/s)
+      TCtpp = TCtpp * 1000. / 365. / 86400.
+
+      ! change unit 2 (kg/s -> kg/m^3/s -> ug/m^3/s -> ppb/s)
+      TCtpp = TCtpp / DX / DYNEW / (DZ/FNT(idxkm)) * 1e9 / 1.25
+
+      ! source
+      DO 988 J = mjm, mjp
+      DO 988 I = mim, mip
+        tempim = mi1*ni_sbdm+i
+        tempjm = mj1*nj_sbdm+j
+        IF ( (tempim .EQ. INT(mi_glob/2)+1) .and. &
+             (tempjm .EQ. INT(mj_glob/2)  ) &
+           ) THEN
+
+             CHEM3D(I,J,idxkm,1) = CHEM3D(I,J,idxkm,1) + &
+                                     TCtpp * Pass_small_dt  ! tracer
+             CHEM3D(I,J,idxkm,3) = CHEM3D(I,J,idxkm,3) + &
+                                     TCtpp * Pass_small_dt * 0.9 ! NO
+             CHEM3D(I,J,idxkm,4) = CHEM3D(I,J,idxkm,4) + &
+                                     TCtpp * Pass_small_dt * 0.1 ! NO2 
+        ENDIF
+        
+ 988 ENDDO
 
 
 !!        ! remove around the boundaries
