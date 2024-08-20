@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = chem_out_hlm
+set expname = case_pbl_tracer_and_chem
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -60,18 +60,18 @@ endif
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
-#define DIFFUSION
 #define PHYSICS
 #define MICROCODE
 #define MICROP3
-#define TOPOGRAPHY
+#define DIFFUSION
 #define LSM
 #define RADCODE
-#define RELAX_XY
 #define CHEM
+#define DIRECT
 'END1'
 cat definesld.com
-#define DIRECT
+#define RELAX_XY
+#define TOPOGRAPHY
 #define DIAG
 #define AREAMN
 
@@ -84,12 +84,12 @@ cat > DOMAIN << 'END3'
 #!/bin/csh
 set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
-sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/80/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/64/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/100/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/3/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/chemical_dimension/22/g' ${codedir}/cdecks/PARMSLD.F90
@@ -100,9 +100,9 @@ cat DOMAIN
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=500.,DYNEW=500.,DZ=50.,DZ1=50.,DT=5.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=300.,DYNEW=300.,DZ=20.,DZ1=20.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
+ &INPUT4 NXS=1,NXSAVG=1,NWR11=1,NFLPRT=1,NRESTART=1 /
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)

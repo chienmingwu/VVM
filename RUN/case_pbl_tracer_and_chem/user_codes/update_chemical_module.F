@@ -127,7 +127,7 @@ CONTAINS
       DO 988 I = mim, mip
         tempim = mi1*ni_sbdm+i
         tempjm = mj1*nj_sbdm+j
-        IF ( (tempim .EQ. INT(mi_glob/2)+1) .and. &
+        IF ( (tempim .EQ. INT(mi_glob/4)+1) .and. &
              (tempjm .EQ. INT(mj_glob/2)  ) &
            ) THEN
 
