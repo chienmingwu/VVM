@@ -37,19 +37,19 @@ CONTAINS
       !! Q1LS(NK3)  [K/s],   Q2LS(NK3)  [g/g/s], WLS(NK3)  [m/s]
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
-      INTEGER (KIND=int_kind), PARAMETER :: NT1=3
+      INTEGER (KIND=int_kind), PARAMETER :: NT1=2
       REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1)
-      INTEGER (KIND=int_kind), PARAMETER :: NU1=4
+      INTEGER (KIND=int_kind), PARAMETER :: NU1=2
       REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1),  V1(NU1)
 
       ! stable enviroment
-      DATA P1/1000., 900., 700./ !hpa
-      DATA T1/288.,  279., 250./ !K
-      DATA QV1/3*1.e-15/ !kg/kg
+      DATA P1/1000., 800./ !hpa
+      DATA T1/299.,  293./ !K
+      DATA QV1/2*1.e-15/ !kg/kg
 
-      DATA PU1/1000., 900., 800, 700./ !hpa
-      DATA U1/2., 2., 0., 0./ !m/s
-      DATA V1/0., 0., 0., 0./ !m/s
+      DATA PU1/1000., 700./ !hpa
+      DATA U1/2., 2./ !m/s
+      DATA V1/0., 0./ !m/s
 
       SST=T1(1)
       P1 = P1*100.

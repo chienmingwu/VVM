@@ -67,10 +67,10 @@ cat > definesld.com << 'END1'
 #define LSM
 #define RADCODE
 #define CHEM
-#define DIRECT
+#define RELAX_XY
 'END1'
 cat definesld.com
-#define RELAX_XY
+#define DIRECT
 #define TOPOGRAPHY
 #define DIAG
 #define AREAMN
@@ -100,11 +100,11 @@ cat DOMAIN
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=8640 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=300.,DYNEW=300.,DZ=20.,DZ1=20.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=200.,DYNEW=200.,DZ=20.,DZ1=20.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=1,NWR11=1,NFLPRT=1,NRESTART=1 /
+ &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60,NITERXY=1000 /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
+ &INPUT5 IX=3182073,ITINIT=1,ITSTOP=3,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT

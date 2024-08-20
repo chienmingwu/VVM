@@ -99,13 +99,16 @@ CONTAINS
         ENDIF
       ENDDO
 
-      ! emssion data [MT/yr]
-      ! change unit (MT/yr -> kg/yr -> kg/s)
-      ! change unit 2 (kg/s -> kg/m^3/s -> ug/m^3/s -> ppb/s)
+      !!!  ! emssion data [MT/yr]
+      !!!  ! change unit (MT/yr -> kg/yr -> kg/s)
+      !!!  ! change unit 2 (kg/s -> kg/m^3/s -> ug/m^3/s -> ppb/s)
 
-      TCtpp = 9843.575 ! NOx
-      TCtpp = TCtpp * 1000. / 365. / 86400.
-      TCtpp = TCtpp / DX / DYNEW / (DZ/FNT(idx300m)) * 1e9 / 1.25
+      !!!  TCtpp = 9843.575 ! NOx
+      !!!  TCtpp = TCtpp * 1000. / 365. / 86400.
+      !!!  TCtpp = TCtpp / DX / DYNEW / (DZ/FNT(idx300m)) * 1e9 / 1.25
+
+      ! emission [ppb/s]
+      TCtpp = 5.
 
       ! source
       DO 988 J = mjm, mjp
