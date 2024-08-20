@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = bubble
+set expname = case_bubble
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -51,9 +51,6 @@ ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-2momI .
 ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-3momI .
 ln -s ${vvmdir}/RUNDATA/p3_lookupTable_2.dat-v6.0 .
 
-# for chemical scheme
-cp -r ${vvmdir}/CODE/CHEM/* .
-
 # for user files
 if( -d ${casedir}/user_files ) then 
   cp -r ${casedir}/user_files .
@@ -95,6 +92,7 @@ sed -i 's/vert_dimension/60/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/chemical_dimension/22/g' ${codedir}/cdecks/PARMSLD.F90
 'END3'
 cat DOMAIN
 

@@ -32,10 +32,10 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
-!! !  Initialize tracer
-!!       IF (ntracer > 0) THEN
-!!         TC3D(:,:,:,:) = 0.
-!!       ENDIF
+!  Initialize tracer
+      IF (ntracer > 0) THEN
+        TC3D(:,:,:,:) = 0.
+      ENDIF
 
    END SUBROUTINE update_tracer_init
 
@@ -61,9 +61,12 @@ CONTAINS
       use pnetcdf
 
       INTEGER (KIND=int_kind) ::   &
-         i, j, k,t, hr, tempim, tempjm, idxkm
+         i, j, k,t, hr, tempim, tempjm
+      INTEGER (KIND=int_kind) ::   &
+         idx300m, idx500m, idx100m
       ! do loop indices for zonal, meridional and vertical dimensions
       REAL xday, xhr, xlon, xlat, sza, coszen
+      REAL :: TCtpp
 
       !current time
       xday = rjday
@@ -74,23 +77,55 @@ CONTAINS
       sza = getth(xday,xlat,xlon,xhr)
       coszen = max(0.0,cos(sza)) !to avoid negative values
 
-!!        ! source
-!!        IF (ntracer>0) THEN
-!!        DO 988 J = mjm, mjp
-!!        DO 988 I = mim, mip
-!!          tempim = mi1*ni_sbdm+i
-!!          tempjm = mj1*nj_sbdm+j
-!!          IF ( (tempim .EQ. INT(mi_glob/2)+1) .and. &
-!!               (tempjm .EQ. INT(mj_glob/2)  ) &
-!!             ) THEN
-!!  
-!!               TC3D(I,J,1,1) = TC3D(I,J,1,1) + &
-!!                                      0.1  * Pass_small_dt  ! tracer
-!!          ENDIF
-!!          
-!!   988 ENDDO
-!!       ENDIF
+      ! find specific height
+      DO k=1,nk2
+        IF(ZT(k)>=300.) THEN
+          idx300m = k
+          EXIT
+        ENDIF
+      ENDDO
 
+      DO k=1,nk2
+        IF(ZT(k)>=500.) THEN
+          idx500m = k
+          EXIT
+        ENDIF
+      ENDDO
+
+      DO k=1,nk2
+        IF(ZT(k)>=100.) THEN
+          idx100m = k
+          EXIT
+        ENDIF
+      ENDDO
+
+      !!!  ! emssion data [MT/yr]
+      !!!  ! change unit (MT/yr -> kg/yr -> kg/s)
+      !!!  ! change unit 2 (kg/s -> kg/m^3/s -> ug/m^3/s -> ppb/s)
+
+      !!!  TCtpp = 9843.575 ! NOx
+      !!!  TCtpp = TCtpp * 1000. / 365. / 86400.
+      !!!  TCtpp = TCtpp / DX / DYNEW / (DZ/FNT(idx300m)) * 1e9 / 1.25
+
+      ! emission [ppb/s]
+      TCtpp = 5.
+
+      ! source
+      DO 988 J = mjm, mjp
+      DO 988 I = mim, mip
+        tempim = mi1*ni_sbdm+i
+        tempjm = mj1*nj_sbdm+j
+        IF ( (tempim .EQ. INT(mi_glob/4)+1) .and. &
+             (tempjm .EQ. INT(mj_glob/2)  ) &
+           ) THEN
+             TC3D(I,J,idx100m,1) = TC3D(I,J,idx100m,1) + &
+                                     TCtpp * Pass_small_dt  ! tracer
+             TC3D(I,J,idx300m,2) = TC3D(I,J,idx300m,2) + &
+                                     TCtpp * Pass_small_dt  ! tracer
+             TC3D(I,J,idx500m,3) = TC3D(I,J,idx500m,3) + &
+                                     TCtpp * Pass_small_dt  ! tracer
+        ENDIF
+  988 ENDDO
 
 !!        ! remove around the boundaries
 !!        DO j = mjm, mjp

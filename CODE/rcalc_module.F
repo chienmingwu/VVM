@@ -99,6 +99,13 @@ CONTAINS
          enddo
       endif
 
+#if defined (CHEM)
+         do nt = 1,nchem
+            CALL ADVEC_3D ( CHEM3D(mim,mjm,1,nt), FCHEM3D(1,1,1,L,nt), term4 )
+         enddo
+#endif
+
+
 #endif
       call timer_stop('advection')
 
@@ -183,6 +190,17 @@ CONTAINS
 
       endif
 
+#if defined (CHEM)
+      DO  nt = 1,nchem
+      DO  J = 1, MJ1
+      DO  I = 1, MI1
+      FCHEM3D(I,J,K,L,nt)=FCHEM3D(I,J,K,L,nt) - WLS(K)*         &
+                (CHEM3D(I,J,K+1,nt)-CHEM3D(I,J,K,nt))*fntddz
+      ENDDO
+      ENDDO
+      ENDDO
+#endif
+
       ELSE
       DO 302 J = 1, MJ1
       DO 302 I = 1, MI1
@@ -236,6 +254,17 @@ CONTAINS
   304 CONTINUE
 
       endif
+#if defined (CHEM)
+      DO nt = 1,nchem
+      DO J = 1, MJ1
+      DO I = 1, MI1
+      FCHEM3D(I,J,K,L,nt)=FCHEM3D(I,J,K,L,nt) - WLS(K)*         &
+                (CHEM3D(I,J,K,nt)-CHEM3D(I,J,K-1,nt))*fntddz
+      ENDDO
+      ENDDO
+      ENDDO
+#endif
+
 
       END IF
   END SELECT 

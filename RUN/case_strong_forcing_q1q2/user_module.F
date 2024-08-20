@@ -20,7 +20,8 @@ PUBLIC :: &
   USER_set_3D_perturbation, &
   USER_set_vertical_coordinate, &
   USER_set_start_time, &
-  USER_set_topography_and_land_type
+  USER_set_topography_and_land_type, &
+  USER_set_CHEM_reaction_file
 
 CONTAINS
   SUBROUTINE USER_set_mean_profile_and_SST
@@ -177,6 +178,19 @@ CONTAINS
       ioutput_user(:,:,3)=14   ! soil type
 
   ENDSUBROUTINE USER_set_topography_and_land_type
+
+  SUBROUTINE USER_set_CHEM_reaction_file(filename_chem_table, &
+                                         number_of_reactions)
+      !! --------------------
+      !! if defined (CHEM), the filename of chemistry table and 
+      !! the total reaction in this table are set in this function.
+      !! --------------------
+      IMPLICIT NONE
+      CHARACTER(len=300), INTENT(out)       :: filename_chem_table
+      INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
+      number_of_reactions = 25
+      filename_chem_table = './user_files/chem.inp.001'
+  ENDSUBROUTINE USER_set_chem_reaction_file
 
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE

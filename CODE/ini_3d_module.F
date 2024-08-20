@@ -9,6 +9,9 @@ USE const3d
 USE utils
 USE bound
 USE update_tracer_module
+#if defined (CHEM)
+USE update_chemical_module
+#endif
 USE domain_decomposition
 #if defined (DIFFUSION)
 USE TURB_3D_module
@@ -58,7 +61,7 @@ CONTAINS
       REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
 #endif
 
-      casename='chem_ish_winter'
+      casename='vvm_exp'
 
       CALL USER_set_vertical_coordinate
 
@@ -338,7 +341,16 @@ CONTAINS
       UTMN0 = UTMN
       VTMN0 = VTMN
       
-      IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
+      IF(itt == 0 .and. ntracer > 0) THEN
+        CALL UPDATE_TRACER_init
+      ENDIF
+
+#if defined (CHEM)
+      IF(itt == 0) THEN
+        CALL UPDATE_chemical_init
+      ENDIF
+#endif
+
 #if defined (RADCODE)
   
       albdo = 0.30

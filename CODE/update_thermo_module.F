@@ -169,6 +169,16 @@ CONTAINS
 
       endif
 
+#if defined(CHEM)
+      DO 72 nt = 1,nchem
+      DO 72 K = 2, NK2
+      DO 72 J = 1, MJ1
+      DO 72 I = 1, MI1
+
+      CHEM3D(I,J,K,nt) = CHEM3D(I,J,K,nt)          &
+                  + A*FCHEM3D(I,J,K,N2,nt)+B*FCHEM3D(I,J,K,N1,nt)
+   72 CONTINUE
+#endif
 
 !ccwut set physics variables on topo to zero
       DO K = 2, maxtopo
@@ -193,10 +203,41 @@ CONTAINS
       QS3D(I,J,K) = 0.
       QG3D(I,J,K) = 0.
 #endif
+
       ENDIF
       ENDDO
       ENDDO
       ENDDO
+
+#if defined(CHEM)
+      DO NT = 1, nchem
+      DO K = 2, maxtopo
+      DO J = 1, MJ1
+      DO I = 1, MI1
+      IF(ITYPEW(I,J,K) .NE. 1) THEN
+      CHEM3D(I,J,K,NT) = 0.
+      ENDIF
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDDO
+#endif
+
+IF (ntracer.gt.0) THEN
+      DO NT=1,ntracer
+      DO K = 2, maxtopo
+      DO J = 1, MJ1
+      DO I = 1, MI1
+      IF(ITYPEW(I,J,K) .NE. 1) THEN
+          TC3D(I,J,K,NT) = 0.
+      ENDIF
+      ENDDO
+      ENDDO
+      ENDDO
+      ENDDO
+ENDIF
+
+
 !ccwut
 
 
