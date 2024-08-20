@@ -92,6 +92,7 @@ sed -i 's/vert_dimension/60/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/chemical_dimension/22/g' ${codedir}/cdecks/PARMSLD.F90
 'END3'
 cat DOMAIN
 
