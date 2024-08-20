@@ -61,7 +61,7 @@ CONTAINS
       REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
 #endif
 
-      casename='chem_ish_winter'
+      casename='vvm_exp'
 
       CALL USER_set_vertical_coordinate
 
