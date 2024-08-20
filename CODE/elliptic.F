@@ -13,6 +13,7 @@ USE utils
 USE timer
 USE domain_decomposition
 USE petsc_vvm_solver
+use petscsys
 
 IMPLICIT NONE
 PRIVATE
@@ -81,16 +82,16 @@ CONTAINS
       call timer_start('SOR')
       call xyavg1(psi,nhalo,mi1,mj1,dum1)
       psi = psi - dum1
-      !call SOR(tmp_psi,psi,1.5_dbl_kind,50000,1.e-6_dbl_kind,idum1)
       call CG(tmp_psi,psi,1.e-6_dbl_kind,10000,idum1)
+      !call CG_pcSOR(tmp_psi,psi,1.e-6_dbl_kind,10000,idum1)
       if (my_task==0) write(*,*) "psi iter = ", idum1
 #if defined (DIAG)
       DIAG2D(:,:,3)=tmp_psi(:,:)
 #endif
       call xyavg1(chi,nhalo,mi1,mj1,dum1)
       chi = chi - dum1
-      !call SOR(tmp_chi,chi,1.5_dbl_kind,50000,1.e-6_dbl_kind,idum1)
       call CG(tmp_chi,chi,1.e-6_dbl_kind,10000,idum1)
+      !call CG_pcSOR(tmp_chi,chi,1.e-6_dbl_kind,10000,idum1)
       if (my_task==0) write(*,*) "chi iter = ", idum1
 #if defined (DIAG)
       DIAG2D(:,:,4)=tmp_chi(:,:)
@@ -180,42 +181,6 @@ CONTAINS
 
       end subroutine relax_2d
 
-    subroutine SOR(phi, f, omega, max_iter, tol, iter)
-      integer, intent(in) :: max_iter
-      real(kind=dbl_kind), intent(in) :: omega, tol
-      real(kind=dbl_kind), intent(inout) :: phi(MIM:MIP,MJM:MJP)
-      real(kind=dbl_kind), intent(in) :: f(MIM:MIP,MJM:MJP)
-      integer :: i, j 
-      integer, intent(out) :: iter
-      real(kind=dbl_kind) :: phi_old(MIM:MIP,MJM:MJP), diff(1), fac
-
-      fac = 1._dbl_kind/(2._dbl_kind/dx**2._dbl_kind+2._dbl_kind/dynew**2._dbl_kind)
-
-      call bound_arb(1,phi)
-
-      do iter = 1, max_iter
-        phi_old = phi
-
-        ! update phi
-        do j = 1, mj1
-        do i = 1, mi1
-          phi(i, j) = (1.0_dbl_kind - omega) * phi(i, j) + omega * fac * &
-                      ((phi(i+1, j) + phi(i-1, j))/dx**2._dbl_kind + &
-                       (phi(i, j+1) + phi(i, j-1))/dynew**2._dbl_kind - f(i, j))
-        end do
-        end do
-
-        
-        ! Check for convergence
-        call XYmax2(phi-phi_old,nhalo,mi1,mj1,1,1,1,diff)
-        if (my_task==0) write(*,*) iter,diff
-        if (diff(1) < tol) exit
-  
-        ! doubly periodic boundary condition
-        call bound_arb(1,phi)
-      end do
-    end subroutine SOR 
-  
     subroutine CG(phi,f,tol,max_iter,iter)
       integer, intent(in) :: max_iter
       real(kind=dbl_kind), intent(in) :: tol
@@ -249,15 +214,84 @@ CONTAINS
 
         call xysum1(r*r,nhalo,mi1,mj1,dum1)
         rs_new=dum1
-        if (my_task==0) write(*,*)  iter,sqrt(rs_new)
+        if (my_task==0) write(*,*)  "CG",iter,sqrt(rs_new)
         if (sqrt(rs_new) < tol) exit
            
         p = r + rs_new/rs_old * p
         rs_old = rs_new
       enddo
-
     end subroutine CG
-    
+
+    subroutine CG_pcSOR(phi,f,tol,max_iter,iter)
+      integer, intent(in) :: max_iter
+      real(kind=dbl_kind), intent(in) :: tol
+      real(kind=dbl_kind), intent(inout) :: phi(MIM:MIP,MJM:MJP)
+      real(kind=dbl_kind), intent(in) :: f(MIM:MIP,MJM:MJP)
+      integer, intent(out) :: iter
+      integer :: i,j
+      real(kind=dbl_kind) :: rs_old, rs_new, alpha, dum1
+      real(kind=dbl_kind) :: r(MIM:MIP,MJM:MJP),p(MIM:MIP,MJM:MJP), &
+                             ap(MIM:MIP,MJM:MJP),z(MIM:MIP,MJM:MJP)
+
+      call bound_arb(1,phi)
+      iter = 0
+
+      ! calculate initial residual
+      call laplacian(phi,ap)
+      r = f - ap
+      call pcSOR(z,r,1.5_dbl_kind)
+      call xysum1(z*r,nhalo,mi1,mj1,dum1)
+      rs_old=dum1
+      if (sqrt(rs_old) < tol) return
+      p = z
+
+      do iter = 1,max_iter
+        call bound_arb(1,p)
+        call laplacian(p,ap)
+        call xysum1(p*ap,nhalo,mi1,mj1,dum1)
+        alpha = rs_old/dum1
+
+        phi = phi + alpha * p
+        r = r - alpha * ap
+
+        call pcSOR(z,r,1.5_dbl_kind)
+
+        call xysum1(z*r,nhalo,mi1,mj1,dum1)
+        rs_new=dum1
+        if (my_task==0) write(*,*)  "CG_pcSOR",iter,sqrt(rs_new)
+        if (sqrt(rs_new) < tol) exit
+
+        p = z + rs_new/rs_old * p
+
+        rs_old = rs_new
+      enddo
+    end subroutine CG_pcSOR
+
+    subroutine pcSOR(z,r,omega)
+      real(kind=dbl_kind), intent(in) :: omega
+      real(kind=dbl_kind), intent(inout) :: z(MIM:MIP,MJM:MJP)
+      real(kind=dbl_kind), intent(in) :: r(MIM:MIP,MJM:MJP)
+      real(kind=dbl_kind) :: zs(MIM:MIP,MJM:MJP)
+      real(kind=dbl_kind) :: fac
+      integer :: i,j
+
+      fac = 1._dbl_kind/(2._dbl_kind/dx**2._dbl_kind+2._dbl_kind/dynew**2._dbl_kind)
+
+      zs = 0. 
+      do j=1,mj1
+      do i=1,mi1
+        zs(i,j) = fac * (r(i,j) - omega * (zs(i-1,j)/dx**2._dbl_kind + zs(i,j-1)/dynew**2._dbl_kind) )
+      enddo
+      enddo
+
+      z = 0.
+      do j=mj1,1,-1
+      do i=mi1,1,-1
+        z(i,j) = fac * (zs(i,j) - omega * (zs(i+1,j)/dx**2._dbl_kind + zs(i,j+1)/dynew**2._dbl_kind))
+      enddo
+      enddo     
+    end subroutine pcSOR
+
     subroutine laplacian(phi,f)
       real(kind=dbl_kind), intent(in) :: phi(MIM:MIP,MJM:MJP)
       real(kind=dbl_kind), intent(out) :: f(MIM:MIP,MJM:MJP)
@@ -269,7 +303,6 @@ CONTAINS
                 +(phi(i,j+1)-2._dbl_kind*phi(i,j)+phi(i,j-1))/(dynew*dynew)
       enddo
       enddo
-
     end subroutine laplacian
 
     
