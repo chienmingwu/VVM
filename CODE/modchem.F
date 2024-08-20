@@ -7,6 +7,7 @@ use PARMSLD, i1=>mi1, j1=>mj1, kmax=>nk1, k1=>nk1, nprocs=>ntasks, &
 use CONSTLD, only : rlv=>hlf, cp, pi
 use domain_decomposition, myid=>my_task, my_real=>mpi_real_kind
 use petscsys, comm3d=>MPI_COMM_WORLD
+use user_module, only: USER_set_chem_reaction_file
                           
 ! version 1.0  3 chem_components on input and  4 on output but only interger coefficents.
 ! version 1.1  4 chem_components on input and 4 on output real on output allowed
@@ -253,6 +254,7 @@ save
   integer :: btime=0
   real :: tres=0.001
   character(3) :: cexpnr   
+  character(len=300) :: filename_chem_table
 
 contains
 !-----------------------------------------------------------------------------------------
@@ -262,44 +264,30 @@ SUBROUTINE initchem
 
   logical :: lCHon= .false.
   integer i, ierr
+  INTEGER(KIND=int_kind)  :: rec_int
 
   character*999 :: line
-
-  namelist/NAMCHEM/ lchem, lcloudKconst, tnor, firstchem,lastchem,ldiuvar,h_ref,lchconst, t_ref, q_ref, p_ref,lchmovie, dtchmovie,lsegr
 
   write(cexpnr,'(i3.3)') iexpnr
 
   itermin  = 0.1 
-
-  lchem    =.false.
-  ldiuvar  = .false.
-  h_ref    = 12.0
-  lchconst = .false.
-  t_ref    = 298.
-  p_ref    = 100000.
-  q_ref    = 5.e-3
-  lchmovie = .false.
-  dtchmovie= 60
+  CALL USER_set_chem_reaction_file(filename_chem_table, rec_int)
+  tnor        = rec_int
+  
+  lchem       = .true.
+  ldiuvar     = .true.
+  h_ref       = utc_time
+  lchconst    = .false. 
+  t_ref       = 300.
+  p_ref       = 100000.
+  q_ref       = 10.0e-3
+  lchmovie    = .false.
+  dtchmovie   = 60.
+  firstchem   = 1
+  lastchem    = nchem
+  lcloudKconst= .false.
+  lsegr       = .false.
   idtchmovie = dtchmovie/tres
-  firstchem= 1
-  lastchem = 10
-  nchsp    = 10
-  lcloudKconst  = .false.
-  lsegr    = .false.
-
-  if(myid==0) then
-    open(ifnamopt,file='./user_files/'//trim(fname_options)//"."//trim(cexpnr),status='old',iostat=ierr)
-    read (ifnamopt,NAMCHEM,iostat=ierr)
-    if (ierr > 0) then
-      print *, 'Problem in namoptions NAMCHEM'
-      print *, 'iostat error: ', ierr
-      stop 'ERROR: Problem in namoptions NAMCHEM'
-    endif
-    write(6 ,NAMCHEM)
-    close(ifnamopt)
-    h_ref = utc_time
-  endif
-
 
   call MPI_BCAST(lchem     ,1,mpi_logical , 0,comm3d, mpierr)
   call MPI_BCAST(ldiuvar   ,1,mpi_logical , 0,comm3d, mpierr)
@@ -364,9 +352,9 @@ SUBROUTINE initchem
   enddo
 
   if(myid==0)then
-    open (ifoutput,file='cloudstat.'//cexpnr,status='replace')
-    write(ifoutput,'(A)') "#  time   UTC #zbase #cloud zbaseavg max_ztop cld_hght max_hght qlintmax qlintavg allqlmax allqlavg"
-    close (ifoutput)
+  !  open (ifoutput,file='cloudstat.'//cexpnr,status='replace')
+  !  write(ifoutput,'(A)') "#  time   UTC #zbase #cloud zbaseavg max_ztop cld_hght max_hght qlintmax qlintavg allqlmax allqlavg"
+  !  close (ifoutput)
   !  open (ifoutput,file='keffs.'//cexpnr,status='replace')
   !  close (ifoutput)
   !  if (lsegr .EQV. .true.) then
@@ -375,20 +363,9 @@ SUBROUTINE initchem
   !    open (ifoutput,file='seg_h.'//cexpnr,status='replace') !File that describes segregation per height
   !    close(ifoutput)
   !  endif !Output for segregation
+    continue
   endif
 
-
-  ! read chem_name_list from list
-  open (unit=10,file='./user_files/chem.inp.'//cexpnr,status='old',form='formatted')
-  do while(.true.)
-    read(10,'(a)') line
-    if (line(1:1) == '@') then
-      read(10,'(a)') line
-      read(line,*)(chem_name_list(i),i=1,nchsp)
-      exit
-    endif
-  enddo
-  close(10)
 
   call inputchem
 
@@ -480,7 +457,7 @@ subroutine inputchem
     reactions(:)%outp(i)%index_sv0 = 999
   enddo
 
-  open (unit=10,file='./user_files/chem.inp.'//cexpnr,err=100,status='old',form='formatted')
+  open (unit=10,file=trim(filename_chem_table),err=100,status='old',form='formatted')
 
   do while(.true.)
     read(10,'(a)',err=100) line
@@ -488,6 +465,7 @@ subroutine inputchem
       if (myid == 0)   print *, trim(line)
     elseif (line(1:1) == '@') then
       call read_chem(chem_name)
+      chem_name_list = chem_name
     elseif (line(1:1) == '$') then
      !end of chemical reactions so we are done, jump out do while loop
       exit

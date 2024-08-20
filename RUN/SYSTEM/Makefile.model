@@ -576,7 +576,7 @@ update_tracer_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decompositi
 
 update_chemical_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o modchem.o bound.o
 
-modchem.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o
+modchem.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o user_module.o
 
 utils.o: kinds.o domain_decomposition.o PARMSLD.o
 

@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = case_pbl_tracer_and_chem
+set expname = case_pbl_tracer_and_chem_try
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
