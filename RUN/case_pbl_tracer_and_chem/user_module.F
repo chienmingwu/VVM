@@ -121,7 +121,7 @@ CONTAINS
       imonth0 = 1
       iday0 = 18
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 21.0 !06(UTC+8)
+      hour0 = 21.0 !05(UTC+8)
   ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_topography_and_land_type(&
