@@ -105,13 +105,7 @@ CONTAINS
       coszen = max(0.0,cos(sza)) !to avoid negative values
 
       ! find specific height
-      idxkm = 0
-      DO k=1,nk2
-        IF(ZT(k)>=300.) THEN
-          idxkm = k
-          EXIT
-        ENDIF
-      ENDDO
+      idxkm = MINLOC(ABS(ZT-300.), 1)
 
       !! ! emssion data [MT/yr]
       !! TCtpp = 9843.575 ! NOx

@@ -78,26 +78,9 @@ CONTAINS
       coszen = max(0.0,cos(sza)) !to avoid negative values
 
       ! find specific height
-      DO k=1,nk2
-        IF(ZT(k)>=300.) THEN
-          idx300m = k
-          EXIT
-        ENDIF
-      ENDDO
-
-      DO k=1,nk2
-        IF(ZT(k)>=500.) THEN
-          idx500m = k
-          EXIT
-        ENDIF
-      ENDDO
-
-      DO k=1,nk2
-        IF(ZT(k)>=100.) THEN
-          idx100m = k
-          EXIT
-        ENDIF
-      ENDDO
+      idx100m = MINLOC(ABS(ZT-100.), 1)
+      idx300m = MINLOC(ABS(ZT-300.), 1)
+      idx500m = MINLOC(ABS(ZT-500.), 1)
 
       !!!  ! emssion data [MT/yr]
       !!!  ! change unit (MT/yr -> kg/yr -> kg/s)
