@@ -229,12 +229,13 @@ CONTAINS
       real(kind=dbl_kind), intent(in) :: f(MIM:MIP,MJM:MJP)
       integer, intent(out) :: iter
       integer :: i,j
-      real(kind=dbl_kind) :: rs_old, rs_new, alpha, dum1
+      real(kind=dbl_kind) :: rs_old, rs_new, alpha, dum1, rs, fac
       real(kind=dbl_kind) :: r(MIM:MIP,MJM:MJP),p(MIM:MIP,MJM:MJP), &
                              ap(MIM:MIP,MJM:MJP),z(MIM:MIP,MJM:MJP)
 
       call bound_arb(1,phi)
       iter = 0
+      fac = -1._dbl_kind/(2._dbl_kind/dx**2._dbl_kind+2._dbl_kind/dynew**2._dbl_kind)
 
       ! calculate initial residual
       call laplacian(phi,ap)
@@ -255,11 +256,10 @@ CONTAINS
         r = r - alpha * ap
 
         call pcSOR(z,r,1.5_dbl_kind)
-
         call xysum1(z*r,nhalo,mi1,mj1,dum1)
         rs_new=dum1
         if (my_task==0) write(*,*)  "CG_pcSOR",iter,sqrt(rs_new)
-        if (sqrt(rs_new) < tol) exit
+        if (sqrt(rs) < tol) exit
 
         p = z + rs_new/rs_old * p
 
