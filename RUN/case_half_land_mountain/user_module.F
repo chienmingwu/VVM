@@ -154,6 +154,8 @@ CONTAINS
       !! --
       !! if taiwanvvm_flag is .False., prescibe idealized 
       !! land surface data through routput_user and ioutput_user.
+      !! --
+      !! Please follow ./CODE/create_topo.F manual
       !! --------------------
       integer(kind=int_kind), dimension(mi_glob,mj_glob,3), intent(out) :: ioutput_user
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
@@ -194,7 +196,8 @@ CONTAINS
 
       DO J = 1,MJ_GLOB
       DO I = MI_GLOB/2+1,MI_GLOB*3/4
-
+ 
+      ! Urban
       routput_user(i,j,2)=15.   ! albedo (%)
       routput_user(i,j,3)=10.   ! green vegetation fraction (%)
       routput_user(i,j,4)=1.   ! leaf area index (m^2/m^2)
