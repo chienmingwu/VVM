@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = strong_forcing_q1q2
+set expname = case_strong_forcing_q1q2
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
@@ -29,9 +29,11 @@ set codedir = ${datadir}'/'${expname}'/CODE'
 set blddir = ${vvmdir}'/RUN/SYSTEM'
 
 # prepare for compiling code
-cd ${expdir}
+cd ${expdir} 
 rsync -av ${vvmdir}'/CODE' .
-cp ${casedir}/user_module.F ${codedir}/
+set user_codes_list = `find ${casedir}/user_codes/ -type f`
+cp ${user_codes_list} ${codedir}
+cp ${casedir}/user_module.F ${codedir}
 csh DOMAIN
 
 if( ! -d ${expdir}'/compile_code' ) then

@@ -223,6 +223,7 @@ SRC_FREE_CODE = \
 	turb_1d_module.F \
 	update_thermo_module.F \
 	update_tracer_module.F \
+	update_chemical_module.F \
         modchem.F \
 	uvtop.F \
 	utils.F \
@@ -504,7 +505,7 @@ TIMEINTERP.o: kinds.o PARMSLD.o
 
 workcom.o: kinds.o PARMSLD.o
 
-ab_3d_module.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o vort_3d_module.o wind_module.o turb_3d_module.o update_tracer_module.o make_profiles_module.o buoyf_module.o q_chk_module.o cloud_module.o rcalc_module.o turb_1d_module.o CLDINFO.o
+ab_3d_module.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o vort_3d_module.o wind_module.o turb_3d_module.o update_tracer_module.o make_profiles_module.o buoyf_module.o q_chk_module.o cloud_module.o rcalc_module.o turb_1d_module.o CLDINFO.o update_chemical_module.o
 
 advec_3d_module.o: kinds.o PARMSLD.o CONSTLD.o CONST3D.o PROFOUTLD.o bound.o
 
@@ -528,7 +529,7 @@ z_coord.o: kinds.o PARMSLD.o CONSTLD.o
 
 ldinput.o: kinds.o PARMSLD.o RADOUTLD.o CONSTLD.o CONST3D.o workcom.o ldoutput.o ini_3d_module.o gather_scatter.o domain_decomposition.o bound.o TIMEINTERP.o new_output_nc.o wind_module.o
 
-ini_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o TIMEINTERP.o bound.o time_interp_module.o update_tracer_module.o ldoutput.o domain_decomposition.o turb_1d_module.o turb_3d_module.o wind_module.o user_module.o
+ini_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o TIMEINTERP.o bound.o time_interp_module.o update_tracer_module.o ldoutput.o domain_decomposition.o turb_1d_module.o turb_3d_module.o wind_module.o user_module.o update_chemical_module.o
 
 user_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o bound.o domain_decomposition.o physics_v10d.o
 
@@ -542,9 +543,9 @@ ldrcalc.o: kinds.o workcom.o
 
 #output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
 
-new_ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o new_output_nc.o ldoutput.o CLDINFO.o land_module.o turb_3d_module.o
+new_ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o new_output_nc.o ldoutput.o CLDINFO.o land_module.o turb_3d_module.o modchem.o
 
-new_output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
+new_output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o modchem.o
 
 ldmain.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o ldoutput.o ldinput.o ab_3d_module.o time_manager_module.o domain_decomposition.o new_ldoutput_nc.o new_output_nc.o vertical_adaptive.o
 
@@ -571,9 +572,11 @@ turb_1d_module.o: kinds.o PARMSLD.o CONSTLD.o bound.o
 
 update_thermo_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o RADOUTLD.o bound.o
 
-update_tracer_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o modchem.o bound.o
+update_tracer_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o bound.o
 
-modchem.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o
+update_chemical_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o modchem.o bound.o
+
+modchem.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o user_module.o
 
 utils.o: kinds.o domain_decomposition.o PARMSLD.o
 

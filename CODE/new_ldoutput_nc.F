@@ -32,6 +32,9 @@ USE land_module
 #endif
 #endif
 USE petscsys
+#if defined (CHEM)
+use modchem, only: chem_name_list
+#endif
 
 
       
@@ -304,6 +307,14 @@ CONTAINS
                     start(1:4), count(1:4), tc3d(1:mi1,1:mj1,1:nk2,1:ntracer) )
       endif
 
+#if defined (CHEM)
+!---- CHEM -------------
+      start(4) = 1; count(4) = nchem
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, chem3d_id_rst,       &
+                  start(1:4), count(1:4), chem3d(1:mi1,1:mj1,1:nk2,1:nchem) )
+!---- CHEM end ---------
+#endif 
+
 !------------------------------------------------------------------------------
 ! Surface fluxes, precipitation, and OLR. Surface fluxes are needed because
 ! the model surface fluxes are not calculated every time step.
@@ -449,6 +460,15 @@ CONTAINS
                   start(1:5), count(1:5), ftc3d )
         if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
       endif
+
+#if defined (CHEM)
+! Chem tendency
+      start(5) = 1; count(5) = nchem
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fchem3d_id_rst,       &
+                start(1:5), count(1:5), fchem3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+#endif
+
 
 #if defined (PHYSICS)
 ! Radiation tendency -- needed in restart history file because radiation is
@@ -1123,6 +1143,15 @@ CONTAINS
           call pCDF_WRITE_4D_slice(ncid_tc, 'tr'//trnum, TIME_L, time_start, out_tm1, nk2 )
         enddo
       endif
+
+#if defined (CHEM)
+      do nt = 1,nchem
+        OUT_tm1(:,:,1:nk2) = chem3d(1:mi1,1:mj1,1:nk2,nt)
+        write(unit=trnum,fmt='(i2.2)')nt
+        !! call pCDF_WRITE_4D_slice(ncid_chem, 'chem'//trnum, TIME_L, time_start, out_tm1, nk2 )
+        call pCDF_WRITE_4D_slice(ncid_chem, trim(chem_name_list(nt)), TIME_L, time_start, out_tm1, nk2 )
+      enddo
+#endif
 
 #if defined (DIAG)
       if(ndiag_2d > 0) then

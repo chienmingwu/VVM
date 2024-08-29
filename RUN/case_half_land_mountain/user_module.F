@@ -20,7 +20,8 @@ PUBLIC :: &
   USER_set_3D_perturbation, &
   USER_set_vertical_coordinate, &
   USER_set_start_time, &
-  USER_set_topography_and_land_type
+  USER_set_topography_and_land_type, &
+  USER_set_CHEM_reaction_file
 
 CONTAINS
   SUBROUTINE USER_set_mean_profile_and_SST
@@ -153,6 +154,8 @@ CONTAINS
       !! --
       !! if taiwanvvm_flag is .False., prescibe idealized 
       !! land surface data through routput_user and ioutput_user.
+      !! --
+      !! Please follow ./CODE/create_topo.F manual
       !! --------------------
       integer(kind=int_kind), dimension(mi_glob,mj_glob,3), intent(out) :: ioutput_user
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
@@ -193,7 +196,8 @@ CONTAINS
 
       DO J = 1,MJ_GLOB
       DO I = MI_GLOB/2+1,MI_GLOB*3/4
-
+ 
+      ! Urban
       routput_user(i,j,2)=15.   ! albedo (%)
       routput_user(i,j,3)=10.   ! green vegetation fraction (%)
       routput_user(i,j,4)=1.   ! leaf area index (m^2/m^2)
@@ -230,10 +234,20 @@ CONTAINS
       ENDDO
       ENDDO
 
-
-
-
   ENDSUBROUTINE USER_set_topography_and_land_type
+
+  SUBROUTINE USER_set_CHEM_reaction_file(filename_chem_table, &
+                                         number_of_reactions)
+      !! --------------------
+      !! if defined (CHEM), the filename of chemistry table and 
+      !! the total reaction in this table are set in this function.
+      !! --------------------
+      IMPLICIT NONE
+      CHARACTER(len=300), INTENT(out)       :: filename_chem_table
+      INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
+      number_of_reactions = 25
+      filename_chem_table = './user_files/chem.inp.001'
+  ENDSUBROUTINE USER_set_chem_reaction_file
 
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE

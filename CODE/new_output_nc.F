@@ -16,6 +16,9 @@ USE pnetcdf
 #if defined (KPP)
 use land_module, only: olev, depth
 #endif
+#if defined (CHEM)
+use modchem, only: chem_name_list
+#endif
       
 IMPLICIT NONE
 PRIVATE
@@ -38,6 +41,9 @@ PRIVATE
           ncid_ras, &                        ! RAS output ID
           ncid_z3dx, &                       ! dynamic variables output ID
           ncid_tc, &                         ! tracers output ID
+#if defined (CHEM)
+          ncid_chem, &
+#endif
 #if defined (DIAG)
           ncid_diag, &                       ! diagnostics output ID
 #endif
@@ -97,6 +103,9 @@ PRIVATE
           xc_id_rst, &     ! zonal coordinate (column centers)
           xb_id_rst, &     ! zonal coordinate (column boundaries)
           itc3d_id_rst, &  ! passive tracer counter
+#if defined (CHEM)
+          ichem3d_id_rst, &  ! passive chemicals counter
+#endif
           iwrite_id_rst, & ! output file counter
           ifile_id_rst, &  ! output writing counter
           th3d_id_rst, &   ! potential temperature
@@ -124,6 +133,9 @@ PRIVATE
           qg3d_id_rst, &   ! graupel mixing ratio
 #endif
           tc3d_id_rst, &   ! passive tracer mixing ratio
+#if defined (CHEM)
+          chem3d_id_rst, &   ! passive chemical mixing ratio
+#endif
           tg_id_rst, &     ! surface temperature
           zrough_id_rst, & ! surface roughness length
           gwet_id_rst, &   ! surface wetness fraction
@@ -166,6 +178,9 @@ PRIVATE
           fqg3d_id_rst, &  ! graupel tendency
 #endif
           ftc3d_id_rst, &  ! passive tracer tendency
+#if defined (CHEM)
+          fchem3d_id_rst, &  ! passive tracer tendency
+#endif
           futmn_id_rst, &  ! tendency of the area-mean of zonal velocity
           fvtmn_id_rst, &  ! tendency of the area-mean of meridional velocity
           fthrad_id_rst    ! potential temperature tendency due to radiation
@@ -197,6 +212,9 @@ PRIVATE
           yb_id_rst_tend, &     ! meridional coordinate (column boundaries)
           xc_id_rst_tend, &     ! zonal coordinate (column centers)
           xb_id_rst_tend, &     ! zonal coordinate (column boundaries)
+#if defined (CHEM)
+          chem3d_id_rst_tend, & ! passive chemicals counter
+#endif
           tc3d_id_rst_tend      ! passive tracer counter
 
 ! public member functions
@@ -532,6 +550,31 @@ CONTAINS
                           yt(1:mj_glob),xt(1:mi_glob))
       endif
 
+#if defined (CHEM)
+! -- CHEM -------------------------------------------------------------------
+      call fname_nc(itp1, EXPHDR, 'Chemicals', ITT_OUTPUT, filnam_nc)
+      nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_chem)
+      CALL pCDF_INI_THERMO (ncid_chem, time_len, &
+                           nk2, mj_glob, mi_glob, zt(1:nk2), &
+                           yt(1:mj_glob), xt(1:mi_glob))
+
+        do nt = 1,nchem
+          write(unit=trnum,fmt='(i2.2)')nt
+          !! CALL pCDF_INI_4DVAR (ncid_chem, 'chem'//trnum, 'passive chemicals mixing ratio '//trnum, &
+          !!                 'chemicals_mixing_ratio '//trnum, 'ppb', &
+          !!                 'zt', 'yt', 'xt')
+          CALL pCDF_INI_4DVAR (ncid_chem, trim(chem_name_list(nt)), trim(chem_name_list(nt)), &
+                          trim(chem_name_list(nt)), 'ppb', &
+                          'zt', 'yt', 'xt')
+        enddo
+
+      nc_err = nfmpi_enddef(ncid_chem)
+      call put_3d_coord(ncid_chem,nk2,mj_glob,mi_glob,zt(1:nk2),&
+                          yt(1:mj_glob),xt(1:mi_glob))
+! -- CHEM -------------------------------------------------------------------
+#endif
+
 #if defined (DIAG)
 ! Tracers ---------------------------------------------------------------------
       if (ndiag_2d > 0 .or. ndiag_3d > 0) then
@@ -859,6 +902,10 @@ CONTAINS
       nc_err = nfmpi_sync(ncid_tc)
     endif
 
+#if defined (CHEM)
+    nc_err = nfmpi_sync(ncid_chem)
+#endif
+
 #if defined (PHYSICS)
 #if defined (RADCODE)
 ! Radiation variables
@@ -904,6 +951,10 @@ CONTAINS
     if (ntracer > 0) then
       nc_err = nfmpi_close(ncid_tc)
     endif
+
+#if defined (CHEM)
+      nc_err = nfmpi_close(ncid_chem)
+#endif
 
 #if defined (DIAG)
      nc_err = nfmpi_close(ncid_diag)
@@ -2981,6 +3032,9 @@ CONTAINS
           xb_dim, &     ! zonal coordinate (column boundaries)
           iwrite_dim, & ! output file counter
           ifile_dim, &  ! output writing counter
+#if defined (CHEM)
+          chem_dim,&    ! chemicals
+#endif
           tc_dim        ! tracers
 
 ! rank (number of dimensions) for each variable
@@ -2994,6 +3048,9 @@ CONTAINS
           xb_rank = 1, &      ! zonal coordinate (column boundaries)
           iwrite_rank = 1, &  ! output file counter
           ifile_rank = 1, &   ! output writing counter
+#if defined (CHEM)
+          chem_rank = 1,&    ! chemicals
+#endif
           tc_rank = 1         ! passive tracers
 
 ! variable shapes
@@ -3007,6 +3064,9 @@ CONTAINS
       integer (KIND=int_kind), dimension(xb_rank)   :: xb_dims   ! zonal coordinate (column boundaries)
       integer (KIND=int_kind), dimension(iwrite_rank) :: iwrite_dims  ! output file counter
       integer (KIND=int_kind), dimension(ifile_rank) :: ifile_dims   ! output writing counter
+#if defined (CHEM)
+      integer (KIND=int_kind), dimension(chem_rank) :: chem_dims   ! tracers
+#endif
       integer (KIND=int_kind), dimension(tc_rank) :: tc_dims   ! tracers
 
 ! variable len copy
@@ -3213,6 +3273,26 @@ CONTAINS
         if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       endif
+
+#if defined (CHEM)      
+! chem --------------------------------------------------------------------------
+        temlen=ntracer
+        nc_err = nfmpi_def_dim(ncid, 'chem_dim', temlen, chem_dim)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        chem_dims(1) = chem_dim
+        nc_err = nfmpi_def_var(ncid, 'chem', NF_INT, 1, chem_dims, chem3d_id_rst)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst, 'axis',    &
+                                    13_mpi_offset_kind, 'chem_number')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst, 'long_name',      &
+                 13_mpi_offset_kind,                               &
+                 'chemicals number')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+#endif
       
 ! ifile --------------------------------------------------------------------------
         temlen=ifile_len
@@ -3598,6 +3678,27 @@ CONTAINS
         nc_err = nfmpi_put_att_double(ncid, tc3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
         if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       endif
+
+#if defined (CHEM)
+! CHEM --------------------------------------------------------
+        nc_err = nfmpi_def_var(ncid, 'chem3d', NF_double, 4, (/ xc_dim, yc_dim, zc_dim, chem_dim /), chem3d_id_rst)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst, 'long_name', 27_mpi_offset_kind, 'passive chemicals mixing ratio')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst, 'standard_name', 19_mpi_offset_kind, 'chemicals_mixing_ratio')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst, 'units', 7_mpi_offset_kind, 'ppb')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+       
+        nc_err = nfmpi_put_att_double(ncid, chem3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_double(ncid, chem3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+#endif
       
 #if defined (PHYSICS)
 ! Surface fluxes, precipitation, and OLR --------------------------------------
@@ -4237,6 +4338,9 @@ CONTAINS
           yb_dim, &     ! meridional coordinate (column boundaries)
           xc_dim, &     ! zonal coordinate (column centers)
           xb_dim, &     ! zonal coordinate (column boundaries)
+#if defined (CHEM)
+          chem_dim, &   ! chemicals
+#endif
           tc_dim        ! tracers
 
 ! rank (number of dimensions) for each variable
@@ -4258,6 +4362,9 @@ CONTAINS
       integer (KIND=int_kind), dimension(xc_rank)   :: xc_dims   ! zonal coordinate (column centers)
       integer (KIND=int_kind), dimension(xb_rank)   :: xb_dims   ! zonal coordinate (column boundaries)
 
+#if defined (CHEM)
+      integer (KIND=int_kind), dimension(1) :: chem_dims   ! chemicals
+#endif
       integer (KIND=int_kind), dimension(1) :: tc_dims   ! tracers
 
 ! variable len copy
@@ -4460,6 +4567,27 @@ CONTAINS
         if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
       endif
+
+#if defined (CHEM)
+! chem ------------------------------------------------------------------------
+        temlen=nchem
+        nc_err = nfmpi_def_dim(ncid, 'chem_dim', temlen, chem_dim)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        chem_dims(1) = chem_dim
+        nc_err = nfmpi_def_var(ncid, 'chem', NF_INT, 1, chem_dims, chem3d_id_rst_tend)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst_tend, 'axis',    &
+                                    13_mpi_offset_kind, 'chem_number')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_text(ncid, chem3d_id_rst_tend, 'long_name',      &
+                 13_mpi_offset_kind,                               &
+                 'chemicals number')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+#endif
       
 !------------------------------------------------------------------------------
 ! Tendencies
@@ -4816,6 +4944,28 @@ CONTAINS
         nc_err = nfmpi_put_att_double(ncid, ftc3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
         if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       endif
+
+#if defined (CHEM)
+! fchem -----------------------------------------------------------------------
+        nc_err = nfmpi_def_var(ncid, 'fchem3d', NF_double, 5, (/ xc_dim, yc_dim, zc_dim, time_dim, chem_dim /), fchem3d_id_rst)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, fchem3d_id_rst, 'long_name', 43_mpi_offset_kind, 'tendency of passive chemicals due &
+              &to advection')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_text(ncid, fchem3d_id_rst, 'standard_name', 24_mpi_offset_kind, 'chemicals_tendency_dynamics')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+
+        nc_err = nfmpi_put_att_text(ncid, fchem3d_id_rst, 'units', 11_mpi_offset_kind, 'ppb s-1')
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_double(ncid, fchem3d_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+      
+        nc_err = nfmpi_put_att_double(ncid, fchem3d_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
+#endif
 
 #if defined (PHYSICS)
 ! fthrad -----------------------------------------------------------------------

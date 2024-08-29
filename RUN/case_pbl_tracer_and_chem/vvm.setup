@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = case_strong_forcing_q1q2
+set expname = case_pbl_tracer_and_chem
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -16,7 +16,7 @@ set codedir = ${datadir}'/'${expname}'/CODE'
 set casedir = ` pwd `
 
 if( ! -d ${datadir} ) then      # if ${datadir} is not found, create it!
-  mkdir ${datadir}                
+  mkdir ${datadir}
 endif
 
 if( ! -d ${expdir} ) then      # if ${subdir} is not found, create it!
@@ -60,21 +60,20 @@ endif
 cat > definesld.com << 'END1'
 #define MPI
 #define PERIODIC
-#define DIFFUSION
 #define PHYSICS
 #define MICROCODE
 #define MICROP3
-#define HEATING
+#define DIFFUSION
+#define LSM
+#define RADCODE
+#define CHEM
 #define RELAX_XY
 'END1'
 cat definesld.com
 #define DIRECT
-#define DIAG
 #define TOPOGRAPHY
-#define LSM
+#define DIAG
 #define AREAMN
-#define RADCODE
-#define CHEM
 
 # Grid parameter declarations.
 # changed from 'cat' to 'sed' - DD 2010.02.09
@@ -86,14 +85,14 @@ cat > DOMAIN << 'END3'
 set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
 sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_dimension/64/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/50/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/3/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/chemical_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/chemical_dimension/22/g' ${codedir}/cdecks/PARMSLD.F90
 'END3'
 cat DOMAIN
 
@@ -101,11 +100,11 @@ cat DOMAIN
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=4320 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
- &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=200.,DYNEW=200.,DZ=40.,DZ1=40.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
+ &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60,NITERXY=1000 /
 #         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=1,ITSTOP=360,SCALE=6.,Q1Q2=T,DTRAD=120.,petsc_cr=0 /
+ &INPUT5 IX=3182073,ITINIT=1,ITSTOP=3,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT

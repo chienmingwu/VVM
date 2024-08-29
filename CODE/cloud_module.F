@@ -81,6 +81,16 @@ CONTAINS
 
       endif
 
+#if defined (CHEM)
+      DO 502 nt = 1, nchem
+      DO 502 K = 2, NK2
+      DO 502 J = 1, MJ1
+      DO 502 I = 1, MI1
+      CHEM3D(I,J,K,nt) = CHEM3D(I,J,K,nt) + DT*CHEMAD3(I,J,K,nt)
+  502 CONTINUE
+#endif
+
+
 #if defined (PHYSICS)
       DO 510 K = 2, NK2
       DO 510 J = 1, MJ1

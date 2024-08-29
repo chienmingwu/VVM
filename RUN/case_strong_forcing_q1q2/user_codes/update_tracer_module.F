@@ -36,6 +36,7 @@ CONTAINS
 !!       IF (ntracer > 0) THEN
 !!         TC3D(:,:,:,:) = 0.
 !!       ENDIF
+      continue
 
    END SUBROUTINE update_tracer_init
 
@@ -61,9 +62,12 @@ CONTAINS
       use pnetcdf
 
       INTEGER (KIND=int_kind) ::   &
-         i, j, k,t, hr, tempim, tempjm, idxkm
+         i, j, k,t, hr, tempim, tempjm
+      INTEGER (KIND=int_kind) ::   &
+         idxm
       ! do loop indices for zonal, meridional and vertical dimensions
       REAL xday, xhr, xlon, xlat, sza, coszen
+      REAL :: TCtpp
 
       !current time
       xday = rjday
@@ -74,23 +78,8 @@ CONTAINS
       sza = getth(xday,xlat,xlon,xhr)
       coszen = max(0.0,cos(sza)) !to avoid negative values
 
-!!        ! source
-!!        IF (ntracer>0) THEN
-!!        DO 988 J = mjm, mjp
-!!        DO 988 I = mim, mip
-!!          tempim = mi1*ni_sbdm+i
-!!          tempjm = mj1*nj_sbdm+j
-!!          IF ( (tempim .EQ. INT(mi_glob/2)+1) .and. &
-!!               (tempjm .EQ. INT(mj_glob/2)  ) &
-!!             ) THEN
-!!  
-!!               TC3D(I,J,1,1) = TC3D(I,J,1,1) + &
-!!                                      0.1  * Pass_small_dt  ! tracer
-!!          ENDIF
-!!          
-!!   988 ENDDO
-!!       ENDIF
-
+!!       ! source
+!!       TC3D(10,10,5,1) = TC3D(10,10,5,1) + 1 * Pass_small_dt
 
 !!        ! remove around the boundaries
 !!        DO j = mjm, mjp
