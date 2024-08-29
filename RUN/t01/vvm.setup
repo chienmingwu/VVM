@@ -92,7 +92,7 @@ sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/4/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/diag3d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag3d_dimension/2/g' ${codedir}/cdecks/PARMSLD.F90
 'END3'
 cat DOMAIN
 

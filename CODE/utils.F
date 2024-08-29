@@ -27,6 +27,7 @@ MODULE utils
      cvmgp,  &
      cvmgn,  &
      xysum1, &
+     xysum2, &
      xyavg1, &
      xyavg2, &
      xymin2, &
@@ -316,7 +317,48 @@ MODULE utils
 #endif
 
       END SUBROUTINE xysum1
+
+      SUBROUTINE XYSUM2(VAB,nhalo,ifi,jfi,KNUM,KST,KFI,AVGV)
+! this routine returns the averages of multiple horizontal slices
+
+! argument list
+         INTEGER (KIND=int_kind), INTENT(IN) ::   &
+            nhalo,  & ! size of halo about slice
+            ifi,    & !  unique size of first dimension
+            jfi,    & !  unique size of second dimension
+            knum,        & ! number of slices
+            kst, kfi       ! lower and upperbounds of slice index to sum
+
+         REAL (KIND=dbl_kind), INTENT(IN) ::    &
+             VAB(1-nhalo:ifi+nhalo,1-nhalo:jfi+nhalo,KNUM)
+         REAL (KIND=dbl_kind), INTENT(OUT) :: AVGV(KNUM)
+
+! local variables
+         REAL (KIND=dbl_kind) :: SUM(knum)
+         INTEGER (KIND=int_kind) :: iend, jend ! actual do loop termination
+         INTEGER (KIND=int_kind) :: i, j, k  ! do loop indices
+
+         iend = ifi
+         jend = jfi
+         sum = 0.
+         DO K=KST,KFI
+            DO J=1,jend
+               DO I=1,iend
+                  SUM(k) = SUM(k) + VAB(I,J,K)
+               ENDDO
+            ENDDO
+         ENDDO
+#if defined (MPI)
+         CALL MPI_ALLREDUCE(sum, avgv,knum,    &
+                            mpi_dbl_kind, MPI_SUM, MPI_COMM_WORLD, mpierr)
+#else
+         DO K=KST,KFI
+         AVGV(K) = SUM(k)
+         enddo
+#endif
       
+      END SUBROUTINE xysum2
+
 
       SUBROUTINE XYAVG1(VAB,nhalo,IFI,JFI,AVGV)
 ! this routine returns the average of one horizontal slice
