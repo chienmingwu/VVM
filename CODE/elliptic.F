@@ -103,7 +103,7 @@ CONTAINS
       psi = psi - dum1
       !call CG_2d(tmp_psi,psi,1.e-6_dbl_kind,10000,idum1)
       !call CG_2d_pcSOR(tmp_psi,psi,1.e-6_dbl_kind,10000,idum1)
-      call CG_2d_pcSOR_wEIS(tmp_psi,psi,1.e-6_dbl_kind,10000,idum1)
+      call CG_2d_pcSOR_wEIS(tmp_psi,psi,1.e-8_dbl_kind,10000,idum1,1.5_dbl_kind)
       if (my_task==0) write(*,*) "psi iter = ", idum1
 #if defined (DIAG)
       DIAG2D(:,:,3)=tmp_psi(:,:)
@@ -112,7 +112,7 @@ CONTAINS
       chi = chi - dum1
       !call CG_2d(tmp_chi,chi,1.e-6_dbl_kind,10000,idum1)
       !call CG_2d_pcSOR(tmp_chi,chi,1.e-6_dbl_kind,10000,idum1)
-      call CG_2d_pcSOR_wEIS(tmp_chi,chi,1.e-6_dbl_kind,10000,idum1)
+      call CG_2d_pcSOR_wEIS(tmp_chi,chi,1.e-8_dbl_kind,10000,idum1,1.5_dbl_kind)
       if (my_task==0) write(*,*) "chi iter = ", idum1
 #if defined (DIAG)
       DIAG2D(:,:,4)=tmp_chi(:,:)
@@ -340,57 +340,90 @@ CONTAINS
       enddo
     end subroutine CG_2d_pcSOR
 
-    subroutine CG_2d_pcSOR_wEIS(phi,f,tol,max_iter,iter)
+    subroutine CG_2d_pcSOR_wEIS(phi,f,tol,max_iter,iter,omega)
       integer, intent(in) :: max_iter
+      real(kind=dbl_kind), intent(in) :: omega
       real(kind=dbl_kind), intent(in) :: tol
       real(kind=dbl_kind), intent(inout) :: phi(MIM:MIP,MJM:MJP)
       real(kind=dbl_kind), intent(in) :: f(MIM:MIP,MJM:MJP)
       integer, intent(out) :: iter
       integer :: i,j
-      real(kind=dbl_kind) :: rs_old, rs_new, alpha, dum1, rs,fac
-      real(kind=dbl_kind) :: r(MIM:MIP,MJM:MJP),p(MIM:MIP,MJM:MJP), &
-                             ap(MIM:MIP,MJM:MJP),z(MIM:MIP,MJM:MJP)
+      real(kind=dbl_kind) :: alpha, beta, dum1, tau, rho, th, c, rs, diag, sdiag
+      real(kind=dbl_kind) :: s(MIM:MIP,MJM:MJP),v(MIM:MIP,MJM:MJP), &
+                             w(MIM:MIP,MJM:MJP),z(MIM:MIP,MJM:MJP), &
+                             g(MIM:MIP,MJM:MJP),d(MIM:MIP,MJM:MJP), &
+                             t(MIM:MIP,MJM:MJP),r(MIM:MIP,MJM:MJP)
       
-      fac = 2._dbl_kind/(dx*dx)+2._dbl_kind/(dynew*dynew)
+      diag = 2._dbl_kind/(dx*dx)+2._dbl_kind/(dynew*dynew)
+      sdiag = (diag - (2._dbl_kind*(-1._dbl_kind/(dx*dx))**2._dbl_kind)/diag)/ omega
  
       call bound_arb(1,phi)
       iter = 0
 
       ! calculate initial residual
-      call laplacian_2d(phi,ap)
-      r = -f - ap
-      call pcSOR_2d(z,r,1.5_dbl_kind)
-      call xysum1(z*r,nhalo,mi1,mj1,dum1)
-      rs_old=dum1
-      call xysum1(r*r,nhalo,mi1,mj1,dum1)
-      rs=dum1
-      if (my_task==0) write(*,*)  "CG_2d_pcSOR_wEIS",iter,sqrt(rs)
-      if (sqrt(rs) < tol .or. sqrt(rs_old) < tol) return
-      p = z
+      call laplacian_2d(phi,v)
+      s = -f - v
+      call forward_sub(v,s,omega)
+      s = v
+      w = diag * v
+      call xysum1(s*s,nhalo,mi1,mj1,tau)
+      call xysum1(s*w,nhalo,mi1,mj1,rho)
+
+      call bound_arb(1,s)
+      call lower_mul(r,s,omega)
+      call xysum1(r*r,nhalo,mi1,mj1,rs)
+      r = sdiag * s
+      call bound_arb(1,r)
+      call lower_mul(t,r,omega)
+      call xysum1(t*t,nhalo,mi1,mj1,dum1)
+      if (my_task==0) write(*,*)  "CG_2d_pcSOR_wEIS",iter,sqrt(rs),sqrt(dum1)
+      if (sqrt(rs) < tol) return
+      z = 0._dbl_kind
+      d = 0._dbl_kind
 
       do iter = 1,max_iter
-        call bound_arb(1,p)
-        call laplacian_2d(p,ap)
-        call xysum1(p*ap,nhalo,mi1,mj1,dum1)
-        alpha = rs_old/dum1
+        ! Eisenstat trick
+        call backward_sub(r,w,omega) ! use r as the temporal array
+        g = (diag - 2._dbl_kind * sdiag) * r + w
+        call forward_sub(t,g,omega)
+        t = t + r      
+        ! Eisenstat trick done
+        call xysum1(w*t,nhalo,mi1,mj1,dum1)
+        alpha = rho / dum1
+        s = s - alpha * t
 
-        phi = phi + alpha * p
-        r = r - alpha * ap
+        call xysum1(s*s,nhalo,mi1,mj1,dum1)
+        th = dum1 / tau
+        c = 1._dbl_kind / (1._dbl_kind + th)
+        tau = tau * th * c
+        d = c * th * d + c * alpha * v
 
-        call pcSOR_2d(z,r,1.5_dbl_kind)
-        call xysum1(z*r,nhalo,mi1,mj1,dum1)
-        rs_new=dum1
-        call xysum1(r*r,nhalo,mi1,mj1,dum1)
-        rs=dum1
-        if (my_task==0) write(*,*)  "CG_2d_pcSOR_wEIS",iter,sqrt(rs)
-        if (sqrt(rs) < tol .or. sqrt(rs_new) < tol) exit
+        z = z + d 
 
-        p = z + rs_new/rs_old * p
-
-        rs_old = rs_new
+        call bound_arb(1,s)
+        call lower_mul(r,s,omega)
+        call xysum1(r*r,nhalo,mi1,mj1,rs)
+        r = sdiag * s
+        call bound_arb(1,r)
+        call lower_mul(t,r,omega)
+        call xysum1(t*t,nhalo,mi1,mj1,dum1)
+        if (my_task==0) write(*,*)  "CG_2d_pcSOR_wEIS",iter,sqrt(rs),sqrt(dum1)
+        if (sqrt(rs) < tol) then
+          z = sdiag * z
+          call backward_sub(d,z,omega)
+          phi = phi + d
+          exit
+        endif 
+      
+        r = sdiag * s ! use r as the temporal array
+        call xysum1(s*r,nhalo,mi1,mj1,dum1)
+        beta = dum1/rho
+        rho = dum1
+        v = s + beta * v
+        w = sdiag * v
       enddo
     end subroutine CG_2d_pcSOR_wEIS
-
+  
     subroutine CG_3d_pcSOR(phi,f,tol,max_iter,iter)
       integer, intent(in) :: max_iter
       real(kind=dbl_kind), intent(in) :: tol
@@ -445,12 +478,12 @@ CONTAINS
         rs_old = rs_new
       enddo
     end subroutine CG_3d_pcSOR
-
-    subroutine forward_sub(z,r,omega)
+ 
+    subroutine lower_mul(z,r,omega)
       real(kind=dbl_kind), intent(in) :: omega
       real(kind=dbl_kind), intent(inout) :: z(MIM:MIP,MJM:MJP)
       real(kind=dbl_kind), intent(in) :: r(MIM:MIP,MJM:MJP)
-      real(kind=dbl_kind), save :: cx1,cx2,cx3, cy1,cy2,cy3, invc
+      real(kind=dbl_kind), save :: cx1,cx2,cx3, cy1,cy2,cy3, c
       logical, save :: first = .True.
       integer :: i,j
 
@@ -462,17 +495,52 @@ CONTAINS
         cy1 = -1._dbl_kind/(dynew*dynew)
         cy3 = -1._dbl_kind/(dynew*dynew)
         cy2 = -(cy1+cy3)
-        invc = 1._dbl_kind/(cx2+cy2)
+        c = (cx2+cy2)-(cx1*cx3+cy1*cy3)/(cx2+cy2)
+        c = c/omega
+      endif
+
+      do j=1,mj1
+      do i=1,mi1
+        z(i,j) =  c * r(i,j) + cx3 * r(i-1,j) + cy3 * r(i,j-1)
+      enddo
+      enddo
+    end subroutine lower_mul 
+
+    subroutine forward_sub(z,r,omega)
+      real(kind=dbl_kind), intent(in) :: omega
+      real(kind=dbl_kind), intent(inout) :: z(MIM:MIP,MJM:MJP)
+      real(kind=dbl_kind), intent(in) :: r(MIM:MIP,MJM:MJP)
+      real(kind=dbl_kind), save :: cx1,cx2,cx3, cy1,cy2,cy3, invc
+      real(kind=dbl_kind) :: z_old,dr
+      logical, save :: first = .True.
+      integer :: i,j,n
+
+      if (first) then
+        first = .False.
+        cx1 = -1._dbl_kind/(dx*dx)
+        cx3 = -1._dbl_kind/(dx*dx)
+        cx2 = -(cx1+cx3)
+        cy1 = -1._dbl_kind/(dynew*dynew)
+        cy3 = -1._dbl_kind/(dynew*dynew)
+        cy2 = -(cy1+cy3)
+        invc = (cx2+cy2)-(cx1*cx3+cy1*cy3)/(cx2+cy2)
+        invc = omega / invc
       endif
 
       z=0.
   
       ! forward sweep
-      do j=1,mj1
-      do i=1,mi1
-        z(i,j) = invc * (r(i,j) - omega * ( cx3*z(i-1,j) + cy3*z(i,j-1)) )
-      enddo
-      enddo
+      111 continue
+        z_old=z(1,1)
+        do j=1,mj1
+        do i=1,mi1
+          z(i,j) = invc * (r(i,j) - ( cx3*z(i-1,j) + cy3*z(i,j-1)) )
+        enddo
+        enddo
+        call bound_arb(1,z)
+        dr=z(1,1)-z_old
+        call mpi_allreduce(mpi_in_place,dr,1,mpi_dbl_kind,mpi_max,mpi_comm_world,i)
+      if (dr>1.e-20_dbl_kind) goto 111
     end subroutine forward_sub
 
     subroutine backward_sub(z,r,omega)
@@ -480,6 +548,7 @@ CONTAINS
       real(kind=dbl_kind), intent(inout) :: z(MIM:MIP,MJM:MJP)
       real(kind=dbl_kind), intent(in) :: r(MIM:MIP,MJM:MJP)
       real(kind=dbl_kind), save :: cx1,cx2,cx3, cy1,cy2,cy3, invc
+      real(kind=dbl_kind) :: z_old,dr
       logical, save :: first = .True.
       integer :: i,j
    
@@ -491,17 +560,24 @@ CONTAINS
         cy1 = -1._dbl_kind/(dynew*dynew)
         cy3 = -1._dbl_kind/(dynew*dynew)
         cy2 = -(cy1+cy3)
-        invc = 1._dbl_kind/(cx2+cy2)
+        invc = (cx2+cy2)-(cx1*cx3+cy1*cy3)/(cx2+cy2)
+        invc = omega / invc
       endif
      
       z=0.
   
       ! backward sweep
-      do j=mj1,1,-1
-      do i=mi1,1,-1
-        z(i,j) = invc * (r(i,j) - omega * ( cx1*z(i+1,j) + cy1*z(i,j+1)) )
-      enddo
-      enddo
+      999 continue
+        z_old=z(mi1,mj1)
+        do j=mj1,1,-1
+        do i=mi1,1,-1
+          z(i,j) = invc * (r(i,j) - ( cx1*z(i+1,j) + cy1*z(i,j+1)) )
+        enddo
+        enddo
+        call bound_arb(1,z)
+        dr=z(mi1,mj1)-z_old
+        call mpi_allreduce(mpi_in_place,dr,1,mpi_dbl_kind,mpi_max,mpi_comm_world,i)
+      if (dr>1.e-20_dbl_kind) goto 999
     end subroutine backward_sub
 
     subroutine pcSOR_2d(z,r,omega)
