@@ -199,6 +199,7 @@ SRC_FREE_CODE = \
 	buoyf_module.F \
 	cloud_module.F \
 	elliptic.F \
+	multigrid.F \
 	force_3d_module.F \
 	gather_scatter.F \
 	ldinput.F \
@@ -507,7 +508,9 @@ cloud_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o PROFOUTLD.o bound.
 
 petsc_vvm_solver.o: kinds.o timer.o PARMSLD.o domain_decomposition.o bound.o
 
-elliptic.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o bound.o workcom.o utils.o petsc_vvm_solver.o gather_scatter.o domain_decomposition.o gather_scatter.o
+elliptic.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o bound.o workcom.o utils.o petsc_vvm_solver.o gather_scatter.o domain_decomposition.o gather_scatter.o multigrid.o
+
+multigrid.o: kinds.o PARMSLD.o
 
 force_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o domain_decomposition.o
 
