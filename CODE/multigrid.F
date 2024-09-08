@@ -10,7 +10,7 @@ implicit none
 
 
 private
-public :: multigrid_v, CG
+public :: multigrid_v, CG, CG_pcSOR, solver_test
 
 
 interface laplacian
@@ -19,6 +19,103 @@ end interface
 
 
 contains
+
+recursive subroutine solver_test(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,nlevel,norm,tol,max_iter,iter)
+implicit none
+
+integer, intent(in) :: ndim, nlevel, max_iter
+integer, intent(in) :: nx,ny,nz
+integer, intent(in) :: nzs,nze
+integer, intent(inout) :: iter
+real(kind=dbl_kind), intent(out) :: norm
+real(kind=dbl_kind), intent(in) :: dx,dy,dz, tol
+real(kind=dbl_kind), intent(in) :: f(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+real(kind=dbl_kind) :: fs(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+real(kind=dbl_kind), intent(inout) :: phi(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+integer :: idum1,i,j,k
+real(kind=dbl_kind) :: b(1-nhalo:nx/2+nhalo,1-nhalo:ny/2+nhalo,1:nz), &
+                       x(1-nhalo:nx/2+nhalo,1-nhalo:ny/2+nhalo,1:nz), dum1
+
+
+fs = f
+call bound_mg(fs,nx,ny,nz) 
+
+if (my_task==0) write(*,*) "solve", ndim,"d", nx,ny,nz
+call CG_pcSOR(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,fs,norm,tol,max_iter,1,idum1)
+
+if (nlevel==1) return
+
+fs = f 
+call bound_mg(fs,nx,ny,nz) 
+
+call restrict_2d(ndim,fs,nx,ny,nz,nzs,nze,b)
+call bound_mg(b,nx/2,ny/2,nz) 
+
+x = 0.
+call solver_test(ndim,x,nx/2,ny/2,nz,nzs,nze,dx*2._dbl_kind,dy*2._dbl_kind, &
+                 dz,b,nlevel-1,norm,tol,max_iter,iter)
+
+end subroutine solver_test
+
+subroutine CG_pcSOR(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,norm,tol,max_iter,pc_iter,iter)
+implicit none
+
+integer, intent(in) :: nx,ny,nz, ndim, max_iter, pc_iter
+integer, intent(in) :: nzs,nze
+real(kind=dbl_kind), intent(in) :: dx,dy,dz
+real(kind=dbl_kind), intent(in) :: tol
+real(kind=dbl_kind), intent(out) :: norm
+real(kind=dbl_kind), intent(inout) :: phi(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+real(kind=dbl_kind), intent(in) :: f(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+integer, intent(out) :: iter
+integer :: i,j,k
+real(kind=dbl_kind) :: rs_old, rs_new, alpha, dum1, rs
+real(kind=dbl_kind) :: r(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz), &
+                       p(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz), &
+                       z(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz), &
+                       ap(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+
+iter = 0
+call bound_mg(phi,nx,ny,nz)
+
+! calculate initial residual
+if (ndim==3) call laplacian(phi,nx,ny,nz,dx,dy,dz,ap)
+if (ndim==2) call laplacian(phi,nx,ny,dx,dy,ap)
+r = f - ap
+call summation(r*r,nx,ny,nz,1,nx,1,ny,nzs,nze,rs)
+if (my_task==0) write(*,'(A8,I8,A3,(I8,ES20.10))')  "CG_pSOR",ndim,"d",iter,sqrt(rs)
+if (sqrt(rs) < tol) return
+
+call bound_mg(r,nx,ny,nz)
+call pcSOR(ndim,z,nx,ny,nz,nzs,nze,dx,dy,dz,r,1.5_dbl_kind,norm,tol,pc_iter,k)
+if (pc_iter<1) z=r 
+call summation(z*r,nx,ny,nz,1,nx,1,ny,nzs,nze,rs_old)
+p = z
+
+do iter = 1,max_iter
+  call bound_mg(p,nx,ny,nz)
+  if (ndim==3) call laplacian(p,nx,ny,nz,dx,dy,dz,ap)
+  if (ndim==2) call laplacian(p,nx,ny,dx,dy,ap)
+  call summation(p*ap,nx,ny,nz,1,nx,1,ny,nzs,nze,dum1)
+  alpha = rs_old/dum1
+
+  phi = phi + alpha * p
+  r = r - alpha * ap
+
+  call summation(r*r,nx,ny,nz,1,nx,1,ny,nzs,nze,rs)
+  if (my_task==0) write(*,'(A8,I8,A3,2(I8,ES20.10))')  "CG_pSOR",ndim,"d",iter,sqrt(rs),k,norm
+  if (sqrt(rs) < tol) exit
+
+  call bound_mg(r,nx,ny,nz)
+  call pcSOR(ndim,z,nx,ny,nz,nzs,nze,dx,dy,dz,r,1.5_dbl_kind,norm,tol,pc_iter,k)
+  if (pc_iter<1) z=r
+  call summation(z*r,nx,ny,nz,1,nx,1,ny,nzs,nze,rs_new)
+
+  p = z + rs_new/rs_old * p
+  rs_old = rs_new
+enddo
+norm = sqrt(rs)
+end subroutine CG_pcSOR
 
 recursive subroutine multigrid_v(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,nlevel,norm,tol,max_iter,iter,finest)
 implicit none
@@ -32,20 +129,20 @@ real(kind=dbl_kind), intent(out) :: norm
 real(kind=dbl_kind), intent(in) :: dx,dy,dz, tol
 real(kind=dbl_kind), intent(in) :: f(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
 real(kind=dbl_kind), intent(inout) :: phi(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
-integer :: idum1,i,j,k, nsmooth
+integer :: idum1,i,j,k, nsmooth, pc_iter
 real(kind=dbl_kind) :: dum1,tol_fac
 real(kind=dbl_kind) :: r(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
 real(kind=dbl_kind) :: b(1-nhalo:nx/2+nhalo,1-nhalo:ny/2+nhalo,1:nz), &
                        x(1-nhalo:nx/2+nhalo,1-nhalo:ny/2+nhalo,1:nz)
 
-if (ndim==2) tol_fac=2.0_dbl_kind**(-1.0_dbl_kind-dble(iter)/10.0_dbl_kind)
-if (ndim==3) tol_fac=2.0_dbl_kind**(1.0_dbl_kind-dble(iter)/10.0_dbl_kind)
-nsmooth=3
-
 if (finest) then
   iter = 0
 endif
+
 555 continue
+
+tol_fac=2.0_dbl_kind**(-1.0_dbl_kind-dble(iter)/30.0_dbl_kind)
+nsmooth=5
 
 if (nlevel==1) then
   call CG(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,norm,tol,max_iter,idum1)
@@ -62,13 +159,13 @@ r = f - r
 
 ! restrict
 call bound_mg(r,nx,ny,nz)
-call restrict_2d(r,nx,ny,nz,nzs,nze,b)
+call restrict_2d(ndim,r,nx,ny,nz,nzs,nze,b)
 call bound_mg(b,nx/2,ny/2,nz)
 
 ! solve on coarser grid
 x = 0._dbl_kind
-
-call multigrid_v(ndim,x,nx/2,ny/2,nz,nzs,nze,dx*2._dbl_kind,dy*2._dbl_kind,dz,b,nlevel-1,norm,tol*tol_fac,max_iter,idum1,.False.)
+call multigrid_v(ndim,x,nx/2,ny/2,nz,nzs,nze,dx*2._dbl_kind,dy*2._dbl_kind, &
+                 dz,b,nlevel-1,norm,tol*tol_fac,max_iter,iter,.False.)
 
 ! prolong
 call bound_mg(x,nx/2,ny/2,nz)
@@ -88,9 +185,10 @@ endif
 end subroutine multigrid_v
 
 
-subroutine restrict_2d(fine,nx,ny,nz,nzs,nze,coarse)
+subroutine restrict_2d(ndim,fine,nx,ny,nz,nzs,nze,coarse)
 implicit none
 
+integer, intent(in) :: ndim
 integer, intent(in) :: nx,ny,nz
 integer, intent(in) :: nzs,nze
 real(kind=dbl_kind), intent(out) :: coarse(1-nhalo:nx/2+nhalo,1-nhalo:ny/2+nhalo,1:nz)
@@ -146,6 +244,79 @@ enddo
 endsubroutine prolong_2d
 
 
+subroutine pcSOR(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,omega,norm,tol,max_iter,iter)
+implicit none
+
+integer, intent(in) :: nx,ny,nz, ndim, max_iter
+integer, intent(in) :: nzs,nze
+real(kind=dbl_kind), intent(in) :: dx,dy,dz
+real(kind=dbl_kind), intent(in) :: tol, omega
+real(kind=dbl_kind), intent(out) :: norm
+real(kind=dbl_kind), intent(inout) :: phi(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+real(kind=dbl_kind), intent(in) :: f(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+integer, intent(out) :: iter
+integer :: i,j,k
+real(kind=dbl_kind) :: r(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+real(kind=dbl_kind) :: cx1,cx2,cx3, cy1,cy2,cy3, &
+                       cz1(nz),cz2(nz),cz3(nz),fac(nz)
+
+!call bound_mg(phi,nx,ny,nz)
+
+cx1 = -1._dbl_kind/(dx*dx)
+cx3 = -1._dbl_kind/(dx*dx)
+cx2 = -(cx1+cx3)
+cy1 = -1._dbl_kind/(dy*dy)
+cy3 = -1._dbl_kind/(dy*dy)
+cy2 = -(cy1+cy3)
+cz1 = 0._dbl_kind
+cz2 = 0._dbl_kind
+cz3 = 0._dbl_kind
+fac = 1._dbl_kind/(cx2+cy2)
+if (ndim==3) then
+  do k=nzs,nze
+    cz1(k) = -(rhoz(k)*fnz(k)*fnu(k+1))/(dz*dz*rhou(k+1))
+    cz3(k) = -(rhoz(k)*fnz(k)*fnu(k))/(dz*dz*rhou(k))
+    cz2(k) = -(cz1(k)+cz3(k))
+    fac(k) = 1._dbl_kind/(cx2+cy2+cz2(k))
+  enddo
+  cz1(nz-1) = 0.
+  cz3(2) = 0.
+endif
+norm = 0.
+
+phi = 0.
+do iter = 1,max_iter
+  r = phi  
+
+  do k=nzs,nze
+
+    ! forward sweep
+    do j=1,ny
+    do i=1,nx
+      phi(i,j,k) = (1.0_dbl_kind - omega) * phi(i,j,k) + omega * fac(k) * &
+                     (f(i,j,k) - (cx1*phi(i+1,j,k) + cx3*phi(i-1,j,k) &
+                                 +cy1*phi(i,j+1,k) + cy3*phi(i,j-1,k)) )
+    enddo
+    enddo
+
+    ! backward sweep
+    do j=ny,1,-1
+    do i=nx,1,-1
+      phi(i,j,k) = (1.0_dbl_kind - omega) * phi(i,j,k) + omega * fac(k) * &
+                     (f(i,j,k) - (cx1*phi(i+1,j,k) + cx3*phi(i-1,j,k) &
+                                 +cy1*phi(i,j+1,k) + cy3*phi(i,j-1,k)) )
+    enddo
+    enddo
+
+  enddo
+
+  r = phi - r
+  norm = maxval(r*r)
+  norm = sqrt(norm)
+  if (norm<tol) return
+enddo
+
+end subroutine pcSOR
 
 subroutine CG(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,norm,tol,max_iter,iter)
 implicit none
@@ -252,6 +423,7 @@ cz1(nz-1) = 0.
 cz3(2) = 0.
 
 f(:,:,1) = 0.
+f(:,:,nz) = 0.
 do k=2,nz-1
   do j=1,ny
   do i=1,nx
@@ -261,7 +433,6 @@ do k=2,nz-1
   enddo
   enddo
 enddo
-f(:,:,nz) = 0.
 end subroutine laplacian_3d
 
 subroutine bound_mg(A,nx,ny,nz)
@@ -348,6 +519,23 @@ sum_par = sum(sum(sum(A(nxs:nxe,nys:nye,nzs:nze),3),2),1)
 call mpi_allreduce(sum_par,sum_all,1,mpi_double_precision,mpi_sum,mpi_comm_world,mpierr)
 
 end subroutine summation
+
+subroutine maximum(A,nx,ny,nz,nxs,nxe,nys,nye,nzs,nze,max_all)
+implicit none
+
+integer, intent(in) :: nx,ny,nz
+integer, intent(in) :: nxs,nxe,nys,nye,nzs,nze
+real(kind=dbl_kind), intent(in) :: A(1-nhalo:nx+nhalo,1-nhalo:ny+nhalo,1:nz)
+real(kind=dbl_kind), intent(out) :: max_all
+integer :: mpierr
+real(kind=dbl_kind) :: max_par
+
+max_par = 0.
+max_par = maxval(maxval(maxval(A(nxs:nxe,nys:nye,nzs:nze),3),2),1)
+
+call mpi_allreduce(max_par,max_all,1,mpi_double_precision,mpi_max,mpi_comm_world,mpierr)
+
+end subroutine maximum
 
 subroutine mean(A,nx,ny,nz,nxs,nxe,nys,nye,nzs,nze,ave_all)
 implicit none

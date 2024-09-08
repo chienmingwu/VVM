@@ -61,8 +61,10 @@ CONTAINS
       call timer_start('CG_3d')
       idum1 = 0 
       !call CG(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,norm,1.e-8_dbl_kind,10000,idum1)
-      call multigrid_v(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,5,norm,1.e-8_dbl_kind,10000,idum1,.True.)
-      !call CG_3d(tmp_w,tmp_y,1.e-8_dbl_kind,10000,idum1)
+      !call CG_pMG(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,norm,1.e-8_dbl_kind,10000,idum1)
+      call multigrid_v(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,5,norm,1.e-8_dbl_kind,200,idum1,.True.)
+      !call solver_test(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,5,norm,1.e-8_dbl_kind,20000,idum1)
+      !call SOR(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,1.5_dbl_kind,norm,1.e-8_dbl_kind,1000000,idum1)
       if (my_task==0) write(*,*) "w iter = ", idum1
       call timer_stop('CG_3d')
 
@@ -106,7 +108,10 @@ CONTAINS
       call xyavg1(psi,nhalo,mi1,mj1,dum1)
       psi = psi - dum1
       !call CG(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,psi,norm,1.e-6_dbl_kind,10000,idum1)
-      call multigrid_v(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,-psi,5,norm,1.e-6_dbl_kind,10000,idum1,.True.)
+      !call CG_pMG(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,psi,norm,1.e-6_dbl_kind,10000,idum1)
+      call multigrid_v(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,-psi,5,norm,1.e-6_dbl_kind,200,idum1,.True.)
+      !call solver_test(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,-psi,5,norm,1.e-6_dbl_kind,20000,idum1)
+      !call SOR(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,-psi,1.5_dbl_kind,norm,1.e-6_dbl_kind,1000000,idum1)
       if (my_task==0) write(*,*) "psi iter = ", idum1
 #if defined (DIAG)
       DIAG2D(:,:,3)=tmp_psi(:,:)
@@ -115,7 +120,10 @@ CONTAINS
       idum1 = 0 
       chi = chi - dum1
       !call CG(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,chi,norm,1.e-6_dbl_kind,10000,idum1)
-      call multigrid_v(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,-chi,5,norm,1.e-6_dbl_kind,10000,idum1,.True.)
+      !call CG_pMG(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,chi,norm,1.e-6_dbl_kind,10000,idum1)
+      call multigrid_v(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,-chi,5,norm,1.e-6_dbl_kind,200,idum1,.True.)
+      !call solver_test(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,-chi,5,norm,1.e-6_dbl_kind,20000,idum1)
+      !call SOR(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,-chi,1.5_dbl_kind,norm,1.e-6_dbl_kind,1000000,idum1)
       if (my_task==0) write(*,*) "chi iter = ", idum1
 #if defined (DIAG)
       DIAG2D(:,:,4)=tmp_chi(:,:)
