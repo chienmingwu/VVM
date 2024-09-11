@@ -769,6 +769,15 @@ CONTAINS
 !!formerly    READ(iunit)tc3d
 !#endif
       endif
+
+#if defined (CHEM)
+      sstart(4) = 1; count(4) = nchem
+      nc_err = nfmpi_inq_varid(ncid, 'chem3d',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
+                  sstart(1:4), count(1:4), chem3d(1:mi1,1:mj1,1:nk2,1:nchem) )
+#endif
+
+
 !
 !#if defined (PARALLELIO) 
       nc_err = nfmpi_get_att_text(ncid, NF_GLOBAL, 'VVM_casename',casename)
@@ -1232,6 +1241,17 @@ CONTAINS
 !        enddo
 !#endif
       endif
+
+#if defined (CHEM)
+      sstart(5) = 1; count(5) = nchem
+      nc_err = nfmpi_inq_varid(ncid, 'fchem3d',varid)
+      nc_err = nfmpi_get_vara_double_all(ncid, varid,       &
+                  sstart(1:5), count(1:5), fchem3d )
+
+#endif
+
+
+
 !      if(my_task == 0) then
 !        READ(IUNIT) FUTMN,FVTMN
 !

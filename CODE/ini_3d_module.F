@@ -9,7 +9,9 @@ USE const3d
 USE utils
 USE bound
 USE update_tracer_module
-USE z_coord
+#if defined (CHEM)
+USE update_chemical_module
+#endif
 USE domain_decomposition
 #if defined (DIFFUSION)
 USE TURB_3D_module
@@ -21,6 +23,10 @@ USE petscsys
 USE pnetcdf
 USE wind_module
 USE petsc_vvm_solver, only: petsc_solver_initialize
+USE user_module, only: USER_set_mean_profile_and_SST, &
+                       USER_set_vertical_coordinate, &
+                       USER_set_3D_perturbation
+
 
 IMPLICIT NONE
 PRIVATE
@@ -40,272 +46,30 @@ CONTAINS
 
       integer (kind=int_kind), intent(in) :: itt
 
-      INTEGER (KIND=int_kind) :: &
-         RDHOUR  
+      REAL (KIND=dbl_kind) ::  scaleq=0._dbl_kind
+      REAL (KIND=dbl_kind) ::  dum1, dum2, dum3
+
       INTEGER (KIND=int_kind) :: &
          i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
-         n,    &    ! time level index
-         i00, j00, &!
-         IQ,JQ 
-      REAL (KIND=dbl_kind) ::    &
-         scaleq=0._dbl_kind, & !
-         rkappa,             &
-         rkappai,            &
-         gamfac, a0, z00, xr, yr, zr, dist,tmp
-      REAL (KIND=dbl_kind), PARAMETER :: th00 = 300._dbl_kind      
-      REAL (KIND=dbl_kind), PARAMETER :: rgas = 287.04     
-      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.    
-      REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
-      REAL (KIND=dbl_kind) :: pzero = 100000._dbl_kind      
-      REAL (KIND=dbl_kind) :: P_INT(NK2),PI_INT(NK2) 
-      REAL (KIND=int_kind) :: temp(NK3)
-      CHARACTER (200) FILENAME,INI_FILE_PATH
-      CHARACTER (10) ENS,ENS_dir
-      integer k1, k2, it, iter, LREC
-      logical lf
-      INTEGER, PARAMETER :: NT1=4000
-      INTEGER, PARAMETER :: NU1=NT1
-      INTEGER, PARAMETER :: NQ1=NT1
-
-      REAL(kind=dbl_kind) :: rbcp, t8, p8, qv8, qc8, qi8, dummy, gdzbcp, cpbr, &
-                             es1, alphaw, pbarmb
-      REAL (KIND=dbl_kind) :: T(NK3),H(NK3),TV(NK3),PILOG(NK3),ALPHA(NK3)  &
-          ,QCBAR(NK3),QVSBAR(NK3)
-      REAL (KIND=dbl_kind) :: ZT1(NT1),PI1(NT1),TV1(NT1),PILOG1(NT1)
-
-      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1), QV1(NT1), QC1(NT1)
-      REAL (KIND=dbl_kind) :: PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), wls1(NQ1)
-      REAL (KIND=dbl_kind) :: PU1(NU1), U1(NU1), V1(NU1)
-
-      REAL (KIND=dbl_kind) :: sounding(8)
+         n          ! time level index
+      REAL (KIND=int_kind) :: temp(NK2)
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
-      CHARACTER(len=8) :: dateStr = '20140107'
-      CHARACTER(len=5) :: stno = '47918'
-      CHARACTER(len=300) :: fname
 
-      INTEGER(kind=int_kind) :: ik1
-      
-      casename='tpe_summer'
+#if !defined (RADCODE)
+      REAL (KIND=dbl_kind), PARAMETER :: rad1 = -2.
+      REAL (KIND=dbl_kind), PARAMETER :: secday = 86400.    
+#endif
 
-      ! Read sounding data from binary file
-      fname = '/home/der0318/46692-2024073100.edt.txt'
-      OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
-      if (my_task==0) write(*,*) "fname:", trim(fname)
-      READ(88, *) ! read first line
-      READ(88, *) ! read first line
-      READ(88, *) ! read first line
-      ik1 = -1
-      DO i=1,NT1
-        READ(88, *) sounding(:)
-        ! Pressure [Pa]
-        P1(i) = sounding(3) * 100.
-        ! Temperature [K]
-        T1(i) = sounding(4) + 273.15
-        ! Qv from RH, mixing ratio [kg/kg]
-        ES1 = sounding(5) * 0.01 * ES ( T1(i) )  ! vapor pressure [Pa]
-        QV1(i) = ES1 * 0.622 / ( P1(i) - ES1 )
-        if(my_task .eq. 0)  PRINT*, 'i, E, P1, QV, RH = ', i, ES1, QV1(i), P1(i), sounding(5)
-        ! U, V from Wind Speed and Wind Direction [m/s]
-        U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
-        V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
-        ! set constant U, V when >= 6km
-        IF ( sounding(2) >= 6000. .and. ik1 <= 0 )  ik1 = i
-        IF ( ik1 > 0 ) THEN
-          U1(i) = U1(ik1)
-          V1(i) = V1(ik1)
-        ENDIF
-      ENDDO
-      close(88)
+      casename='vvm_exp'
 
-      ! shao, sounding_debug -----------
-      if (my_task .eq. 0) THEN
-        DO i=1,NT1
-          WRITE(*,*) i, P1(i), T1(i), QV1(i), U1(i), V1(i)
-        ENDDO
-      ENDIF
-
-
-      if ( my_task .eq. 0) then 
-        print *, 'read data in u:',  U1(1),  U1(NU1-1),  U1(NU1), NU1
-        print *, 'read data in v:',  V1(1),  V1(NU1-1),  V1(NU1), NU1
-        print *, 'read data in t:',  t1(1),  t1(NT1-1),  t1(NT1), NT1
-        print *, 'read data in qv:', qv1(1), qv1(NT1-1),qv1(NT1), NT1
-        print *, 'read data in p:',  p1(1),  p1(NT1-1),  p1(NT1), NT1
-      endif
-      CALL MPI_BARRIER(MPI_COMM_WORLD, mpierr)
-      ! shao, sounding_debug -----------
-
-      wls1=0.
-      PQ1      = p1
-      PU1      = p1
-      Q1OBS(:) = 0.
-      Q2OBS(:) = 0.
-
-      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
-      CZ1 = 1. - CZ2 * DOMAIN
-
-      CALL COORDS_2D ( CZ1, CZ2, DZ, ZB )
-
+      CALL USER_set_vertical_coordinate
 
 !*****************************************************
 !     1. OBTAIN 1D THERMODYNAMICAL PROFILE
 !*****************************************************
+      CALL USER_set_mean_profile_and_SST
       
-!     TEMPERATURE, MIXING RATIO AND PRESSURE FOR GATE PHASE III MEAN
-!     SOUNDING ( STATION 5 ) FROM ESBENSEN. VALUES ARE GIVEN IN DATA
-!     STATEMENT IN UNITS OF 1.0E-1 DEG C (T), 1.0E-1 G/KG (QV), AND
-!     MB (P). CONVERT THESE TO DEG K (T) AND G/G (QV).
-
-!      SST = 298.13
-!      SST = t1(1)
-!      SST = 303.906 ! 24/07/17
-      SST = 302.318 ! 24/07/31 
-      PSFC = p1(1)
-
-      RBCP = RGAS / CP
-      DO 110 K = 1, NT1
-      PI1(K) = ( P1(K) / PZERO ) ** RBCP
-  110 CONTINUE
-
-!     *** MIXED LAYER PROFILE ***
-!     ADJUST T1, QV1, AND QC1. UNITS : P1, MB.
-
-      DO 120 K = 1, NT1
-      T8  = T1(K)
-      P8  = P1(K)*0.01
-      QV8 = QV1(K)
-      QC8 = 0.D0
-      QI8 = 0.D0
-
-      ! shao, sounding_debug -----------
-      CALL MPI_BARRIER(MPI_COMM_WORLD, mpierr)  !shao, sounding debug
-      if (my_task .eq. 0) print*, 'T8=',T8,'P8=',P8,'QV8=',QV8,'K=',K
-      ! shao, sounding_debug -----------
-
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      QV1(K) = QV8
-      QC1(K) = 0.
-  120 CONTINUE
-      if (my_task.eq.0) print*, 'obs saturation done !!!' ! shao, sounding debug
-
-!     DETERMINE HEIGHT OF PRESSURE LEVELS GIVEN T(K), QV(K), PI(K).
-!     UNITS ARE T : DEG K, QV : G/G.
-
-      DO 130 K = 1, NT1
-      PILOG1(K) = LOG ( PI1(K) )
-      TV1(K) = T1(K) * ( 1. + 0.608 * QV1(K) - QC1(K) )
-  130 CONTINUE
-
-
-      ZT1(1) = Zz(1)
-      DO 140 K = 2, NT1
-      ZT1(K) = ZT1(K-1)-CP/(2.*GRAV)         &
-              *(PILOG1(K)-PILOG1(K-1))*(TV1(K)+TV1(K-1))
-  140 CONTINUE
-!     LOCATE J = 1 T-LEVEL AT ZW(1).
-
-      ZT(1)    = Zz(1)
-      T(1)     = T1(1)
-      QVBAR(1) = QV1(1)
-      QCBAR(1) = QC1(1)
-
-!     FIND T(K), QVBAR(K) AND QCBAR(K) BY LINEAR INTERPOLATION
-
-      DO 150 K = 2, NK3
-      K1 = INDEXR ( ZT(K), NT1, ZT1, LF )
-      K2 = K1 + 1
-      T(K) = FINTRP ( 1, ZT(K), ZT1(K1), T1(K1), ZT1(K2), T1(K2) )
-      QVBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QV1(K1), ZT1(K2), QV1(K2) )
-      QCBAR(K) = FINTRP ( 1, ZT(K), ZT1(K1), QC1(K1), ZT1(K2), QC1(K2) )
-  150 CONTINUE
-       
-      ! shao, sounding_debug -----------
-      if ( my_task .eq. 0 ) print*, 'linear interpolation done !!'
-      CALL MPI_BARRIER(MPI_COMM_WORLD, mpierr)
-      ! shao, sounding_debug -----------
-
-!     CALCULATE PIBAR AND PBAR USING THE HYDROSTATIC EQ.
-
-      GDZBCP = 2. * GRAV * DZ / CP
-      CPBR = CP / RGAS
-      RBCP = 1. / CPBR
-
-!     CONVERT PRESSURES TO PASCALS
-
-      PISFC = ( PSFC / PZERO ) ** RBCP
-
-      PBAR(1)  = PSFC
-      PIBAR(1) = PISFC
-      PILOG(1) = LOG ( PIBAR(1) )
-
-      DO 160 IT = 1, 3
-
-      DO 162 K = 1, NK3
-      TV(K) = T(K) * ( 1. + 0.608 * QVBAR(K) )
-  162 CONTINUE
-
-      PILOG(2)=PILOG(1)-GDZBCP/(TV(1)+TV(2))     &
-              *(ZT(2)-Zz(1))/DZ
-      DO 164 K = 3, NK3
-      PILOG(K)=PILOG(K-1)-GDZBCP/(TV(K-1)+TV(K))/FNZ(K-1)
-  164 CONTINUE
-
-      DO 166 K = 2, NK3
-      PIBAR(K)= EXP ( PILOG(K) )
-      PBAR(K) = PZERO * PIBAR(K) ** CPBR
-  166 CONTINUE
-
-!     ADJUST T, QVBAR AND QCBAR.
-
-      DO 168 K = 1, NK3
-      T8 = T(K)
-      P8 = PBAR(K) * 0.01
-      QV8 = QVBAR(K)
-      QC8 = 0.D0
-      QI8 = 0.D0
-
-      ! shao, sounding_debug -----------
-      CALL MPI_BARRIER(MPI_COMM_WORLD, mpierr)
-      if (my_task .eq. 0) print*, 'IT=',IT,'K=',K,'T8=',T8,'P8=',P8,'QV8=',QV8
-      ! shao, sounding_debug -----------
-
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
-      QVBAR(K) = QV8
-      ES1 = ES ( T(K) )
-      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
-      THBAR(K) = T(K) / PIBAR(K)
-      H(K) = QVBAR(K) / QVSBAR(K)
-      QCBAR(K) = 0.
-  168 CONTINUE
-
-  160 CONTINUE
-
-      IF (MY_TASK .EQ. 0 ) PRINT*,(PIBAR(K),PBAR(K),K,K=1,NK3)
-
-
-
-!     PROFILES OF RHO, RHOz, AND GAMMA
-
-      GAMFAC = HLF / CP
-
-      DO 170 K = 2, NK3
-      GAMMA(K) = GAMFAC / PIBAR(K)
-      ALPHA(K) = RGAS * TV(K) / PBAR(K)
-  170 CONTINUE
-
-      DO 180 K = 2, NK2
-      ALPHAW = ( ALPHA(K) + ALPHA(K+1) ) / 2.
-      RHOz(K) = 1. / ALPHAW
-  180 CONTINUE
-
-!     SURFACE DENSITY
-
-      RHOz(1) = PSFC / ( RGAS * TV(1) )
-
-      DO 190 K = 2, NK3
-      RHO(K) = 1. / ALPHA(K)
-  190 CONTINUE
 
 !     DENSITY FOR k=1/2
 
@@ -323,29 +87,19 @@ CONTAINS
       RHOW(K)=RHOZ(K)  ! This line added with removal of equivalence in constld
   102 CONTINUE
 
-      DO 200 K = 2, NK3
-      IF ( ZT(K) .LT. 15000. ) THEN
-      K1 = INDEXR(PBAR(K),NQ1,PQ1,LF)
-      K2 = K1 + 1
-      Q1LS (K) =  &
-        FINTRP(1,PBAR(K),PQ1(K1),Q1OBS(K1),PQ1(K2),Q1OBS(K2))
-      Q2LS (K) =  &
-        FINTRP(1,PBAR(K),PQ1(K1),Q2OBS(K1),PQ1(K2),Q2OBS(K2))
-      ELSE
-      Q1LS (K) = 0.0
-      Q2LS (K) = 0.0
-      END IF
-  200 CONTINUE
+!     ensure the wind at model bottom and top is same
+      UG(1)   = UG(2)
+      UG(NK3) = UG(NK2)
+      VG(1)   = VG(2)
+      VG(NK3) = VG(NK2)
 
-!     CHANGE UNIT FROM K/DAY TO K/S (Q1LS) AND G/G/S (Q2LS) AND MULTIPLY
-!     THEM BY SCALEQ TO GET THE ACTUALLY IMPOSED Q1 & Q2.
+!     PREPARE Q1, Q2 scale and check the RADCODE default
 
       IF ( Q1Q2 ) SCALEQ = SCALE
-
       DO 210 K = 1, NK3
-      Q1LS (K) = -1.* SCALE * Q1LS (K) / PIBAR(K) / SECDAY
-      Q2LS (K) = SCALE * Q2LS (K) / (GAMFAC * SECDAY)
-  210 CONTINUE
+      Q1LS (K) = SCALEQ * Q1LS (K)
+      Q2LS (K) = SCALEQ * Q2LS (K)
+  210 continue
 
 #if !defined (RADCODE)
       DO 212 K = 1, NK3
@@ -353,54 +107,7 @@ CONTAINS
   212 CONTINUE
 #endif
 
-      DO 220 K = 2, NK2
-      PBARMB = PBAR(K)
-      K1 = INDEXR(PBARMB,NU1,PU1,LF)
-      K2 = K1 + 1
-      UG(K) = FINTRP(1,PBARMB,PU1(K1),U1(K1),PU1(K2),U1(K2))
-      VG(K) = FINTRP(1,PBARMB,PU1(K1),V1(K1),PU1(K2),V1(K2))
-  220 CONTINUE
-      UG(1)   = UG(2)
-      UG(NK3) = UG(NK2)
-      VG(1)   = VG(2)
-      VG(NK3) = VG(NK2)
 
-!ccwu Taipei TSA sounding
-
-!      do  K = 1, NK3
-!      IF (ZT(K) .LT. 3000.) THEN
-!        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
-!      ELSEIF (ZT(K) .LT. 8000.) THEN
-!        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
-!      ELSEIF (ZT(K) .LT. 13000.) THEN
-!        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
-!      ELSE
-!        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
-!      ENDIF
-
-!      T(K) = THBAR(K) * PIBAR(K)
-!      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
-!      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
-!      IF (T(K) .LE. 233.15) THEN
-!        ES1 = ESI
-!      ELSE IF (T(K) .LT. 273.15) THEN
-!        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
-!      ELSE
-!        ES1 = ESW
-!      ENDIF
-!      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
-!CCCCCCCCCCCCCCCCCC
-!      IF (ZT(K) .LE. 1500) THEN
-!        H(K) = 0.82
-!      ELSE IF (ZT(K) .LE. 12000) THEN
-!        H(K) = (ZT(K)-8000)**2/132031250.+0.5
-!      ELSE
-!        H(K) = 0.50
-!      END IF
-!CCCCCCCCCCCCCCCCCC
-!      QVBAR(K) = H(K) * QVSBAR(K)
-
-!      ENDDO
 
 !     OCEAN POINTS
 
@@ -415,39 +122,49 @@ CONTAINS
       locean = .true.
       psfx = .false.
 
-      WRITE(95,*) '************* INITIAL PROFILE ****************'
-      WRITE(95,401)
-      WRITE(95,402) (ZT(K),PBAR(K),T(K),THBAR(K),QVBAR(K),UG(K),  &
-                     K=2,NK2)
-      WRITE(95,*) 
-      WRITE(95,*) 
-      WRITE(95,*) '************* LS FORCING **********************'
-      WRITE(95,403)
-      WRITE(95,404) (ZT(K),Q1LS(K),Q2LS(K),WLS(K),K=2,NK2)
-
-
-  401 FORMAT (7X,'Z(m)',2X,'PBAR(mb)',4X,'T(K)',4X,'THBAR(K)',2X,  &
-       'QVBAR(g/kg)',2X,'U(m/s)'//)
-
-  402 FORMAT ( 0PF10.0,-2PF10.1,0PF10.2,0PF10.2,3PF10.1,0PF10.1)
-
-  403 FORMAT (7X,'Z(m)',3X,'Q1LS(K/day)',1X,'Q2LS(K/day)'//)
-  404 FORMAT (0PF10.0,0PE12.3,0PE12.3,0PE12.3)
-
       if(my_task == 0) then
       INQUIRE(iolength=k) temp
       OPEN(UNIT=99,FILE='bar.dat',FORM='unformatted',STATUS='unknown', &
-      access='direct',recl=k)
-      temp=thbar
+      access='direct',recl=k,CONVERT="LITTLE_ENDIAN")
+      temp=pbar(1:NK2)
       write(99,rec=1) temp
-      temp=qvbar
+      temp=pibar(1:NK2)
       write(99,rec=2) temp
-      temp=pbar
+      temp=rho(1:NK2)
       write(99,rec=3) temp
-      temp=pibar
+      temp=thbar(1:NK2)
       write(99,rec=4) temp
-      temp=rho
+      temp=qvbar(1:NK2)
       write(99,rec=5) temp
+      temp=UG(1:NK2)
+      write(99,rec=6) temp
+      temp=VG(1:NK2)
+      write(99,rec=7) temp
+      temp=Q1LS(1:NK2)
+      write(99,rec=8) temp
+      temp=Q2LS(1:NK2)
+      write(99,rec=9) temp
+      temp=WLS(1:NK2)
+      write(99,rec=10) temp
+      ! dzt
+      DO k=1,nk2
+        temp(k) = DZ/FNT(K)
+      ENDDO
+      write(99,rec=11) temp
+      ! theta_e bar
+      DO k=1,nk2
+        dum1 = THBAR(K)*PIBAR(K) ! temperature
+        temp(k) = THBAR(k)*(1+2.5e6*QVBAR(k) / (1004.*dum1 ) )
+      ENDDO
+      write(99,rec=12) temp
+      ! theta_es bar
+      DO k=1,nk2
+        dum1 = THBAR(K)*PIBAR(K) ! temperature [K]
+        dum3 = ES ( dum1 ) ! es[Pa]
+        dum2 = dum3 * 0.622 / ( PBAR(K) - dum3 ) ! qvs [kg/kg]
+        temp(k) = THBAR(k)*(1+2.5e6*dum2 / (1004.*dum1) ) 
+      ENDDO
+      write(99,rec=13) temp
       CLOSE(99)
       endif
 
@@ -545,6 +262,8 @@ CONTAINS
       U3DY(I,J,K)=VG(K)
   610 CONTINUE
 
+      CALL USER_set_3D_perturbation
+
       DO 660 K = 2, NK1
       DO 660 J = 1, MJ1
       DO 660 I = 1, MI1
@@ -622,7 +341,16 @@ CONTAINS
       UTMN0 = UTMN
       VTMN0 = VTMN
       
-      IF(itt == 0 .and. ntracer > 0) CALL UPDATE_TRACER_init
+      IF(itt == 0 .and. ntracer > 0) THEN
+        CALL UPDATE_TRACER_init
+      ENDIF
+
+#if defined (CHEM)
+      IF(itt == 0) THEN
+        CALL UPDATE_chemical_init
+      ENDIF
+#endif
+
 #if defined (RADCODE)
   
       albdo = 0.30
@@ -652,7 +380,6 @@ CONTAINS
       i,j,k,NN,midi,midj
       real(kind=int_kind) :: &
       twtopo(mi_glob,mj_glob) 
-      character(25) FILENAME
       integer(kind=int_kind) :: ncid,varid,ierr
       INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart,readlen
 
@@ -1041,8 +768,6 @@ CONTAINS
 
 
       ENDSUBROUTINE SST_RESTART
-
-!^^^^^endif for #if !defined (RESTART)
 
 
       END MODULE ini_3d_module

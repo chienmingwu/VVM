@@ -7,12 +7,8 @@
 set echo  # echoes the commands
 set expname = solver_test
 
-# set job system and compiler
-set compiler = 'intel_mogamd'
-set jobsys = 'slurm_mogamd_intel'
-
 # set paths
-set vvmdir = ` pwd | rev | cut -c 9- | rev `
+set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
 set datadir = ${vvmdir}'/DATA'
 set rundir = ${vvmdir}'/RUN'
 set expdir = ${datadir}'/'${expname}

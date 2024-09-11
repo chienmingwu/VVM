@@ -17,18 +17,21 @@ set expname = solver_test
 
 # set job system and compiler
 set compiler = 'intel_mogamd'
-set jobsys = 'slurm_mogamd_intel'
+set jobsys   = 'slurm_mogamd_intel'
 
 # set paths
-set vvmdir = ` pwd | rev | cut -c 9- | rev `
+set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
+set casedir = ` pwd `
 set datadir = ${vvmdir}'/DATA'
 set rundir = ${vvmdir}'/RUN'
 set expdir = ${datadir}'/'${expname}
 set codedir = ${datadir}'/'${expname}'/CODE'
+set blddir = ${vvmdir}'/RUN/SYSTEM'
 
 # prepare for compiling code
 cd ${expdir}
 rsync -av ${vvmdir}'/CODE' .
+cp ${casedir}/user_module.F ${codedir}/
 csh DOMAIN
 
 if( ! -d ${expdir}'/compile_code' ) then
@@ -37,12 +40,12 @@ if( ! -d ${expdir}'/compile_code' ) then
 else
   # clean previous compilation
   cd ${expdir}'/compile_code'
-  make RUNDIR=${rundir} CASENAME=${expname} COMPILER=${compiler} -f ${rundir}/makefile clean
+  make RUNDIR=${blddir} CASENAME=${expname} COMPILER=${compiler} -f ${blddir}/makefile clean
 endif
 
 # compile both create_topolsm and vvm
-make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile newtopo
-make RUNDIR=${rundir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${rundir}/makefile -j8
+make RUNDIR=${blddir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${blddir}/makefile newtopo
+make RUNDIR=${blddir} CASENAME=${expname} CODEDIR=${codedir} EXPDIR=${expdir} COMPILER=${compiler} -f ${blddir}/makefile -j8
 
 # Set walltime to large number instead of marking it if you don't need it.
 sed -e 's/expname.out/'${expname}'.out/g' \

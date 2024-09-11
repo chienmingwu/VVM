@@ -1,0 +1,609 @@
+#-----------------------------------------------------------------------------
+# Makefile for model-dependent information:  original shallow-water model
+# This file is intended to be read by GNUmakefile (along with Makefile.host)
+# See the comments in GNUmakefile for more information.
+#
+# This makefile must define all model-dependent information, principally:
+#
+#	A. model-dependent CPP flags
+#	B. name of executable code and default target
+#	C. list of all source files
+#	D. list of all nontrivial dependencies (e.g., on modules)
+#	
+# Explanation of each is in the comments below.
+#
+# Author:  Scott R. Fulton
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
+# PART A:  model-dependent CPP flags
+#-----------------------------------------------------------------------------
+CPP_OPTS        = 
+
+#-----------------------------------------------------------------------------
+# PART B:  name of executable code and default target
+#-----------------------------------------------------------------------------
+# NAME = name of the executable code, BINDIR = directory in which to put it
+#
+# Leave the other lines alone!  They define the default target "all"
+# (the name is traditional) which gets processed when you run "make".
+# This must go here (before any dependency lines, which are also targets).
+# Using a phony target here allows us to put the actual rule for building
+# the executable code $(MAIN) in the main makefile (GNUmakefile).
+#-----------------------------------------------------------------------------
+NAME = vvm
+BINDIR	= ../../DATA/${CASENAME}
+
+MAIN = $(EXPDIR)/$(NAME)
+TOPO = $(EXPDIR)/create_topolsm
+.PHONY: all clean topography newtopo
+all : $(MAIN)
+
+#-----------------------------------------------------------------------------
+# PART C:  list of all source files
+#-----------------------------------------------------------------------------
+# The bottom line in this section is to have two variables which list all
+# source files:
+#	SRC_FREE	all .F files using free  source form
+#	SRC_FIXED	all .F files using fixed source form
+# These can be explicit lists (i.e., hard-coded path to each file), but a 
+# far better approach is to define the two lists of files (without paths)
+# and then specify the directories in which to search for them in VPATH. 
+# Either list may be empty.
+#-----------------------------------------------------------------------------
+
+#-----------------------------------------------------------------------------
+# Set the paths to the various source directories
+#-----------------------------------------------------------------------------
+CODE		= ${CODEDIR}
+CDECKS		= ${CODEDIR}/cdecks
+RRTMG		= ${CODEDIR}/RRTMG
+RAD_RRTM	= ${CODEDIR}/RRTMG/RAD_RRTM_CFMIP
+
+#==hchun===========================
+LSM             = $(CODEDIR)/LSM
+#==================================
+
+#-----------------------------------------------------------------------------
+# Set the path to search for source files.  This eliminates the need to 
+# hard-code the path to each source file, and allows us to keep multiple 
+# copies in different directories for testing and running variants.  
+# To use the copy you want, just put the directories in the proper order.
+#-----------------------------------------------------------------------------
+VPATH = $(CODE):$(CDECKS):$(RRTMG):$(RAD_RRTM):$(LSM):$(BINDIR)
+
+#-----------------------------------------------------------------------------
+# List the source files (must define SRC_FREE and SRC_FIXED)
+# The splitting here of source files into levels and SW-specific code
+# is NOT needed, but it may help keep track of which files are where.
+#-----------------------------------------------------------------------------
+
+#===hchun=================================
+SRC_FREE_LSM = \
+        kwm_date_utilities.F \
+        module_ascii_io.F \
+        module_io.F \
+        module_model_constants.F \
+        module_netcdf_io.F \
+        module_noahlsm_utility.F \
+        module_sfcdif_wrf.F \
+        module_sf_noahlsm.F \
+        module_sf_noahlsm_glacial_only.F \
+        module_simple_driver.F
+#==========================================
+
+SRC_FREE_RAD_RRTM = \
+	rrtmg_sw_init.f90 \
+	rrtmg_sw_setcoef.f90 \
+	rrtmg_sw_cldprmc.f90 \
+	rrtmg_sw_cldprop.f90 \
+	rrtmg_sw_spcvrt.f90 \
+	rrtmg_sw_rad.f90 \
+
+SRC_FREE_RAD_RRTM_OPT = \
+	rrtmg_sw_read_nc.f90 \
+	rrtmg_sw_vrtqdr.f90 \
+	rrtmg_sw_reftra.f90 \
+	rrtmg_sw_taumol.f90 \
+	rrtmg_sw_spcvmc.f90 \
+	parkind.f90 \
+	parrrtm.f90 \
+	rrlw_cld.f90 \
+	rrlw_con.f90 \
+	rrlw_kg01.f90 \
+	rrlw_kg02.f90 \
+	rrlw_kg03.f90 \
+	rrlw_kg04.f90 \
+	rrlw_kg05.f90 \
+	rrlw_kg06.f90 \
+	rrlw_kg07.f90 \
+	rrlw_kg08.f90 \
+	rrlw_kg09.f90 \
+	rrlw_kg10.f90 \
+	rrlw_kg11.f90 \
+	rrlw_kg12.f90 \
+	rrlw_kg13.f90 \
+	rrlw_kg14.f90 \
+	rrlw_kg15.f90 \
+	rrlw_kg16.f90 \
+	rrlw_ncpar.f90 \
+	rrlw_ref.f90 \
+	rrlw_tbl.f90 \
+	rrlw_vsn.f90 \
+	rrlw_wvn.f90 \
+	rrtmg_lw_setcoef.f90 \
+	rrtmg_lw_read_nc.f90 \
+	rrtmg_lw_cldprmc.f90 \
+	rrtmg_lw_cldprop.f90 \
+	rrtmg_lw_init.f90 \
+	rrtmg_lw_rtrn.f90 \
+	rrtmg_lw_rtrnmc.f90 \
+	rrtmg_lw_rtrnmr.f90 \
+	rrtmg_lw_taumol.f90 \
+	rrtmg_lw_rad.f90 \
+	parrrsw.f90 \
+	rrsw_aer.f90 \
+	rrsw_cld.f90 \
+	rrsw_con.f90 \
+	rrsw_kg16.f90 \
+	rrsw_kg17.f90 \
+	rrsw_kg18.f90 \
+	rrsw_kg19.f90 \
+	rrsw_kg20.f90 \
+	rrsw_kg21.f90 \
+	rrsw_kg22.f90 \
+	rrsw_kg23.f90 \
+	rrsw_kg24.f90 \
+	rrsw_kg25.f90 \
+	rrsw_kg26.f90 \
+	rrsw_kg27.f90 \
+	rrsw_kg28.f90 \
+	rrsw_kg29.f90 \
+	rrsw_ncpar.f90 \
+	rrsw_ref.f90 \
+	rrsw_tbl.f90 \
+	rrsw_vsn.f90 \
+	rrsw_wvn.f90 \
+	shr_kind_mod.f90 \
+	shr_orb_mod.f90 \
+	cam_rad_parameterizations.f90 \
+	cldefrint.f90 \
+	rad_error.f90 \
+	rad.f90 \
+	rad_driver.f90 \
+	rad_full.f90 
+	
+
+SRC_FREE_RRTMG = \
+	kinds.F \
+	rrtm_grid.f90 \
+	rrtm_params.f90 \
+	rrtm_vars.f90 \
+	trace_gases.f90
+
+SRC_FREE_CDECKS = \
+	PARMSLD.F90 \
+	CONST3D.F90 \
+	CONSTLD.F90 \
+	CLDINFO.F90 \
+	PROFOUTLD.F90 \
+	RADOUTLD.F90 \
+	TIMEINFO.F90 \
+	TIMEINTERP.F90 \
+	workcom.F90 \
+
+SRC_FREE_CODE = \
+	ab_3d_module.F \
+	advec_3d_module.F \
+	bound.F \
+	buoyf_module.F \
+	cloud_module.F \
+	elliptic.F \
+	multigrid.F \
+	force_3d_module.F \
+	gather_scatter.F \
+	ldinput.F \
+	ini_3d_module.F \
+        user_module.F \
+	z_coord.F \
+	ldoutput.F \
+	make_profiles_module.F \
+	nudge_module.F \
+	physics_interface.f90 \
+	physics_v10d.f90 \
+        microphy_p3.F \
+        ras_module.F \
+	q_chk_module.F \
+	radiation_rrtmg.f90 \
+	rcalc_module.F \
+	time_interp_module.F \
+	time_manager_module.F \
+        land_module.F \
+        kpp_module.F \
+	turb_3d_module.F \
+	turb_1d_module.F \
+	update_thermo_module.F \
+	update_tracer_module.F \
+	update_chemical_module.F \
+        modchem.F \
+	uvtop.F \
+	utils.F \
+	damping.F \
+	vort_3d_module.F \
+	wind_module.F \
+	domain_decomposition.F \
+	timer.F \
+        new_output_nc.F \
+        new_ldoutput_nc.F \
+	ldmain.F \
+	vertical_adaptive.F \
+#	output_nc.F \
+	ldoutput_nc.F \
+
+NOCHECK = petsc_vvm_solver.F
+
+# Der (7 Jan 2023)
+TOPOCODE = create_topolsm.F 
+TOPODEP = $(TOPOCODE) \
+	kinds.F \
+	PARMSLD.F90 \
+	CONSTLD.F90 \
+	user_module.F \
+	CONST3D.F90 \
+	utils.F \
+	workcom.F90 \
+	bound.F \
+	domain_decomposition.F \
+	physics_v10d.f90 \
+
+####hchun###
+SRC_FREE = $(SRC_FREE_CDECKS) $(SRC_FREE_RRTMG) $(SRC_FREE_CODE) $(SRC_FREE_LSM) $(SRC_FREE_RAD_RRTM_OPT)
+############
+
+SRC_OPT0 = $(SRC_FREE_RAD_RRTM)
+
+SRC_FIXED = $(SRC_FIXED_CODE)
+
+#-----------------------------------------------------------------------------
+# PART D:  list of all nontrivial dependencies
+#-----------------------------------------------------------------------------
+# This list is critical--it tells make what depends on what.  The things to 
+# the left of the colon (targets) depend on the things to the right of the 
+# colon (prerequisites).  You can put multiple targets on the left if they 
+# all depend on the same list of prerequisites.
+#
+# Make already knows that an object (.o) file depends on the corresponding 
+# source (.F) file.  What is needed here is any other dependency, such as 
+# dependencies on modules (or include files).  For this, note that it is not
+# the source file (.F) which depends on the module (the source doesn't change
+# if you change the module), but the object code.  Also, what it depends on 
+# is the compiled module (which in turn depends on its own source code).
+# Thus we have .o files on the left (targets) and right (prerequisites).
+#
+# It might be the case (technically) that the object code for a program unit
+# depends not on the object code for a module but rather on some other file
+# (e.g., a .mod file) which is produced as a byproduct of compiling the
+# module.  If this is the case, then this makefile may fail in the unlikely
+# situation that the .mod file is missing or changed but the .o file is not.
+# This could be overcome by introducing the suffix .mod and corresponding 
+# rules, but I'm reluctant to try it:
+# 1. It's highly unlikely to ever be needed,
+# 2. Some systems may use something other than .mod, and
+# 3. I can't find ANY documentation for what the true dependency is.
+#
+# The utility getdep may be used to generate these dependency lists.
+#-----------------------------------------------------------------------------
+
+# Note:  dependencies below were generated automatically by getdep
+# Note:  dependencies on .h files commented out (I don't know where they are)
+# Note:  dependency of timer.o on xlfutility.o (ibm only) commented out
+
+#------RAD_RRTM_CFMIP------:
+
+shr_kind_mod.o: shr_kind_mod.f90
+
+shr_orb_mod.o: shr_kind_mod.o
+
+cam_rad_parameterizations.o: shr_orb_mod.o PARMSLD.o
+
+cldefrint.o: rrtm_grid.o cam_rad_parameterizations.o
+
+parkind.o: parkind.f90
+
+parrrsw.o: parkind.o
+
+parrrtm.o: parkind.o
+
+rad.o: parkind.o
+
+rad_driver.o: shr_orb_mod.o cam_rad_parameterizations.o rrtmg_sw_rad.o rrtmg_lw_rad.o parrrtm.o parrrsw.o parkind.o rrtmg_sw_init.o rrtmg_lw_init.o rrlw_ncpar.o
+
+driver.o: kinds.o mph.o error_handler.o global_time_manager.o params_global_MPH.o sendrecv.o
+
+rad_error.o: rad_error.f90
+
+rad_full.o: rad.o rad_driver.o parkind.o rrtm_grid.o rrtm_params.o rrtm_vars.o trace_gases.o
+
+rrlw_cld.o: parkind.o
+
+rrlw_con.o: parkind.o
+
+rrlw_kg01.o: parkind.o
+
+rrlw_kg02.o: parkind.o
+
+rrlw_kg03.o: parkind.o
+
+rrlw_kg04.o: parkind.o
+
+rrlw_kg05.o: parkind.o
+
+rrlw_kg06.o: parkind.o
+
+rrlw_kg07.o: parkind.o
+
+rrlw_kg08.o: parkind.o
+
+rrlw_kg09.o: parkind.o
+
+rrlw_kg10.o: parkind.o
+
+rrlw_kg11.o: parkind.o
+
+rrlw_kg12.o: parkind.o
+
+rrlw_kg13.o: parkind.o
+
+rrlw_kg14.o: parkind.o
+
+rrlw_kg15.o: parkind.o
+
+rrlw_kg16.o: parkind.o
+
+rrlw_ncpar.o: parkind.o
+
+rrlw_ref.o: parkind.o
+
+rrlw_tbl.o: parkind.o
+
+rrlw_vsn.o: parkind.o
+
+rrlw_wvn.o: parkind.o parrrtm.o
+
+rrsw_aer.o: parkind.o parrrsw.o
+
+rrsw_cld.o: parkind.o
+
+rrsw_con.o: parkind.o
+
+rrsw_kg16.o: parkind.o parrrsw.o
+
+rrsw_kg17.o: parkind.o parrrsw.o
+
+rrsw_kg18.o: parkind.o parrrsw.o
+
+rrsw_kg19.o: parkind.o parrrsw.o
+
+rrsw_kg20.o: parkind.o parrrsw.o
+
+rrsw_kg21.o: parkind.o parrrsw.o
+
+rrsw_kg22.o: parkind.o parrrsw.o
+
+rrsw_kg23.o: parkind.o parrrsw.o
+
+rrsw_kg24.o: parkind.o parrrsw.o
+
+rrsw_kg25.o: parkind.o parrrsw.o
+
+rrsw_kg26.o: parkind.o parrrsw.o
+
+rrsw_kg27.o: parkind.o parrrsw.o
+
+rrsw_kg28.o: parkind.o parrrsw.o
+
+rrsw_kg29.o: parkind.o parrrsw.o
+
+rrsw_ncpar.o: parkind.o
+
+rrsw_ref.o: parkind.o
+
+rrsw_tbl.o: parkind.o
+
+rrsw_vsn.o:
+
+rrsw_wvn.o:parkind.o parrrsw.o
+
+rrtmg_lw_cldprmc.o: parkind.o parrrtm.o rrlw_cld.o rrlw_wvn.o rrlw_vsn.o
+
+rrtmg_lw_cldprop.o: parkind.o parrrtm.o rrlw_cld.o rrlw_vsn.o
+
+rrtmg_lw_init.o: parkind.o rrtmg_lw_read_nc.o rrlw_wvn.o rrtmg_lw_setcoef.o parrrtm.o rrlw_tbl.o rrlw_vsn.o rrlw_con.o rrlw_kg01.o rrlw_kg02.o rrlw_kg03.o rrlw_kg04.o rrlw_kg05.o rrlw_kg06.o rrlw_kg07.o rrlw_kg08.o rrlw_kg09.o rrlw_kg10.o rrlw_kg11.o rrlw_kg12.o rrlw_kg13.o rrlw_kg14.o rrlw_kg15.o rrlw_kg16.o rrlw_cld.o
+
+rrtmg_lw_rad.o: parkind.o rrlw_vsn.o rrtmg_lw_cldprop.o rrtmg_lw_rtrn.o rrtmg_lw_rtrnmr.o rrtmg_lw_setcoef.o rrtmg_lw_taumol.o parrrtm.o rrlw_con.o rrlw_wvn.o
+
+rrtmg_lw_read_nc.o: rrlw_ncpar.o rrlw_kg01.o rrlw_kg02.o rrlw_kg03.o rrlw_kg04.o rrlw_kg05.o rrlw_kg06.o rrlw_kg07.o rrlw_kg08.o rrlw_kg09.o rrlw_kg10.o rrlw_kg11.o rrlw_kg12.o rrlw_kg13.o rrlw_kg14.o rrlw_kg15.o rrlw_kg16.o rrtm_grid.o
+
+rrtmg_lw_rtrn.o: parkind.o parrrtm.o rrlw_con.o rrlw_wvn.o rrlw_tbl.o rrlw_vsn.o
+
+rrtmg_lw_rtrnmc.o: parkind.o parrrtm.o rrlw_con.o rrlw_wvn.o rrlw_tbl.o rrlw_vsn.o
+
+rrtmg_lw_rtrnmr.o: parkind.o parrrtm.o rrlw_con.o rrlw_wvn.o rrlw_tbl.o rrlw_vsn.o
+
+rrtmg_lw_setcoef.o: parkind.o parrrtm.o rrlw_wvn.o rrlw_ref.o rrlw_vsn.o
+
+rrtmg_lw_taumol.o: parkind.o parrrtm.o rrlw_con.o rrlw_wvn.o rrlw_vsn.o rrlw_ref.o rrlw_kg01.o rrlw_kg02.o rrlw_kg03.o rrlw_kg04.o rrlw_kg05.o rrlw_kg06.o rrlw_kg07.o rrlw_kg08.o rrlw_kg09.o rrlw_kg10.o rrlw_kg11.o rrlw_kg12.o rrlw_kg13.o rrlw_kg14.o rrlw_kg15.o rrlw_kg16.o
+
+rrtmg_sw_cldprmc.o: parkind.o parrrsw.o rrsw_cld.o rrsw_wvn.o rrsw_vsn.o
+
+rrtmg_sw_cldprop.o: parkind.o parrrsw.o rrsw_cld.o rrsw_wvn.o rrsw_vsn.o
+
+rrtmg_sw_init.o: parkind.o rrtmg_sw_read_nc.o rrsw_wvn.o rrtmg_sw_setcoef.o parrrsw.o rrsw_tbl.o rrsw_vsn.o rrsw_con.o rrsw_aer.o rrsw_cld.o rrsw_kg16.o rrsw_kg17.o rrsw_kg18.o rrsw_kg19.o rrsw_kg20.o rrsw_kg21.o rrsw_kg22.o rrsw_kg23.o rrsw_kg24.o rrsw_kg25.o rrsw_kg26.o rrsw_kg27.o rrsw_kg28.o rrsw_kg29.o
+
+rrtmg_sw_rad.o: parkind.o rrsw_vsn.o rrtmg_sw_cldprop.o rrtmg_sw_setcoef.o rrtmg_sw_spcvrt.o parrrsw.o rrsw_aer.o rrsw_con.o rrsw_wvn.o
+
+rrtmg_sw_read_nc.o: rrsw_ncpar.o rrsw_kg16.o rrsw_kg17.o rrsw_kg18.o rrsw_kg19.o rrsw_kg20.o rrsw_kg21.o rrsw_kg22.o rrsw_kg23.o rrsw_kg24.o rrsw_kg25.o rrsw_kg26.o rrsw_kg27.o rrsw_kg28.o rrsw_kg29.o rrtm_grid.o
+
+rrtmg_sw_reftra.o: parkind.o rrsw_tbl.o rrsw_vsn.o
+
+rrtmg_sw_setcoef.o: parkind.o parrrsw.o rrsw_ref.o rrsw_vsn.o
+
+rrtmg_sw_spcvmc.o: parkind.o parrrsw.o rrsw_tbl.o rrsw_vsn.o rrsw_wvn.o rrtmg_sw_reftra.o rrtmg_sw_taumol.o rrtmg_sw_vrtqdr.o
+
+rrtmg_sw_spcvrt.o: parkind.o parrrsw.o rrsw_tbl.o rrsw_vsn.o rrsw_wvn.o rrtmg_sw_reftra.o rrtmg_sw_taumol.o rrtmg_sw_vrtqdr.o
+
+rrtmg_sw_taumol.o: parkind.o rrsw_con.o rrsw_wvn.o rrsw_vsn.o parrrsw.o rrsw_kg16.o rrsw_kg17.o rrsw_kg18.o rrsw_kg19.o rrsw_kg20.o rrsw_kg21.o rrsw_kg22.o rrsw_kg23.o rrsw_kg24.o rrsw_kg25.o rrsw_kg26.o rrsw_kg27.o rrsw_kg28.o rrsw_kg29.o
+
+rrtmg_sw_vrtqdr.o: parkind.o
+
+kinds.o: kinds.F
+
+rrtm_grid.o: parkind.o PARMSLD.o
+
+rrtm_params.o: parkind.o rrtm_grid.o
+
+rrtm_vars.o: parkind.o rrtm_grid.o
+
+trace_gases.o: kinds.o rrtm_grid.o rrtm_params.o domain_decomposition.o
+#=====hchun=============================================
+
+module_io.o: module_ascii_io.o module_netcdf_io.o
+
+module_ascii_io.o: module_ascii_io.F kwm_date_utilities.o
+
+module_netcdf_io.o: module_netcdf_io.F
+
+module_noahlsm_utility.o: module_noahlsm_utility.F
+
+module_sf_noahlsm.o: module_model_constants.o
+
+module_model_constants.o: module_model_constants.F
+
+module_sf_noahlsm_glacial_only.o: module_model_constants.o module_sf_noahlsm.o
+
+module_sfcdif_wrf.o: module_model_constants.o
+
+kwm_date_utilities.o: kwm_date_utilities.F
+
+module_simple_driver.o: kinds.o PARMSLD.o module_io.o module_noahlsm_utility.o module_sf_noahlsm.o module_sf_noahlsm_glacial_only.o module_sfcdif_wrf.o kwm_date_utilities.o
+#=======================================================
+
+CONST3D.o: kinds.o PARMSLD.o
+
+CONSTLD.o: kinds.o PARMSLD.o
+
+CLDINFO.o: kinds.o PARMSLD.o
+
+PARMSLD.o: kinds.o
+
+PROFOUTLD.o: kinds.o PARMSLD.o
+
+RADOUTLD.o: kinds.o PARMSLD.o
+
+TIMEINFO.o: kinds.o
+
+TIMEINTERP.o: kinds.o PARMSLD.o
+
+workcom.o: kinds.o PARMSLD.o
+
+ab_3d_module.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o vort_3d_module.o wind_module.o turb_3d_module.o update_tracer_module.o make_profiles_module.o buoyf_module.o q_chk_module.o cloud_module.o rcalc_module.o turb_1d_module.o CLDINFO.o update_chemical_module.o
+
+advec_3d_module.o: kinds.o PARMSLD.o CONSTLD.o CONST3D.o PROFOUTLD.o bound.o
+
+bound.o: kinds.o PARMSLD.o CONST3D.o domain_decomposition.o
+
+buoyf_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o bound.o
+
+damping.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o PROFOUTLD.o utils.o
+
+cloud_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o PROFOUTLD.o bound.o damping.o
+
+petsc_vvm_solver.o: kinds.o timer.o PARMSLD.o domain_decomposition.o bound.o
+
+elliptic.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o bound.o workcom.o utils.o petsc_vvm_solver.o gather_scatter.o domain_decomposition.o gather_scatter.o multigrid.o
+
+multigrid.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o
+
+force_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o domain_decomposition.o
+
+gather_scatter.o: kinds.o PARMSLD.o domain_decomposition.o 
+
+z_coord.o: kinds.o PARMSLD.o CONSTLD.o 
+
+ldinput.o: kinds.o PARMSLD.o RADOUTLD.o CONSTLD.o CONST3D.o workcom.o ldoutput.o ini_3d_module.o gather_scatter.o domain_decomposition.o bound.o TIMEINTERP.o new_output_nc.o wind_module.o
+
+ini_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o TIMEINTERP.o bound.o time_interp_module.o update_tracer_module.o ldoutput.o domain_decomposition.o turb_1d_module.o turb_3d_module.o wind_module.o user_module.o update_chemical_module.o
+
+user_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o bound.o domain_decomposition.o physics_v10d.o
+
+ldoutput.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o gather_scatter.o domain_decomposition.o TIMEINTERP.o 
+
+domain_decomposition.o: kinds.o PARMSLD.o
+
+ldrcalc.o: kinds.o workcom.o
+
+#ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o output_nc.o ldoutput.o CLDINFO.o land_module.o turb_3d_module.o
+
+#output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o
+
+new_ldoutput_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o CONST3D.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o utils.o domain_decomposition.o gather_scatter.o TIMEINTERP.o new_output_nc.o ldoutput.o CLDINFO.o land_module.o turb_3d_module.o modchem.o
+
+new_output_nc.o: kinds.o PARMSLD.o CONSTLD.o workcom.o domain_decomposition.o land_module.o modchem.o
+
+ldmain.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o ldoutput.o ldinput.o ab_3d_module.o time_manager_module.o domain_decomposition.o new_ldoutput_nc.o new_output_nc.o vertical_adaptive.o
+
+make_profiles_module.o: kinds.o PARMSLD.o CONSTLD.o PROFOUTLD.o utils.o
+
+nudge_module.o: kinds.o PARMSLD.o CONSTLD.o PROFOUTLD.o utils.o TIMEINTERP.o CONST3D.o workcom.o domain_decomposition.o
+
+q_chk_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o PROFOUTLD.o bound.o domain_decomposition.o
+
+rcalc_module.o: kinds.o timer.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o workcom.o nudge_module.o update_thermo_module.o force_3d_module.o advec_3d_module.o physics_interface.o
+
+time_interp_module.o: kinds.o PARMSLD.o TIMEINTERP.o CONST3D.o CONSTLD.o workcom.o utils.o domain_decomposition.o
+
+time_manager_module.o: kinds.o PARMSLD.o TIMEINFO.o CONSTLD.o ldinput.o TIMEINTERP.o CONST3D.o workcom.o domain_decomposition.o user_module.o
+
+land_module.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o module_simple_driver.o workcom.o kpp_module.o
+
+kpp_module.o: kpp_module.F
+
+#======hchun====================================
+turb_3d_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o workcom.o bound.o utils.o land_module.o
+#===============================================
+turb_1d_module.o: kinds.o PARMSLD.o CONSTLD.o bound.o
+
+update_thermo_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o RADOUTLD.o bound.o
+
+update_tracer_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o bound.o
+
+update_chemical_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o modchem.o bound.o
+
+modchem.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o user_module.o
+
+utils.o: kinds.o domain_decomposition.o PARMSLD.o
+
+timer.o: kinds.o
+
+uvtop.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o elliptic.o domain_decomposition.o
+
+vort_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o bound.o workcom.o damping.o
+
+wind_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o bound.o elliptic.o uvtop.o workcom.o turb_1d_module.o
+
+radiation_rrtmg.o: kinds.o rrtm_params.o rrtm_grid.o rrtm_vars.o rad.o trace_gases.o RADOUTLD.o TIMEINFO.o CONST3D.o bound.o rad_full.o
+
+physics_interface.o: kinds.o timer.o rrtm_params.o rrtm_grid.o rrtm_vars.o physics_v10d.o microphy_p3.o update_thermo_module.o PROFOUTLD.o RADOUTLD.o CONST3D.o TIMEINFO.o bound.o cloud_module.o radiation_rrtmg.o domain_decomposition.o cam_rad_parameterizations.o
+
+physics_v10d.o: kinds.o PARMSLD.o
+
+microphy_p3.o: microphy_p3.F kinds.o PARMSLD.o
+
+ras_module.o: ras_module.F kinds.o PARMSLD.o CONST3D.o CONSTLD.o domain_decomposition.o
+
+vertical_adaptive.o: CONST3D.o CONSTLD.o PARMSLD.o kinds.o domain_decomposition.o
+#-----------------------------------------------------------------------------
+# Der (7 Jan 2023)
+create_topolsm.o: CONSTLD.o PARMSLD.o kinds.o user_module.o
+
+

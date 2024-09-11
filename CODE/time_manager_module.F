@@ -9,6 +9,7 @@ USE timeinterp
 USE const3d
 USE workcom
 USE domain_decomposition
+USE user_module, only: USER_set_start_time
 
 IMPLICIT NONE
 PRIVATE
@@ -78,17 +79,14 @@ CONTAINS
       iyear0 = 2006
       imonth0 = 1
       iday0 = 18
-! Specify hour in fractional UTC time (Greenwich)
       hour0 = 0.0
   CASE DEFAULT
-! TWP-ICE comparison study (16Z 20160617)
-      iyear0 = 2024
-      imonth0 = 7
-      iday0 = 30
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 16.0  !00(UTC+8)
-!      hour0 = 21.0 !05(UTC+8)
-!      hour0 = 0. !08(UTC+8)
+!!       iyear0 = 2019
+!!       imonth0 = 1
+!!       iday0 = 18
+!!       hour0 = 22.0 !06(UTC+8)
+      CALL USER_set_start_time(iyear0, imonth0, iday0, hour0)
   END SELECT 
 
 !  Get Julian day

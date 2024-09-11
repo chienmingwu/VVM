@@ -1,11 +1,13 @@
+#include "definesld.com"
 module modchem
 
 use kinds 
 use PARMSLD, i1=>mi1, j1=>mj1, kmax=>nk1, k1=>nk1, nprocs=>ntasks, &
              ih=>nhalo, jh=>nhalo, imax=>MI_glob, jmax=>MJ_glob
-use CONSTLD, only : timee=>ittadd, rlv=>hlf, cp, pi
+use CONSTLD, only : rlv=>hlf, cp, pi
 use domain_decomposition, myid=>my_task, my_real=>mpi_real_kind
 use petscsys, comm3d=>MPI_COMM_WORLD
+use user_module, only: USER_set_chem_reaction_file
                           
 ! version 1.0  3 chem_components on input and  4 on output but only interger coefficents.
 ! version 1.1  4 chem_components on input and 4 on output real on output allowed
@@ -129,9 +131,10 @@ use petscsys, comm3d=>MPI_COMM_WORLD
 ! This module is modified for VVM. (Der and Fan 2020.09.16) 
 
 implicit none
+#if defined (CHEM)
 
 private
-PUBLIC :: lchem, initchem,inputchem, twostep, PL_scheme, nchsp, firstchem, lastchem, RH, choffset, CO2
+PUBLIC :: lchem, initchem,inputchem, twostep, PL_scheme, nchsp, firstchem, lastchem, RH, choffset, CO2, chem_name_list
 save
 
   ! namoptions
@@ -214,6 +217,7 @@ save
   real, allocatable :: atol(:),rtol(:)  ! nchsp
   real, allocatable :: rk1(:,:),rk2(:,:),rk(:,:),kreact(:,:)
   real, allocatable :: T_abs(:,:),convppb(:,:)
+  character*6, allocatable :: chem_name_list(:) !nchsp
 
   real, allocatable :: ynew(:,:,:),yold(:,:,:),ysum(:,:,:)
   real, allocatable,target :: yl(:,:,:),yp(:,:,:)
@@ -250,6 +254,7 @@ save
   integer :: btime=0
   real :: tres=0.001
   character(3) :: cexpnr   
+  character(len=300) :: filename_chem_table
 
 contains
 !-----------------------------------------------------------------------------------------
@@ -259,42 +264,30 @@ SUBROUTINE initchem
 
   logical :: lCHon= .false.
   integer i, ierr
+  INTEGER(KIND=int_kind)  :: rec_int
 
-  namelist/NAMCHEM/ lchem, lcloudKconst, tnor, firstchem,lastchem,ldiuvar,h_ref,lchconst, t_ref, q_ref, p_ref,lchmovie, dtchmovie,lsegr
+  character*999 :: line
 
   write(cexpnr,'(i3.3)') iexpnr
 
-  itermin  = 1.0
-
-  lchem    =.false.
-  ldiuvar  = .false.
-  h_ref    = 12.0
-  lchconst = .false.
-  t_ref    = 298.
-  p_ref    = 100000.
-  q_ref    = 5.e-3
-  lchmovie = .false.
-  dtchmovie= 60
+  itermin  = 0.1 
+  CALL USER_set_chem_reaction_file(filename_chem_table, rec_int)
+  tnor        = rec_int
+  
+  lchem       = .true.
+  ldiuvar     = .true.
+  h_ref       = utc_time
+  lchconst    = .false. 
+  t_ref       = 300.
+  p_ref       = 100000.
+  q_ref       = 10.0e-3
+  lchmovie    = .false.
+  dtchmovie   = 60.
+  firstchem   = 1
+  lastchem    = nchem
+  lcloudKconst= .false.
+  lsegr       = .false.
   idtchmovie = dtchmovie/tres
-  firstchem= 1
-  lastchem = 10
-  nchsp    = 10
-  lcloudKconst  = .false.
-  lsegr    = .false.
-
-  if(myid==0) then
-    open(ifnamopt,file=trim(fname_options)//"."//trim(cexpnr),status='old',iostat=ierr)
-    read (ifnamopt,NAMCHEM,iostat=ierr)
-    if (ierr > 0) then
-      print *, 'Problem in namoptions NAMCHEM'
-      print *, 'iostat error: ', ierr
-      stop 'ERROR: Problem in namoptions NAMCHEM'
-    endif
-    write(6 ,NAMCHEM)
-    close(ifnamopt)
-    h_ref = utc_time
-  endif
-
 
   call MPI_BCAST(lchem     ,1,mpi_logical , 0,comm3d, mpierr)
   call MPI_BCAST(ldiuvar   ,1,mpi_logical , 0,comm3d, mpierr)
@@ -323,6 +316,7 @@ SUBROUTINE initchem
 
   allocate(PL_scheme(nchsp))
   allocate (atol(nchsp), rtol(nchsp))
+  allocate (chem_name_list(nchsp))
 
   allocate (ynew(1:i1,1:j1,nchsp),yold(1:i1,1:j1,nchsp),ysum(1:i1,1:j1,nchsp))
   allocate (yl(1:i1,1:j1,nchsp),yp(1:i1,1:j1,nchsp))
@@ -358,9 +352,9 @@ SUBROUTINE initchem
   enddo
 
   if(myid==0)then
-    open (ifoutput,file='cloudstat.'//cexpnr,status='replace')
-    write(ifoutput,'(A)') "#  time   UTC #zbase #cloud zbaseavg max_ztop cld_hght max_hght qlintmax qlintavg allqlmax allqlavg"
-    close (ifoutput)
+  !  open (ifoutput,file='cloudstat.'//cexpnr,status='replace')
+  !  write(ifoutput,'(A)') "#  time   UTC #zbase #cloud zbaseavg max_ztop cld_hght max_hght qlintmax qlintavg allqlmax allqlavg"
+  !  close (ifoutput)
   !  open (ifoutput,file='keffs.'//cexpnr,status='replace')
   !  close (ifoutput)
   !  if (lsegr .EQV. .true.) then
@@ -369,7 +363,9 @@ SUBROUTINE initchem
   !    open (ifoutput,file='seg_h.'//cexpnr,status='replace') !File that describes segregation per height
   !    close(ifoutput)
   !  endif !Output for segregation
+    continue
   endif
+
 
   call inputchem
 
@@ -461,7 +457,7 @@ subroutine inputchem
     reactions(:)%outp(i)%index_sv0 = 999
   enddo
 
-  open (unit=10,file='chem.inp.'//cexpnr,err=100,status='old',form='formatted')
+  open (unit=10,file=trim(filename_chem_table),err=100,status='old',form='formatted')
 
   do while(.true.)
     read(10,'(a)',err=100) line
@@ -469,6 +465,7 @@ subroutine inputchem
       if (myid == 0)   print *, trim(line)
     elseif (line(1:1) == '@') then
       call read_chem(chem_name)
+      chem_name_list = chem_name
     elseif (line(1:1) == '$') then
      !end of chemical reactions so we are done, jump out do while loop
       exit
@@ -1088,7 +1085,7 @@ SUBROUTINE read_chem(chem_name)
     if (myid == 0)  print*, i,'  ',chem_name(i),atol(i),rtol(i)
   enddo
 
-  print *,' '
+  if (myid ==0 ) print *,' '
 
 RETURN
 
@@ -1102,18 +1099,19 @@ end subroutine read_chem
 !-----------------------------------------------------------------------------------------
 
 
-SUBROUTINE twostep()     !(t,te,y)   (timee, timee+dt, sv0)
+SUBROUTINE twostep(ITT)     !(t,te,y)   (timee, timee+dt, sv0)
 use const3d
 use constld, only: pibar, pbar, zt, dz, fnt
 implicit none
 
 logical :: lrsAgs = .false.
-integer :: k,j,i
+integer :: k,j,i,timee
+integer, intent(in) :: ITT
 real, dimension(1:i1,1:j1,1:k1) :: thl, ql, qv
 real, dimension(1:i1,1:j1,1:k1,firstchem:lastchem) :: svm
 real, dimension(1:k1) :: rho, exnf, pres, zf, dzf
 
-
+  timee = itt
   ! prepare variables for chemistry (Der)
   DO k=1,k1
     exnf(k)=pibar(k+1)
@@ -1121,7 +1119,7 @@ real, dimension(1:k1) :: rho, exnf, pres, zf, dzf
     zf(k)=ZT(k+1)
     dzf(k)=dz/fnt(k+1)
     qv(1:i1,1:j1,k)=QV3D(1:i1,1:j1,k+1) ! qv
-    svm(1:i1,1:j1,k,firstchem:lastchem)=TC3D(1:i1,1:j1,k+1,firstchem:lastchem) ! tracers
+    svm(1:i1,1:j1,k,firstchem:lastchem)=CHEM3D(1:i1,1:j1,k+1,firstchem:lastchem) ! tracers
     ql(1:i1,1:j1,k)=QC3D(1:i1,1:j1,k+1)+QR3D(1:i1,1:j1,k+1) ! ql
     thl(1:i1,1:j1,k)=TH3D(1:i1,1:j1,k+1)-(rlv/cp)*ql(1:i1,1:j1,k)*(1/exnf(k)) ! th_l
     do j=1,j1
@@ -1147,14 +1145,14 @@ real, dimension(1:k1) :: rho, exnf, pres, zf, dzf
   !!!! they may be starting at XX but we acces them with index 1 to nchsp
   call twostep2(svm(1:i1,1:j1,1:k1,firstchem:lastchem),qv(1:i1,1:j1,1:k1) &
                ,thl(1:i1,1:j1,1:k1),ql(1:i1,1:j1,1:k1),rho(1:k1) &
-               ,exnf(1:k1),pres(1:k1),zf(1:k1),dzf(1:k1))
+               ,exnf(1:k1),pres(1:k1),zf(1:k1),dzf(1:k1),timee)
   !if (timee >= tnextwrite ) then
   !  tnextwrite = tnextwrite + itimeav
   !endif
 
-  ! return to TC3D
+  ! return to CHEM3D
   DO k=1,k1
-    TC3D(1:i1,1:j1,k+1,firstchem:lastchem)=svm(1:i1,1:j1,k,firstchem:lastchem)
+    CHEM3D(1:i1,1:j1,k+1,firstchem:lastchem)=svm(1:i1,1:j1,k,firstchem:lastchem)
   ENDDO
 
 end subroutine twostep
@@ -1162,7 +1160,7 @@ end subroutine twostep
 !-----------------------------------------------------------------------------------------
 
 
-SUBROUTINE twostep2(y,qt0,thl,ql,rho,exnf,pres,zf,dzf)
+SUBROUTINE twostep2(y,qt0,thl,ql,rho,exnf,pres,zf,dzf,timee)
 !c
 !c-----------------------------------------------------------------|
 !c                                                                 |
@@ -1212,12 +1210,13 @@ implicit none
   integer k_zi,Rnr
   integer nsecs, nhrs, nminut
   real    rest_zi, zi_temp, we_temp
+  integer timee
 
   !c Initialization of logical and counters
   t = timee*PASS_BIG_DT
   te = timee*PASS_BIG_DT+PASS_SMALL_DT
 
-  dtmin   = itermin
+  dtmin   = 0.2
   naccpt  = 0
   nrejec  = 0
   nfcn    = 0
@@ -1285,8 +1284,27 @@ implicit none
     if (restart) kdt=kdt/10.0
     restart=.true.
     kdt=max(dtmin,min(kdt,kdtmax))
+    !!! aries(2024.07.15) dt check
+    !!if ((myid==0) .and. (nstart>1)) then
+    !!  write(*,*) "restart (before fit) kdt=",kdt,"dtmin=",dtmin,"nstart=",nstart
+    !!endif
     call FIT(t,te,kdt)
     kdt=min(kdt,(te-t)/2)
+    !!! aries(2024.07.15) dt check
+    !!if ((myid==0) .and. (nstart>1)) then
+    !!  write(*,*) "restart (after fit) kdt=",kdt,"(te-t)/2=",(te-t)/2,"nstart=",nstart
+    !!endif
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !aries(2024.07.16) cycle bug
+    if (nstart>10000) then
+      kdt=dtmin
+      if (myid==0) then 
+        write(*,*) "restart err: err=",errlte,"t=",t,"nsta=",nstart,"nrej=",nrejec
+      endif
+    endif
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ! sta=kdt
 
     !c The starting step is carried out, using the implicit Euler method.
@@ -1314,6 +1332,11 @@ implicit none
     a1  = ((c+1.0)**2)/(c*c+2.0*c)
     a2  =-1.0/(c*c+2.0*c)
     dtg = kdt*(1.0+c)/(2.0+c)
+    
+    !!! aries(2024.07.15) dt check
+    !!if ((failer) .and. (myid==0)) then
+    !!  write(*,*) "60 continue: p=",pl,"c=",c,"a1=",a1,"a2=",a2,"dtg=",dtg
+    !!endif
 
     ysum(:,:,1:nchsp) = a1*y(1:i1,1:j1,pl,1:nchsp)+a2*yold(:,:,1:nchsp)
     ynew(:,:,1:nchsp) = max(0.0,y(1:i1,1:j1,pl,1:nchsp)+ ratio*(y(1:i1,1:j1,pl,1:nchsp)-yold(:,:,1:nchsp)))
@@ -1331,6 +1354,12 @@ implicit none
         do i=1,i1
           ytol=atol(n)+rtol(n)*abs(y(i,j,pl,n))
           errltel=max(errltel,abs(c*ynew(i,j,n)-cp1* y(i,j,pl,n)+yold(i,j,n))/ytol)
+          !!! aries(2024.07.15) dt check
+          !!if (myid==0) then
+          !!  if ((errltel>1.0) .and. (failer)) then
+          !!    write(*,*) "error! i=",i,"j=",j,"p=",pl,"nch=",nchsp,"err=",errltel
+          !!  endif
+          !!endif
         enddo
       enddo
     enddo
@@ -1338,7 +1367,18 @@ implicit none
     call MPI_ALLREDUCE(errltel, errlte, 1,MY_REAL,MPI_MAX, comm3d, mpierr)
 
     errlte=2.0*errlte/(c+c*c)
+    !!if ((myid .eq. 0) .and. (failer)) then
+    !!  write(*,*) "ITERMPI fail! kdt=",kdt,"c=",c,"ratio=",ratio,"errlte=",errlte
+    !!endif
+
     call NEWDT(t,te,kdt,dtold,ratio,errlte,accept,dtmin,kdtmax)
+     
+    !!! aries(2024.07.15) dt check
+    !!if ((myid .eq. 0) .and. (failer)) then
+    !!  write(*,*) "NEWDT fail!,accept",accept,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
+    !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
+    !!endif
+
     !c Check if step has been accepted.
     if (accept) then
       failer  = .false.
@@ -1349,6 +1389,12 @@ implicit none
       y(1:i1,1:j1, pl,1:nchsp) = ynew(:,:,1:nchsp)
 
       t = t+dtold
+      
+      !!! aries(2024.07.11) dt check
+      !!if (kdt .le. 0.01) then
+      !!  write(*,*) "accept!,myid=",myid,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
+      !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
+      !!endif
 
       if (t.ge.te) goto 120
         goto 60
@@ -1361,6 +1407,18 @@ implicit none
       naccpt = naccpt-1
       t=t-dtold
       y(1:i1,1:j1, pl,1:nchsp) = yold(:,:,1:nchsp)
+      
+      !!! aries(2024.07.15) dt check
+      !!if ((myid .eq. 0) .and. (restart)) then
+      !!  write(*,*) "restart fail!,myid=",myid,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
+      !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
+      !!endif
+ 
+      !!! aries(2024.07.11) dt check
+      !!if ((myid .eq. 0) .and. (restart==.false.)) then
+      !!  write(*,*) "check fail!,myid=",myid,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
+      !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
+      !!endif
 
       goto 25
     endif
@@ -1368,6 +1426,13 @@ implicit none
     !c Here the step has been rejected.
     nrejec=nrejec+1
     failer=.true.
+
+    !!! aries(2024.07.11) dt check
+    !!if ((myid .eq. 0) .and. (te .ne. t)) then
+    !!  write(*,*) "fail!,nrejec=",nrejec,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
+    !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
+    !!endif
+
     goto 60
 
 120 t=tb
@@ -2441,5 +2506,6 @@ implicit none
   endif !if myid==0
 
 end subroutine write_chem_scheme
+#endif
 
 end module modchem

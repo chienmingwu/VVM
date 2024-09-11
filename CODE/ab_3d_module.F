@@ -14,6 +14,7 @@ USE cldinfo
 USE TURB_3D_module
 #endif
 USE update_tracer_module
+USE update_chemical_module
 USE make_profiles_module
 USE buoyf_module
 USE q_chk_module
@@ -168,8 +169,14 @@ CONTAINS
       CALL WIND_3D  ( N1, N2 )
       call timer_stop('WIND_3D')
       call timer_start('UPDATE_TRACER')
-      if (ntracer > 0) CALL UPDATE_TRACER
+      if (ntracer > 0) CALL UPDATE_TRACER ( ITT )
       call timer_stop('UPDATE_TRACER')
+#if defined (CHEM)
+      call timer_start('UPDATE_CHEMICAL')
+      call UPDATE_CHEMICAL ( ITT )
+      call timer_stop('UPDATE_CHEMICAL')
+#endif
+
       call timer_start('make_prof')
       CALL MAKE_PROFILES
       call timer_stop('make_prof')

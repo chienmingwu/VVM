@@ -1,0 +1,112 @@
+#!/bin/csh
+# Setup file for RRTMG radiation runs. After executing this script,
+# run the makefile.  The final step is to submit the batch job to
+# Bassi, which calls the executable rrtm_*.run.
+#--------------------------------------------------------------------- 
+
+set echo  # echoes the commands
+set expname = solver_test
+
+# set paths
+set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
+set datadir = ${vvmdir}'/DATA'
+set rundir = ${vvmdir}'/RUN'
+set expdir = ${datadir}'/'${expname}
+set codedir = ${datadir}'/'${expname}'/CODE'
+set casedir = ` pwd `
+
+if( ! -d ${datadir} ) then      # if ${datadir} is not found, create it!
+  mkdir ${datadir}                
+endif
+
+if( ! -d ${expdir} ) then      # if ${subdir} is not found, create it!
+  mkdir ${expdir} 
+  cd ${expdir}
+else
+  cd ${expdir}
+  alias rm rm
+  rm -rf *
+endif
+
+mkdir RUNDATA
+mkdir archive
+
+# prepare tables for model
+cp ${casedir}/vvm.setup .
+cp ${vvmdir}/CODE/make_ctl.sh .
+
+# for NOAH LSM
+ln -s ${vvmdir}/CODE/LSM/GENPARM.TBL .
+ln -s ${vvmdir}/CODE/LSM/SOILPARM.TBL .
+ln -s ${vvmdir}/CODE/LSM/VEGPARM.TBL .
+
+# for RRTMG
+ln -s ${vvmdir}/RUNDATA/fort.91 fort.91
+ln -s ${vvmdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
+ln -s ${vvmdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+ln -s ${vvmdir}/RUNDATA/topolsm_TW.nc RUNDATA/topolsm_TW.nc
+
+# for P3 scheme
+ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-2momI .
+ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-3momI .
+ln -s ${vvmdir}/RUNDATA/p3_lookupTable_2.dat-v6.0 .
+
+# for user files
+if( -d ${casedir}/user_files ) then 
+  cp -r ${casedir}/user_files .
+endif
+
+# create CPP list
+cat > definesld.com << 'END1'
+#define MPI
+#define PERIODIC
+#define DIFFUSION
+#define PHYSICS
+#define MICROCODE
+#define MICROP3
+#define RADCODE
+#define TOPOGRAPHY
+#define LSM
+#define AREAMN
+#define DIAG
+'END1'
+cat definesld.com
+#define CHEM
+
+# Grid parameter declarations.
+# changed from 'cat' to 'sed' - DD 2010.02.09
+# added domain decomposition variables, without '#define MPI' must both
+#  be 1, total subdomains/processes = product of decomposition variables
+#  - DD 2010.04.12
+cat > DOMAIN << 'END3'
+#!/bin/csh
+set expdir = ` pwd `
+set codedir = ${expdir}'/CODE'
+sed -i 's/zonal_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/1024/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag2d_dimension/7/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag3d_dimension/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/chemical_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
+'END3'
+cat DOMAIN
+
+# input data
+cat > INPUT << 'END6'
+ &INPUT1 NEWRUN=T, ITTADD=8640 /
+ &INPUT2 RLAT=23.458, RLON=120.95 /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
+#           (m)          (m)     (m)     (m)    (s)                (time step)
+ &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120,niterw=200,niterxy=200,multilevel=4,tol_2d=1.e-6,tol_3d=1.e-8 /
+#         ( case output frequency)                    sub-domain size/(2^multilevel) should greater than 8*8
+ &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
+#                                                              (s)
+'END6'
+cat INPUT
+#-------------------------------------------------------------------
+
+exit
+
