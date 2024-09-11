@@ -1,0 +1,32 @@
+#!/usr/bin/bash
+###SBATCH -J expname        # Job name
+#####SBATCH -A MST109184      # Account number
+###SBATCH -p all          # job partition
+###SBATCH -N np_nodes       # Run all processes on a single node	
+###SBATCH -c 1              # cores per MPI rank
+###SBATCH -n total_cores    # Run a single task
+###SBATCH -o expname%j.out  # output file
+###SBATCH -e expname%j.err  # error file
+
+module purge
+
+module use /home/der0318/modulefiles
+module load compiler ifort mpi
+
+export PATH=$HOME/.local/bin:$PATH
+export LD_LIBRARY_PATH=$HOME/.local/lib:$LD_LIBRARY_PATH
+
+ulimit -s unlimited
+
+export I_MPI_FABRICS=shm
+
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+
+mpirun -np 1 ./create_topolsm
+mpirun -np total_cores ./vvm < INPUT | tee OUTPUT  
+
+date >> runtime
+
+

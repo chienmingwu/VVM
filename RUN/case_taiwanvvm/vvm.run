@@ -16,8 +16,8 @@ set echo  # echoes the commands
 set expname = solver_test
 
 # set job system and compiler
-set compiler = 'intel_mogamd'
-set jobsys   = 'slurm_mogamd_intel'
+set compiler = 'intel_ntu'
+set jobsys   = 'slurm_ntu'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -59,7 +59,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/total_cores/64/g' ${blddir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-sbatch run.sh
+#bash run.sh
 
 exit
 

@@ -143,12 +143,8 @@ endif
 tol_fac=2.0_dbl_kind**(-1.0_dbl_kind-dble(iter)/30.0_dbl_kind)
 nsmooth=5
 
-if (my_task==0) write(*,*) nlevel, iter, tol_fac
-
-if (nlevel==0) then
-  if (my_task==0) write(*,*) nlevel,max_iter,tol
+if (nlevel==1) then
   call CG(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,norm,tol,max_iter,idum1)
-  if (my_task==0) write(*,*) "solved"
   return
 endif
 
@@ -181,7 +177,7 @@ call CG(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,norm,tol,nsmooth,idum1)
 
 if (finest) then
   iter = iter + 1
-  if (my_task==0) write(*,*) "multigrid",iter, tol_fac, norm
+  !if (my_task==0) write(*,*) "multigrid",iter, tol_fac, norm
   if (iter>max_iter) return
   if (norm>tol) goto 555
 endif
@@ -348,26 +344,21 @@ if (ndim==2) call laplacian(phi,nx,ny,dx,dy,ap)
 r = f - ap
 p = r
 call summation(r*r,nx,ny,nz,1,nx,1,ny,nzs,nze,rs_old)
-if (my_task==0) write(*,*)  "CG",ndim,"d",iter,sqrt(rs_old)
+!if (my_task==0) write(*,*)  "CG",ndim,"d",iter,sqrt(rs_old)
 if (sqrt(rs_old) < tol) return
 
 do iter = 1,max_iter
-  if (my_task==0) write(*,*)  "CG",ndim,"d",iter,"first"
   call bound_mg(p,nx,ny,nz)
-  if (my_task==0) write(*,*)  "CG",ndim,"d",iter,"after bound"
   if (ndim==3) call laplacian(p,nx,ny,nz,dx,dy,dz,ap)
   if (ndim==2) call laplacian(p,nx,ny,dx,dy,ap)
-  if (my_task==0) write(*,*)  "CG",ndim,"d",iter,"after operator",nx,ny,nz,1,nx,1,ny,nzs,nze
   call summation(p*ap,nx,ny,nz,1,nx,1,ny,nzs,nze,dum1)
-  if (my_task==0) write(*,*)  "CG",ndim,"d",iter,"after sum"
   alpha = rs_old/dum1
 
   phi = phi + alpha * p
   r = r - alpha * ap
-  if (my_task==0) write(*,*)  "CG",ndim,"d",iter,"after update"
 
   call summation(r*r,nx,ny,nz,1,nx,1,ny,nzs,nze,rs_new)
-  if (my_task==0) write(*,*)  "CG",ndim,"d",iter,sqrt(rs_new)
+  !if (my_task==0) write(*,*)  "CG",ndim,"d",iter,sqrt(rs_new)
   if (sqrt(rs_new) < tol) exit
 
   p = r + rs_new/rs_old * p
@@ -522,14 +513,10 @@ real(kind=dbl_kind), intent(out) :: sum_all
 integer :: mpierr
 real(kind=dbl_kind) :: sum_par
 
-if (my_task==0) write(*,*) "sum"
-
 sum_par = 0.
 sum_par = sum(sum(sum(A(nxs:nxe,nys:nye,nzs:nze),3),2),1)
 
-if (my_task==0) write(*,*) "before reduce"
 call mpi_allreduce(sum_par,sum_all,1,mpi_double_precision,mpi_sum,mpi_comm_world,mpierr)
-if (my_task==0) write(*,*) "after reduce"
 
 end subroutine summation
 
