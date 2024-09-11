@@ -60,23 +60,18 @@ CONTAINS
 
       call timer_start('CG_3d')
       idum1 = 0 
-      !call CG(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,norm,1.e-8_dbl_kind,10000,idum1)
-      !call CG_pMG(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,norm,1.e-8_dbl_kind,10000,idum1)
       call multigrid_v(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,5,norm,1.e-8_dbl_kind,200,idum1,.True.)
-      !call solver_test(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,5,norm,1.e-8_dbl_kind,20000,idum1)
-      !call SOR(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,1.5_dbl_kind,norm,1.e-8_dbl_kind,1000000,idum1)
-      if (my_task==0) write(*,*) "w iter = ", idum1
+      if (my_task==0) write(*,'(A10,I8,A20,ES15.7)') "w iter = ", idum1,",norm of error=", norm
+    
+      do k=1,nk2
+        W3D(:,:,k)=tmp_w(:,:,k)/rhoz(k)
+      enddo
       call timer_stop('CG_3d')
 
+#if defined (PETSC)
       call timer_start('DIRECT_3D')
       call petsc_solve_3d(YTEM,W3D)
       call timer_stop('DIRECT_3D')
-
-#if defined (DIAG)
-      DIAG3D(:,:,1:nk2,1)=W3d
-      do k=1,nk2
-        DIAG3D(:,:,k,2)=tmp_w(:,:,k)/rhoz(k)
-      enddo
 #endif
 
       CALL BOUND_ARB (NK2,W3D)
@@ -107,29 +102,18 @@ CONTAINS
       idum1 = 0 
       call xyavg1(psi,nhalo,mi1,mj1,dum1)
       psi = psi - dum1
-      !call CG(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,psi,norm,1.e-6_dbl_kind,10000,idum1)
-      !call CG_pMG(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,psi,norm,1.e-6_dbl_kind,10000,idum1)
       call multigrid_v(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,-psi,5,norm,1.e-6_dbl_kind,200,idum1,.True.)
-      !call solver_test(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,-psi,5,norm,1.e-6_dbl_kind,20000,idum1)
-      !call SOR(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,-psi,1.5_dbl_kind,norm,1.e-6_dbl_kind,1000000,idum1)
-      if (my_task==0) write(*,*) "psi iter = ", idum1
-#if defined (DIAG)
-      DIAG2D(:,:,3)=tmp_psi(:,:)
-#endif
+      if (my_task==0) write(*,'(A10,I8,A20,ES15.7)') "psi iter = ", idum1," ,norm of error=", norm
+      psi = tmp_psi
       call xyavg1(chi,nhalo,mi1,mj1,dum1)
       idum1 = 0 
       chi = chi - dum1
-      !call CG(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,chi,norm,1.e-6_dbl_kind,10000,idum1)
-      !call CG_pMG(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,chi,norm,1.e-6_dbl_kind,10000,idum1)
       call multigrid_v(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,-chi,5,norm,1.e-6_dbl_kind,200,idum1,.True.)
-      !call solver_test(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,-chi,5,norm,1.e-6_dbl_kind,20000,idum1)
-      !call SOR(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,-chi,1.5_dbl_kind,norm,1.e-6_dbl_kind,1000000,idum1)
-      if (my_task==0) write(*,*) "chi iter = ", idum1
-#if defined (DIAG)
-      DIAG2D(:,:,4)=tmp_chi(:,:)
-#endif
+      if (my_task==0) write(*,'(A10,I8,A20,ES15.7)') "chi iter = ", idum1,",norm of error=", norm
+      chi = tmp_chi
       call timer_stop('CG_2d')
 
+#if defined (PETSC)
       call timer_start('DIRECT_XY')
       call petsc_solve_psi(PSI)
       call bound_arb(1,PSI)
@@ -137,12 +121,7 @@ CONTAINS
       call petsc_solve_chi(CHI)
       call bound_arb(1,CHI)
       call timer_stop('DIRECT_XY')
-
-#if defined (DIAG)
-      DIAG2D(:,:,1)=psi(:,:)
-      DIAG2D(:,:,2)=chi(:,:)
 #endif
-
 
       END SUBROUTINE direct_xy
 

@@ -5,7 +5,6 @@ use constld, only: rhou, rhoz, fnu, fnz
 use domain_decomposition, only: my_task,nsbdm_n,nsbdm_e,nsbdm_s,nsbdm_w &
                                        ,nsbdm_nw,nsbdm_ne,nsbdm_se,nsbdm_sw
 use petscsys
-use const3d, only: diag2d
 implicit none
 
 
@@ -178,7 +177,8 @@ call CG(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,norm,tol,nsmooth,idum1)
 
 if (finest) then
   iter = iter + 1
-  if (my_task==0) write(*,*) "multigrid",iter, tol_fac, norm
+  !if (my_task==0) write(*,*) "multigrid",iter, tol_fac, norm
+  if (iter>max_iter) return
   if (norm>tol) goto 555
 endif
 
@@ -344,7 +344,7 @@ if (ndim==2) call laplacian(phi,nx,ny,dx,dy,ap)
 r = f - ap
 p = r
 call summation(r*r,nx,ny,nz,1,nx,1,ny,nzs,nze,rs_old)
-if (my_task==0) write(*,*)  "CG",ndim,"d",iter,sqrt(rs_old)
+!if (my_task==0) write(*,*)  "CG",ndim,"d",iter,sqrt(rs_old)
 if (sqrt(rs_old) < tol) return
 
 do iter = 1,max_iter
@@ -358,7 +358,7 @@ do iter = 1,max_iter
   r = r - alpha * ap
 
   call summation(r*r,nx,ny,nz,1,nx,1,ny,nzs,nze,rs_new)
-  if (my_task==0) write(*,*)  "CG",ndim,"d",iter,sqrt(rs_new)
+  !if (my_task==0) write(*,*)  "CG",ndim,"d",iter,sqrt(rs_new)
   if (sqrt(rs_new) < tol) exit
 
   p = r + rs_new/rs_old * p
