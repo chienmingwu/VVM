@@ -65,6 +65,7 @@ CONTAINS
                        ,NSFLUX,ALADV,UVTAU,BUOY,NOTHERM           &
                        ,WRXMU
       NAMELIST /INPUT4/ NXC,NTS,NXS,NXSAVG,NFLPRT,NITERW,NITERXY  &
+                       ,multilevel,tol_3d,tol_2d                  &
                        ,IFL10,IFL11,IFL12,IFL13,IFL14,IFL15       &
                        ,NWR10,NWR11,NWR12,NWR13,NWR14,NWR15,NRESTART       
       NAMELIST /INPUT5/ ZRSEA,DSST,SCALE,IX,ITINIT,ITSTOP         &
@@ -170,8 +171,13 @@ CONTAINS
       NXSAVG  = 2
       NFLPRT  = 999999
       nrestart  = 999999
-      NITERW  = 10
-      NITERXY = 1000
+      ! this setup is for multigrid solver.
+      ! if multilevel is set to 1, please set Niterw and Niterxy to 10000.
+      NITERW  = 200   
+      NITERXY = 200
+      multilevel = 5
+      tol_3d = 1.e-8_dbl_kind
+      tol_2d = 1.e-6_dbl_kind
 
       DO 20 I = 10, 19
       NWRITE(I) = 999999

@@ -109,6 +109,8 @@ PRIVATE
       z2pert,    &  ! formerly c(64) z_high for random perturbation
       aladv,     &  ! formerly c(70) alpha in advection
       WRXMU,     &  ! formerly c(71) mu/dt in relaxed method
+      tol_2d,    &  ! tolerance for 2d solver
+      tol_3d,    &  ! tolerance for 3d solver
       uvtau         ! formerly c(72) timescale for mean-wind nudging (???)
    
    INTEGER (KIND=int_kind), PUBLIC ::           &
@@ -128,6 +130,7 @@ PRIVATE
       niterw,    &  ! formerly ic(31) # of iterations for w
       niterxy,   &  ! formerly ic(32) # of iterations for psi and chi
       nxsavg,    &  ! formerly ic(44) averaging period for output
+      multilevel,&  ! n levels for multigrid solver
       nout          ! # of data outputs
    INTEGER (KIND=int_kind), DIMENSION(10:19), PUBLIC ::        &   
       nwrite        ! formerly ic(51)

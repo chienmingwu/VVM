@@ -55,23 +55,22 @@ CONTAINS
 
   120 CONTINUE
 
+      call timer_start('MGsolver_3d')
       tmp_y = 0._dbl_kind
       tmp_y(1:mi1,1:mj1,2:nk2-1) = - ytem
-
-      call timer_start('CG_3d')
       idum1 = 0 
-      call multigrid_v(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,5,norm,1.e-8_dbl_kind,200,idum1,.True.)
-      if (my_task==0) write(*,'(A10,I8,A20,ES15.7)') "w iter = ", idum1,",norm of error=", norm
+      call multigrid_v(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,multilevel,norm,tol_3d,niterw,idum1,.True.)
+      if (my_task==0) write(*,'(A14,I8,A20,ES15.7)') "w iter = ", idum1,",norm of error=", norm
     
       do k=1,nk2
         W3D(:,:,k)=tmp_w(:,:,k)/rhoz(k)
       enddo
-      call timer_stop('CG_3d')
+      call timer_stop('MGsolver_3d')
 
 #if defined (PETSC)
-      call timer_start('DIRECT_3D')
+      call timer_start('petsc_3d')
       call petsc_solve_3d(YTEM,W3D)
-      call timer_stop('DIRECT_3D')
+      call timer_stop('petsc_3d')
 #endif
 
       CALL BOUND_ARB (NK2,W3D)
@@ -98,29 +97,29 @@ CONTAINS
         first=.false.
       endif
 
-      call timer_start('CG_2d')
+      call timer_start('MGsolver_2d')
       idum1 = 0 
       call xyavg1(psi,nhalo,mi1,mj1,dum1)
       psi = psi - dum1
-      call multigrid_v(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,-psi,5,norm,1.e-6_dbl_kind,200,idum1,.True.)
-      if (my_task==0) write(*,'(A10,I8,A20,ES15.7)') "psi iter = ", idum1," ,norm of error=", norm
+      call multigrid_v(2,tmp_psi,mi1,mj1,1,1,1,dx,dynew,dz,-psi,multilevel,norm,tol_2d,niterxy,idum1,.True.)
+      if (my_task==0) write(*,'(A14,I8,A20,ES15.7)') "psi iter = ", idum1," ,norm of error=", norm
       psi = tmp_psi
       call xyavg1(chi,nhalo,mi1,mj1,dum1)
       idum1 = 0 
       chi = chi - dum1
-      call multigrid_v(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,-chi,5,norm,1.e-6_dbl_kind,200,idum1,.True.)
-      if (my_task==0) write(*,'(A10,I8,A20,ES15.7)') "chi iter = ", idum1,",norm of error=", norm
+      call multigrid_v(2,tmp_chi,mi1,mj1,1,1,1,dx,dynew,dz,-chi,multilevel,norm,tol_2d,niterxy,idum1,.True.)
+      if (my_task==0) write(*,'(A14,I8,A20,ES15.7)') "chi iter = ", idum1,",norm of error=", norm
       chi = tmp_chi
-      call timer_stop('CG_2d')
+      call timer_stop('MGsolver_2d')
 
 #if defined (PETSC)
-      call timer_start('DIRECT_XY')
+      call timer_start('petsc_2d')
       call petsc_solve_psi(PSI)
       call bound_arb(1,PSI)
 
       call petsc_solve_chi(CHI)
       call bound_arb(1,CHI)
-      call timer_stop('DIRECT_XY')
+      call timer_stop('petsc_2d')
 #endif
 
       END SUBROUTINE direct_xy
