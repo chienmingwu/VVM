@@ -117,13 +117,13 @@ CONTAINS
         glob_idx_i = real(mi1*ni_sbdm+i)
 
         radius_norm = sqrt( &
-                             ((glob_idx_i-mi_glob/2)*DX/5000.)**2 &
+                             ((glob_idx_i-mi_glob/2)*DX/4000.)**2 &
                           !+  ((glob_idx_j-mj_glob/2)*DYNEW/5000.)**2 &
-                          + ((ZT(K)-1500.)/1000.)**2 &
+                          + ((ZT(K)-3200.)/2000.)**2 &
                           )
         IF ( radius_norm <= 1 ) THEN
           TH3D(I,J,K) = TH3D(I,J,K) &
-                        + 10.*(cos(3.14159265*0.5*radius_norm))
+                        - 15.*(cos(3.14159265*0.5*radius_norm))
         ENDIF
       ENDDO
       ENDDO
@@ -165,6 +165,8 @@ CONTAINS
       integer(kind=int_kind), dimension(mi_glob,mj_glob,3), intent(out) :: ioutput_user
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
       logical, intent(out) :: taiwanvvm_flag
+      integer :: i
+      real(kind=dbl_kind) :: distance
 
       taiwanvvm_flag = .False.
 
@@ -178,6 +180,16 @@ CONTAINS
       ioutput_user(:,:,1)=16   ! land type 
       ioutput_user(:,:,2)=0    ! slope type
       ioutput_user(:,:,3)=14   ! soil type
+
+      ! add mountain (Chien and Wu, 2016)
+      do i=1,mi_glob
+        distance=abs(dble(i)-dble(mi_glob)/2.)*DX
+        if (distance<5000.) then
+          routput_user(i,:,1) = 1200.
+        else if (distance<=20000. .and. distance>=5000.) then
+          routput_user(i,:,1) = -0.08*(distance-20000.)
+        endif
+      enddo
 
   ENDSUBROUTINE USER_set_topography_and_land_type
 
