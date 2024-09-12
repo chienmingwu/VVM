@@ -59,7 +59,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/total_cores/64/g' ${blddir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-#bash run.sh
+bash run.sh
 
 exit
 
