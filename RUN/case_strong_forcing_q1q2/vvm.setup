@@ -65,10 +65,8 @@ cat > definesld.com << 'END1'
 #define MICROCODE
 #define MICROP3
 #define HEATING
-#define RELAX_XY
 'END1'
 cat definesld.com
-#define DIRECT
 #define DIAG
 #define TOPOGRAPHY
 #define LSM
@@ -103,7 +101,7 @@ cat > INPUT << 'END6'
  &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=4000.,DYNEW=4000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=T,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60 /
+ &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60,niterw=200,niterxy=200,multilevel=4,tol_2d=1.e-6,tol_3d=1.e-8  /
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=1,ITSTOP=360,SCALE=6.,Q1Q2=T,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
