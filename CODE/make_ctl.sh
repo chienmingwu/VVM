@@ -1057,63 +1057,11 @@ VARS '$#diagvarname >> diag.ctl
 set n = 0
 while ( ${n} < $#diagvarname )
 @ n++
+if ( ${diagvarlev[${n}]} != 1 ) then
 echo ${diagvarname[${n}]}'=>'${diagvarname[${n}]}' '${diagvarlev[${n}]}' t,z,y,x '${expname} >> diag.ctl
-end
-echo 'ENDVARS' >> diag.ctl
+else
+echo ${diagvarname[${n}]}'=>'${diagvarname[${n}]}' '${diagvarlev[${n}]}' t,y,x '${expname} >> diag.ctl
 endif
-# =================RAS======================================
-if( ${diag} != "nan" )then
-echo 'DSET ^../archive/'${expname}'.L.Diag-%tm6'${tail}' \
-DTYPE netcdf \
-OPTIONS template \
-TITLE tracers \
-UNDEF 9.96921e+36 \
-CACHESIZE 10000000 \
-XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
-YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
-ZDEF '${nz}' LEVELS ' > diag.ctl
-
-set n = 0
-while ( ${n} < $#zc )
-@ n++
-echo ${zc[${n}]} >> diag.ctl
-end
-
-echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
-VARS '$#diagvarname >> diag.ctl
-
-set n = 0
-while ( ${n} < $#diagvarname )
-@ n++
-echo ${diagvarname[${n}]}'=>'${diagvarname[${n}]}' '${diagvarlev[${n}]}' t,z,y,x '${expname} >> diag.ctl
-end
-echo 'ENDVARS' >> diag.ctl
-endif
-# =================RAS======================================
-if( ${diag} != "nan" )then
-echo 'DSET ^../archive/'${expname}'.L.Diag-%tm6'${tail}' \
-DTYPE netcdf \
-OPTIONS template \
-TITLE tracers \
-UNDEF 9.96921e+36 \
-CACHESIZE 10000000 \
-XDEF '${nx}' LINEAR '${xst}' '${xlen}' \
-YDEF '${ny}' LINEAR '${yst}' '${ylen}' \
-ZDEF '${nz}' LEVELS ' > diag.ctl
-
-set n = 0
-while ( ${n} < $#zc )
-@ n++
-echo ${zc[${n}]} >> diag.ctl
-end
-
-echo 'TDEF '${nt}' LINEAR 00:00Z01JAN2000 1mn \
-VARS '$#diagvarname >> diag.ctl
-
-set n = 0
-while ( ${n} < $#diagvarname )
-@ n++
-echo ${diagvarname[${n}]}'=>'${diagvarname[${n}]}' '${diagvarlev[${n}]}' t,z,y,x '${expname} >> diag.ctl
 end
 echo 'ENDVARS' >> diag.ctl
 endif
