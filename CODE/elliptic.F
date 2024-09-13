@@ -55,6 +55,11 @@ CONTAINS
 
   120 CONTINUE
 
+#if defined (PETSC)
+      call timer_start('petsc_3d')
+      call petsc_solve_3d(YTEM,W3D)
+      call timer_stop('petsc_3d')
+#else
       call timer_start('MGsolver_3d')
       tmp_y = 0._dbl_kind
       tmp_y(1:mi1,1:mj1,2:nk2-1) = - ytem
@@ -66,11 +71,6 @@ CONTAINS
         W3D(:,:,k)=tmp_w(:,:,k)/rhoz(k)
       enddo
       call timer_stop('MGsolver_3d')
-
-#if defined (PETSC)
-      call timer_start('petsc_3d')
-      call petsc_solve_3d(YTEM,W3D)
-      call timer_stop('petsc_3d')
 #endif
 
       CALL BOUND_ARB (NK2,W3D)
@@ -97,6 +97,15 @@ CONTAINS
         first=.false.
       endif
 
+#if defined (PETSC)
+      call timer_start('petsc_2d')
+      call petsc_solve_psi(PSI)
+      call bound_arb(1,PSI)
+
+      call petsc_solve_chi(CHI)
+      call bound_arb(1,CHI)
+      call timer_stop('petsc_2d')
+#else
       call timer_start('MGsolver_2d')
       idum1 = 0 
       call xyavg1(psi,nhalo,mi1,mj1,dum1)
@@ -112,14 +121,6 @@ CONTAINS
       chi = tmp_chi
       call timer_stop('MGsolver_2d')
 
-#if defined (PETSC)
-      call timer_start('petsc_2d')
-      call petsc_solve_psi(PSI)
-      call bound_arb(1,PSI)
-
-      call petsc_solve_chi(CHI)
-      call bound_arb(1,CHI)
-      call timer_stop('petsc_2d')
 #endif
 
       END SUBROUTINE direct_xy

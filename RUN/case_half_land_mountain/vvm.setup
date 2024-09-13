@@ -67,6 +67,7 @@ cat > definesld.com << 'END1'
 #define TOPOGRAPHY
 #define LSM
 #define RADCODE
+#define PETSC
 'END1'
 cat definesld.com
 #define DIAG

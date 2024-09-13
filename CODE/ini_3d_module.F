@@ -273,7 +273,9 @@ CONTAINS
                  -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
 
+#if defined (PETSC)
       CALL petsc_solver_initialize(petsc_cr)
+#endif
 
       restart_read: IF (.false.)THEN
 
