@@ -72,6 +72,7 @@ cat definesld.com
 #define MICROP3
 #define LSM
 #define RADCODE
+#define PETSC
 
 # Grid parameter declarations.
 # changed from 'cat' to 'sed' - DD 2010.02.09

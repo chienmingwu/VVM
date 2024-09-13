@@ -67,12 +67,12 @@ cat > definesld.com << 'END1'
 #define TOPOGRAPHY
 #define LSM
 #define RADCODE
-#define PETSC
 'END1'
 cat definesld.com
 #define DIAG
 #define AREAMN
 #define CHEM
+#define PETSC
 
 # Grid parameter declarations.
 # changed from 'cat' to 'sed' - DD 2010.02.09
