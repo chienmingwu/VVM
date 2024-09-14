@@ -125,9 +125,20 @@ real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6) :: routput_user
 
 
 
-! options for taiwanvvm
-!taiwanvvm=.true.       ! read taiwanvvm information (500 m spatial resolution)
+dum1=0.
+DOMAIN=15000.
+ZB=0.
 
+namelist /INPUT3/ DX,DYNEW,DZ,DZ1,ZB,DOMAIN,DT,NOTURB,NOSFX,NSFLUX,ALADV,UVTAU
+open(unit=15,file='INPUT',form='formatted')
+read(15, INPUT3)
+close(15)
+
+call USER_set_vertical_coordinate
+
+
+! options for taiwanvvm or idealized, set in user_module.F
+!taiwanvvm=.true.       ! read taiwanvvm information (500 m spatial resolution)
 CALL USER_set_topography_and_land_type(taiwanvvm, ioutput_user, routput_user)
 write(*,*) "TOPO: Is taiwanvvm ... ", taiwanvvm
 
@@ -143,17 +154,6 @@ if ((mi_glob<1024/f_coarse_taiwanvvm .or. &
   write(*,*) "MI_glob=",mi_glob,",MJ_glob=",mj_glob
   write(*,*) "nx_tw=",1024/f_coarse_taiwanvvm,",ny_tw=",1024/f_coarse_taiwanvvm
 endif
-
-dum1=0.
-DOMAIN=15000.
-ZB=0.
-
-namelist /INPUT3/ DX,DYNEW,DZ,DZ1,ZB,DOMAIN,DT,NOTURB,NOSFX,NSFLUX,ALADV,UVTAU
-open(unit=15,file='INPUT',form='formatted')
-read(15, INPUT3)
-close(15)
-
-call USER_set_vertical_coordinate
 
 if (taiwanvvm) then
   ! read TaiwanVVM data
