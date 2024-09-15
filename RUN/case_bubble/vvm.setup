@@ -85,7 +85,7 @@ set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
 sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/32/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/60/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
