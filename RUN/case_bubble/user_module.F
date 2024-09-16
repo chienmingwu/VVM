@@ -39,13 +39,14 @@ CONTAINS
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
 
-      INTEGER(KIND=int_kind), PARAMETER :: nt1=3
+      INTEGER(KIND=int_kind), PARAMETER :: nt1=2
       REAL(KIND=dbl_kind),    DIMENSION(nt1) :: P1(nt1), T1(nt1), QV1(nt1)
+      INTEGER(KIND=int_kind) :: k
 
       ! stable enviroment
-      DATA P1/1000., 100., 86/
-      DATA T1/300.,  280., 190/
-      DATA QV1/3*1.e-15/
+      DATA P1/1000., 500./
+      DATA T1/300.,  250./
+      DATA QV1/2*1.e-15/
 
       SST=300.
       P1 = P1*100.

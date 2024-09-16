@@ -7,7 +7,7 @@
 #SBATCH -n total_cores    # Run a single task
 #SBATCH -o expname%j.out  # output file
 #SBATCH -e expname%j.err  # error file
-#SBATCH --nodelist=mogamd
+##SBATCH --nodelist=mogamd
 
 module purge
 
