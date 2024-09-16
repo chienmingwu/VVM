@@ -258,7 +258,9 @@ PROGRAM ldmain
     call timer_stop('total vvm')
     if(my_task == 0) call timer_write('vvm')
 !-----------------------------------------------------------------------
+#if defined (PETSC)
     CALL petsc_solver_finalize
+#endif
     CALL PETSCFINALIZE(mpierr)
 !-----------------------------------------------------------------------
 
