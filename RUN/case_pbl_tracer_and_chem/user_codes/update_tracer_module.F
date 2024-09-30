@@ -108,7 +108,8 @@ CONTAINS
              TC3D(I,J,idx500m,3) = TC3D(I,J,idx500m,3) + &
                                      TCtpp * Pass_small_dt  ! tracer
         ENDIF
-  988 ENDDO
+      ENDDO
+      ENDDO
 
 !!        ! remove around the boundaries
 !!        DO j = mjm, mjp

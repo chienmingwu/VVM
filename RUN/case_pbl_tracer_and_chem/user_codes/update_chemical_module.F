@@ -120,8 +120,8 @@ CONTAINS
       TCtpp = 5
 
       ! source
-      DO 988 J = mjm, mjp
-      DO 988 I = mim, mip
+      DO J = mjm, mjp
+      DO I = mim, mip
         tempim = mi1*ni_sbdm+i
         tempjm = mj1*nj_sbdm+j
         IF ( (tempim .EQ. INT(mi_glob/4)+1) .and. &
@@ -136,7 +136,8 @@ CONTAINS
                                      TCtpp * Pass_small_dt * 0.1 ! NO2 
         ENDIF
         
- 988 ENDDO
+      ENDDO
+      ENDDO
 
 
 !!        ! remove around the boundaries
