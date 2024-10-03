@@ -487,7 +487,7 @@ CONTAINS
 !-----7---------------------------------------------------------------72
    SUBROUTINE land_ini(hx,tg)
    use pnetcdf
-   USE petscsys
+   USE mpi
 
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(IN) :: hx
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp), INTENT(INOUT) :: tg
