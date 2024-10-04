@@ -73,7 +73,6 @@ cat definesld.com
 #define AREAMN
 #define RADCODE
 #define CHEM
-#define PETSC
 
 # Grid parameter declarations.
 # changed from 'cat' to 'sed' - DD 2010.02.09
