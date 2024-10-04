@@ -142,6 +142,7 @@ endif
 
 tol_fac=2.0_dbl_kind**(-1.0_dbl_kind-dble(iter)/30.0_dbl_kind)
 nsmooth=5
+norm=0.
 
 if (nlevel==0) then
   call CG(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,norm,tol,max_iter,idum1)
