@@ -628,7 +628,7 @@ CONTAINS
                     QGR    = qg3d(i,j,k) * rho(k)
                     RHOFAC = SQRT( 1.1   / rho(k)  ) 
                     if (  qr3d(i,j,k) > 1E-8 ) then
-                        vtr_now =  min( VCONR * QRR ** 0.2 * RHOFAC , 10. ) 
+                        vtr_now =  min( VCONR * QRR ** 0.4 * RHOFAC , 10. ) 
                     end if
                     if (  qg3d(i,j,k) > 1E-8 ) then
                         vtg_now =  min( VCONG * QGR **0.125000 / DSQRT(rho(k)) , 20.0_8 )

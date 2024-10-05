@@ -57,7 +57,7 @@ CONTAINS
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
 
       IF (.false.) THEN ! Der test for rcemip
-      IF (CRAD.NE.0.) THEN
+!      IF (CRAD.NE.0.) THEN
 !     Gravity Wave Damping (Rayleigh type)
 !-----------------------------------------
       DO 700 K = NK2-4, NK2
