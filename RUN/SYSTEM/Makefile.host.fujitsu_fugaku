@@ -78,7 +78,7 @@ INC = -I$(CDECKS) -I$(EXPDIR) $(include_netcdf) $(include_netcdff) $(include_pne
 
 FC = mpifrtpx -O3 -fw -KPIC,ocl,preex,optmsg=2,loop_fission,auto,threadsafe -X03 -Ncompdisp -x-
 
-LDLIBS = $(link_petsc) $(link_netcdff) $(link_netcdf) $(link_pnetcdf) $(link_hdf5) -L/opt/FJSVxtclanga/tcsds-1.2.37/lib64 -lfjprofmpi -lmpi_cxx -lfjcrt -lfjc++ -lfjc++abi
+LDLIBS = $(link_petsc) $(link_netcdff) $(link_netcdf) $(link_pnetcdf) $(link_hdf5) -L/opt/FJSVxtclanga/tcsds-1.2.40/lib64 -lfjprofmpi -lmpi_cxx -lfjcrt -lfjc++ -lfjc++abi
 
 FFLAGS    = $(INC)
 FIXED     = -Fixed 
