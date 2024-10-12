@@ -1,0 +1,25 @@
+#!/usr/bin/bash
+###SBATCH -J expname        # Job name
+#####SBATCH -A MST109184      # Account number
+###SBATCH -p all          # job partition
+###SBATCH -N np_nodes       # Run all processes on a single node	
+###SBATCH -c 1              # cores per MPI rank
+###SBATCH -n total_cores    # Run a single task
+###SBATCH -o expname%j.out  # output file
+###SBATCH -e expname%j.err  # error file
+
+export PATH=/opt/bin:$PATH
+export LD_LIBRARY_PATH=/opt/lib:$LD_LIBRARY_PATH
+
+ulimit -s unlimited
+
+export EXPHDR_tmp='expname ../../DATA/expname'
+
+date > runtime
+
+mpirun -np 1 ./create_topolsm
+mpirun -np total_cores ./vvm < INPUT | tee OUTPUT  
+
+date >> runtime
+
+
