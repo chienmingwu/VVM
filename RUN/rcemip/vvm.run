@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = rcemip_mg_large_1
+set expname = rcemip_mg_large_1_1
 
 # set job system and compiler
 set compiler = 'fujitsu_fugaku'
