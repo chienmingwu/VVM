@@ -548,21 +548,21 @@
       insolation_TOA(i,j) = swDown(1,nzrad-k+3) ! shortwave down at TOA
       swDownSurface(i,j) = swDown(1,k) ! shortwave down at surface
 
-      NetswUpToa(i,j) = swUp(1,nzrad-k+3) - swDown(1,nzrad-k+3) ! net shortwave up at TOA
+      NetswUpToa(i,j) = swUp(1,nzrad-k+3) ! - swDown(1,nzrad-k+3) ! net shortwave up at TOA
 
-      NetswDownToa(i,j) = swDown(1,nzrad-k+3) - swUp(1,nzrad-k+3) ! net shortwave down at TOA
+      NetswDownToa(i,j) = swDown(1,nzrad-k+3) ! - swUp(1,nzrad-k+3) ! net shortwave down at TOA
       NetswDownToaClearSky(i,j) = swDownClearSky(1,nzrad-k+3) - swUpClearSky(1,nzrad-k+3) ! net clearsky shortwave down at TOA
 
-      NetswDownSurface(i,j) = swDown(1,k) - swUp(1,k) ! net shortwave down at surface
+      NetswDownSurface(i,j) = swDown(1,k) ! - swUp(1,k) ! net shortwave down at surface
       NetswDownSurfaceClearSky(i,j) = swDownClearSky(1,k) - swUpClearSky(1,k) ! net clearsky shortwave down at surface
 
       ! longwave fluxes at top-of-atmosphere (TOA) and surface -- NOTE POSITIVE UPWARDS
       lwDownSurface(i,j) = lwDown(1,k) ! longwave down at surface
 
-      NetlwUpToa(i,j) = lwUp(1,nzrad-k+3) - lwDown(1,nzrad-k+3) ! net longwave up at TOA
+      NetlwUpToa(i,j) = lwUp(1,nzrad-k+3) ! - lwDown(1,nzrad-k+3) ! net longwave up at TOA
       NetlwUpToaClearSky(i,j) = lwUpClearSky(1,nzrad-k+3) - lwDownClearSky(1,nzrad-k+3) ! net clearsky longwave up at TOA
 
-      NetlwUpSurface(i,j) = lwUp(1,k) - lwDown(1,k) ! net longwave up at surface
+      NetlwUpSurface(i,j) = lwUp(1,k) !- lwDown(1,k) ! net longwave up at surface
       NetlwUpSurfaceClearSky(i,j) = lwUpClearSky(1,k) - lwDownClearSky(1,k) ! net clearsky longwave up at surface
 
  1000 continue ! j = 1,ny

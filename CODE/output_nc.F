@@ -11,7 +11,7 @@ USE parmsld
 USE constld
 USE workcom
 USE domain_decomposition
-USE petscsys
+USE mpi
 
 #if defined (PARALLELIO)
  USE pnetcdf

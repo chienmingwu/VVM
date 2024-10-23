@@ -3,7 +3,7 @@ MODULE domain_decomposition
 
    use kinds
    use parmsld
-   use petscsys  
+   use mpi  
  
    IMPLICIT NONE
    PRIVATE
@@ -69,14 +69,14 @@ MODULE domain_decomposition
       nl_sbdm(nsbdm_x,nsbdm_y)  ! inverse mapping to the above
 
 
-   call MPI_COMM_RANK(PETSC_COMM_WORLD, my_task, mpierr)
+   call MPI_COMM_RANK(MPI_COMM_WORLD, my_task, mpierr)
    call MPI_comm_size(MPI_COMM_WORLD, i,mpierr)
    IF (i .NE. ntasks) THEN
    IF (MY_TASK .EQ. 0) THEN
    PRINT*, 'The number of porcessors =/= zonal_decomposition*merid_decomposition'
    PRINT*, 'Please check the vvm.setup'
    ENDIF
-   CALL PETSCFINALIZE(mpierr)
+   CALL mpi_finalize(mpierr)
    STOP
    ENDIF
 
@@ -85,7 +85,7 @@ MODULE domain_decomposition
    PRINT*, 'bad cores and grid for horizontal dimension.'
    PRINT*, 'Please check the vvm.setup'
    ENDIF
-   CALL PETSCFINALIZE(mpierr)
+   CALL mpi_finalize(mpierr)
    STOP
    ENDIF
 
