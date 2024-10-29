@@ -19,10 +19,9 @@ USE TURB_3D_module
 #if defined (RADCODE)
 USE rrtm_vars, only: sstxy,albdo
 #endif 
-USE petscsys
+USE mpi
 USE pnetcdf
 USE wind_module
-USE petsc_vvm_solver, only: petsc_solver_initialize
 USE user_module, only: USER_set_mean_profile_and_SST, &
                        USER_set_vertical_coordinate, &
                        USER_set_3D_perturbation
@@ -275,8 +274,6 @@ CONTAINS
       Z3DX(I,J,K)=(W3D(I,J+1,K)-W3D(I,J,K))/DYNEW &
                  -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
-
-      CALL petsc_solver_initialize(petsc_cr)
 
       restart_read: IF (.true.)THEN
 
