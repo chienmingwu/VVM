@@ -91,8 +91,7 @@ PROGRAM ldmain
     USE time_manager_module
     USE timer
     USE domain_decomposition
-    USE petscsys
-    USE petsc_vvm_solver, only: petsc_solver_finalize
+    USE mpi
     USE vertical_adaptive
 
     IMPLICIT NONE
@@ -119,8 +118,7 @@ PROGRAM ldmain
 
 !-----------------------------------------------------------------------
 ! Initialize MPI environment and domain decomposition
-!      call MPI_INIT(mpierr)
-    CALL PetscInitialize(PETSC_NULL_CHARACTER,mpierr)
+    call mpi_init(mpierr)
     call domain_init
 
     call timer_start('total vvm')
@@ -258,8 +256,7 @@ PROGRAM ldmain
     call timer_stop('total vvm')
     if(my_task == 0) call timer_write('vvm')
 !-----------------------------------------------------------------------
-    CALL petsc_solver_finalize
-    CALL PETSCFINALIZE(mpierr)
+    call mpi_finalize(mpierr)
 !-----------------------------------------------------------------------
 
 END PROGRAM ldmain

@@ -17,8 +17,7 @@ USE timeinterp
 USE bound
 USE new_output_nc
 USE wind_module
-USE petscsys
-USE petsc_vvm_solver, only: petsc_solver_initialize
+USE mpi
 
 !#if defined (PARALLELIO)
  USE pnetcdf
@@ -356,7 +355,6 @@ CONTAINS
    ELSE  ! if newrun
       if(my_task == 0) write(6,*) 'ITTGET=',ITTGET,' MAXITT=',MAXITT,'ITT=',ITT
 
-      CALL petsc_solver_initialize(petsc_cr)
    endif
 
       ITTMAX = MAXITT

@@ -101,8 +101,8 @@ cat > INPUT << 'END6'
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=60,NWR11=1,NFLPRT=1,NRESTART=60,niterw=200,niterxy=200,multilevel=3,tol_2d=1.e-6,tol_3d=1.e-8 /
-#         ( case output frequency)   ( result could be seen in ncfile)
- &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
+#         ( case output frequency)                    sub-domain size/(2^multilevel) should be greater than 8*8
+ &INPUT5 IX=3182073,ITINIT=0,ITSTOP=10,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'
 cat INPUT

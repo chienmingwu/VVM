@@ -31,7 +31,7 @@ USE land_module
 #endif
 #endif
 #endif
-USE petscsys
+USE mpi
 #if defined (CHEM)
 use modchem, only: chem_name_list
 #endif

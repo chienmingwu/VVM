@@ -4,7 +4,7 @@ USE constld
 USE const3d
 USE parmsld
 USE kinds
-USE petscsys
+USE mpi
 
 IMPLICIT NONE
 

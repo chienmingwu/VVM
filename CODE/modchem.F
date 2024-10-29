@@ -6,7 +6,7 @@ use PARMSLD, i1=>mi1, j1=>mj1, kmax=>nk1, k1=>nk1, nprocs=>ntasks, &
              ih=>nhalo, jh=>nhalo, imax=>MI_glob, jmax=>MJ_glob
 use CONSTLD, only : rlv=>hlf, cp, pi
 use domain_decomposition, myid=>my_task, my_real=>mpi_real_kind
-use petscsys, comm3d=>MPI_COMM_WORLD
+use mpi, comm3d=>MPI_COMM_WORLD
 use user_module, only: USER_set_chem_reaction_file
                           
 ! version 1.0  3 chem_components on input and  4 on output but only interger coefficents.

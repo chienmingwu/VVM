@@ -19,10 +19,9 @@ USE TURB_3D_module
 #if defined (RADCODE)
 USE rrtm_vars, only: sstxy,albdo
 #endif 
-USE petscsys
+USE mpi
 USE pnetcdf
 USE wind_module
-USE petsc_vvm_solver, only: petsc_solver_initialize
 USE user_module, only: USER_set_mean_profile_and_SST, &
                        USER_set_vertical_coordinate, &
                        USER_set_3D_perturbation
@@ -52,7 +51,7 @@ CONTAINS
       INTEGER (KIND=int_kind) :: &
          i, j, k, & ! do loop indices for zonal, meridional and vertical dimensions
          n          ! time level index
-      REAL (KIND=int_kind) :: temp(NK2),tempim
+      REAL (KIND=int_kind) :: temp(NK2)
 
       CHARACTER(200) :: thermodynamic_file, dynamic_file, tg_file, topo_file
 
@@ -115,9 +114,6 @@ CONTAINS
       DO 300 I = mim,mip
       GWET(I,J)  = -1.
       TG(I,J)=SST
-!     tempim=dble(mi1*ni_sbdm+i)
-!      pi = 4._8 * atan(1._8)
-!      TG(i,j)=300.-1.0*1.25/2.*cos(2*pi*tempim/2048.)   !512 points in x direction
       if (hx(I,J) .GT. 1) TG(I,J) = THBAR(INT(hx(I,J)))*pibar(hx(I,J))
       ZROUGH(I,J)= ZRSEA
   300 CONTINUE
@@ -276,9 +272,7 @@ CONTAINS
                  -(U3DY(I,J,K+1)-U3DY(I,J,K))*FNZ(K)/DZ
   660 CONTINUE
 
-      CALL petsc_solver_initialize(petsc_cr)
-
-      restart_read: IF (.true.)THEN
+      restart_read: IF (.false.)THEN
 
 !   restart( thermodynamic_file (absolute path) , hydrometer , 
 !            dynamic_variables , {optional} dynamic_file (absolute path) )
@@ -291,10 +285,11 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/vol0500/data/hp230108/u12035/VVM/DATA/rcemip_mg_1p25_1/archive/&
-              &rcemip_mg_1p25_1.L.Thermodynamic-000151.nc"
-      dynamic_file = "/vol0500/data/hp230108/u12035/VVM/DATA/rcemip_mg_1p25_1/archive/&
-              &rcemip_mg_1p25_1.L.Dynamic-000151.nc" 
+      thermodynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
+              &tcvvm_qobs_large_uras.L.Thermodynamic-000030.nc"
+
+      dynamic_file = "/work/peter50504/VVM/DATA/tcvvm_qobs_large_uras/archive/&
+              &tcvvm_qobs_large_uras.L.Dynamic-000030.nc" 
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 

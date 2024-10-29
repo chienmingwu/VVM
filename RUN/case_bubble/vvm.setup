@@ -84,7 +84,7 @@ set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
 sed -i 's/zonal_dimension/512/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/32/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/60/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
@@ -101,7 +101,7 @@ cat > INPUT << 'END6'
  &INPUT3 DX=100.,DYNEW=100.,DZ=100.,DZ1=100.,DT=0.1,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=100,NWR11=1,NFLPRT=1,NRESTART=60,niterw=200,niterxy=200,multilevel=2,tol_2d=1.e-8,tol_3d=1.e-10 /
-#         ( case output frequency)   ( result could be seen in ncfile)
+#         ( case output frequency)                    sub-domain size/(2^multilevel) should be greater than 8*8
  &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=6.,Q1Q2=F,DTRAD=120.,petsc_cr=0 /
 #                                                              (s)
 'END6'

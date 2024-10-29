@@ -4,7 +4,7 @@ use parmsld, only: nhalo, ntasks
 use constld, only: rhou, rhoz, fnu, fnz
 use domain_decomposition, only: my_task,nsbdm_n,nsbdm_e,nsbdm_s,nsbdm_w &
                                        ,nsbdm_nw,nsbdm_ne,nsbdm_se,nsbdm_sw
-use petscsys
+use mpi
 implicit none
 
 
@@ -142,6 +142,7 @@ endif
 
 tol_fac=2.0_dbl_kind**(-1.0_dbl_kind-dble(iter)/30.0_dbl_kind)
 nsmooth=5
+norm=0.
 
 if (nlevel==0) then
   call CG(ndim,phi,nx,ny,nz,nzs,nze,dx,dy,dz,f,norm,tol,max_iter,idum1)

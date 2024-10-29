@@ -8,7 +8,7 @@ MODULE utils
 #if defined (MPI)
    USE parmsld, only : mi_glob, mj_glob
    USE domain_decomposition
-   USE petscsys
+   USE mpi
 #endif
    
    IMPLICIT NONE
