@@ -8,7 +8,7 @@ USE kinds
 USE parmsld
 USE const3d
 USE domain_decomposition
-USE petscsys
+USE mpi
 
 IMPLICIT NONE
 PRIVATE
