@@ -291,10 +291,10 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/vol0500/data/hp230108/u12035/VVM/DATA/rcemip_mg_1p25_1/archive/&
-              &rcemip_mg_1p25_1.L.Thermodynamic-000151.nc"
-      dynamic_file = "/vol0500/data/hp230108/u12035/VVM/DATA/rcemip_mg_1p25_1/archive/&
-              &rcemip_mg_1p25_1.L.Dynamic-000151.nc" 
+      thermodynamic_file = "/vol0500/data/hp230108/u12035/VVM/DATA/rcemip_mg_1p25/archive/&
+              &rcemip_mg_1p25.L.Thermodynamic-000196.nc"
+      dynamic_file = "/vol0500/data/hp230108/u12035/VVM/DATA/rcemip_mg_1p25/archive/&
+              &rcemip_mg_1p25.L.Dynamic-000196.nc" 
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
@@ -361,10 +361,10 @@ CONTAINS
       call turb_3d_ini
 #endif
 
-      TG_restart: IF (.false.)THEN
+      TG_restart: IF (.true.)THEN
 
-      tg_file = "/data2/C.peter50504/VVM/DATA/uras_landsea_1800/archive/&
-                 uras_landsea_1800.C.Surface-000192.nc"
+      tg_file = "/vol0500/data/hp230108/u12035/VVM/DATA/rcemip_mg_1p25/archive/&
+                 rcemip_mg_1p25.C.Surface-000196.nc"
       topo_file = "TOPO.nc"
 
       call SST_RESTART(tg_file,topo_file)

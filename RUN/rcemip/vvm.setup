@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rcemip_mg_large_1_3
+set expname = rcemip_mg_large_1_4
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -84,7 +84,7 @@ set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
 sed -i 's/zonal_dimension/2048/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/2048/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/128/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/64/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/75/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
@@ -100,7 +100,7 @@ cat > INPUT << 'END6'
  &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=3000.,DYNEW=3000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360,niterw=100,niterxy=200,multilevel=2,tol_2d=1.e-6,tol_3d=1.e-8 /
+ &INPUT4 NXS=1,NXSAVG=360,NWR11=1,NFLPRT=1,NRESTART=360,niterw=200,niterxy=200,multilevel=2,tol_2d=1.e-6,tol_3d=1.e-8 /
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=0.,Q1Q2=F,DTRAD=300.,petsc_cr=0 /
 #                                                              (s)

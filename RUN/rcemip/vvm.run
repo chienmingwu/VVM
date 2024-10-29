@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = rcemip_mg_large_1_3
+set expname = rcemip_mg_large_1_4
 
 # set job system and compiler
 set compiler = 'fujitsu_fugaku'
@@ -54,9 +54,9 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/expname.err/'${expname}'.err/g' \
     -e 's/expname/'${expname}'/g' \
     -e 's/walltime/72:00:00/g' \
-    -e 's/np_nodes/171/g' \
-    -e 's/np_threads/8192/g' \
-    -e 's/total_cores/8192/g' ${blddir}/run.sh.${jobsys} > ${expdir}/run.sh
+    -e 's/np_nodes/86/g' \
+    -e 's/np_threads/4096/g' \
+    -e 's/total_cores/4096/g' ${blddir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
 pjsub run.sh
