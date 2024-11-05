@@ -229,7 +229,7 @@ CONTAINS
       ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
    50 CONTINUE
 
-      filename="/home/u12035/snd_rcemip_anal300_v3"
+      filename="/home/mog/snd_rcemip_anal300_v3"
       OPEN(939,FILE=trim(filename))
       READ(939,*)
       DO k=1,nk2-1
