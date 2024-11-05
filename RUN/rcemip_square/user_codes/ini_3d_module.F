@@ -279,7 +279,7 @@ CONTAINS
   660 CONTINUE
 
 
-      restart_read: IF (.false.)THEN
+      restart_read: IF (.true.)THEN
 
 !   restart( thermodynamic_file (absolute path) , hydrometer , 
 !            dynamic_variables , {optional} dynamic_file (absolute path) )
@@ -292,10 +292,10 @@ CONTAINS
 !        >>>> read all dynamic variables
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
-      thermodynamic_file = "/vol0500/data/hp230108/u12035/VVM/DATA/rcemip_mg_large_1_3/archive/&
-              &rcemip_mg_large_1_3.L.Thermodynamic-000037.nc"
-      dynamic_file = "/vol0500/data/hp230108/u12035/VVM/DATA/rcemip_mg_large_1_3/archive/&
-              &rcemip_mg_large_1_3.L.Dynamic-000037.nc" 
+      thermodynamic_file = "/data/mog/VVM/DATA/RRCE_3km_f00/archive/&
+              &RRCE_3km_f00.L.Thermodynamic-000720.nc"
+      dynamic_file = "/data/mog/VVM/DATA/RRCE_3km_f00/archive/&
+              &RRCE_3km_f00.L.Dynamic-000720.nc" 
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
