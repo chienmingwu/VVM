@@ -1,0 +1,1429 @@
+#include "definesld.com"
+MODULE new_ldoutput_nc
+
+! this module contains the I/O routines related to writing the VVM NetCDF output
+
+!USE netcdf
+USE pnetcdf
+
+USE kinds
+USE parmsld
+USE constld
+USE workcom
+USE const3d
+USE cldinfo
+USE profoutld
+USE radoutld
+USE timeinfo
+USE utils
+USE domain_decomposition
+USE gather_scatter
+USE timeinterp
+USE new_output_nc
+USE ldoutput
+#if defined (DIFFUSION)
+USE TURB_3D_module
+#if defined (LSM)
+#if defined (KPP)
+USE land_module, Tocean=>To, Uocean=>Uo, Vocean=>Vo 
+#else
+USE land_module 
+#endif
+#endif
+#endif
+USE mpi
+#if defined (CHEM)
+use modchem, only: chem_name_list
+#endif
+
+
+      
+IMPLICIT NONE
+PRIVATE
+
+
+      INTEGER (KIND=int_kind), PARAMETER ::             &
+         IVAR1=6,IVAR2=6,IVAR3=1,IVAR4=ntracer,IVAR5=7, & ! number of fields in
+         IVAR6=6,IVAR7=3,IVAR8=2,IVAR9=15,IVAR10=62        !  each output variable class
+
+! *** FOR DATA STORAGE FILE MANAGEMENT
+      CHARACTER*50 F_HEADER
+      CHARACTER*8 FILNAM
+      CHARACTER*50 FILENAME
+
+      REAL (KIND=real_kind) :: C_s(80)
+!      INTEGER (KIND=int_kind), public :: IC_s(60)
+!      REAL (KIND=dbl_kind), public :: C_8(80)
+!      LOGICAL (KIND=log_kind), public :: LC_s(40)
+
+! This statement controls the type for the binary output. The default
+!   is the 4byte real_kind so that the post-processing can run on it,
+!   but the option for 8byte reals allows bit-for-bit comparison of output
+!   during testing
+      INTEGER (KIND=int_kind), PARAMETER :: tm_kind = real_kind
+!      INTEGER (KIND=int_kind), PARAMETER :: tm_kind = dbl_kind
+
+!   REAL (KIND=dbl_kind), PUBLIC ::  &
+!      iobuffh(1-nhalo:mi_glob+nhalo,1-nhalo:mj_glob+nhalo,nk3)  ! halo
+
+!   REAL (KIND=dbl_kind), PUBLIC ::  &
+!      iobuff(mi_glob,mj_glob,nk2,2) ! no halo
+
+! *** storage arrays for time-average physical output
+      REAL (KIND=tm_kind) ::            &
+         STD_TM5(mi1,mj1,IVAR5),        &
+#if defined (HEATING)
+         STD_TM55(mi1,mj1,nk2,4),       &
+#endif
+#if defined (DIAG)
+         STD_TMD2(mi1,mj1,ndiag_2d),    &
+         STD_TMD3(mi1,mj1,nk2,ndiag_3d),&
+#endif
+         STD_RAD(mi1,mj1,nk2,8)
+#if defined (RAS)
+      REAL (KIND=tm_kind) ::            &
+         STD_TM92(mi1,mj1),             &
+         STD_TM91(mi1,mj1,nk2,2)
+#endif
+
+#if defined (DIFFUSION) 
+#if defined (LSM)
+      REAL (KIND=tm_kind) :: STD_LSM(mi1,mj1,IVAR10)
+#if defined (KPP)
+      REAL (KIND=tm_kind) :: STD_KPP(mi1,mj1,olev,3), &
+                             STD_KPP_2d(mi1,mj1,1)
+#endif
+#endif
+#endif
+
+!========
+! *** FOR STANDARD MEAN PROFILE DATA (P-FILE) temporary storage array
+      REAL (KIND=tm_kind) :: OUT_TM9(NK3,IVAR9)
+      INTEGER (KIND=int_kind) :: isample
+
+
+   INTEGER (KIND=int_kind), DIMENSION(1), PUBLIC :: &
+      time_start
+
+! NetCDF restart ids
+      integer (KIND=int_kind), public :: &
+          ncid_rst, ncid_rst_tend
+          
+! public member functions
+
+PUBLIC ::         &
+   rstart_nc, &
+   xsec_cdf
+
+CONTAINS
+
+!==============================================================================
+   SUBROUTINE rstart_nc ( ITT, LTP_RST )
+!==============================================================================
+
+      INTEGER (KIND=int_kind), INTENT(IN) :: &
+          itt, ltp_rst
+          
+! *** FOR DATA STORAGE FILE MANAGEMENT
+      REAL (KIND=real_kind) :: time_l, time_prev
+      REAL (KIND=real_kind), dimension(2) :: time_temp
+      INTEGER (KIND=int_kind) :: nt,         &
+                                 ITT_OUTPUT    ! model output step 
+! *** FOR RESTART DATA temporary storage array
+      REAL (KIND=dbl_kind) :: OUT_TMR(1:mi1,1:mj1,NK2)
+      integer (kind=mpi_offset_kind), dimension(5) :: start, count
+      real(kind=dbl_kind) :: dtem(1)
+      real(kind=real_kind) :: rtem(1)
+
+!JH   The fort number (LTP_RST) 13 is given to generate "...E01". 
+
+        TIME_L = ITT * DT / 60. 
+        time_prev = (ITT-1) * DT / 60.
+        if(my_task == 0) write(6,*) 'write restart at time_l=',time_l
+        write(unit=timestamp_string,fmt='(i6.6)')nint(time_l/60.)
+
+      IF (.FALSE.) THEN
+
+      if(my_task == 0) then
+          CALL OUTCON_RESTART ( 8 )
+
+          open(unit=3,file='restart_timestamp',form='formatted')
+            write(3,'(a6)')trim(timestamp_string)
+          close(3)
+      endif
+
+!------------------------------------------------------------------------------
+! Create NetCDF restart dataset
+
+        ITT_OUTPUT = INT( ITT / NXSAVG )       
+
+        call fname_nc(ltp_rst, EXPHDR, 'rst1_'//timestamp_string, ITT_OUTPUT, filnam_nc)
+        nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_rst)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst)
+
+        call fname_nc(ltp_rst, EXPHDR, 'rst2_'//timestamp_string, ITT_OUTPUT, filnam_nc)
+        nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
+                            mpi_info_null, ncid_rst_tend)
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst_tend)
+        
+        if (my_task == 0) write(6,*) 'rstart_nc: ncid_rst, ncid_rst_tend = ',ncid_rst,ncid_rst_tend
+
+!------------------------------------------------------------------------------
+! Initialize NetCDF coordinate axes and attributes
+
+! Real-time variables (fields contain halo points)
+        call pcdf_ini_rstart(ncid_rst, 1, &
+                            nk2, &
+                            mj_glob, &
+                            mi_glob, &
+                            ZT(1:nk3), ZZ(1:nk2), YT, YZ, XT, XZ)
+
+! Tendency terms (no halo points)
+        call pcdf_ini_tend_rstart(ncid_rst_tend, &
+                                 nk2, &
+                            mj_glob, &
+                            mi_glob, &
+                                 ZT(1:nk2), ZZ(1:nk2), YT, YZ, XT, XZ)
+ 
+
+!!------------------------------------------------------------------------------
+      nc_err = nfmpi_begin_indep_data(ncid_rst)
+      if(my_task == 0) then
+! Inquire time id and store time
+        nc_err = nfmpi_put_var_real(ncid_rst, time_id_rst, rtem )
+        time_l = rtem(1)
+        if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid_rst, time_id_rst)
+
+
+! store iwrite
+        nc_err = nfmpi_put_var_int(ncid_rst, iwrite_id_rst, iwrite )
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst)
+! store ifile
+        nc_err = nfmpi_put_var_int(ncid_rst, ifile_id_rst, ifile )
+        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid_rst)
+      endif
+      nc_err = nfmpi_end_indep_data(ncid_rst)
+
+      nc_err = nfmpi_begin_indep_data(ncid_rst_tend)
+      if(my_task == 0) then
+        time_temp = (/time_prev, time_l/)
+        nc_err = nfmpi_put_var_real(ncid_rst_tend, time_id_rst_tend, time_temp)
+        if (nc_err /= NF90_NOERR) call check_err2(nc_err, ncid_rst_tend, time_id_rst_tend)
+      endif
+      nc_err = nfmpi_end_indep_data(ncid_rst_tend)
+
+!------------------------------------------------------------------------------
+
+      start(1) = ni_sbdm*mi1 + 1
+      start(2) = nj_sbdm*mj1 + 1
+      start(3) = 1
+      count(1:3) = (/mi1,mj1,nk2/)
+
+! TH3D
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, th3d_id_rst,       &
+                  start(1:3), count(1:3), th3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+! Vorticity vector      
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, z3dx_id_rst,       &
+                  start(1:3), count(1:3), z3dx(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, z3dy_id_rst,       &
+                  start(1:3), count(1:3), z3dy(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, z3dz_id_rst,       &
+                  start(1:3), count(1:3), z3dz(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+#if defined (PHYSICS)
+! Water variables
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qv3d_id_rst,       &
+                  start(1:3), count(1:3), qv3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qc3d_id_rst,       &
+                  start(1:3), count(1:3), qc3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qr3d_id_rst,       &
+                  start(1:3), count(1:3), qr3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qi3d_id_rst,       &
+                  start(1:3), count(1:3), qi3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+#if defined (MICROP3)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, nc3d_id_rst,       &
+                  start(1:3), count(1:3), nc3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, nr3d_id_rst,       &
+                  start(1:3), count(1:3), nr3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, ni3d_id_rst,       &
+                  start(1:3), count(1:3), ni3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qrim3d_id_rst,       &
+                  start(1:3), count(1:3), qrim3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, brim3d_id_rst,       &
+                  start(1:3), count(1:3), brim3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+#if defined (LIQFRACP3)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qiliq3d_id_rst,       &
+                  start(1:3), count(1:3), qiliq3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+#endif
+#else
+!QS and QG
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qs3d_id_rst,       &
+                  start(1:3), count(1:3), qs3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, qg3d_id_rst,       &
+                  start(1:3), count(1:3), qg3d(1:mi1,1:mj1,1:nk2) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+#endif
+
+#endif
+
+!------------------------------------------------------------------------------
+
+      if(ntracer > 0) then
+        start(4) = 1; count(4) = ntracer
+        nc_err = nfmpi_put_vara_double_all(ncid_rst, tc3d_id_rst,       &
+                    start(1:4), count(1:4), tc3d(1:mi1,1:mj1,1:nk2,1:ntracer) )
+      endif
+
+#if defined (CHEM)
+!---- CHEM -------------
+      start(4) = 1; count(4) = nchem
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, chem3d_id_rst,       &
+                  start(1:4), count(1:4), chem3d(1:mi1,1:mj1,1:nk2,1:nchem) )
+!---- CHEM end ---------
+#endif 
+
+!------------------------------------------------------------------------------
+! Surface fluxes, precipitation, and OLR. Surface fluxes are needed because
+! the model surface fluxes are not calculated every time step.
+
+#if defined (PHYSICS)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, uw_id_rst,       &
+                  start(1:2), count(1:2), uw(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, wv_id_rst,       &
+                  start(1:2), count(1:2), wv(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, wth_id_rst,       &
+                  start(1:2), count(1:2), wth(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, wqv_id_rst,       &
+                  start(1:2), count(1:2), wqv(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, sprec_id_rst,       &
+                  start(1:2), count(1:2), sprec(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, olr_id_rst,       &
+                  start(1:2), count(1:2), olr(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, tg_id_rst,       &
+                  start(1:2), count(1:2), tg(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+#endif
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, tg_id_rst,       &
+                  start(1:2), count(1:2), tg(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, zrough_id_rst,       &
+                  start(1:2), count(1:2), zrough(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst, gwet_id_rst,       &
+                  start(1:2), count(1:2), gwet(1:mi1,1:mj1) )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+
+!------------------------------------------------------------------------------
+! Mean velocity and arrays used for relaxation solver
+
+      nc_err = nfmpi_begin_indep_data(ncid_rst)
+      if(my_task == 0) then
+      dtem(1) = utmn
+      nc_err = nfmpi_put_var_double(ncid_rst, utmn_id_rst, dtem )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      dtem(1) = vtmn
+      nc_err = nfmpi_put_var_double(ncid_rst, vtmn_id_rst, dtem )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      endif
+      nc_err = nfmpi_end_indep_data(ncid_rst)
+      
+!------------------------------------------------------------------------------
+! Write tendency terms
+
+      count(4) = 2
+      start(4) = 1
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fth3d_id_rst,       &
+                  start(1:4), count(1:4), fth3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fzx_id_rst,       &
+                  start(1:4), count(1:4), fzx )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fzy_id_rst,       &
+                  start(1:4), count(1:4), fzy )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      count(3) = 2
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fztop_id_rst,       &
+                  start(1:3), count(1:3), fztop )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+#if defined (PHYSICS)
+
+      count(3) = nk2; count(4) = 2
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqv3d_id_rst,       &
+                  start(1:4), count(1:4), fqv3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqc3d_id_rst,       &
+                  start(1:4), count(1:4), fqc3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqr3d_id_rst,       &
+                  start(1:4), count(1:4), fqr3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqi3d_id_rst,       &
+                  start(1:4), count(1:4), fqi3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+#if defined (MICROP3)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fnc3d_id_rst,       &
+                  start(1:4), count(1:4), fnc3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fnr3d_id_rst,       &
+                  start(1:4), count(1:4), fnr3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fni3d_id_rst,       &
+                  start(1:4), count(1:4), fni3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqrim3d_id_rst,       &
+                  start(1:4), count(1:4), fqrim3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fbrim3d_id_rst,       &
+                  start(1:4), count(1:4), fbrim3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+#if defined (LIQFRACP3)
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqiliq3d_id_rst,       &
+                  start(1:4), count(1:4), fqiliq3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+#endif
+#else
+! QS and QG
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqs3d_id_rst,       &
+                  start(1:4), count(1:4), fqs3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fqg3d_id_rst,       &
+                  start(1:4), count(1:4), fqg3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+#endif
+
+#endif
+
+! Tracer tendency
+
+      if(ntracer > 0) then
+        start(5) = 1; count(5) = ntracer
+        nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, ftc3d_id_rst,       &
+                  start(1:5), count(1:5), ftc3d )
+        if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      endif
+
+#if defined (CHEM)
+! Chem tendency
+      start(5) = 1; count(5) = nchem
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fchem3d_id_rst,       &
+                start(1:5), count(1:5), fchem3d )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+#endif
+
+
+#if defined (PHYSICS)
+! Radiation tendency -- needed in restart history file because radiation is
+! not called every time step
+
+      nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fthrad_id_rst,       &
+                  start(1:3), count(1:3), fthrad )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      nc_err = nfmpi_begin_indep_data(ncid_rst_tend)
+      if(my_task == 0) then
+      nc_err = nfmpi_put_var_double(ncid_rst_tend, futmn_id_rst, FUTMN )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      nc_err = nfmpi_put_var_double(ncid_rst_tend, fvtmn_id_rst, FvTMN )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+      endif
+      nc_err = nfmpi_end_indep_data(ncid_rst_tend)
+
+#endif
+
+!------------------------------------------------------------------------------
+! TWP-ICE profiles and forcing data
+
+      SELECT CASE (TRIM(casename))
+      CASE ('TWP-ICE')
+
+      nc_err = nfmpi_begin_indep_data(ncid_rst)
+      if(my_task == 0) then
+      nc_err = nfmpi_put_var_double(ncid_rst, rdhour_id_rst, dtem(1) )
+      rdhour = dtem(1)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, thbar_id_rst, THBAR )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, qvbar_id_rst, QVBAR )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, wls_id_rst, WLS )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, q1ls_id_rst, Q1LS )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, q2ls_id_rst, Q2LS )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, z3dx0_id_rst, Z3DX0 )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, z3dy0_id_rst, Z3DY0 )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, thinc_id_rst, THINC )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, qvinc_id_rst, QVINC )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, wlsinc_id_rst, WLSINC )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, q1inc_id_rst, Q1INC )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, q2inc_id_rst, Q2INC )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, dx0inc_id_rst, DX0INC )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_put_var_double(ncid_rst, dy0inc_id_rst, DY0INC )
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      endif
+      nc_err = nfmpi_end_indep_data(ncid_rst)
+
+      END SELECT
+      
+      nc_err = nfmpi_close(ncid_rst)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
+      nc_err = nfmpi_close(ncid_rst_tend)
+      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
+
+      ENDIF      
+!sync L files when restart is done
+!ccwu out put restart file
+      IF (ITT .EQ. ITTADD) THEN
+
+      WRITE(FILENAME,'(A16,I3.3,A1,I3.3,A4)') &
+      'RUNDATA/RESTART',ni_sbdm+1,'_',nj_sbdm+1,'.dat'
+      OPEN(99,FILE=FILENAME,FORM='unformatted',STATUS='UNKNOWN')
+      WRITE(99) U3DX,U3DY,W3D,Z3DX,Z3DY,Z3DZ,TH3D,QV3D,QC3D,QR3D,QI3D,QS3D,QG3D
+      CLOSE(99)
+
+      ENDIF
+
+
+      call output_nc_sync
+
+
+!==============================================================================
+   END SUBROUTINE rstart_nc
+!==============================================================================
+
+!==============================================================================
+      SUBROUTINE XSEC_CDF ( ITT )
+!==============================================================================
+
+! Argument list variables
+      INTEGER (KIND=int_kind), INTENT(IN) ::  &
+         ITT    ! time step count
+
+      REAL (KIND=real_kind) :: TIME_L, TIME_R
+      REAL (KIND=real_kind), SAVE :: TIME_C
+
+! *** FOR STANDARD OUTPUT DATA (L-FILE) temporary storage array
+      REAL (KIND=tm_kind) :: OUT_TM1(1:mi1,1:mj1,NK2)
+
+      REAL (KIND=dbl_kind) :: time1 ! current time of run (min)
+
+      LOGICAL (KIND=log_kind) :: OPENF,COPYF, fexist
+      INTEGER (KIND=int_kind) ::   &
+         i, j, k, nt    ! do loop indices for zonal, meridional, vertical 
+                        ! and tracer dimensions
+#if defined (LSM) 
+      INTEGER (KIND=int_kind) :: ivar ! index for LSM masking out
+#endif
+      INTEGER (KIND=int_kind)     ::   &
+         n2,                           &
+         itp1, itp5,                   &  ! logical unit numbers
+         ITT_OUTPUT                       ! output step count
+      Character (LEN=2) :: trnum  ! character string for tracer number
+      REAL (KIND=real_kind) :: TIME_P
+      
+      
+      REAL (KIND=dbl_kind) ::  sfmn, fac, dtfac
+#if defined (DIAG)
+      REAL (KIND=dbl_kind) :: TH3D_O(mim:mip,mjm:mjp,nk3)
+#endif           
+      INTEGER (KIND=int_kind)     ::   ibnew, kvar , out_itt   ! mars add
+      LOGICAL first 
+      DATA IBNEW/0/, first/.true./, out_itt/-1/
+
+!------------------------------------------------------------------------------
+
+
+      ITP5 = 15
+      ITP1 = 11
+
+      TIME1 = ITT * DT / 60.      
+         N2 = MOD ( ITT - 1, 2 ) + 1
+      TIME_L = TIME1
+      TIME_R = TIME1
+#if defined (PHYSICS)
+      if(itt /= 0) then
+        CALL XYAVG1(SPREC,nhalo,mi1,mj1,sfmn)
+        if(my_task == 0) write(6,*)'This is the mean surface precipitation:  ',sfmn
+      endif
+
+   dtfac = PASS_SMALL_DT / DT
+
+! initialize accumulators and counter on first call
+   if(first) then
+      isample = 0
+      std_rad = 0.0
+      std_tm5 = 0.0
+      out_tm9 = 0.0
+#if defined (RAS)
+      std_tm91= 0.0
+      std_tm92= 0.0
+#endif
+#if defined (LSM)
+      std_lsm = 0.
+#endif
+
+   dtfac = PASS_SMALL_DT / DT * NXSAVG
+
+   endif
+
+
+! accumulate physical variables all timesteps (except twp-ice case)
+   SELECT CASE (TRIM(casename))
+   CASE('TWP-ICE')
+      isample = 1
+!     Store the real-time raw-vectors into output-arrays for dataset C
+      DO 226 J=1,mj1
+      DO 226 I=1,mi1
+      STD_TM5(I,J,1)=UW(I,J)
+      STD_TM5(I,J,2)=WV(I,J)
+      STD_TM5(I,J,3)=WTH(I,J)
+      STD_TM5(I,J,4)=WQV(I,J)
+      STD_TM5(I,J,5)=SPREC(I,J)
+      STD_TM5(I,J,6)=TG(I,J)
+      STD_TM5(I,J,7)=OLR(I,J)
+  226 CONTINUE
+
+#if defined (DIFFUSION)
+#if defined (LSM)
+
+      DO 227 J=1,mj1
+      DO 227 I=1,mi1
+!===hchun
+      STD_LSM(I,J,1)=lST(I,J,1)
+      STD_LSM(I,J,2)=lST(I,J,2)
+      STD_LSM(I,J,3)=lST(I,J,3)
+      STD_LSM(I,J,4)=lST(I,J,4)
+      STD_LSM(I,J,5)=lSM(I,J,1)
+      STD_LSM(I,J,6)=lSM(I,J,2)
+      STD_LSM(I,J,7)=lSM(I,J,3)
+      STD_LSM(I,J,8)=lSM(I,J,4)
+!=======
+  227 CONTINUE
+#endif
+#endif
+
+
+      DO 2226 k=1,nk2
+      DO 2226 J=1,mj1
+      DO 2226 I=1,mi1
+      STD_RAD(I,J,k,1)=FUSWO(I,J,k)
+      STD_RAD(I,J,k,2)=FDSWO(I,J,k)
+      STD_RAD(I,J,k,3)=FULWO(I,J,k)
+      STD_RAD(I,J,k,4)=FDLWO(I,J,k)
+      STD_RAD(I,J,k,5)=DTRADSW(I,J,k)
+      STD_RAD(I,J,k,6)=DTRADLW(I,J,k)
+ 2226 CONTINUE
+      DO 2227 J=1,mj1
+      DO 2227 I=1,mi1
+      STD_RAD(I,J,1,8)=FUSWTOA(I,J)
+      STD_RAD(I,J,2,8)=FDSWTOA(I,J)
+      STD_RAD(I,J,3,8)=FULWTOA(I,J)
+ 2227 CONTINUE
+
+      DO 1040 K=1, NK2
+      OUT_TM9(K,1)=RLHR(K)
+      OUT_TM9(K,2)=QVTEND(K)
+      OUT_TM9(K,3)=QVSGS(K)
+      OUT_TM9(K,4)=QVMICR(K)
+      OUT_TM9(K,5)=QVNUDT(K)
+      OUT_TM9(K,6)=HYDROT(K)
+      OUT_TM9(K,7)=HYLS(K)
+      OUT_TM9(K,8)=HYSGS(K)
+      OUT_TM9(K,9)=THTEND(K)
+      OUT_TM9(K,10)=THSGS(K)
+      OUT_TM9(K,11)=THMICR(K)
+      OUT_TM9(K,12)=THNUDT(K)
+      OUT_TM9(K,13)=THRADT(K)
+      OUT_TM9(K,14)=WLS(K)
+      OUT_TM9(K,15)=FSED(K)
+ 1040 CONTINUE
+      
+   CASE DEFAULT
+      isample = isample + 1
+!     Store the real-time raw-vectors into output-arrays for dataset C
+      DO 1226 J=1,mj1
+      DO 1226 I=1,mi1
+      STD_TM5(I,J,1)=STD_TM5(I,J,1)+UW(I,J)        *  dtfac
+      STD_TM5(I,J,2)=STD_TM5(I,J,2)+WV(I,J)        *  dtfac
+      STD_TM5(I,J,3)=STD_TM5(I,J,3)+WTH(I,J)       *  dtfac
+      STD_TM5(I,J,4)=STD_TM5(I,J,4)+WQV(I,J)       *  dtfac
+      STD_TM5(I,J,5)=STD_TM5(I,J,5)+SPREC(I,J)     *  dtfac
+      STD_TM5(I,J,6)=STD_TM5(I,J,6)+TG(I,J)        *  dtfac
+      STD_TM5(I,J,7)=STD_TM5(I,J,7)+OLR(I,J)       *  dtfac
+ 1226 CONTINUE
+
+#if defined (HEATING)
+      DO 1986 K=1,nk2
+      DO 1986 J=1,mj1
+      DO 1986 I=1,mi1
+      STD_TM55(I,J,K,1)=STD_TM55(I,J,K,1)+  L_dep(I,J,K)   *  dtfac
+      STD_TM55(I,J,K,2)=STD_TM55(I,J,K,2)+  L_con(I,J,K)   *  dtfac
+      STD_TM55(I,J,K,3)=STD_TM55(I,J,K,3)+  L_fre(I,J,K)   *  dtfac
+      STD_TM55(I,J,K,4)=STD_TM55(I,J,K,4)+  L_met(I,J,K)   *  dtfac
+ 1986 CONTINUE
+
+#endif
+
+#if defined (DIAG)
+      if (ndiag_2d>0) then
+      DO 1987 NT=1,ndiag_2d
+      DO 1987 J=1,mj1
+      DO 1987 I=1,mi1
+      STD_TMD2(I,J,NT)=STD_TMD2(I,J,NT) + DIAG2D(I,J,NT) * dtfac 
+ 1987 CONTINUE
+      endif
+
+#if defined (DIAG)
+             
+      do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
+         DIAG3D(i,j,K,1) = 1./rho(k)*(                                   &
+                        0.25 * (Z3DX(i,j,k  )+Z3DX(i,j-1,k  )     &
+                               +Z3DX(i,j,k-1)+Z3DX(i,j-1,k-1))           &
+                               *(TH3D(i+1,j,k)-TH3D(i-1,j,k))/(2*DX)     &
+                      - 0.25 * (Z3DY(i,j,k  )+Z3DY(i-1,j,k  )            & 
+                               +Z3DY(i,j,k-1)+Z3DY(i-1,j,k-1))           &
+                               *(TH3D(i,j+1,k)-TH3d(i,j-1,k))/(2*DYNEW)  &
+                      + (0.25 * (Z3DZ(i,j,k  )+Z3DZ(i,j-1,k  )           &
+                               +Z3DZ(i-1,j,k)+Z3DZ(i-1,j-1,k))+f)        &
+                               *(TH3D(i,j,k+1)-TH3D(i,j,k-1))/(ZT(k+1)-ZT(k-1))) 
+        enddo
+       enddo
+      enddo
+
+      do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
+         DIAG3D(i,j,K,2) = 1./rho(k)*(                                   &
+                        (0.25 * (Z3DZ(i,j,k  )+Z3DZ(i,j-1,k  )           &
+                               +Z3DZ(i-1,j,k)+Z3DZ(i-1,j-1,k))+f)        &
+                               *((TH3D(i,j,k+1)-TH3D(i,j,k-1))           &
+                                -(TH3D_O(i,j,k+1)-TH3D_O(i,j,k-1)))      &
+                                /(ZT(k+1)-ZT(k-1)))/PASS_SMALL_DT
+        enddo
+       enddo
+      enddo 
+
+      do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
+         DIAG3D(i,j,K,3) = 1./rho(k)*(                                   &
+                               0.25 * (Z3DX(i,j,k  )+Z3DX(i,j-1,k  )     &
+                               +Z3DX(i,j,k-1)+Z3DX(i,j-1,k-1))           &
+                               *((TH3D(i+1,j,k)-TH3D(i-1,j,k))           &
+                                -(TH3D_O(i+1,j,k)-TH3D_O(i-1,j,k)))      &
+                                /(2*DX))/PASS_SMALL_DT  
+        enddo
+       enddo
+      enddo      
+
+      do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
+         DIAG3D(i,j,K,4) = 1./rho(k)*(                                   &
+                      - 0.25 * (Z3DY(i,j,k  )+Z3DY(i-1,j,k  )            &
+                               +Z3DY(i,j,k-1)+Z3DY(i-1,j,k-1))           &
+                               *((TH3D(i,j+1,k)-TH3D(i,j-1,k))           &
+                               -(TH3D_O(i,j+1,k)-TH3D_O(i,j-1,k)))       &
+                               /(2*DYNEW))/PASS_SMALL_DT  
+        enddo
+       enddo
+      enddo      
+
+!save TH3D
+      TH3D_O(:,:,:)=TH3D(:,:,:)
+!save TH3D      
+
+#endif
+
+
+      if (ndiag_3d>0) then
+      DO 1988 NT=1,ndiag_3d
+      DO 1988 K=1,nk2
+      DO 1988 J=1,mj1
+      DO 1988 I=1,mi1
+      STD_TMD3(I,J,K,NT)=STD_TMD3(I,J,K,NT) + DIAG3D(I,J,K,NT) * dtfac 
+ 1988 CONTINUE
+      endif
+#endif
+
+#if defined (RAS)
+      DO 1231 J=1,mj1
+      DO 1231 I=1,mi1
+      STD_TM92(I,J)=STD_TM92(I,J)+PREC_CUMULUS(I,J)         *  dtfac
+ 1231 CONTINUE
+
+      DO 1233 k=1,nk2
+      DO 1233 J=1,mj1
+      DO 1233 I=1,mi1
+      STD_TM91(I,J,K,1)=STD_TM91(I,J,K,1)+THAD_CUMULUS(I,J,K) *  dtfac
+      STD_TM91(I,J,K,2)=STD_TM91(I,J,K,2)+QVAD_CUMULUS(I,J,K) *  dtfac
+ 1233 CONTINUE
+#endif
+
+
+#if defined (DIFFUSION)
+#if defined (LSM)
+
+      DO 1227 J=1,mj1
+      DO 1227 I=1,mi1
+!===hchun
+! easy, only average points that apply lsm
+      if (LU(I,J) .NE. 16) THEN
+      STD_LSM(I,J,1)=STD_LSM(I,J,1)+lEMISSI(I,J)   *  dtfac
+      STD_LSM(I,J,2)=STD_LSM(I,J,2)+lCMC(I,J)      *  dtfac
+      STD_LSM(I,J,3)=STD_LSM(I,J,3)+lT1(I,J)       *  dtfac
+      STD_LSM(I,J,4)=STD_LSM(I,J,4)+lST(I,J,1)     *  dtfac
+      STD_LSM(I,J,5)=STD_LSM(I,J,5)+lST(I,J,2)     *  dtfac
+      STD_LSM(I,J,6)=STD_LSM(I,J,6)+lST(I,J,3)     *  dtfac
+      STD_LSM(I,J,7)=STD_LSM(I,J,7)+lST(I,J,4)     *  dtfac
+      STD_LSM(I,J,8)=STD_LSM(I,J,8)+lSM(I,J,1)     *  dtfac
+      STD_LSM(I,J,9)=STD_LSM(I,J,9)+lSM(I,J,2)     *  dtfac
+      STD_LSM(I,J,10)=STD_LSM(I,J,10)+lSM(I,J,3)   *  dtfac
+      STD_LSM(I,J,11)=STD_LSM(I,J,11)+lSM(I,J,4)   *  dtfac
+      STD_LSM(I,J,12)=STD_LSM(I,J,12)+lSL(I,J,1)   *  dtfac
+      STD_LSM(I,J,13)=STD_LSM(I,J,13)+lSL(I,J,2)   *  dtfac
+      STD_LSM(I,J,14)=STD_LSM(I,J,14)+lSL(I,J,3)   *  dtfac
+      STD_LSM(I,J,15)=STD_LSM(I,J,15)+lSL(I,J,4)   *  dtfac
+      STD_LSM(I,J,16)=STD_LSM(I,J,16)+lSNOWH(I,J)  *  dtfac
+      STD_LSM(I,J,17)=STD_LSM(I,J,17)+lSNEQV(I,J)  *  dtfac
+      STD_LSM(I,J,18)=STD_LSM(I,J,18)+lALBEDO(I,J) *  dtfac
+      STD_LSM(I,J,19)=STD_LSM(I,J,19)+lCH(I,J)     *  dtfac
+      STD_LSM(I,J,20)=STD_LSM(I,J,20)+lCM(I,J)     *  dtfac
+      STD_LSM(I,J,21)=STD_LSM(I,J,21)+lETA(I,J)    *  dtfac
+      STD_LSM(I,J,22)=STD_LSM(I,J,22)+lFDOWN(I,J)  *  dtfac
+      STD_LSM(I,J,23)=STD_LSM(I,J,23)+lEC(I,J)     *  dtfac
+      STD_LSM(I,J,24)=STD_LSM(I,J,24)+lEDIR(I,J)   *  dtfac
+      STD_LSM(I,J,25)=STD_LSM(I,J,25)+lET(I,J,1)   *  dtfac
+      STD_LSM(I,J,26)=STD_LSM(I,J,26)+lET(I,J,2)   *  dtfac
+      STD_LSM(I,J,27)=STD_LSM(I,J,27)+lET(I,J,3)   *  dtfac
+      STD_LSM(I,J,28)=STD_LSM(I,J,28)+lET(I,J,4)   *  dtfac
+      STD_LSM(I,J,29)=STD_LSM(I,J,29)+lETT(I,J)    *  dtfac
+      STD_LSM(I,J,30)=STD_LSM(I,J,30)+lESNOW(I,J)  *  dtfac
+      STD_LSM(I,J,31)=STD_LSM(I,J,31)+lDRIP(I,J)   *  dtfac
+      STD_LSM(I,J,32)=STD_LSM(I,J,32)+lDEW(I,J)    *  dtfac
+      STD_LSM(I,J,33)=STD_LSM(I,J,33)+lBETA(I,J)   *  dtfac
+      STD_LSM(I,J,34)=STD_LSM(I,J,34)+lETP(I,J)    *  dtfac
+      STD_LSM(I,J,35)=STD_LSM(I,J,35)+lSSOIL(I,J)  *  dtfac
+      STD_LSM(I,J,36)=STD_LSM(I,J,36)+lFLX1(I,J)   *  dtfac
+      STD_LSM(I,J,37)=STD_LSM(I,J,37)+lFLX2(I,J)   *  dtfac
+      STD_LSM(I,J,38)=STD_LSM(I,J,38)+lFLX3(I,J)   *  dtfac
+      STD_LSM(I,J,39)=STD_LSM(I,J,39)+lSNOMLT(I,J) *  dtfac
+      STD_LSM(I,J,40)=STD_LSM(I,J,40)+lSNCOVR(I,J) *  dtfac
+      STD_LSM(I,J,41)=STD_LSM(I,J,41)+lRUNOFF1(I,J)*  dtfac
+      STD_LSM(I,J,42)=STD_LSM(I,J,42)+lRUNOFF2(I,J)*  dtfac
+      STD_LSM(I,J,43)=STD_LSM(I,J,43)+lRUNOFF3(I,J)*  dtfac
+      STD_LSM(I,J,44)=STD_LSM(I,J,44)+lRC(I,J)     *  dtfac
+      STD_LSM(I,J,45)=STD_LSM(I,J,45)+lPC(I,J)     *  dtfac
+      STD_LSM(I,J,46)=STD_LSM(I,J,46)+lRSMIN(I,J)  *  dtfac
+      STD_LSM(I,J,47)=STD_LSM(I,J,47)+lXLAI(I,J)   *  dtfac
+      STD_LSM(I,J,48)=STD_LSM(I,J,48)+lRCS(I,J)    *  dtfac
+      STD_LSM(I,J,49)=STD_LSM(I,J,49)+lRCT(I,J)    *  dtfac
+      STD_LSM(I,J,50)=STD_LSM(I,J,50)+lRCQ(I,J)    *  dtfac
+      STD_LSM(I,J,51)=STD_LSM(I,J,51)+lRCSOIL(I,J) *  dtfac
+      STD_LSM(I,J,52)=STD_LSM(I,J,52)+lSOILW(I,J)  *  dtfac
+      STD_LSM(I,J,53)=STD_LSM(I,J,53)+lSOILM(I,J)  *  dtfac
+      STD_LSM(I,J,54)=STD_LSM(I,J,54)+lQ1(I,J)     *  dtfac
+      STD_LSM(I,J,55)=STD_LSM(I,J,55)+lSMAV(I,J,1) *  dtfac
+      STD_LSM(I,J,56)=STD_LSM(I,J,56)+lSMAV(I,J,2) *  dtfac
+      STD_LSM(I,J,57)=STD_LSM(I,J,57)+lSMAV(I,J,3) *  dtfac
+      STD_LSM(I,J,58)=STD_LSM(I,J,58)+lSMAV(I,J,4) *  dtfac
+      STD_LSM(I,J,59)=STD_LSM(I,J,59)+lSMCWLT(I,J) *  dtfac
+      STD_LSM(I,J,60)=STD_LSM(I,J,60)+lSMCDRY(I,J) *  dtfac
+      STD_LSM(I,J,61)=STD_LSM(I,J,61)+lSMCREF(I,J) *  dtfac
+      STD_LSM(I,J,62)=STD_LSM(I,J,62)+lSMCMAX(I,J) *  dtfac
+!      STD_LSM(I,J,63)=STD_LSM(I,J,63)+lNROOT(I,J)
+!      STD_LSM(I,J,64)=STD_LSM(I,J,64)+lLU(I,J)
+!========
+      ENDIF
+ 1227 CONTINUE
+
+!#if defined (KPP)
+!      DO k=1,olev
+!      DO J=1,mj1
+!      DO I=1,mi1
+!      STD_KPP(I,J,K,1)=STD_KPP(I,J,K,1) + To(I,J,K) *  dtfac
+!      STD_KPP(I,J,K,2)=STD_KPP(I,J,K,2) + Uo(I,J,K) *  dtfac
+!      STD_KPP(I,J,K,3)=STD_KPP(I,J,K,3) + Vo(I,J,K) *  dtfac
+!      ENDDO
+!      ENDDO
+!      ENDDO
+!
+!      DO J=1,mj1
+!      DO I=1,mi1
+!      STD_KPP_2d(I,J,1)=STD_KPP_2d(I,J,1) + bldpth(I,J) *  dtfac
+!      ENDDO
+!      ENDDO
+!#endif
+
+#endif
+#endif
+
+      DO 3226 k=1,nk2
+      DO 3226 J=1,mj1
+      DO 3226 I=1,mi1
+      STD_RAD(I,J,k,1)=STD_RAD(I,J,k,1)+FUSWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,2)=STD_RAD(I,J,k,2)+FDSWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,3)=STD_RAD(I,J,k,3)+FULWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,4)=STD_RAD(I,J,k,4)+FDLWO(I,J,k) *  dtfac
+      STD_RAD(I,J,k,5)=STD_RAD(I,J,k,5)+DTRADSW(I,J,k) *  dtfac
+      STD_RAD(I,J,k,6)=STD_RAD(I,J,k,6)+DTRADLW(I,J,k) *  dtfac
+      STD_RAD(I,J,k,7)=STD_RAD(I,J,k,7)+cldfrc(I,J,k) *  dtfac
+ 3226 CONTINUE
+      DO 3227 J=1,mj1
+      DO 3227 I=1,mi1
+      STD_RAD(I,J,1,8)=STD_RAD(I,J,1,8)+FUSWTOA(I,J) *  dtfac
+      STD_RAD(I,J,2,8)=STD_RAD(I,J,2,8)+FDSWTOA(I,J) *  dtfac
+      STD_RAD(I,J,3,8)=STD_RAD(I,J,3,8)+FULWTOA(I,J) *  dtfac
+ 3227 CONTINUE
+
+      DO 1041 K=1, NK2
+      OUT_TM9(K,1)=OUT_TM9(K,1)+RLHR(K)
+      OUT_TM9(K,2)=OUT_TM9(K,2)+QVTEND(K)
+      OUT_TM9(K,3)=OUT_TM9(K,3)+QVSGS(K)
+      OUT_TM9(K,4)=OUT_TM9(K,4)+QVMICR(K)
+      OUT_TM9(K,5)=OUT_TM9(K,5)+QVNUDT(K)
+      OUT_TM9(K,6)=OUT_TM9(K,6)+HYDROT(K)
+      OUT_TM9(K,7)=OUT_TM9(K,7)+HYLS(K)
+      OUT_TM9(K,8)=OUT_TM9(K,8)+HYSGS(K)
+      OUT_TM9(K,9)=OUT_TM9(K,9)+THTEND(K)
+      OUT_TM9(K,10)=OUT_TM9(K,10)+THSGS(K)
+      OUT_TM9(K,11)=OUT_TM9(K,11)+THMICR(K)
+      OUT_TM9(K,12)=OUT_TM9(K,12)+THNUDT(K)
+      OUT_TM9(K,13)=OUT_TM9(K,13)+THRADT(K)
+      OUT_TM9(K,14)=OUT_TM9(K,14)+WLS(K)
+      OUT_TM9(K,15)=OUT_TM9(K,15)+FSED(K)
+ 1041 CONTINUE
+      
+   END SELECT
+#endif
+
+   if( (mod(itt,nxsavg) .ne. 0 ) .OR. ( itt .eq. out_itt ) ) return
+
+   out_itt = itt  ! Mars ADD to prevent over-estimate
+
+
+#if defined (PHYSICS)
+   SELECT CASE (TRIM(casename))
+   CASE('TWP-ICE')
+      TIME_C = TIME1
+   CASE DEFAULT
+      FAC = 1. / FLOAT ( NXSAVG )
+!      TIME_C = TIME1 -0.5*dt / ( FAC * 60.)
+      TIME_C = TIME1
+!      FAC = 1. / FLOAT ( isample )   ! Mars comment to test sprec
+      std_rad = std_rad * fac
+      std_tm5 = std_tm5 * fac
+#if defined (HEATING)
+      std_tm55 = std_tm55 * fac
+#endif
+#if defined (DIAG)
+      if(ndiag_2d > 0) std_tmd2 = std_tmd2 * fac
+      if(ndiag_3d > 0) std_tmd3 = std_tmd3 * fac
+#endif
+      out_tm9 = out_tm9 * fac
+#if defined (RAS)
+      std_tm91= std_tm91* fac
+      std_tm92= std_tm92* fac
+#endif
+#if defined (LSM)
+      std_lsm = std_lsm * fac
+! easy, mask out the water points
+      DO J = 1,MJ1
+      DO I = 1,MI1
+      IF (LU(I,J)==16) THEN
+      DO IVAR = 1, IVAR10
+      std_lsm(I,J,IVAR) = realval
+      ENDDO
+      ENDIF
+      ENDDO
+      ENDDO
+#endif
+
+   END SELECT
+#endif
+
+
+!------------------------------------------------------------------------------
+! *** WRITE MODEL OUTPUT ***
+
+!------------------------------------------------------------------------------
+
+      time_start(1) =  1
+     
+      if(my_task == 0) then
+        print *,' L, R, C file output this timestep:',ITT,INT(ITT/NXSAVG)
+#if defined (OUTPUTGRIDA)
+        print *," A-grid output (regrid)"
+#else
+        print *," C-grid output (model grid)"
+#endif
+      endif
+
+      ITT_OUTPUT = INT( ITT / NXSAVG )
+      call cdf_ini( ITT_OUTPUT )
+
+      first = .false.      
+
+! Vorticity vector     
+
+! Xi
+#if defined (OUTPUTGRIDA)
+      DO I=1,mi1
+         DO J=1,mj1
+            DO K=1,nk2
+               OUT_tm1(I,J,K) = ( 0.5*abs(ZT(K)-ZZ(K-1)) &
+                                  *sum( z3dx(I,J-1:J,K-1) ) + &
+                                  0.5*abs(ZZ(K)-ZT(K  )) &
+                                  *sum( z3dx(I,J-1:J,K  ) ) ) &
+                                  /(ZZ(K)-ZZ(K-1))
+            ENDDO
+         ENDDO
+      ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = z3dx(1:mi1,1:mj1,1:nk2)
+#endif
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'xi', TIME_L, time_start, out_tm1, nk2 )
+
+! Eta
+#if defined (OUTPUTGRIDA)
+      DO I=1,mi1
+         DO J=1,mj1
+            DO K=1,nk2
+               OUT_tm1(I,J,K) = ( 0.5*abs(ZT(K)-ZZ(K-1)) &
+                                  *sum( z3dx(I-1:I,J,K-1) ) + &
+                                  0.5*abs(ZZ(K)-ZT(K  )) &
+                                  *sum( z3dx(I-1:I,J,K  ) ) ) &
+                                  /(ZZ(K)-ZZ(K-1))
+            ENDDO
+         ENDDO
+      ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = z3dy(1:mi1,1:mj1,1:nk2)
+#endif
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'eta', TIME_L, time_start, out_tm1, nk2 )
+
+! Zeta
+#if defined (OUTPUTGRIDA)
+      DO I=1,mi1
+         DO J=1,mj1
+            DO K=1,nk2
+               OUT_tm1(I,J,K) = 0.25*sum( z3dz(I-1:I,J-1:J,K) )
+            ENDDO
+         ENDDO
+      ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = z3dz(1:mi1,1:mj1,1:nk2)
+#endif
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'zeta', TIME_L, time_start, out_tm1, nk2 )
+
+! Velocity vector
+
+! U
+#if defined (OUTPUTGRIDA)
+      DO I=1,mi1
+         DO J=1,mj1
+            DO K=1,nk2
+               OUT_tm1(I,J,K) = 0.5*( u3dx(I-1,J,K) + u3dx(I,J,K) )
+            ENDDO
+         ENDDO
+      ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = u3dx(1:mi1,1:mj1,1:nk2)
+#endif
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'u', TIME_L, time_start, out_tm1, nk2  )
+
+! V
+#if defined (OUTPUTGRIDA)
+      DO I=1,mi1
+         DO J=1,mj1
+            DO K=1,nk2
+               OUT_tm1(I,J,K) = 0.5*( u3dy(I,J-1,K) + u3dy(I,J,K) )
+            ENDDO
+         ENDDO
+      ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = u3dy(1:mi1,1:mj1,1:nk2)
+#endif
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'v', TIME_L, time_start, out_tm1, nk2  )
+
+! W
+#if defined (OUTPUTGRIDA)
+      DO I=1,mi1
+         DO J=1,mj1
+            DO K=1,nk2
+               OUT_tm1(I,J,K) = ( abs(ZT(K)-ZZ(K-1))*w3d(I,J,K-1) + &
+                                  abs(ZZ(K)-ZT(K  ))*w3d(I,J,K  ) ) &
+                                  /(ZZ(K)-ZZ(K-1))
+            ENDDO
+         ENDDO
+      ENDDO
+#else
+      OUT_tm1(:,:,1:nk2) = w3d(1:mi1,1:mj1,1:nk2)
+#endif
+      call pCDF_WRITE_4D_slice(ncid_z3dx, 'w', TIME_L, time_start, out_tm1, nk2  )
+
+! Thermodynamic Variables
+      OUT_tm1(:,:,1:nk2) = th3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'th', TIME_L, time_start, out_tm1, nk2 )
+
+#if defined (PHYSICS)
+      OUT_tm1(:,:,1:nk2) = qv3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'qv', TIME_L, time_start, out_tm1, nk2  )
+
+      OUT_tm1(:,:,1:nk2) = qc3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'qc', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(:,:,1:nk2) = qr3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'qr', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(:,:,1:nk2) = qi3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'qi', TIME_L, time_start, out_tm1, nk2 )
+
+#if defined (MICROP3)
+      OUT_tm1(:,:,1:nk2) = nc3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'nc', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(:,:,1:nk2) = nr3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'nr', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(:,:,1:nk2) = ni3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'ni', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(:,:,1:nk2) = qrim3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'qrim', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(:,:,1:nk2) = brim3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'brim', TIME_L, time_start, out_tm1, nk2 )
+
+#if defined (LIQFRACP3)
+      OUT_tm1(:,:,1:nk2) = qiliq3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'qiliq', TIME_L, time_start, out_tm1, nk2 )
+
+#endif
+#else
+! QS and QG
+      OUT_tm1(:,:,1:nk2) = qs3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'qs', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(:,:,1:nk2) = qg3d(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'qg', TIME_L, time_start, out_tm1, nk2 )
+
+#endif
+
+#if defined (HEATING)
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,1)
+      call pCDF_WRITE_4D_slice(ncid_th, 'ldep', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,2)
+      call pCDF_WRITE_4D_slice(ncid_th, 'lcon', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,3)
+      call pCDF_WRITE_4D_slice(ncid_th, 'lfre', TIME_L, time_start, out_tm1, nk2 )
+
+      OUT_tm1(1:mi1,1:mj1,1:nk2) = std_tm55(1:mi1,1:mj1,1:nk2,4)
+      call pCDF_WRITE_4D_slice(ncid_th, 'lmet', TIME_L, time_start, out_tm1, nk2 )
+#endif
+
+#if defined (RAS)
+      call pCDF_WRITE_4D_slice(ncid_ras, 'dth', TIME_C, time_start, std_tm91(:,:,1:nk2,1), nk2 )
+
+      call pCDF_WRITE_4D_slice(ncid_ras, 'dqv', TIME_C, time_start, std_tm91(:,:,1:nk2,2), nk2 )
+
+      call pCDF_WRITE_xy_slice(ncid_ras, 'prec', TIME_C, time_start, std_tm92(:,:) )
+#endif
+
+#endif
+
+      if(ntracer > 0) then
+        do nt = 1,ntracer
+          OUT_tm1(:,:,1:nk2) = tc3d(1:mi1,1:mj1,1:nk2,nt)
+          write(unit=trnum,fmt='(i2.2)')nt
+          call pCDF_WRITE_4D_slice(ncid_tc, 'tr'//trnum, TIME_L, time_start, out_tm1, nk2 )
+        enddo
+      endif
+
+#if defined (CHEM)
+      do nt = 1,nchem
+        OUT_tm1(:,:,1:nk2) = chem3d(1:mi1,1:mj1,1:nk2,nt)
+        write(unit=trnum,fmt='(i2.2)')nt
+        !! call pCDF_WRITE_4D_slice(ncid_chem, 'chem'//trnum, TIME_L, time_start, out_tm1, nk2 )
+        call pCDF_WRITE_4D_slice(ncid_chem, trim(chem_name_list(nt)), TIME_L, time_start, out_tm1, nk2 )
+      enddo
+#endif
+
+#if defined (DIAG)
+      if(ndiag_2d > 0) then
+        do nt = 1,ndiag_2d
+          write(unit=trnum,fmt='(i2.2)')nt
+          call pCDF_WRITE_xy_slice(ncid_diag, 'ds'//trnum, TIME_C, time_start, std_tmd2(:,:,nt) )
+        enddo
+      endif
+
+      if(ndiag_3d > 0) then
+        do nt = 1,ndiag_3d
+          write(unit=trnum,fmt='(i2.2)')nt
+          call pCDF_WRITE_4D_slice(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,1:nk2,nt), nk2 )
+        enddo
+      endif
+#endif
+
+
+#if defined (PHYSICS)
+
+        call pCDF_WRITE_xy_slice(ncid_phys, 'uw', TIME_C, time_start, std_tm5(:,:,1) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'wv', TIME_C, time_start, std_tm5(:,:,2) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'wth', TIME_C, time_start, std_tm5(:,:,3) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'wqv', TIME_C, time_start, std_tm5(:,:,4) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'sprec', TIME_C, time_start, std_tm5(:,:,5) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'tg', TIME_C, time_start, std_tm5(:,:,6) )
+        call pCDF_WRITE_xy_slice(ncid_phys, 'olr', TIME_C, time_start, std_tm5(:,:,7) )
+
+!===hchun
+#if defined (DIFFUSION)
+#if defined (LSM)
+        if (ITT==0 .or. ITT_OUTPUT==0 ) std_lsm=0.
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'emissi', TIME_C, time_start, std_lsm(:,:,1) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'cmc', TIME_C, time_start, std_lsm(:,:,2) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 't1', TIME_C, time_start, std_lsm(:,:,3) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ST1', TIME_C, time_start, std_lsm(:,:,4) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ST2', TIME_C, time_start, std_lsm(:,:,5) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ST3', TIME_C, time_start, std_lsm(:,:,6) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ST4', TIME_C, time_start, std_lsm(:,:,7) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SM1', TIME_C, time_start, std_lsm(:,:,8) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SM2', TIME_C, time_start, std_lsm(:,:,9) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SM3', TIME_C, time_start, std_lsm(:,:,10) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SM4', TIME_C, time_start, std_lsm(:,:,11) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SL1', TIME_C, time_start, std_lsm(:,:,12) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SL2', TIME_C, time_start, std_lsm(:,:,13) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SL3', TIME_C, time_start, std_lsm(:,:,14) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'SL4', TIME_C, time_start, std_lsm(:,:,15) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'snowh', TIME_C, time_start, std_lsm(:,:,16) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'sneqv', TIME_C, time_start, std_lsm(:,:,17) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'albedo', TIME_C, time_start, std_lsm(:,:,18) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ch', TIME_C, time_start, std_lsm(:,:,19) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'cm', TIME_C, time_start, std_lsm(:,:,20) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'eta', TIME_C, time_start, std_lsm(:,:,21) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'fdown', TIME_C, time_start, std_lsm(:,:,22) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ec', TIME_C, time_start, std_lsm(:,:,23) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'edir', TIME_C, time_start, std_lsm(:,:,24) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'et1', TIME_C, time_start, std_lsm(:,:,25) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'et2', TIME_C, time_start, std_lsm(:,:,26) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'et3', TIME_C, time_start, std_lsm(:,:,27) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'et4', TIME_C, time_start, std_lsm(:,:,28) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ett', TIME_C, time_start, std_lsm(:,:,29) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'esnow', TIME_C, time_start, std_lsm(:,:,30) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'drip', TIME_C, time_start, std_lsm(:,:,31) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'dew', TIME_C, time_start, std_lsm(:,:,32) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'beta', TIME_C, time_start, std_lsm(:,:,33) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'etp', TIME_C, time_start, std_lsm(:,:,34) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'ssoil', TIME_C, time_start, std_lsm(:,:,35) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'flx1', TIME_C, time_start, std_lsm(:,:,36) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'flx2', TIME_C, time_start, std_lsm(:,:,37) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'flx3', TIME_C, time_start, std_lsm(:,:,38) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'snomlt', TIME_C, time_start, std_lsm(:,:,39) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'sncovr', TIME_C, time_start, std_lsm(:,:,40) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'runoff1', TIME_C, time_start, std_lsm(:,:,41) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'runoff2', TIME_C, time_start, std_lsm(:,:,42) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'runoff3', TIME_C, time_start, std_lsm(:,:,43) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rc', TIME_C, time_start, std_lsm(:,:,44) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'pc', TIME_C, time_start, std_lsm(:,:,45) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rsmin', TIME_C, time_start, std_lsm(:,:,46) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'xlai', TIME_C, time_start, std_lsm(:,:,47) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rcs', TIME_C, time_start, std_lsm(:,:,48) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rct', TIME_C, time_start, std_lsm(:,:,49) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rcq', TIME_C, time_start, std_lsm(:,:,50) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'rcsoil', TIME_C, time_start, std_lsm(:,:,51) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'soilw', TIME_C, time_start, std_lsm(:,:,52) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'soilm', TIME_C, time_start, std_lsm(:,:,53) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'q1', TIME_C, time_start, std_lsm(:,:,54) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smav1', TIME_C, time_start, std_lsm(:,:,55) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smav2', TIME_C, time_start, std_lsm(:,:,56) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smav3', TIME_C, time_start, std_lsm(:,:,57) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smav4', TIME_C, time_start, std_lsm(:,:,58) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smcwlt', TIME_C, time_start, std_lsm(:,:,59) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smcdry', TIME_C, time_start, std_lsm(:,:,60) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smcref', TIME_C, time_start, std_lsm(:,:,61) )
+        call pCDF_WRITE_xy_slice(ncid_lsm, 'smcmax', TIME_C, time_start, std_lsm(:,:,62) )
+
+
+#if defined (KPP)
+      OUT_tm1(:,:,1:olev) = Tocean
+      call pCDF_WRITE_4D_slice(ncid_kpp, 't', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+
+      OUT_tm1(:,:,1:olev) = Uocean
+      call pCDF_WRITE_4D_slice(ncid_kpp, 'u', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+
+      OUT_tm1(:,:,1:olev) = Vocean
+      call pCDF_WRITE_4D_slice(ncid_kpp, 'v', TIME_L, time_start, out_tm1(:,:,1:olev), olev )
+
+      OUT_tm1(:,:,1)= bldpth 
+      call pCDF_WRITE_xy_slice(ncid_kpp, 'mld', TIME_L, time_start, out_tm1(:,:,1) )
+#endif
+
+#endif
+#endif
+!========
+
+
+#if defined (RADCODE)
+        call pCDF_WRITE_4D_slice(ncid_rad, 'fusw', TIME_R, time_start, STD_RAD(:,:,1:nk2,1), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'fdsw', TIME_R, time_start, STD_RAD(:,:,1:nk2,2), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'fulw', TIME_R, time_start, STD_RAD(:,:,1:nk2,3), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'fdlw', TIME_R, time_start, STD_RAD(:,:,1:nk2,4), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'dtradsw', TIME_R, time_start, STD_RAD(:,:,1:nk2,5), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'dtradlw', TIME_R, time_start, STD_RAD(:,:,1:nk2,6), nk2 )
+        call pCDF_WRITE_4D_slice(ncid_rad, 'cldfrc', TIME_R, time_start, STD_RAD(:,:,1:nk2,7), nk2 )
+        call pCDF_WRITE_xy_slice(ncid_rad, 'fuswtoa', TIME_R, time_start, STD_RAD(:,:,1,8) )
+        call pCDF_WRITE_xy_slice(ncid_rad, 'fdswtoa', TIME_R, time_start, STD_RAD(:,:,2,8) )
+        call pCDF_WRITE_xy_slice(ncid_rad, 'fulwtoa', TIME_R, time_start, STD_RAD(:,:,3,8) )
+#endif
+#endif
+
+    call output_nc_close
+
+
+#if defined (PHYSICS)
+
+      TIME_P = TIME1
+
+! *** FT15 DATA STORAGE ***
+!     FT10: Dataset P: real-time field various mean profiles.
+
+! *** TEST FOR NEW FILE (GENERAL CODE)
+!      OPENF = IWRITE (ITP5) .EQ. 0
+!      
+!      if(my_task == 0) then  
+!        CALL FNAME_2D ( IFILE(ITP5), ITP5, EXPHDR, FILNAM )
+!        inquire(file=filnam, exist=fexist)
+!
+!        if(openf) then
+!! *** INCREMENT FILE COUNTER
+!          IFILE(ITP5) = IFILE(ITP5) + 1
+!          if(my_task == 0) write(6,*)'ifile',ifile(itp5)
+!
+!        endif  
+!
+!        if(openf .or. fexist) then  
+!          CALL FNAME_2D ( IFILE(ITP5), ITP5, EXPHDR, FILNAM )
+!          OPEN (ITP5,FILE=FILNAM, STATUS='UNKNOWN',FORM='UNFORMATTED',position='APPEND')
+!          write(6,*) 'fnam5=',FILNAM,'TIME_P=',TIME_P
+!        endif
+!
+!! *** WRITE HEADER ***
+!        if(openf) then
+!          write(F_HEADER,'(a4,a)') EXPHDR(1:4),' MEAN PROFILES (dataset P)'
+!          WRITE(ITP5) F_HEADER
+!        endif  
+!
+!      if(my_task == 0) print *,' P file output this timestep'
+!        WRITE(ITP5) TIME_P
+!        WRITE(ITP5) OUT_TM9
+!      
+!! *** GENERAL CODE TO TEST FOR COPYING FILE
+!! *** INCREMENT WRITE COUNTER
+!        IWRITE(ITP5)= IWRITE(ITP5) + 1
+!        COPYF = IWRITE(ITP5) .EQ. NWRITE(ITP5)
+!        IF ( .NOT. COPYF ) GO TO 3501
+!        CLOSE (UNIT=ITP5)
+!! *** RESET WRITE COUNTER
+!        IWRITE(ITP5) = 0
+!
+! 3501 CONTINUE
+!
+!
+!      endif  ! if (my_task == 0)
+!      CALL MPI_BCAST( iwrite(itp5), 1, MPI_INTEGER, 0, MPI_COMM_WORLD, mpierr)
+!      CALL MPI_BCAST( ifile(itp5), 1, MPI_INTEGER, 0, MPI_COMM_WORLD, mpierr)
+
+#endif
+
+! reinitialize accumulators and counterl
+      isample = 0
+      std_rad = 0.0
+      std_tm5 = 0.0
+      out_tm9 = 0.0
+#if defined (DIAG)
+      if(ndiag_2d > 0) std_tmd2 = 0.0
+      if(ndiag_3d > 0) std_tmd3 = 0.0
+#endif
+#if defined (RAS)
+      std_tm91= 0.0
+      std_tm92= 0.0
+#endif
+#if defined (LSM)     
+      std_lsm = 0.0
+#endif
+!==============================================================================
+   END SUBROUTINE XSEC_CDF
+!==============================================================================
+
+END MODULE new_ldoutput_nc
