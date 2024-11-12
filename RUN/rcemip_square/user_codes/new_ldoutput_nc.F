@@ -746,14 +746,14 @@ CONTAINS
        do j=1,mj1
         do i=1,mi1
          DIAG3D(i,j,K,1) = 1./rho(k)*(                                   &
-                        0.25 * (Z3DX(i,j,k  )+Z3DX(i,j-1,k  )     &
+                        0.25 * (Z3DX(i,j,k  )+Z3DX(i,j-1,k  )            &
                                +Z3DX(i,j,k-1)+Z3DX(i,j-1,k-1))           &
                                *(TH3D(i+1,j,k)-TH3D(i-1,j,k))/(2*DX)     &
                       - 0.25 * (Z3DY(i,j,k  )+Z3DY(i-1,j,k  )            & 
                                +Z3DY(i,j,k-1)+Z3DY(i-1,j,k-1))           &
-                               *(TH3D(i,j+1,k)-TH3d(i,j-1,k))/(2*DYNEW)  &
-                      + (0.25 * (Z3DZ(i,j,k  )+Z3DZ(i,j-1,k  )           &
-                               +Z3DZ(i-1,j,k)+Z3DZ(i-1,j-1,k))+f)        &
+                               *(TH3D(i,j+1,k)-TH3D(i,j-1,k))/(2*DYNEW)  &
+                      +(0.25 * (Z3DZ(i,j,k  )+Z3DZ(i,j-1,k  )            &
+                               +Z3DZ(i-1,j,k)+Z3DZ(i-1,j-1,k))+F)        &
                                *(TH3D(i,j,k+1)-TH3D(i,j,k-1))/(ZT(k+1)-ZT(k-1))) 
         enddo
        enddo
@@ -764,7 +764,7 @@ CONTAINS
         do i=1,mi1
          DIAG3D(i,j,K,2) = 1./rho(k)*(                                   &
                         (0.25 * (Z3DZ(i,j,k  )+Z3DZ(i,j-1,k  )           &
-                               +Z3DZ(i-1,j,k)+Z3DZ(i-1,j-1,k))+f)        &
+                                +Z3DZ(i-1,j,k)+Z3DZ(i-1,j-1,k))+F)       &
                                *((TH3D(i,j,k+1)-TH3D(i,j,k-1))           &
                                 -(TH3D_O(i,j,k+1)-TH3D_O(i,j,k-1)))      &
                                 /(ZT(k+1)-ZT(k-1)))/PASS_SMALL_DT
@@ -776,7 +776,7 @@ CONTAINS
        do j=1,mj1
         do i=1,mi1
          DIAG3D(i,j,K,3) = 1./rho(k)*(                                   &
-                               0.25 * (Z3DX(i,j,k  )+Z3DX(i,j-1,k  )     &
+                        0.25 * (Z3DX(i,j,k  )+Z3DX(i,j-1,k  )            &
                                +Z3DX(i,j,k-1)+Z3DX(i,j-1,k-1))           &
                                *((TH3D(i+1,j,k)-TH3D(i-1,j,k))           &
                                 -(TH3D_O(i+1,j,k)-TH3D_O(i-1,j,k)))      &

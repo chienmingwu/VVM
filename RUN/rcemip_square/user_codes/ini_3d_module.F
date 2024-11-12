@@ -293,9 +293,9 @@ CONTAINS
 !   If dynamic_variables is true, dynamic_file should be defined.  By Der 20190128
 
       thermodynamic_file = "/data/mog/VVM/DATA/RRCE_3km_f00/archive/&
-              &RRCE_3km_f00.L.Thermodynamic-000720.nc"
+              &RRCE_3km_f00.L.Thermodynamic-002160.nc"
       dynamic_file = "/data/mog/VVM/DATA/RRCE_3km_f00/archive/&
-              &RRCE_3km_f00.L.Dynamic-000720.nc" 
+              &RRCE_3km_f00.L.Dynamic-002160.nc" 
 
       write(*,*) trim(thermodynamic_file), trim(dynamic_file)
 
