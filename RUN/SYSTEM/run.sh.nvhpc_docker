@@ -15,6 +15,9 @@ ulimit -s unlimited
 
 export EXPHDR_tmp='expname ../../DATA/expname'
 
+export OMPI_ALLOW_RUN_AS_ROOT=1
+export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+
 date > runtime
 
 mpirun -np 1 ./create_topolsm
