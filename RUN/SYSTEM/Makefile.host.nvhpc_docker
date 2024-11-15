@@ -56,12 +56,13 @@ SUF      = f
 
 INC = -I$(CDECKS) -I$(EXPDIR) -I/opt/include 
 
-FC = mpifort -fPIC -O3 -Mlarge_arrays
+ACCFLAGS = #-acc=multicore -Minfo=accel
+FC = mpifort -fPIC -O3 -w -Mlarge_arrays -lnvhpcwrapnvtx 
 
 LDLIBS = -Wl,-rpath,/opt/lib -L/opt/lib -lpetsc -lblas -llapack -lpnetcdf -lnetcdff -lnetcdf
 
 FFLAGS    = $(INC)
 FIXED     = -Mfixed 
 FREE      = -Mfree
-LD        = $(FC)
+LD        = $(FC) $(ACCFLAGS)
 

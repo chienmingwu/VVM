@@ -18,10 +18,15 @@ export EXPHDR_tmp='expname ../../DATA/expname'
 export OMPI_ALLOW_RUN_AS_ROOT=1
 export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
 
+core_minus_one=$(echo "total_cores-1"|bc)
+
 date > runtime
 
-mpirun -np 1 ./create_topolsm
-mpirun -np total_cores ./vvm < INPUT | tee OUTPUT  
+# mpiexec -n 1 ./create_topolsm
+# mpiexec -n total_cores ./vvm < INPUT | tee OUTPUT  
+
+mpiexec -n 1 ./create_topolsm
+mpiexec -n 1 nsys profile -t nvtx,cuda,mpi --stats=true --force-overwrite true -o nsys_vvm_%q{OMPI_COMM_WORLD_RANK} ./vvm : -n ${core_minus_one} ./vvm < INPUT | tee OUTPUT  
 
 date >> runtime
 
