@@ -9,6 +9,7 @@ USE profoutld
 USE radoutld
 USE bound
 USE domain_decomposition
+USE nvtx
 
 IMPLICIT NONE
 PRIVATE
@@ -34,6 +35,11 @@ CONTAINS
 ! local variables
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
+
+      call nvtxStartRange('update_thermoal')
+
+
+
 ! Update theta from dynamics tendency term
       DO 50 K = 2, NK2
       DO 50 J = 1, MJ1
@@ -243,6 +249,7 @@ ENDIF
 
 #endif
       CALL BOUND_3D
+      call nvtxEndRange
 
    END SUBROUTINE update_thermodynamics
 

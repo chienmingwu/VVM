@@ -11,6 +11,7 @@ USE elliptic
 USE uvtop
 USE workcom
 USE domain_decomposition
+USE nvtx
 #if defined (TURB_TOM)
 USE turb_1d_module
 #endif
@@ -42,11 +43,16 @@ CONTAINS
 !     PREDICT [U] AND [V] NEAR THE TOP OF THE MODEL 
 !     (HORIZONTALLY UNIFORM PART)
       if(.not.PRESENT(lrstart)) CALL UVTMN_3D (N1,N2) 
+
 !     SOLVE THE 3D ELLIPTIC EQUATION FOR UPDATING W3D 
+      CALL nvtxStartRange('DIRECT_3D')
       CALL DIRECT_3D 
+      CALL nvtxEndRange
 !     UPDATING HORIZONTAL VELOCITY COMPONENTS
 !     (HORIZONTALLY NONUNIFORM PART) 
+      CALL nvtxStartRange('UVTOP_3D')
       CALL UVTOP_3D (UTOP,VTOP)
+      CALL nvtxEndRange
 
       CALL XYAVG1(UTOP,nhalo,mi1,mj1,UTOPM)
 

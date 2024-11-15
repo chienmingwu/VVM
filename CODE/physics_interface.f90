@@ -36,6 +36,7 @@
       USE cloud_module
       USE timer
       USE domain_decomposition
+      USE nvtx
 !     P3 and RAS are install by Der
 #if defined (MICROP3)
       USE microphy_p3
@@ -297,6 +298,7 @@
 #endif
 
 #if defined (RADCODE)
+      call nvtxStartRange('radiation')
       call timer_start('radiation')
       first_rad = .FALSE.
 
@@ -309,6 +311,7 @@
       THRAD(I,J,K)=FTHRAD(I,J,K)
   230 CONTINUE
       call timer_stop('radiation')
+      call nvtxEndRange
 #endif
       endif  ! if(.not.notherm)
 #endif
@@ -453,6 +456,7 @@
 #if defined (MICROCODE)      
 
 #if defined (MICROP3)
+      call nvtxStartRange('microp3')
       call timer_start('microphysics')
 
       dt_p3=DT
@@ -498,7 +502,9 @@
   200 CONTINUE
 
       call timer_stop('microphysics')
+      call nvtxEndRange
 #else
+      call nvtxStartRange('microphy_lin')
       call timer_start('microphysics')
       CALL Microphysics
 
@@ -509,6 +515,7 @@
   200 CONTINUE
 
       call timer_stop('microphysics')
+      call nvtxEndRange
 #endif
 
 #endif

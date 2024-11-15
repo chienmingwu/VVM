@@ -93,6 +93,7 @@ PROGRAM ldmain
     USE domain_decomposition
     USE mpi
     USE vertical_adaptive
+    USE nvtx
 
     IMPLICIT NONE
 
@@ -116,6 +117,8 @@ PROGRAM ldmain
     INTEGER (KIND=int_kind)  ::  &
         itt_record
 
+    CHARACTER(len=1000) :: dumstr
+
 !-----------------------------------------------------------------------
 ! Initialize MPI environment and domain decomposition
     call mpi_init(mpierr)
@@ -123,9 +126,15 @@ PROGRAM ldmain
 
     call timer_start('total vvm')
 
+    call nvtxStartRange('program start')
+
+    call nvtxStartRange('initialize')
+
     call timer_start('initialize')
     CALL INPUT_3D ( ITT )
     call timer_stop('initialize')
+
+    call nvtxEndRange
 
     if(my_task == 0) write(6,*) 'ITTOUT=',ITT
 
@@ -135,12 +144,15 @@ PROGRAM ldmain
     IF ( ITTADD .LE. 0 ) STOP 101
     PASS_SMALL_DT = DT
 
+
+    call nvtxStartRange('output-initial')
     call timer_start('output')
     CALL OUTCON_3D  (8)
     ! CALL OUTPUT_3D  (ITT,9)
     ! CALL XSEC_3D ( ITT )
     CALL XSEC_CDF ( ITT )
     call timer_stop('output')
+    call nvtxEndRange
 
 
     ITT = ITT + 1
@@ -162,10 +174,12 @@ PROGRAM ldmain
 
     CALL AB_3D ( N1, N2, ITT )
 
+    call nvtxStartRange('output-first')
     call timer_start('output')
     !IF ( lc35 ) CALL XSEC_CDF ( ITT )
     CALL XSEC_CDF ( ITT )
     call timer_stop('output')
+    call nvtxEndRange
 
     ENDIF
 
@@ -220,7 +234,9 @@ PROGRAM ldmain
         PASS_SMALL_DT = DT
         PASS_BIG_DT   = origin_dt
 
+        call nvtxStartRange('ab_3d')
         CALL AB_3D ( N1, N2, ITT )        
+        call nvtxEndRange
 
         DT   = origin_dt ! move set original dt here
         
@@ -238,6 +254,8 @@ PROGRAM ldmain
 
         lc35 = MOD ( ITT,   NXS ) .EQ. 0
 
+
+        call nvtxStartRange('output')
         call timer_start('output')
         IF ( lc35 ) CALL XSEC_CDF ( ITT )
         !IF ( MOD ( ITT, NRESTART ) .EQ. 0 ) CALL rstart_nc ( ITT, 13 )  ! This is new addition.
@@ -247,6 +265,7 @@ PROGRAM ldmain
             if ( my_task == 0 ) write(12345,*) '--OUTPUT--'
         endif          
         call timer_stop('output')
+        call nvtxEndRange
         
     ENDDO
 
@@ -254,6 +273,7 @@ PROGRAM ldmain
     if(my_task == 0) close(12345)
 
     call timer_stop('total vvm')
+    call nvtxEndRange
     if(my_task == 0) call timer_write('vvm')
 !-----------------------------------------------------------------------
     call mpi_finalize(mpierr)

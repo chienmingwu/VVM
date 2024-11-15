@@ -13,6 +13,7 @@ USE force_3d_module
 USE advec_3d_module
 USE timer
 USE domain_decomposition
+USE nvtx
 
 IMPLICIT NONE
 PRIVATE
@@ -49,6 +50,7 @@ CONTAINS
 
 !-----------------------------------------------------------------------
 
+      call nvtxStartRange('advection')
       call timer_start('advection')
       CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
 #if defined (PHYSICS)
@@ -108,7 +110,9 @@ CONTAINS
 
 #endif
       call timer_stop('advection')
+      call nvtxEndRange
 
+      call nvtxStartRange('forcing')
       call timer_start('forcing')
 
      IF ( START .AND. ITT .LT. ITSTOP )   &
@@ -271,6 +275,8 @@ CONTAINS
   300 CONTINUE
       END IF
       call timer_stop('forcing')
+      call nvtxEndRange
+
       
 !tac-------FOLLOWING MOVED TO physics_interface------------------------
 !tac#if defined (PHYSICS)
@@ -281,6 +287,7 @@ CONTAINS
 !tac-------------------------------------------------------------------
 
 
+      call nvtxStartRange('physics')
       call timer_start('physics')
 ! Initialize tendency terms to zero
       DO 510 K=2,NK2
@@ -311,6 +318,7 @@ CONTAINS
                              RHO,PSFC,NOTHERM,NRAD,tg(1:mi1,1:mj1),      &
                              DX,DYNEW,RLAT,RLON,THBAR,THBARZ)
       call timer_stop('physics')
+      call nvtxEndRange
 
 
 

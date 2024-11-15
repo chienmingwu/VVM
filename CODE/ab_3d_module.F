@@ -21,6 +21,7 @@ USE q_chk_module
 USE cloud_module
 USE rcalc_module
 USE timer
+USE nvtx
 
 IMPLICIT NONE
 PRIVATE
@@ -105,11 +106,14 @@ CONTAINS
 !!----------------------------------------------------------------------
 !!      endif
 
+      call nvtxStartRange('rcalc_3d')
       call timer_start('rcalc_3d')
       IF (.NOT.NOTHERM) CALL RCALC_3D ( N1, N2, ITT )
       call timer_stop('rcalc_3d')
+      call nvtxEndRange
 
 ! Determine turbulence coefficients RKM and RKH
+      call nvtxStartRange('turb_3d')
       call timer_start('TURB_3D')
 #if defined (TURB_TOM)
       call turb_1d_driver(TH3D, qv3d, u3dx, u3dy, qc3d,   &
@@ -121,6 +125,7 @@ CONTAINS
       CALL TURB_3D ( ITT )
 #endif
       call timer_stop('TURB_3D')
+      call nvtxEndRange
 
       IF (.NOT.NOTHERM) then
 
@@ -129,15 +134,20 @@ CONTAINS
 ! the turbulence parameterization has computed tendencies due to
 !   the turbulence
 #else
+      call nvtxStartRange('TURB_3D_THERM')
       call timer_start('TURB_3D_THERM')
       CALL TURB_3D_THERM
       call timer_stop('TURB_3D_THERM')
+      call nvtxEndRange
 #endif
 
 ! Update thermodynamic variables from turbulence
+
+      call nvtxStartRange('CLOUD_3D_COREC')
       call timer_start('CLOUD_3D_COREC')
       CALL CLOUD_3D_COREC
       call timer_stop('CLOUD_3D_COREC')
+      call nvtxEndRange
 
 ! Nudging moved to RCALC_3D
 ! Nudge mean water vapor and mean potential temperature to mean
@@ -146,40 +156,65 @@ CONTAINS
 !
 
 ! Fill negative values
+      call nvtxStartRange('Q_CHK_3D')
       call timer_start('Q_CHK_3D')
       CALL Q_CHK_3D ( ITT )
       call timer_stop('Q_CHK_3D')
+      call nvtxEndRange
 
       ENDIF  
+
+      call nvtxStartRange('BUOYF_3D')
       call timer_start('BUOYF_3D')
       CALL BUOYF_3D (BUOY)
       call timer_stop('BUOYF_3D')
+      call nvtxEndRange
+
+      call nvtxStartRange('VORT_3D')
       call timer_start('VORT_3D')
       CALL VORT_3D  ( N1, N2 )
       call timer_stop('VORT_3D')
+      call nvtxEndRange
+
 #if !defined (TURB_TOM)
+      call nvtxStartRange('TURB_3D_VORT')
       call timer_start('TURB_3D_VORT')
       CALL TURB_3D_VORT
       call timer_stop('TURB_3D_VORT')
+      call nvtxEndRange
 #endif
+      call nvtxStartRange('VORT_3D_COREC')
       call timer_start('VORT_3D_COREC')
       CALL VORT_3D_COREC
       call timer_stop('VORT_3D_COREC')
+      call nvtxEndRange
+
+      call nvtxStartRange('WIND_3D')
       call timer_start('WIND_3D')
       CALL WIND_3D  ( N1, N2 )
       call timer_stop('WIND_3D')
+      call nvtxEndRange
+
+      call nvtxStartRange('UPDATE_TRACER')
       call timer_start('UPDATE_TRACER')
       if (ntracer > 0) CALL UPDATE_TRACER ( ITT )
       call timer_stop('UPDATE_TRACER')
+      call nvtxEndRange
+
+
 #if defined (CHEM)
+      call nvtxStartRange('UPDATE_CHEMICAL')
       call timer_start('UPDATE_CHEMICAL')
       call UPDATE_CHEMICAL ( ITT )
       call timer_stop('UPDATE_CHEMICAL')
+      call nvtxEndRange
 #endif
 
+      call nvtxStartRange('make_prof')
       call timer_start('make_prof')
       CALL MAKE_PROFILES
       call timer_stop('make_prof')
+      call nvtxEndRange
 
    END SUBROUTINE ab_3d
 
