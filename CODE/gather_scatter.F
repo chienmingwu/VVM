@@ -12,7 +12,7 @@ MODULE gather_scatter
 USE kinds
 USE parmsld
 USE domain_decomposition
-USE petscsys
+USE mpi
 
 
 IMPLICIT NONE

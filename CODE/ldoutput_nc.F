@@ -29,7 +29,7 @@ USE TURB_3D_module
 USE land_module
 #endif
 #endif
-USE petscsys
+USE mpi
 
 
       

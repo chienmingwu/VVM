@@ -2,7 +2,7 @@
 MODULE trace_gases
       
       USE kinds
-      USE petscsys
+      USE mpi
  
       IMPLICIT NONE
       PRIVATE

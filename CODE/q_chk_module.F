@@ -9,7 +9,7 @@ USE profoutld
 USE bound
 USE utils
 USE domain_decomposition
-USE petscsys
+USE mpi
 
 
 IMPLICIT NONE

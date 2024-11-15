@@ -12,8 +12,6 @@ USE workcom
 USE utils
 USE timer
 USE domain_decomposition
-USE petsc_vvm_solver
-use petscsys
 use multigrid
 
 IMPLICIT NONE
@@ -55,11 +53,6 @@ CONTAINS
 
   120 CONTINUE
 
-#if defined (PETSC)
-      call timer_start('petsc_3d')
-      call petsc_solve_3d(YTEM,W3D)
-      call timer_stop('petsc_3d')
-#else
       call timer_start('MGsolver_3d')
       tmp_y = 0._dbl_kind
       tmp_y(1:mi1,1:mj1,2:nk2-1) = - ytem
@@ -71,7 +64,6 @@ CONTAINS
         W3D(:,:,k)=tmp_w(:,:,k)/rhoz(k)
       enddo
       call timer_stop('MGsolver_3d')
-#endif
 
       CALL BOUND_ARB (NK2,W3D)
 
@@ -97,15 +89,6 @@ CONTAINS
         first=.false.
       endif
 
-#if defined (PETSC)
-      call timer_start('petsc_2d')
-      call petsc_solve_psi(PSI)
-      call bound_arb(1,PSI)
-
-      call petsc_solve_chi(CHI)
-      call bound_arb(1,CHI)
-      call timer_stop('petsc_2d')
-#else
       call timer_start('MGsolver_2d')
       idum1 = 0 
       call xyavg1(psi,nhalo,mi1,mj1,dum1)
@@ -120,8 +103,6 @@ CONTAINS
       if (my_task==0) write(*,'(A14,I8,A20,ES15.7)') "chi iter = ", idum1,",norm of error=", norm
       chi = tmp_chi
       call timer_stop('MGsolver_2d')
-
-#endif
 
       END SUBROUTINE direct_xy
 
@@ -281,7 +262,6 @@ CONTAINS
         rs_old = rs_new
       enddo
     end subroutine CG_3d 
-
     subroutine laplacian_2d(phi,f)
       real(kind=dbl_kind), intent(in) :: phi(MIM:MIP,MJM:MJP)
       real(kind=dbl_kind), intent(out) :: f(MIM:MIP,MJM:MJP)

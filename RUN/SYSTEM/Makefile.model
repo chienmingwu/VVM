@@ -240,7 +240,7 @@ SRC_FREE_CODE = \
 #	output_nc.F \
 	ldoutput_nc.F \
 
-NOCHECK = petsc_vvm_solver.F
+#NOCHECK = petsc_vvm_solver.F
 
 # Der (7 Jan 2023)
 TOPOCODE = create_topolsm.F 
@@ -518,9 +518,9 @@ damping.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o PROFOUTLD.o utils.o
 
 cloud_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o PROFOUTLD.o bound.o damping.o
 
-petsc_vvm_solver.o: kinds.o timer.o PARMSLD.o domain_decomposition.o bound.o
+#petsc_vvm_solver.o: kinds.o timer.o PARMSLD.o domain_decomposition.o bound.o
 
-elliptic.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o bound.o workcom.o utils.o petsc_vvm_solver.o gather_scatter.o domain_decomposition.o gather_scatter.o multigrid.o
+elliptic.o: kinds.o timer.o PARMSLD.o CONST3D.o CONSTLD.o bound.o workcom.o utils.o gather_scatter.o domain_decomposition.o gather_scatter.o multigrid.o
 
 multigrid.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o
 
