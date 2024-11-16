@@ -61,8 +61,8 @@ FC = mpifort -fPIC -O3 -w -Mlarge_arrays -lnvhpcwrapnvtx
 
 LDLIBS = -Wl,-rpath,/opt/lib -L/opt/lib -lpetsc -lblas -llapack -lpnetcdf -lnetcdff -lnetcdf
 
-FFLAGS    = $(INC)
+FFLAGS    = $(INC) $(ACCFLAGS)
 FIXED     = -Mfixed 
 FREE      = -Mfree
-LD        = $(FC) $(ACCFLAGS)
+LD        = $(FC)
 
