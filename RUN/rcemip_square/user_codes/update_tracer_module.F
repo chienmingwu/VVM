@@ -78,6 +78,24 @@ CONTAINS
       sza = getth(xday,xlat,xlon,xhr)
       coszen = max(0.0,cos(sza)) !to avoid negative values
 
+
+            do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
+         TC3D(i,j,K,1) = 1./rho(k)*(                                   &
+                        0.25 * (Z3DX(i,j,k  )+Z3DX(i,j-1,k  )            &
+                               +Z3DX(i,j,k-1)+Z3DX(i,j-1,k-1))           &
+                               *(TH3D(i+1,j,k)-TH3D(i-1,j,k))/(2*DX)     &
+                      - 0.25 * (Z3DY(i,j,k  )+Z3DY(i-1,j,k  )            &
+                               +Z3DY(i,j,k-1)+Z3DY(i-1,j,k-1))           &
+                               *(TH3D(i,j+1,k)-TH3D(i,j-1,k))/(2*DYNEW)  &
+                      +(0.25 * (Z3DZ(i,j,k  )+Z3DZ(i,j-1,k  )            &
+                               +Z3DZ(i-1,j,k)+Z3DZ(i-1,j-1,k))+F)        &
+                               *(TH3D(i,j,k+1)-TH3D(i,j,k-1))/(ZT(k+1)-ZT(k-1)))
+        enddo
+       enddo
+      enddo
+
 !!       ! source
 !!       TC3D(10,10,5,1) = TC3D(10,10,5,1) + 1 * Pass_small_dt
 

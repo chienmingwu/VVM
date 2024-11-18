@@ -32,10 +32,10 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
-!! !  Initialize tracer
-!!       IF (ntracer > 0) THEN
-!!         TC3D(:,:,:,:) = 0.
-!!       ENDIF
+ !  Initialize tracer
+       IF (ntracer > 0) THEN
+         TC3D(:,:,:,:) = 0.
+       ENDIF
 
    END SUBROUTINE update_tracer_init
 
@@ -73,6 +73,9 @@ CONTAINS
 
       sza = getth(xday,xlat,xlon,xhr)
       coszen = max(0.0,cos(sza)) !to avoid negative values
+
+      IF (ntracer>0)
+      
 
 !!        ! source
 !!        IF (ntracer>0) THEN
