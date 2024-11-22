@@ -25,8 +25,8 @@ date > runtime
 # mpiexec --bind-to none -n 1 ./create_topolsm
 # mpiexec --bind-to none -n total_cores ./vvm < INPUT | tee OUTPUT  
 
-mpiexec --bind-to none -n 1 --bind-to none ./create_topolsm
-mpiexec --bind-to none -n 1 nsys profile -t nvtx,cuda,mpi --stats=true --force-overwrite true -o nsys_vvm_%q{OMPI_COMM_WORLD_RANK} ./vvm : -n ${core_minus_one} ./vvm < INPUT | tee OUTPUT  
+mpiexec --bind-to none -n 1 ./create_topolsm
+mpiexec --bind-to none -n 1 nsys profile -t nvtx,openacc,mpi --stats=true --force-overwrite true -o nsys_vvm_%q{OMPI_COMM_WORLD_RANK} ./vvm : -n ${core_minus_one} ./vvm < INPUT | tee OUTPUT  
 
 date >> runtime
 
