@@ -11,7 +11,7 @@
 export PATH=/opt/bin:$PATH
 export LD_LIBRARY_PATH=/opt/lib:$LD_LIBRARY_PATH
 
-ulimit -s unlimited
+#ulimit -s unlimited
 
 export EXPHDR_tmp='expname ../../DATA/expname'
 
