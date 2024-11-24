@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = pbl_op_8dth_6tr_nsys
+set expname = pbl_op_4core_baseline
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -84,8 +84,8 @@ set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
 sed -i 's/zonal_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/128/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/2/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/50/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/6/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
