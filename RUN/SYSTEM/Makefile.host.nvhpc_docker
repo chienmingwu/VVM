@@ -56,7 +56,8 @@ SUF      = f
 
 INC = -I$(CDECKS) -I$(EXPDIR) -I/opt/include 
 
-ACCFLAGS = #-acc=multicore -Minfo=accel
+#ACCFLAGS = -acc=multicore -Minfo=accel
+ACCFLAGS = -acc=gpu -gpu=lineinfo -Minfo=accel
 FC = mpifort -fPIC -O3 -w -Mlarge_arrays -lnvhpcwrapnvtx $(ACCFLAGS)
 
 LDLIBS = -Wl,-rpath,/opt/lib -L/opt/lib -lpetsc -lblas -llapack -lpnetcdf -lnetcdff -lnetcdf
