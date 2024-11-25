@@ -44,18 +44,24 @@ CONTAINS
       call extend_ne(nk3,q,qew,qns,u3dx,uew,u3dy,vns)
 
 !     Zonal advection
+      !$acc parallel loop
       DO K = 2, NK2
+      !$acc loop
       DO J = 1, MJ1
       UEW(1,J,K) = UEW(1,J,K)*RHOU(K) ! use for u(-1,J,K) =uew(1,J,K)
+      !$acc loop
       DO I=mim,mip
       TEMPI(I,J,K)=U3DX(I,J,K)*RHOU(K)
       END DO
       END DO
       END DO
 
+      !$acc parallel loop
       DO K=2,NK2
+      !$acc loop
       DO J=1,MJ1
       UEW(1,J,K) = 0.5*(UEW(1,J,K)+ABS(UEW(1,J,K)))
+      !$acc loop
       DO I=mim,mip
       UPI(I,J,K)=0.5*(TEMPI(I,J,K)+ABS(TEMPI(I,J,K)))
       UMI(I,J,K)=0.5*(TEMPI(I,J,K)-ABS(TEMPI(I,J,K)))
@@ -63,9 +69,12 @@ CONTAINS
       END DO
       END DO
 
+      !$acc parallel loop
       DO K=2,NK2
+      !$acc loop
       DO J=1,MJ1
       UEW(1,J,K) = SQRT(UEW(1,J,K))
+      !$acc loop
       DO I=mim,mip
       UPSRI(I,J,K)=SQRT(UPI(I,J,K))
       UMSRI(I,J,K)=SQRT(ABS(UMI(I,J,K)))
@@ -73,8 +82,9 @@ CONTAINS
       END DO
       END DO
 
-
+      !$acc parallel loop
       DO K=2,NK2
+      !$acc loop
       DO J=1,MJ1
       I = 0
       FLXI(I,J,K)=TEMPI(I,J,K)*(Q(I+1,J,K)+Q(I,J,K))     &
@@ -82,7 +92,7 @@ CONTAINS
        -UPSRI(I,J,K)*UEW(1,J,K)*(Q(I,J,K)-QEW(1,J,K)) &
        +UMI(I,J,K)*(Q(I,J,K)-Q(I+1,J,K))                &
        +UMSRI(I,J,K)*UMSRI(I+1,J,K)*(Q(I+1,J,K)-Q(I+2,J,K)))/3.
-
+      !$acc loop
       DO I=1,MI1-1
       FLXI(I,J,K)=TEMPI(I,J,K)*(Q(I+1,J,K)+Q(I,J,K))      &
        -ALADV*(UPI(I,J,K)*(Q(I+1,J,K)-Q(I,J,K))         &
@@ -100,8 +110,11 @@ CONTAINS
       END DO
       END DO
 
+      !$acc parallel loop
       DO K=2,NK2
+      !$acc loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       terma(I,J,K)=-(FLXI(I,J,K)-FLXI(I-1,J,K))/(2.*DX)
       END DO
@@ -111,18 +124,24 @@ CONTAINS
 !      IF (.FALSE.) THEN
 
 !     Meridional advection
+      !$acc parallel loop
       DO K = 2, NK2
+      !$acc loop
       DO I = 1,MI1
       VNS(I,1,K) = RHOU(K)*VNS(I,1,K)
+      !$acc loop
       DO J = mjm,mjp
       TEMPI(I,J,K)=U3DY(I,J,K)*RHOU(K)
       END DO
       END DO
       END DO
 
+      !$acc parallel loop
       DO K=2,NK2
+      !$acc loop
       DO I = 1,MI1
       VNS(I,1,K) = 0.5*(VNS(I,1,K)+ABS(VNS(I,1,K)))
+      !$acc loop
       DO J = mjm,mjp
       UPI(I,J,K)=0.5*(TEMPI(I,J,K)+ABS(TEMPI(I,J,K)))
       UMI(I,J,K)=0.5*(TEMPI(I,J,K)-ABS(TEMPI(I,J,K)))
@@ -133,9 +152,12 @@ CONTAINS
 !      CALL bound_ns(nk1, upi(mim,mjm,2))
 !      CALL bound_ns(nk1, umi(mim,mjm,2))
 
+      !$acc parallel loop
       DO K=2,NK2
+      !$acc loop
       DO I=1,MI1
       VNS(I,1,K) = SQRT(VNS(I,1,K))
+      !$acc loop
       DO J=mjm,mjp
       UPSRi(i,J,K)=SQRT(UPi(i,J,K))
       UMSRi(i,J,K)=SQRT(ABS(UMi(i,J,K)))
@@ -143,15 +165,17 @@ CONTAINS
       END DO
       END DO
 
-      DO 440 K=2,NK2
-      DO 440 I=1,MI1
+      !$acc parallel loop
+      DO K=2,NK2
+      !$acc loop
+      DO I=1,MI1
       J = 0 
       FLXI(I,J,K)=TEMPI(I,J,K)*(Q(I,J+1,K)+Q(I,J,K))       &
        -ALADV*(UPI(I,J,K)*(Q(I,J+1,K)-Q(I,J,K))          &
        -UPSRI(I,J,K)*VNS(I,1,K)*(Q(I,J,K)-QNS(I,1,K))  &
        +UMI(I,J,K)*(Q(I,J,K)-Q(I,J+1,K))                 &
        +UMSRI(I,J,K)*UMSRI(I,J+1,K)*(Q(I,J+1,K)-Q(I,J+2,K)))/3.
-        
+      !$acc loop
       DO J=1,MJ1-1
       FLXI(I,J,K)=TEMPI(I,J,K)*(Q(I,J+1,K)+Q(I,J,K))       &
        -ALADV*(UPI(I,J,K)*(Q(I,J+1,K)-Q(I,J,K))          &
@@ -170,9 +194,11 @@ CONTAINS
       END DO
 
 !      CALL send_north(nk1,flxi(0,0,2))
-
+      !$acc parallel loop
       DO K=2,NK2
+      !$acc loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       terma(I,J,K)=terma(I,J,K)-(FLXI(I,J,K)-FLXI(I,J-1,K))/(2.*DYNEW)
       END DO
@@ -180,26 +206,34 @@ CONTAINS
       END DO
 
 !     Vertical advection
-
+      !$acc parallel loop
       DO K=2,NK1
+      !$acc loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       TEMPI(I,J,K)=W3D(I,J,K)*RHOZ(K)
       END DO
       END DO
       END DO
 
+      !$acc parallel loop
       DO K=2,NK1
+      !$acc loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       UPI(I,J,K)=0.5*(TEMPI(I,J,K)+ABS(TEMPI(I,J,K)))
       UMI(I,J,K)=0.5*(TEMPI(I,J,K)-ABS(TEMPI(I,J,K)))
       END DO
       END DO
       END DO
-      
+
+      !$acc parallel loop
       DO K=2,NK1
+      !$acc loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       UPSRI(I,J,K)=SQRT(UPI(I,J,K))
       UMSRI(I,J,K)=SQRT(ABS(UMI(I,J,K)))
@@ -207,8 +241,11 @@ CONTAINS
       END DO
       END DO
 
+      !$acc parallel loop
       DO K=3,NK1-1
+      !$acc loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       FLXI(I,J,K)=TEMPI(I,J,K)*(Q(I,J,K+1)+Q(I,J,K))       &
        -ALADV*(UPI(I,J,K)*(Q(I,J,K+1)-Q(I,J,K))          &
@@ -219,7 +256,9 @@ CONTAINS
       END DO
       END DO
 
+      !$acc parallel loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       IF(TEMPI(I,J,NK1).GE.0.) THEN
          FLXI(I,J,NK1)=TEMPI(I,J,NK1)*(Q(I,J,NK2)+Q(I,J,NK1))   &
@@ -239,25 +278,32 @@ CONTAINS
       END DO
       END DO
 
+      !$acc parallel loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       FLXI(I,J, 1)= 0.
       FLXI(I,J,NK2)= 0.
       END DO
       END DO
 
-
+      !$acc parallel loop
       DO K=2,NK2
+      !$acc loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       terma(I,J,K)=terma(I,J,K)-(FLXI(I,J,K)-FLXI(I,J,K-1))*FNU(K)/(2.*DZ)
       termf(I,J,K)=-(FLXI(I,J,K)-FLXI(I,J,K-1))*FNU(K)/(2.*DZ)/RHOU(K)
       END DO
       END DO
       END DO
-
+      
+      !$acc parallel loop
       DO K=2,NK2
+      !$acc loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       terma(I,J,K)=terma(I,J,K)/RHOU(K)
       END DO
@@ -266,8 +312,11 @@ CONTAINS
 
 !ccwut set flux convergence on topo to zero
 
+      !$acc parallel loop
       DO K=2,maxtopo
+      !$acc loop
       DO J=1,MJ1
+      !$acc loop
       DO I=1,MI1
       IF(ITYPEW(I,J,K) .NE. 1) THEN
       terma(I,J,K)=0.
