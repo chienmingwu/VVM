@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = pbl_op_4core_baseline
+set expname = pbl_op_4cLoop_test2
 
 # set job system and compiler
 set compiler = 'nvhpc_docker'
