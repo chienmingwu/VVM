@@ -43,8 +43,11 @@ CONTAINS
 
       call extend_ne(nk3,q,qew,qns,u3dx,uew,u3dy,vns)
 
+! OpenACC Structured Data region
+      !$acc data copyin(Q(mim:mip,mjm:mjp,NK3)) copyout(terma(mi1,mj1,NK2), termf(mim:mip,mjm:mjp,nk3)) create(TEMPI(mim:mip,mjm:mjp,NK2),UPI(mim:mip,mjm:mjp,NK2),UMI(mim:mip,mjm:mjp,NK2), UPSRI(mim:mip,mjm:mjp,NK2),UMSRI(mim:mip,mjm:mjp,NK2), FLXI(0:MI1,0:mj1,NK2), qew(2,mjm:mjp,nk3), uew(2,mjm:mjp,nk3), qns(mim:mip,2,nk3), vns(mim:mip,2,nk3))
+      
 !     Zonal advection
-      !$acc parallel loop
+      !$acc parallel loop present(uew(1,1:mj1,2:nk2), rhou(2:nk2), tempi(mim:mip,1:mj1,2:nk2), u3dx(mim:mip, 1:mj1, 2:nk2))
       DO K = 2, NK2
       !$acc loop
       DO J = 1, MJ1
@@ -56,7 +59,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(uew(1,1:mj1,2:nk2), upi(mim:mip,1:mj1,2:nk2), tempi(mim:mip,1:mj1,2:nk2), umi(mim:mip,1:mj1,2:nk2))
       DO K=2,NK2
       !$acc loop
       DO J=1,MJ1
@@ -69,7 +72,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(uew(1,1:mj1,2:nk2), upsri(mim:mip,1:mj1,2:nk2), upi(mim:mip,1:mj1,2:nk2), umsri(mim:mip,1:mj1,2:nk2), umi(mim:mip,1:mj1,2:nk2))
       DO K=2,NK2
       !$acc loop
       DO J=1,MJ1
@@ -82,7 +85,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(flxi(0:mi1,1:mj1,2:nk2), tempi(0:mi1,1:mj1,2:nk2), q(0:mi1+2,1:mj1,2:nk2), upi(0:mi1,1:mj1,2:nk2), upsri(0:mi1,1:mj1,2:nk2), uew(2,1:mj1,2:nk2), qew(2,1:mj1,2:nk2), umi(0:mi1,1:mj1,2:nk2), umsri(1:mi1+1,1:mj1,2:nk2))
       DO K=2,NK2
       !$acc loop
       DO J=1,MJ1
@@ -110,7 +113,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(terma(1:mi1,1:mj1,2:nk2), flxi(0:mi1,1:mj1,2:nk2))
       DO K=2,NK2
       !$acc loop
       DO J=1,MJ1
@@ -124,7 +127,7 @@ CONTAINS
 !      IF (.FALSE.) THEN
 
 !     Meridional advection
-      !$acc parallel loop
+      !$acc parallel loop present(vns(1:mi1,1,2:nk2), rhou(2:nk2), tempi(1:mi1,mjm:mjp,2:nk2), u3dy(1:mi1,mjm:mjp,2:nk2))
       DO K = 2, NK2
       !$acc loop
       DO I = 1,MI1
@@ -136,7 +139,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(vns(1:mi1,1,2:nk2), tempi(1:mi1,mjm:mjp,2:nk2), upi(1:mi1,mjm:mjp,2:nk2), umi(1:mi1,mjm:mjp,2:nk2))
       DO K=2,NK2
       !$acc loop
       DO I = 1,MI1
@@ -152,7 +155,7 @@ CONTAINS
 !      CALL bound_ns(nk1, upi(mim,mjm,2))
 !      CALL bound_ns(nk1, umi(mim,mjm,2))
 
-      !$acc parallel loop
+      !$acc parallel loop present(vns(1:mi1,1,2:nk2), upsri(1:mi1,mjm:mjp,2:nk2), umsri(1:mi1,mjm:mjp,2:nk2))
       DO K=2,NK2
       !$acc loop
       DO I=1,MI1
@@ -165,7 +168,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(flxi(1:mi1,0:mj1,2:nk2), tempi(1:mi1,0:mj1,2:nk2), q(1:mi1,0:mj1+1,2:nk2), upi(1:mi1,0:mj1,2:nk2), upsri(1:mi1,0:mj1+1,2:nk2), vns(1:mi1,2,2:nk2), qns(1:mi1,2,2:nk2), umi(1:mi1,0:mj1,2:nk2), umsri(1:mi1,0:mj1+1,2:nk2))
       DO K=2,NK2
       !$acc loop
       DO I=1,MI1
@@ -194,7 +197,7 @@ CONTAINS
       END DO
 
 !      CALL send_north(nk1,flxi(0,0,2))
-      !$acc parallel loop
+      !$acc parallel loop present(terma(1:mi1,1:mj1,2:nk2), flxi(1:mi1,0:mj1,2:nk2))
       DO K=2,NK2
       !$acc loop
       DO J=1,MJ1
@@ -206,7 +209,7 @@ CONTAINS
       END DO
 
 !     Vertical advection
-      !$acc parallel loop
+      !$acc parallel loop present(tempi(1:mi1,1:mj1,2:nk1), w3d(1:mi1,1:mj1,2:nk1), rhoz(2:nk1))
       DO K=2,NK1
       !$acc loop
       DO J=1,MJ1
@@ -217,7 +220,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(upi(1:mi1,1:mj1,2:nk1), tempi(1:mi1,1:mj1,2:nk1), umi(1:mi1,1:mj1,2:nk1))
       DO K=2,NK1
       !$acc loop
       DO J=1,MJ1
@@ -229,7 +232,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(upsri(1:mi1,1:mj1,2:nk1), upi(1:mi1,1:mj1,2:nk1), umsri(1:mi1,1:mj1,2:nk1), umi(1:mi1,1:mj1,2:nk1))
       DO K=2,NK1
       !$acc loop
       DO J=1,MJ1
@@ -241,7 +244,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(flxi(1:mi1,1:mj1,3:nk1-1), tempi(1:mi1,1:mj1,3:nk1-1), q(1:mi1,1:mj1,2:nk1+1), upi(1:mi1,1:mj1,3:nk1-1), upsri(1:mi1,1:mj1,2:nk1-1), umi(1:mi1,1:mj1,3:nk1-1), umsri(1:mi1,1:mj1,3:nk1))
       DO K=3,NK1-1
       !$acc loop
       DO J=1,MJ1
@@ -256,7 +259,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(flxi(1:mi1, 1:mj1, 2:nk1), tempi(1:mi1, 1:mj1, 2:nk1), q(1:mi1, 1:mj1, 2:nk2), upi(1:mi1, 1:mj1, 2:nk1), upsri(1:mi1, 1:mj1, 2:nk1), umi(1:mi1, 1:mj1, 2), umsri(1:mi1, 1:mj1, 2:3))
       DO J=1,MJ1
       !$acc loop
       DO I=1,MI1
@@ -278,7 +281,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(flxi(1:mi1,1:mj1,1:nk2))
       DO J=1,MJ1
       !$acc loop
       DO I=1,MI1
@@ -287,19 +290,19 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop
+      !$acc parallel loop present(terma(1:mi1,1:mj1,2:nk2), flxi(1:mi1,1:mj1,1:nk2),fnu(2:nk2))
       DO K=2,NK2
       !$acc loop
       DO J=1,MJ1
       !$acc loop
       DO I=1,MI1
       terma(I,J,K)=terma(I,J,K)-(FLXI(I,J,K)-FLXI(I,J,K-1))*FNU(K)/(2.*DZ)
-      termf(I,J,K)=-(FLXI(I,J,K)-FLXI(I,J,K-1))*FNU(K)/(2.*DZ)/RHOU(K)
+      !termf(I,J,K)=-(FLXI(I,J,K)-FLXI(I,J,K-1))*FNU(K)/(2.*DZ)/RHOU(K)
       END DO
       END DO
       END DO
       
-      !$acc parallel loop
+      !$acc parallel loop present(terma(1:mi1,1:mj1,2:nk2), rhou(2:nk2))
       DO K=2,NK2
       !$acc loop
       DO J=1,MJ1
@@ -312,7 +315,7 @@ CONTAINS
 
 !ccwut set flux convergence on topo to zero
 
-      !$acc parallel loop
+      !$acc parallel loop present(terma(1:mi1,1:mj1,2:maxtopo), itypew(1:mi1,1:mj1,2:maxtopo))
       DO K=2,maxtopo
       !$acc loop
       DO J=1,MJ1
@@ -326,7 +329,7 @@ CONTAINS
       END DO
 !ccwut
  
- 
+      !$acc end data
    END SUBROUTINE advec_3d
       
 END MODULE advec_3d_module
