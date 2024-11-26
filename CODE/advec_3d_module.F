@@ -44,8 +44,9 @@ CONTAINS
       call extend_ne(nk3,q,qew,qns,u3dx,uew,u3dy,vns)
 
 ! OpenACC Structured Data region
-      !$acc data copyin(Q, qew, uew, qns, vns, rhou, u3dx, u3dy, w3d, rhoz, fnu, itypew) copyout(terma, termf) create(TEMPI,UPI,UMI, UPSRI,UMSRI, FLXI)
-!      !$acc update device(Q, rhou, u3dx, u3dy, w3d, rhoz, fnu, itypew)
+       !$acc data copyin(Q, qew, uew, qns, vns) copyout(terma, termf) create(TEMPI,UPI,UMI, UPSRI,UMSRI, FLXI)
+!      !$acc data copyin(Q, qew, uew, qns, vns, rhou, u3dx, u3dy, w3d, rhoz, fnu, itypew) copyout(terma, termf) create(TEMPI,UPI,UMI, UPSRI,UMSRI, FLXI)  ! the last version
+!      !$acc update device(Q, rhou, u3dx, u3dy, w3d, rhoz, fnu, itypew)  ! remove update clause
       
 !     Zonal advection
 !      !$acc parallel loop present(uew, rhou, tempi, u3dx)
@@ -129,7 +130,7 @@ CONTAINS
       END DO
       END DO
       END DO
-      !$acc update self(terma)
+      !$acc update self(terma) 
 
 !      IF (.FALSE.) THEN
 

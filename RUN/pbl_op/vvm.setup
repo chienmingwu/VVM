@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = pbl_op_4cLoop_test2
+set expname = pbl_op_4cLoop_test3
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `

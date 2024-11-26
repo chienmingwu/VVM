@@ -52,6 +52,7 @@ CONTAINS
 
       call nvtxStartRange('advection')
       call timer_start('advection')
+      !$acc enter data copyin(u3dx, u3dy, w3d, rhou, rhoz, fnu, itypew)
       CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
 #if defined (PHYSICS)
 
@@ -109,6 +110,7 @@ CONTAINS
 
 
 #endif
+      !$acc exit data delete(u3dx, u3dy, w3d, rhou, rhoz, fnu, itypew)
       call timer_stop('advection')
       call nvtxEndRange
 
