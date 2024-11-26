@@ -44,8 +44,8 @@ CONTAINS
       call extend_ne(nk3,q,qew,qns,u3dx,uew,u3dy,vns)
 
 ! OpenACC Structured Data region
-       !$acc data copyin(Q, qew, uew, qns, vns) copyout(terma, termf) create(TEMPI,UPI,UMI, UPSRI,UMSRI, FLXI)
-!      !$acc data copyin(Q, qew, uew, qns, vns, rhou, u3dx, u3dy, w3d, rhoz, fnu, itypew) copyout(terma, termf) create(TEMPI,UPI,UMI, UPSRI,UMSRI, FLXI)  ! the last version
+!       !$acc data present(Q, u3dx, u3dy, w3d, rhou, rhoz, fnu, itypew) copyin(qew, uew, qns, vns) copyout(terma, termf) create(TEMPI,UPI,UMI, UPSRI,UMSRI, FLXI)
+      !$acc data copyin(Q, qew, uew, qns, vns) copyout(terma, termf) create(TEMPI,UPI,UMI, UPSRI,UMSRI, FLXI)  ! the last version
 !      !$acc update device(Q, rhou, u3dx, u3dy, w3d, rhoz, fnu, itypew)  ! remove update clause
       
 !     Zonal advection
@@ -130,7 +130,7 @@ CONTAINS
       END DO
       END DO
       END DO
-      !$acc update self(terma) 
+!      !$acc update self(terma)  ! remove update clause
 
 !      IF (.FALSE.) THEN
 
@@ -220,7 +220,7 @@ CONTAINS
       END DO
       END DO
       END DO
-      !$acc update self(terma)
+!      !$acc update self(terma)  ! remove update
 
 !     Vertical advection
 !      !$acc parallel loop present(tempi, w3d, rhoz)
@@ -322,7 +322,7 @@ CONTAINS
       END DO
       END DO
       END DO
-      !$acc update self(terma, termf)
+!      !$acc update self(terma, termf)   ! remove update
       
 !      !$acc parallel loop present(terma, rhou)
       !$acc parallel loop
@@ -352,7 +352,7 @@ CONTAINS
       END DO
       END DO
 !ccwut
-      !$acc update self (terma, termf)
+!      !$acc update self (terma, termf)   ! remove update
       !$acc end data
    END SUBROUTINE advec_3d
       
