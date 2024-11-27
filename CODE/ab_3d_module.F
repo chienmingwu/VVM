@@ -210,11 +210,11 @@ CONTAINS
       call nvtxEndRange
 #endif
 
-      call nvtxStartRange('make_prof')
-      call timer_start('make_prof')
-      CALL MAKE_PROFILES
-      call timer_stop('make_prof')
-      call nvtxEndRange
+!      call nvtxStartRange('make_prof')
+!      call timer_start('make_prof')
+!      CALL MAKE_PROFILES
+!      call timer_stop('make_prof')
+!      call nvtxEndRange
 
    END SUBROUTINE ab_3d
 
