@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = rcemip_mg_square_diag2
+set expname = pv_bubble
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -64,15 +64,16 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define MICROP3
-#define RADCODE
 #define DIAG
-#define CORIOLIS
+#define HEATING
 'END1'
 cat definesld.com
 #define AREAMN
 #define CHEM
 #define TOPOGRAPHY
 #define LSM
+#define CORIOLIS
+#define RADCODE
 
 # Grid parameter declarations.
 # changed from 'cat' to 'sed' - DD 2010.02.09
@@ -83,8 +84,8 @@ cat > DOMAIN << 'END3'
 #!/bin/csh
 set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
-sed -i 's/zonal_dimension/384/g' ${codedir}/cdecks/PARMSLD.F90 
-sed -i 's/merid_dimension/384/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
+sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/75/g' ${codedir}/cdecks/PARMSLD.F90
@@ -97,11 +98,11 @@ cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=43200 /
+ &INPUT1 NEWRUN=T, ITTADD=1080 /
  &INPUT2 RLAT=10., RLON=120.95 /
- &INPUT3 DX=3000.,DYNEW=3000.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
- &INPUT4 NXS=1,NXSAVG=120,NWR11=1,NFLPRT=1,NRESTART=120,niterw=200,niterxy=200,multilevel=3,tol_2d=1.e-6,tol_3d=1.e-8 /
+ &INPUT4 NXS=1,NXSAVG=6,NWR11=1,NFLPRT=1,NRESTART=6,niterw=200,niterxy=200,multilevel=3,tol_2d=1.e-6,tol_3d=1.e-8 /
 #         ( case output frequency)   ( result could be seen in ncfile)
  &INPUT5 IX=3182073,ITINIT=0,ITSTOP=0,SCALE=0.,Q1Q2=F,DTRAD=300.,petsc_cr=0 /
 #                                                              (s)

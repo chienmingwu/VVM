@@ -39,20 +39,20 @@ CONTAINS
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
 
-      INTEGER (KIND=int_kind), PARAMETER :: NT1=76
+      INTEGER (KIND=int_kind), PARAMETER :: NT1=71
       REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), U1(NT1), V1(NT1)
       CHARACTER(len=300)   :: fname
       INTEGER              :: k
       
-      fname = './user_files/profile_sounding.txt'
+      fname = './user_files/20220623.txt'
       OPEN(10, FILE=trim(fname))
       READ(10,*)  ! read header
       DO k=1,NT1
         READ(10,*) P1(k), T1(k), QV1(k), U1(k), V1(k)
       ENDDO
     
-      P1(:)  = P1
-      QV1(:) = QV1
+      P1(:)  = P1*100.
+      QV1(:) = QV1*1E-3
 
       ! interpolate thermoaldynamics profile
       ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
@@ -119,8 +119,32 @@ CONTAINS
       !! mjm = 1 - nhalo       ! starting meridional index
       !! mjp = mj1 + nhalo     ! ending meridional index
       !! --------------------
-      
-      continue
+
+      INTEGER(int_kind) :: i, j, k
+      REAL(dbl_kind)    :: glob_idx_i, glob_idx_j
+      REAL(dbl_kind)    :: radius_norm
+
+
+
+      !! bubble example
+      DO K = 1, NK3
+      DO J = mjm,mjp
+      DO I = mim,mip
+        glob_idx_j = real(mj1*nj_sbdm+j)
+        glob_idx_i = real(mi1*ni_sbdm+i)
+
+        radius_norm = sqrt( &
+                             ((glob_idx_i-mi_glob/2)*DX/16000.)**2 &
+                          +  ((glob_idx_j-mj_glob/2)*DYNEW/16000.)**2 &
+                          + ((ZT(K)-2500.)/2000.)**2 &
+                          )
+        IF ( radius_norm <= 1 ) THEN
+          TH3D(I,J,K) = TH3D(I,J,K) &
+                        + 10.*(cos(3.14159265*0.5*radius_norm))
+        ENDIF
+      ENDDO
+      ENDDO
+      ENDDO      
 
 
   ENDSUBROUTINE USER_set_3D_perturbation

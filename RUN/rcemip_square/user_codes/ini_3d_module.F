@@ -279,7 +279,7 @@ CONTAINS
   660 CONTINUE
 
 
-      restart_read: IF (.true.)THEN
+      restart_read: IF (.false.)THEN
 
 !   restart( thermodynamic_file (absolute path) , hydrometer , 
 !            dynamic_variables , {optional} dynamic_file (absolute path) )

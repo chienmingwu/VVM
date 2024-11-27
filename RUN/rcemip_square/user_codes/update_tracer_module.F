@@ -79,7 +79,7 @@ CONTAINS
       coszen = max(0.0,cos(sza)) !to avoid negative values
 
 
-            do k=2,nk2
+      do k=2,nk2
        do j=1,mj1
         do i=1,mi1
          TC3D(i,j,K,1) = 1./rho(k)*(                                   &
