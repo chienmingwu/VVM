@@ -53,34 +53,34 @@ CONTAINS
       call nvtxStartRange('advection')
       call timer_start('advection')
       !$acc enter data copyin(u3dx, u3dy, w3d, rhou, rhoz, fnu, itypew)
-      CALL ADVEC_3D ( TH3D, FTH3D(1,1,1,L), thstd1  )
+      CALL ADVEC_3D ( TH3D, FTH3D(:,:,:,L), thstd1  )
 #if defined (PHYSICS)
 
-      CALL ADVEC_3D ( QV3D, FQV3D(1,1,1,L), QVSTD )
+      CALL ADVEC_3D ( QV3D, FQV3D(:,:,:,L), QVSTD )
   
-      CALL ADVEC_3D ( QR3D, FQR3D(1,1,1,L), HYSG3D )
+      CALL ADVEC_3D ( QR3D, FQR3D(:,:,:,L), HYSG3D )
       
-      CALL ADVEC_3D ( QC3D, FQC3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( QC3D, FQC3D(:,:,:,L), term4 )
 
-      CALL ADVEC_3D ( QI3D, FQI3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( QI3D, FQI3D(:,:,:,L), term4 )
 
 #if defined (MICROP3)
-      CALL ADVEC_3D ( NC3D, FNC3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( NC3D, FNC3D(:,:,:,L), term4 )
 
-      CALL ADVEC_3D ( NR3D, FNR3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( NR3D, FNR3D(:,:,:,L), term4 )
 
-      CALL ADVEC_3D ( NI3D, FNI3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( NI3D, FNI3D(:,:,:,L), term4 )
 
-      CALL ADVEC_3D ( QRIM3D, FQRIM3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( QRIM3D, FQRIM3D(:,:,:,L), term4 )
 
-      CALL ADVEC_3D ( BRIM3D, FBRIM3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( BRIM3D, FBRIM3D(:,:,:,L), term4 )
 #if defined (LIQFRACP3)
 
-      CALL ADVEC_3D ( QILIQ3D, FQILIQ3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( QILIQ3D, FQILIQ3D(:,:,:,L), term4 )
 #endif
 #else
 
-      CALL ADVEC_3D ( QS3D, FQS3D(1,1,1,L), term4 )
+      CALL ADVEC_3D ( QS3D, FQS3D(:,:,:,L), term4 )
 !      DO 160 K = 2, NK2
 !      DO 160 J = 1, MJ1
 !      DO 160 I = 1, MI1
@@ -98,13 +98,13 @@ CONTAINS
     
       if (ntracer > 0)then
          do nt = 1,ntracer
-            CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(1,1,1,L,nt), term4 )
+            CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(:,:,:,L,nt), term4 )
          enddo
       endif
 
 #if defined (CHEM)
          do nt = 1,nchem
-            CALL ADVEC_3D ( CHEM3D(mim,mjm,1,nt), FCHEM3D(1,1,1,L,nt), term4 )
+            CALL ADVEC_3D ( CHEM3D(mim,mjm,1,nt), FCHEM3D(:,:,:,L,nt), term4 )
          enddo
 #endif
 
