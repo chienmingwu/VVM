@@ -53,34 +53,34 @@ CONTAINS
       call nvtxStartRange('advection')
       call timer_start('advection')
       !$acc data copyin(u3dx, u3dy, w3d, rhou, rhoz, fnu, itypew)
-      CALL ADVEC_3D ( TH3D, FTH3D(:,:,:,L), 1*10)
+      CALL ADVEC_3D ( TH3D, FTH3D(:,:,:,L), 0)
 #if defined (PHYSICS)
 
-      CALL ADVEC_3D ( QV3D, FQV3D(:,:,:,L), 2*10)
+      CALL ADVEC_3D ( QV3D, FQV3D(:,:,:,L), 1)
   
-      CALL ADVEC_3D ( QR3D, FQR3D(:,:,:,L), 3*10)
+      CALL ADVEC_3D ( QR3D, FQR3D(:,:,:,L), 2)
       
-      CALL ADVEC_3D ( QC3D, FQC3D(:,:,:,L), 4*10)
+      CALL ADVEC_3D ( QC3D, FQC3D(:,:,:,L), 0)
 
-      CALL ADVEC_3D ( QI3D, FQI3D(:,:,:,L), 5*10)
+      CALL ADVEC_3D ( QI3D, FQI3D(:,:,:,L), 1)
 
 #if defined (MICROP3)
-      CALL ADVEC_3D ( NC3D, FNC3D(:,:,:,L), 6*10)
+      CALL ADVEC_3D ( NC3D, FNC3D(:,:,:,L), 2)
 
-      CALL ADVEC_3D ( NR3D, FNR3D(:,:,:,L), 7*10)
+      CALL ADVEC_3D ( NR3D, FNR3D(:,:,:,L), 0)
 
-      CALL ADVEC_3D ( NI3D, FNI3D(:,:,:,L), 8*10)
+      CALL ADVEC_3D ( NI3D, FNI3D(:,:,:,L), 1)
 
-      CALL ADVEC_3D ( QRIM3D, FQRIM3D(:,:,:,L), 9*10)
+      CALL ADVEC_3D ( QRIM3D, FQRIM3D(:,:,:,L), 2)
 
-      CALL ADVEC_3D ( BRIM3D, FBRIM3D(:,:,:,L), 10*10)
+      CALL ADVEC_3D ( BRIM3D, FBRIM3D(:,:,:,L), 0)
 #if defined (LIQFRACP3)
 
-      CALL ADVEC_3D ( QILIQ3D, FQILIQ3D(:,:,:,L), 11*10)
+      CALL ADVEC_3D ( QILIQ3D, FQILIQ3D(:,:,:,L), 1)
 #endif
 #else
 
-      CALL ADVEC_3D ( QS3D, FQS3D(:,:,:,L), 12*10)
+      CALL ADVEC_3D ( QS3D, FQS3D(:,:,:,L), 2)
 !      DO 160 K = 2, NK2
 !      DO 160 J = 1, MJ1
 !      DO 160 I = 1, MI1
@@ -98,13 +98,13 @@ CONTAINS
 
       if (ntracer > 0)then
          do nt = 1,ntracer
-            CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(:,:,:,L,nt), (12+nt)*10)
+            CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(:,:,:,L,nt), mod(nt, 3))
          enddo
       endif
 
 #if defined (CHEM)
          do nt = 1,nchem
-            CALL ADVEC_3D ( CHEM3D(mim,mjm,1,nt), FCHEM3D(:,:,:,L,nt), (12+ntracer+nt)*10)
+            CALL ADVEC_3D ( CHEM3D(mim,mjm,1,nt), FCHEM3D(:,:,:,L,nt), mod(nt, 3))
          enddo
 #endif
 
