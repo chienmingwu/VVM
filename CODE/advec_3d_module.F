@@ -15,7 +15,7 @@ PUBLIC :: advec_3d
 
 CONTAINS
 
-      SUBROUTINE ADVEC_3D (Q,terma, termf)
+      SUBROUTINE ADVEC_3D (Q,terma)
 !     Advection for thermodynamic variables 
 !     ALADV: alpha in advection scheme
 
@@ -25,8 +25,8 @@ CONTAINS
 
       REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,NK2), INTENT(out) ::  &  
          terma      ! advective tendency (final)
-      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3), INTENT(out) ::  & 
-         termf      ! vertical flux convergence
+!      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3), INTENT(out) ::  & 
+!         termf      ! vertical flux convergence
 
 ! local variables
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK2) :: &
@@ -48,7 +48,7 @@ CONTAINS
       call extend_ne(nk3,q,qew,qns,u3dx,uew,u3dy,vns)
 
 ! OpenACC Structured Data region
-      !$acc data copyin(Q, qew, uew, qns, vns) copyout(terma, termf) create(TEMPI_z, TEMPI_m, TEMPI_v, UPI_z, UPI_m, UPI_v, UMI_z, UMI_m, UMI_v, UPSRI_z, UPSRI_m, UPSRI_v, UMSRI_z, UMSRI_m, UMSRI_v, FLXI_z, FLXI_m, FLXI_v)
+      !$acc data copyin(Q, qew, uew, qns, vns) copyout(terma) create(TEMPI_z, TEMPI_m, TEMPI_v, UPI_z, UPI_m, UPI_v, UMI_z, UMI_m, UMI_v, UPSRI_z, UPSRI_m, UPSRI_v, UMSRI_z, UMSRI_m, UMSRI_v, FLXI_z, FLXI_m, FLXI_v)
       
 !     Zonal advection
       !$acc parallel loop collapse(2) async(1)
@@ -266,7 +266,6 @@ CONTAINS
       terma(I,J,K) = terma(I,J,K)/RHOU(K)
 !      terma(I,J,K)=terma(I,J,K)-(FLXI(I,J,K)-FLXI(I,J,K-1))*FNU(K)/(2.*DZ)
 !      terma(I,J,K)=terma(I,J,K)/RHOU(K)
-      !termf(I,J,K)=-(FLXI(I,J,K)-FLXI(I,J,K-1))*FNU(K)/(2.*DZ)/RHOU(K)
       ! Set flux conv. on topo to zero
       IF(ITYPEW(I,J,K) .NE. 1) THEN
       terma(I,J,K)=0.
