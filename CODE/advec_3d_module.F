@@ -15,7 +15,7 @@ PUBLIC :: advec_3d
 
 CONTAINS
 
-      SUBROUTINE ADVEC_3D (Q,terma)
+      SUBROUTINE ADVEC_3D (Q,terma, stream_id)
 !     Advection for thermodynamic variables 
 !     ALADV: alpha in advection scheme
 
@@ -25,6 +25,8 @@ CONTAINS
 
       REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,NK2), INTENT(out) ::  &  
          terma      ! advective tendency (final)
+      INTEGER, INTENT(in) :: &
+         stream_id  ! id of the GPU kernel stream
 !      REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3), INTENT(out) ::  & 
 !         termf      ! vertical flux convergence
 
@@ -51,7 +53,7 @@ CONTAINS
       !$acc data copyin(Q, qew, uew, qns, vns) copyout(terma) create(TEMPI_z, TEMPI_m, TEMPI_v, UPI_z, UPI_m, UPI_v, UMI_z, UMI_m, UMI_v, UPSRI_z, UPSRI_m, UPSRI_v, UMSRI_z, UMSRI_m, UMSRI_v, FLXI_z, FLXI_m, FLXI_v)
       
 !     Zonal advection
-      !$acc parallel loop collapse(2) async(1)
+      !$acc parallel loop collapse(2) async(stream_id+1)
       DO K = 2, NK2
       DO J = 1, MJ1
       UEW(1,J,K) = UEW(1,J,K)*RHOU(K) ! use for u(-1,J,K) =uew(1,J,K)
@@ -81,7 +83,7 @@ CONTAINS
 !      UPSRI_z(mim:mip,1:MJ1,2:NK2) = SQRT(UPI_z(mim:mip,1:MJ1,2:NK2))
 !      UMSRI_z(mim:mip,1:MJ1,2:NK2) = SQRT(ABS(UMI_z(mim:mip,1:MJ1,2:NK2)))
 
-      !$acc parallel loop collapse(2) async(1)
+      !$acc parallel loop collapse(2) async(stream_id+1)
       DO K=2,NK2
       DO J=1,MJ1
       I = 0
@@ -120,7 +122,7 @@ CONTAINS
 !      IF (.FALSE.) THEN
 
 !     Meridional advection
-      !$acc parallel loop collapse(2) async(2)
+      !$acc parallel loop collapse(2) async(stream_id+2)
       DO K = 2, NK2
       DO I = 1,MI1
       VNS(I,1,K) = RHOU(K)*VNS(I,1,K)
@@ -143,7 +145,7 @@ CONTAINS
 !      UPSRI_m(1:MI1,mjm:mjp,2:NK2) = SQRT(UPI_m(1:MI1,mjm:mjp,2:NK2))
 !      UMSRI_m(1:MI1,mjm:mjp,2:NK2) = SQRT(ABS(UMI_m(1:MI1,mjm:mjp,2:NK2)))
 
-      !$acc parallel loop collapse(2) async(2)
+      !$acc parallel loop collapse(2) async(stream_id+2)
       DO K=2,NK2
       DO I=1,MI1
       J = 0 
@@ -181,7 +183,7 @@ CONTAINS
 !      END DO
 
 !     Vertical advection
-      !$acc parallel loop collapse(3) async(3)
+      !$acc parallel loop collapse(3) async(stream_id+3)
       DO K=2,NK1
       DO J=1,MJ1
       DO I=1,MI1
@@ -216,7 +218,7 @@ CONTAINS
 !      UPSRI_v(1:MI1,1:MJ1,2:NK1) = SQRT(UPI_v(1:MI1,1:MJ1,2:NK1))
 !      UMSRI_v(1:MI1,1:MJ1,2:NK1) = SQRT(ABS(UMI_v(1:MI1,1:MJ1,2:NK1)))
 
-      !$acc parallel loop collapse(3) async(3)
+      !$acc parallel loop collapse(3) async(stream_id+3)
       DO K=3,NK1-1
       DO J=1,MJ1
       DO I=1,MI1
@@ -229,7 +231,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop collapse(2) async(3)
+      !$acc parallel loop collapse(2) async(stream_id+3)
       DO J=1,MJ1
       DO I=1,MI1
       FLXI_v(I,J, 1)= 0.
@@ -251,7 +253,7 @@ CONTAINS
       ENDIF
       END DO
       END DO
-      !$acc wait
+      !$acc wait(stream_id+1, stream_id+2, stream_id+3)
       !$acc parallel loop collapse(3)
       DO K=2,NK2
       DO J=1,MJ1
