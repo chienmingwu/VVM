@@ -53,34 +53,34 @@ CONTAINS
       call nvtxStartRange('advection')
       call timer_start('advection')
       !$acc data copyin(u3dx, u3dy, w3d, rhou, rhoz, fnu, itypew)
-      CALL ADVEC_3D ( TH3D, FTH3D(:,:,:,L) ) !$acc async(1)
+      CALL ADVEC_3D ( TH3D, FTH3D(:,:,:,L) )
 #if defined (PHYSICS)
 
-      CALL ADVEC_3D ( QV3D, FQV3D(:,:,:,L) ) !$acc async(1)
+      CALL ADVEC_3D ( QV3D, FQV3D(:,:,:,L) )
   
-      CALL ADVEC_3D ( QR3D, FQR3D(:,:,:,L) ) !$acc async(1)
+      CALL ADVEC_3D ( QR3D, FQR3D(:,:,:,L) )
       
-      CALL ADVEC_3D ( QC3D, FQC3D(:,:,:,L) ) !$acc async(2)
+      CALL ADVEC_3D ( QC3D, FQC3D(:,:,:,L) )
 
-      CALL ADVEC_3D ( QI3D, FQI3D(:,:,:,L) ) !$acc async(2)
+      CALL ADVEC_3D ( QI3D, FQI3D(:,:,:,L) )
 
 #if defined (MICROP3)
-      CALL ADVEC_3D ( NC3D, FNC3D(:,:,:,L) ) !$acc async(3)
+      CALL ADVEC_3D ( NC3D, FNC3D(:,:,:,L) )
 
-      CALL ADVEC_3D ( NR3D, FNR3D(:,:,:,L) ) !$acc async(3)
+      CALL ADVEC_3D ( NR3D, FNR3D(:,:,:,L) )
 
-      CALL ADVEC_3D ( NI3D, FNI3D(:,:,:,L) ) !$acc async(3)
+      CALL ADVEC_3D ( NI3D, FNI3D(:,:,:,L) )
 
-      CALL ADVEC_3D ( QRIM3D, FQRIM3D(:,:,:,L) ) !$acc async(4)
+      CALL ADVEC_3D ( QRIM3D, FQRIM3D(:,:,:,L) )
 
-      CALL ADVEC_3D ( BRIM3D, FBRIM3D(:,:,:,L) ) !$acc async(4)
+      CALL ADVEC_3D ( BRIM3D, FBRIM3D(:,:,:,L) )
 #if defined (LIQFRACP3)
 
-      CALL ADVEC_3D ( QILIQ3D, FQILIQ3D(:,:,:,L) ) !$acc async(4)
+      CALL ADVEC_3D ( QILIQ3D, FQILIQ3D(:,:,:,L) )
 #endif
 #else
 
-      CALL ADVEC_3D ( QS3D, FQS3D(:,:,:,L) ) !$acc async(4)
+      CALL ADVEC_3D ( QS3D, FQS3D(:,:,:,L) )
 !      DO 160 K = 2, NK2
 !      DO 160 J = 1, MJ1
 !      DO 160 I = 1, MI1
@@ -95,7 +95,7 @@ CONTAINS
 !                               *(HLF/CP)*86400.
 !  170 CONTINUE
 #endif
-      !$acc wait
+
       if (ntracer > 0)then
          do nt = 1,ntracer
             CALL ADVEC_3D ( TC3D(mim,mjm,1,nt), FTC3D(:,:,:,L,nt) )
