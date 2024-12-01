@@ -29,8 +29,6 @@ CONTAINS
          termf      ! vertical flux convergence
 
 ! local variables
-      REAL (KIND=dbl_kind), DIMENSION(mi1,mj1,NK2) ::  &  
-         terma_z, terma_m, terma_v      ! temporary advective tendency (zonal, meridional, vertical)
       REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,NK2) :: &
          TEMPI_z, TEMPI_m, TEMPI_v, UPI_z, UPI_m, UPI_v, UMI_z, UMI_m, UMI_v, UPSRI_z, UPSRI_m, UPSRI_v, UMSRI_z, UMSRI_m, UMSRI_v
       REAL (KIND=dbl_kind), DIMENSION(0:MI1,0:mj1,NK2) :: &
@@ -50,10 +48,10 @@ CONTAINS
       call extend_ne(nk3,q,qew,qns,u3dx,uew,u3dy,vns)
 
 ! OpenACC Structured Data region
-      !$acc data copyin(Q, qew, uew, qns, vns) copyout(terma, termf) create(terma_z, terma_m, terma_v, TEMPI_z, TEMPI_m, TEMPI_v, UPI_z, UPI_m, UPI_v, UMI_z, UMI_m, UMI_v, UPSRI_z, UPSRI_m, UPSRI_v, UMSRI_z, UMSRI_m, UMSRI_v, FLXI_z, FLXI_m, FLXI_v)
+      !$acc data copyin(Q, qew, uew, qns, vns) copyout(terma, termf) create(TEMPI_z, TEMPI_m, TEMPI_v, UPI_z, UPI_m, UPI_v, UMI_z, UMI_m, UMI_v, UPSRI_z, UPSRI_m, UPSRI_v, UMSRI_z, UMSRI_m, UMSRI_v, FLXI_z, FLXI_m, FLXI_v)
       
 !     Zonal advection
-      !$acc parallel loop collapse(2)
+      !$acc parallel loop collapse(2) async(1)
       DO K = 2, NK2
       DO J = 1, MJ1
       UEW(1,J,K) = UEW(1,J,K)*RHOU(K) ! use for u(-1,J,K) =uew(1,J,K)
@@ -70,22 +68,20 @@ CONTAINS
       END DO
       END DO
       !! Array version !!
+!      !$acc parallel loop
 !      DO K = 2, NK2
 !          UEW(1,1:MJ1,K)           = UEW(1,1:MJ1,K)*RHOU(K)
 !          TEMPI_z(mim:mip,1:MJ1,K) = U3DX(mim:mip,1:MJ1,K)*RHOU(K)
 !          VNS(1:MI1,1,K)           = VNS(1:MI1,1,K)*RHOU(K)  ! moved meridional initialization here
 !          TEMPI_m(1:MI1,mjm:mjp,K) = U3DY(1:MI1,mjm:mjp,K)*RHOU(K)
 !      END DO
-!      UEW(1,1:MJ1,2:NK2) = SQRT(0.5*(UEW(1,1:MJ1,2:NK2)*RHOU(2:NK2)+ABS(UEW(1,1:MJ1,2:NK2))))
-!      TEMPI_z(mim:mip,1:MJ1,2:NK2) = U3DX(mim:mip,1:MJ1,2:NK2)*RHOU(2:NK2)
-
 !      UEW(1,1:MJ1,2:NK2) = SQRT(0.5*(UEW(1,1:MJ1,2:NK2)+ABS(UEW(1,1:MJ1,2:NK2))))
 !      UPI_z(mim:mip,1:MJ1,2:NK2)   = 0.5*(TEMPI_z(mim:mip,1:MJ1,2:NK2)+ABS(TEMPI_z(mim:mip,1:MJ1,2:NK2)))
 !      UMI_z(mim:mip,1:MJ1,2:NK2)   = 0.5*(TEMPI_z(mim:mip,1:MJ1,2:NK2)-ABS(TEMPI_z(mim:mip,1:MJ1,2:NK2)))
 !      UPSRI_z(mim:mip,1:MJ1,2:NK2) = SQRT(UPI_z(mim:mip,1:MJ1,2:NK2))
 !      UMSRI_z(mim:mip,1:MJ1,2:NK2) = SQRT(ABS(UMI_z(mim:mip,1:MJ1,2:NK2)))
 
-      !$acc parallel loop collapse(2)
+      !$acc parallel loop collapse(2) async(1)
       DO K=2,NK2
       DO J=1,MJ1
       I = 0
@@ -124,7 +120,7 @@ CONTAINS
 !      IF (.FALSE.) THEN
 
 !     Meridional advection
-      !$acc parallel loop collapse(2)
+      !$acc parallel loop collapse(2) async(2)
       DO K = 2, NK2
       DO I = 1,MI1
       VNS(I,1,K) = RHOU(K)*VNS(I,1,K)
@@ -141,16 +137,13 @@ CONTAINS
       END DO
       END DO
       !! Array version !!
-!      VNS(1:MI1,1,2:NK2) = SQRT(0.5*(VNS(1:MI1,1,2:NK2)*RHOU(2:NK2)+ABS(VNS(1:MI1,1,2:NK2))))
-!      TEMPI_m(1:MI1,mjm:mjp,2:NK2) = U3DY(1:MI1,mjm:mjp,2:NK2)*RHOU(2:NK2)
-
 !      VNS(1:MI1,1,2:NK2) = SQRT(0.5*(VNS(1:MI1,1,2:NK2)+ABS(VNS(1:MI1,1,2:NK2))))
 !      UPI_m(1:MI1,mjm:mjp,2:NK2)   = 0.5*(TEMPI_m(1:MI1,mjm:mjp,2:NK2)+ABS(TEMPI_m(1:MI1,mjm:mjp,2:NK2)))
 !      UMI_m(1:MI1,mjm:mjp,2:NK2)   = 0.5*(TEMPI_m(1:MI1,mjm:mjp,2:NK2)-ABS(TEMPI_m(1:MI1,mjm:mjp,2:NK2)))
 !      UPSRI_m(1:MI1,mjm:mjp,2:NK2) = SQRT(UPI_m(1:MI1,mjm:mjp,2:NK2))
 !      UMSRI_m(1:MI1,mjm:mjp,2:NK2) = SQRT(ABS(UMI_m(1:MI1,mjm:mjp,2:NK2)))
 
-      !$acc parallel loop collapse(2)
+      !$acc parallel loop collapse(2) async(2)
       DO K=2,NK2
       DO I=1,MI1
       J = 0 
@@ -188,19 +181,11 @@ CONTAINS
 !      END DO
 
 !     Vertical advection
-      !$acc parallel loop collapse(3)
+      !$acc parallel loop collapse(3) async(3)
       DO K=2,NK1
       DO J=1,MJ1
       DO I=1,MI1
       TEMPI_v(I,J,K)=W3D(I,J,K)*RHOZ(K)
-      END DO
-      END DO
-      END DO
-
-      !$acc parallel loop collapse(3)
-      DO K=2,NK1
-      DO J=1,MJ1
-      DO I=1,MI1
       UPI_v(I,J,K)=0.5*(TEMPI_v(I,J,K)+ABS(TEMPI_v(I,J,K)))
       UMI_v(I,J,K)=0.5*(TEMPI_v(I,J,K)-ABS(TEMPI_v(I,J,K)))
       UPSRI_v(I,J,K)=SQRT(UPI_v(I,J,K))
@@ -208,6 +193,18 @@ CONTAINS
       END DO
       END DO
       END DO
+
+!      !$acc parallel loop collapse(3)
+!      DO K=2,NK1
+!      DO J=1,MJ1
+!      DO I=1,MI1
+!      UPI_v(I,J,K)=0.5*(TEMPI_v(I,J,K)+ABS(TEMPI_v(I,J,K)))
+!      UMI_v(I,J,K)=0.5*(TEMPI_v(I,J,K)-ABS(TEMPI_v(I,J,K)))
+!      UPSRI_v(I,J,K)=SQRT(UPI_v(I,J,K))
+!      UMSRI_v(I,J,K)=SQRT(ABS(UMI_v(I,J,K)))
+!      END DO
+!      END DO
+!      END DO
       !! Array Version !!
 !      DO K = 2, NK1
 !          TEMPI_v(1:MI1,1:MJ1,K) = W3D(1:MI1,1:MJ1,K)*RHOZ(K)
@@ -219,7 +216,7 @@ CONTAINS
 !      UPSRI_v(1:MI1,1:MJ1,2:NK1) = SQRT(UPI_v(1:MI1,1:MJ1,2:NK1))
 !      UMSRI_v(1:MI1,1:MJ1,2:NK1) = SQRT(ABS(UMI_v(1:MI1,1:MJ1,2:NK1)))
 
-      !$acc parallel loop collapse(3)
+      !$acc parallel loop collapse(3) async(3)
       DO K=3,NK1-1
       DO J=1,MJ1
       DO I=1,MI1
@@ -232,7 +229,7 @@ CONTAINS
       END DO
       END DO
 
-      !$acc parallel loop collapse(2)
+      !$acc parallel loop collapse(2) async(3)
       DO J=1,MJ1
       DO I=1,MI1
       FLXI_v(I,J, 1)= 0.
@@ -254,7 +251,7 @@ CONTAINS
       ENDIF
       END DO
       END DO
-
+      !$acc wait
       !$acc parallel loop collapse(3)
       DO K=2,NK2
       DO J=1,MJ1
@@ -270,26 +267,26 @@ CONTAINS
 !      terma(I,J,K)=terma(I,J,K)-(FLXI(I,J,K)-FLXI(I,J,K-1))*FNU(K)/(2.*DZ)
 !      terma(I,J,K)=terma(I,J,K)/RHOU(K)
       !termf(I,J,K)=-(FLXI(I,J,K)-FLXI(I,J,K-1))*FNU(K)/(2.*DZ)/RHOU(K)
-      END DO
-      END DO
-      END DO
-
-!ccwut set flux convergence on topo to zero
-
-      !$acc parallel loop collapse(3)
-      DO K=2,maxtopo
-      DO J=1,MJ1
-      DO I=1,MI1
+      ! Set flux conv. on topo to zero
       IF(ITYPEW(I,J,K) .NE. 1) THEN
       terma(I,J,K)=0.
       ENDIF
       END DO
       END DO
       END DO
-      !! Array Version !!
-!      terma(ITYPEW /= 1) = 0.0
-!      terma(:, :, 2:maxtopo) = 0.0
-!      terma(:, :, 2:maxtopo) = merge(terma(:, :, 2:maxtopo), 0.0, ITYPEW(:, :, 2:maxtopo) /= 1)
+
+!ccwut set flux convergence on topo to zero
+
+!      !$acc parallel loop collapse(3)
+!      DO K=2,maxtopo
+!      DO J=1,MJ1
+!      DO I=1,MI1
+!      IF(ITYPEW(I,J,K) .NE. 1) THEN
+!      terma(I,J,K)=0.
+!      ENDIF
+!      END DO
+!      END DO
+!      END DO
 !ccwut
       !$acc end data
    END SUBROUTINE advec_3d
