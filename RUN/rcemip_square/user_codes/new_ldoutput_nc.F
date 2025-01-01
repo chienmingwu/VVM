@@ -5,7 +5,7 @@ MODULE new_ldoutput_nc
 
 !USE netcdf
 USE pnetcdf
-
+USE bound
 USE kinds
 USE parmsld
 USE constld
@@ -804,6 +804,8 @@ CONTAINS
 #endif
       enddo
 !laplacian of buoyancy
+      
+      call bound_arb(nk2,diag3d(:,:,:,6))
 
       do k=2,nk2
        do j=1,mj1
@@ -816,22 +818,20 @@ CONTAINS
 
 !D term for vertical momentum flux divergence
 
-      do k=3,nk1
-       do j=2,mj1
-        do i=2,mi1
+      do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
         diag3d(i,j,k,8)=-1./rho(k)*(                                               &
-        ((u3dx(i-1+1,j,k)+u3dx(i+1,j,k))*(w3d(i+1,j,k-1)+w3d(i+1,j,k))/4.          &
-        -(u3dx(i-1-1,j,k)+u3dx(i-1,j,k))*(w3d(i-1,j,k-1)+w3d(i-1,j,k))/4.)         &
-        /(2.*dx)*rho(k)+                                                           &
-        ((u3dy(i,j-1+1,k)+u3dy(i,j+1,k))*(w3d(i,j+1,k-1)+w3d(i,j+1,k))/4.          &
-        -(u3dy(i,j-1-1,k)+u3dy(i,j-1,k))*(w3d(i,j-1,k-1)+w3d(i,j-1,k))/4.)         &
-        /(2.*dynew)*rho(k)+                                                        &
-        (rho(k+1)*(w3d(i,j,k-1+1)+w3d(i,j,k+1))*(w3d(i,j,k-1+1)+w3d(i,j,k+1))/4.   &
-        -rho(k-1)*(w3d(i,j,k-1-1)+w3d(i,j,k-1))*(w3d(i,j,k-1-1)+w3d(i,j,k-1))/4.)  &
-        /((ZT(k+1)-ZT(k-1))))
+                       (u3dx(i,j,k)*(w3d(i,j,k)+w3d(i+1,j,k)+w3d(i,j,k-1)+w3d(i+i,j,k-1))*0.25 &
+                       -u3dx(i-1,j,k)*(w3d(i-1,j,k)+w3d(i,j,k)+w3d(i-1,j,k-1)+w3d(i,j,k-1))*0.25)/DX &
+                      +(u3dy(i,j,k)*(w3d(i,j,k)+w3d(i,j+1,k)+w3d(i,j,k-1)+w3d(i,j+1,k-1))*0.25 &
+                       -u3dy(i,j-1,k)*(w3d(i,j-1,k)+w3d(i,j,k)+w3d(i,j-1,k-1)+w3d(i,j,k-1))*0.25)/DYNEW & 
+                      +(rhoz(k)*w3d(i,j,k)*w3d(i,j,k)-rhoz(k-1)*w3d(i,j,k-1)*w3d(i,j,k-1))/(zz(k)-zz(k-1)))
         enddo
        enddo
       enddo
+
+      call bound_arb(nk2,diag3d(:,:,:,8))
 
       do k=2,nk1
        do j=1,mj1
@@ -841,9 +841,10 @@ CONTAINS
         enddo
        enddo
       enddo
+
 !D term for u^2+v^2 KE
 
-      do k=2,nk1
+      do k=2,nk2
        do j=1,mj1
         do i=1,mi1
       diag3d(i,j,k,9)=0.125*((u3dx(i-1,j,k)+u3dx(i,j,k))*(u3dx(i-1,j,k)+u3dx(i,j,k)) &
@@ -852,7 +853,9 @@ CONTAINS
        enddo
       enddo
 
-      do k=2,nk1
+      call bound_arb(nk2,diag3d(:,:,:,9))
+
+      do k=2,nk2
        do j=1,mj1
         do i=1,mi1
          diag3d(i,j,k,9) =(diag3d(i+1,j,k,9)+diag3d(i-1,j,k,9)-2.*diag3d(i,j,k,9))/(DX*DX)          &
@@ -868,41 +871,39 @@ CONTAINS
 !d term for shear
 
      do k=2,nk1
-      do j=2,mj1
-       do i=2,mi1
-       diag3d(i,j,k,10)= (((u3dx(i-1+1,j,k+1)+u3dx(i+1,j,k+1))-(u3dx(i-1+1,j,k-1)+u3dx(i+1,j,k-1)))/((ZT(k+1)-ZT(k-1))) &
-                         *((w3d(i+1,j,k)+w3d(i+1,j,k-1))/2.)                                           &
-                        -((u3dx(i-1-1,j,k+1)+u3dx(i-1,j,k+1))-(u3dx(i-1-1,j,k-1)+u3dx(i-1,j,k-1)))/((ZT(k+1)-ZT(k-1))) &
-                         *((w3d(i+1,j,k)+w3d(i+1,j,k-1))/2.)                                           &
-                        -((u3dx(i-1-1,j,k+1)+u3dx(i-1,j,k+1))-(u3dx(i-1-1,j,k-1)+u3dx(i-1,j,k-1)))/((ZT(k+1)-ZT(k-1))) &
-                         *((w3d(i-1,j,k)+w3d(i-1,j,k-1))/2.))                                          &
-                         /(2.*dx)+                                                                 &
-                        (((u3dy(i,j-1+1,k+1)+u3dy(i,j+1,k+1))-(u3dy(i,j-1+1,k-1)+u3dy(i,j+1,k-1)))/((ZT(k+1)-ZT(k-1))) &
-                         *((w3d(i,j+1,k)+w3d(i,j+1,k-1))/2.)                                           &
-                        -((u3dy(i,j-1-1,k+1)+u3dy(i,j-1,k+1))-(u3dy(i,j-1-1,k-1)+u3dy(i,j-1,k-1)))/((ZT(k+1)-ZT(k-1))) &
-                         *((w3d(i,j-1,k)+w3d(i,j-1,k-1))/2.))                                          &
-                         /(2.*dynew)
+      do j=1,mj1
+       do i=1,mi1
+       diag3d(i,j,k,10)=(((u3dx(i,j,k+1)-u3dx(i,j,k))/(zt(k+1)-zt(k)) &
+                         *(w3d(i,j,k)+w3d(i+1,j,k))*0.5                   &
+                         -(u3dx(i-1,j,k+1)-u3dx(i-1,j,k))/(zt(k+1)-zt(k)) &
+                         *(w3d(i-1,j,k)+w3d(i,j,k))*0.5)/DX                   &
+                       +((u3dy(i,j,k+1)-u3dy(i,j,k))/(zt(k+1)-zt(k)) &
+                         *(w3d(i,j,k)+w3d(i,j+1,k))*0.5                   &
+                         -(u3dy(i,j-1,k+1)-u3dx(i,j-1,k))/(zt(k+1)-zt(k)) &
+                         *(w3d(i,j-1,k)+w3d(i,j,k))*0.5)/DYNEW               &
+                      -((u3dx(i,j,k)-u3dx(i,j,k-1))/(zt(k)-zt(k-1)) &
+                         *(w3d(i,j,k-1)+w3d(i+1,j,k-1))*0.5                   &
+                         -(u3dx(i-1,j,k)-u3dx(i-1,j,k-1))/(zt(k)-zt(k-1)) &
+                         *(w3d(i-1,j,k-1)+w3d(i,j,k-1))*0.5)/DX                   &
+                       +((u3dy(i,j,k)-u3dy(i,j,k-1))/(zt(k)-zt(k-1)) &
+                         *(w3d(i,j,k-1)+w3d(i,j+1,k-1))*0.5                   &
+                         -(u3dy(i,j-1,k)-u3dx(i,j-1,k-1))/(zt(k)-zt(k-1)) &
+                         *(w3d(i,j-1,k-1)+w3d(i,j,k-1))*0.5)/DYNEW)/(zz(k)-zz(k-1))
        enddo
       enddo
      enddo
 
-      do k=2,nk1
-      diag3d(:,:,k,10)=(diag3d(:,:,k+1,10)-diag3d(:,:,k-1,10))/((ZT(k+1)-ZT(k-1)))
-      enddo
-
 !D term for vertical vorticity gradient
 
-      do k=2,nk1
-       do j=2,mj1
-        do i=2,mi1
-         diag3d(i,j,k,11)=((z3dz(i-1+1,j-1,k)+z3dz(i-1+1,j,k)+z3dz(i+1,j-1,k)+z3dz(i+1,j,k))              &
-                         -(z3dz(i-1-1,j-1,k)+z3dz(i-1-1,j,k)+z3dz(i-1,j-1,k)+z3dz(i-1,j,k)))/(8.*dx)     &
-                        *(u3dy(i,j-1,k)+u3dy(i,j,k))/2.                                                  &
-                         -((z3dz(i-1,j-1+1,k)+z3dz(i-1,j+1,k)+z3dz(i,j-1+1,k)+z3dz(i,j+1,k))             &
-                          -(z3dz(i-1,j-1-1,k)+z3dz(i-1,j-1,k)+z3dz(i,j-1-1,k)+z3dz(i,j-1,k)))/(8.*dynew) &
-                        *(u3dx(i-1,j,k)+u3dx(i,j,k))/2.                                                  &
-                        +(z3dz(i-1,j-1,k)+z3dz(i-1,j,k)+z3dz(i,j-1,k)+z3dz(i,j,k))*                      &
-                         (z3dz(i-1,j-1,k)+z3dz(i-1,j,k)+z3dz(i,j-1,k)+z3dz(i,j,k))/16.
+      do k=2,nk2
+       do j=1,mj1
+        do i=1,mi1
+         diag3d(i,j,k,11)=(u3dy(i,j,k)*(z3dz(i,j,k)-z3dz(i-1,j,k))              &
+                          +u3dy(i,j-1,k)*(z3dz(i,j-1,k)-z3dz(i-1,j-1,k)))*0.5/DX  &
+                         -(u3dx(i,j,k)*(z3dz(i,j,k)-z3dz(i,j-1,k))              &
+                          +u3dx(i-1,j,k)*(z3dz(i-1,j,k)-z3dz(i-1,j-1,k)))*0.5/DYNEW  &
+                         +(z3dx(i-1,j,k)+z3dx(i,j,k)+z3dz(i,j-1,k)+z3dz(i-1,j-1,k))*0.25 &
+                         *(z3dx(i-1,j,k)+z3dx(i,j,k)+z3dz(i,j-1,k)+z3dz(i-1,j-1,k))*0.25
         enddo
        enddo
       enddo

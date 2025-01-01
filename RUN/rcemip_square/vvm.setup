@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = pv_bubble
+set expname = pv_bubble_dterm
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -86,8 +86,8 @@ set expdir = ` pwd `
 set codedir = ${expdir}'/CODE'
 sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90 
 sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/zonal_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/merid_decomposition/4/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/75/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/1/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
