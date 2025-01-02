@@ -88,7 +88,7 @@ sed -i 's/zonal_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_dimension/256/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/zonal_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/merid_decomposition/8/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/vert_dimension/75/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/1/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag3d_dimension/11/g' ${codedir}/cdecks/PARMSLD.F90
@@ -100,7 +100,7 @@ cat DOMAIN
 cat > INPUT << 'END6'
  &INPUT1 NEWRUN=T, ITTADD=1080 /
  &INPUT2 RLAT=10., RLON=120.95 /
- &INPUT3 DX=500.,DYNEW=500.,DZ=500.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=7200. /
+ &INPUT3 DX=500.,DYNEW=500.,DZ=250.,DZ1=100.,DT=10.,NOTURB=F,NOSFX=F,NSFLUX=6,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
  &INPUT4 NXS=1,NXSAVG=6,NWR11=1,NFLPRT=1,NRESTART=6,niterw=200,niterxy=200,multilevel=3,tol_2d=1.e-6,tol_3d=1.e-8 /
 #         ( case output frequency)   ( result could be seen in ncfile)
