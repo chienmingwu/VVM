@@ -136,7 +136,7 @@ CONTAINS
         radius_norm = sqrt( &
                              ((glob_idx_i-mi_glob/2)*DX/16000.)**2 &
                           +  ((glob_idx_j-mj_glob/2)*DYNEW/16000.)**2 &
-                          + ((ZT(K)-2500.)/2000.)**2 &
+                          + ((ZT(K)-1500.)/1000.)**2 &
                           )
         IF ( radius_norm <= 1 ) THEN
           TH3D(I,J,K) = TH3D(I,J,K) &
