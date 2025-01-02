@@ -805,7 +805,7 @@ CONTAINS
       enddo
 !laplacian of buoyancy
       
-      call bound_arb(nk2,diag3d(:,:,:,6))
+      call bound_arb(nk3,diag3d(mim:mip,mjm:mjp,1:nk3,6))
 
       do k=2,nk2
        do j=1,mj1
@@ -831,7 +831,7 @@ CONTAINS
        enddo
       enddo
 
-      call bound_arb(nk2,diag3d(:,:,:,8))
+      call bound_arb(nk3,diag3d(mim:mip,mjm:mjp,1:nk3,8))
 
       do k=2,nk1
        do j=1,mj1
@@ -853,7 +853,7 @@ CONTAINS
        enddo
       enddo
 
-      call bound_arb(nk2,diag3d(:,:,:,9))
+      call bound_arb(nk3,diag3d(mim:mip,mjm:mjp,1:nk3,9))
 
       do k=2,nk2
        do j=1,mj1
@@ -865,7 +865,7 @@ CONTAINS
       enddo
 
       do k=2,nk1
-      diag3d(:,:,k,9)=(diag3d(:,:,k+1,9)-diag3d(:,:,k-1,9))/((ZT(k+1)-ZT(k-1)))
+      diag3d(:,:,k,9)=(diag3d(:,:,k+1,9)-diag3d(:,:,k-1,9))/(ZT(k+1)-ZT(k-1))
       enddo
 
 !d term for shear
