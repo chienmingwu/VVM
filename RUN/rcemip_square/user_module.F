@@ -44,7 +44,7 @@ CONTAINS
       CHARACTER(len=300)   :: fname
       INTEGER              :: k
       
-      fname = './user_files/20220623.txt'
+      fname = './user_files/profile_sounding.txt'
       OPEN(10, FILE=trim(fname))
       READ(10,*)  ! read header
       DO k=1,NT1
