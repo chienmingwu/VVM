@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = pv_bubble_dterm
+set expname = pv_bubble_dterm2
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `

@@ -591,7 +591,7 @@ CONTAINS
       
       REAL (KIND=dbl_kind) ::  sfmn, fac, dtfac
 #if defined (DIAG)
-      REAL (KIND=dbl_kind) :: TH3D_O(mim:mip,mjm:mjp,nk3)
+      REAL (KIND=dbl_kind) :: TH3D_O(mim:mip,mjm:mjp,nk3), dummy_diag(mim:mip,mjm:mjp,nk3)
 #endif           
       INTEGER (KIND=int_kind)     ::   ibnew, kvar , out_itt   ! mars add
       LOGICAL first 
@@ -805,8 +805,6 @@ CONTAINS
       enddo
 !laplacian of buoyancy
       
-      call bound_arb(nk3,diag3d(mim:mip,mjm:mjp,1:nk3,6))
-
       do k=2,nk2
        do j=1,mj1
         do i=1,mi1
@@ -821,8 +819,8 @@ CONTAINS
       do k=2,nk2
        do j=1,mj1
         do i=1,mi1
-        diag3d(i,j,k,8)=-1./rho(k)*(                                               &
-                       (u3dx(i,j,k)*(w3d(i,j,k)+w3d(i+1,j,k)+w3d(i,j,k-1)+w3d(i+i,j,k-1))*0.25 &
+        dummy_diag(i,j,k)=-1./rho(k)*(                                               &
+                       (u3dx(i,j,k)*(w3d(i,j,k)+w3d(i+1,j,k)+w3d(i,j,k-1)+w3d(i+1,j,k-1))*0.25 &
                        -u3dx(i-1,j,k)*(w3d(i-1,j,k)+w3d(i,j,k)+w3d(i-1,j,k-1)+w3d(i,j,k-1))*0.25)/DX &
                       +(u3dy(i,j,k)*(w3d(i,j,k)+w3d(i,j+1,k)+w3d(i,j,k-1)+w3d(i,j+1,k-1))*0.25 &
                        -u3dy(i,j-1,k)*(w3d(i,j-1,k)+w3d(i,j,k)+w3d(i,j-1,k-1)+w3d(i,j,k-1))*0.25)/DYNEW & 
@@ -831,13 +829,13 @@ CONTAINS
        enddo
       enddo
 
-      call bound_arb(nk3,diag3d(mim:mip,mjm:mjp,1:nk3,8))
+      call bound_arb(nk3,dummy_diag)
 
       do k=2,nk1
        do j=1,mj1
         do i=1,mi1
-         diag3d(i,j,k,8) =(diag3d(i+1,j,k,8)+diag3d(i-1,j,k,8)-2.*diag3d(i,j,k,8))/(DX*DX)          &
-                         +(diag3d(i,j+1,k,8)+diag3d(i,j-1,k,8)-2.*diag3d(i,j,k,8))/(DYNEW*DYNEW)
+         diag3d(i,j,k,8) =(dummy_diag(i+1,j,k)+dummy_diag(i-1,j,k)-2.*dummy_diag(i,j,k))/(DX*DX)          &
+                         +(dummy_diag(i,j+1,k)+dummy_diag(i,j-1,k)-2.*dummy_diag(i,j,k))/(DYNEW*DYNEW)
         enddo
        enddo
       enddo
@@ -847,25 +845,24 @@ CONTAINS
       do k=2,nk2
        do j=1,mj1
         do i=1,mi1
-      diag3d(i,j,k,9)=0.125*((u3dx(i-1,j,k)+u3dx(i,j,k))*(u3dx(i-1,j,k)+u3dx(i,j,k)) &
+      dummy_diag(i,j,k)=0.125*((u3dx(i-1,j,k)+u3dx(i,j,k))*(u3dx(i-1,j,k)+u3dx(i,j,k)) &
                             +(u3dy(i,j-1,k)+u3dy(i,j,k))*(u3dy(i,j-1,k)+u3dy(i,j,k)))
         enddo
        enddo
       enddo
 
-      call bound_arb(nk3,diag3d(mim:mip,mjm:mjp,1:nk3,9))
+      call bound_arb(nk3,dummy_diag)
 
       do k=2,nk2
        do j=1,mj1
         do i=1,mi1
-         diag3d(i,j,k,9) =(diag3d(i+1,j,k,9)+diag3d(i-1,j,k,9)-2.*diag3d(i,j,k,9))/(DX*DX)          &
-                         +(diag3d(i,j+1,k,9)+diag3d(i,j-1,k,9)-2.*diag3d(i,j,k,9))/(DYNEW*DYNEW)
+         diag3d(i,j,k,9) =(((dummy_diag(i+1,j,k+1)+dummy_diag(i-1,j,k+1)-2.*dummy_diag(i,j,k+1))/(DX*DX)            &
+                           +(dummy_diag(i,j+1,k+1)+dummy_diag(i,j-1,k+1)-2.*dummy_diag(i,j,k+1))/(DYNEW*DYNEW))     &
+                          -((dummy_diag(i+1,j,k-1)+dummy_diag(i-1,j,k-1)-2.*dummy_diag(i,j,k-1))/(DX*DX)            &
+                           +(dummy_diag(i,j+1,k-1)+dummy_diag(i,j-1,k-1)-2.*dummy_diag(i,j,k-1))/(DYNEW*DYNEW)))    &
+                         /(ZT(k+1)-ZT(k-1))
         enddo
        enddo
-      enddo
-
-      do k=2,nk1
-      diag3d(:,:,k,9)=(diag3d(:,:,k+1,9)-diag3d(:,:,k-1,9))/(ZT(k+1)-ZT(k-1))
       enddo
 
 !d term for shear
@@ -873,21 +870,21 @@ CONTAINS
      do k=2,nk1
       do j=1,mj1
        do i=1,mi1
-       diag3d(i,j,k,10)=(((u3dx(i,j,k+1)-u3dx(i,j,k))/(zt(k+1)-zt(k)) &
-                         *(w3d(i,j,k)+w3d(i+1,j,k))*0.5                   &
-                         -(u3dx(i-1,j,k+1)-u3dx(i-1,j,k))/(zt(k+1)-zt(k)) &
+       diag3d(i,j,k,10)=(((u3dx(i,j,k+1)-u3dx(i,j,k))/(zt(k+1)-zt(k))         &
+                         *(w3d(i,j,k)+w3d(i+1,j,k))*0.5                       &
+                         -(u3dx(i-1,j,k+1)-u3dx(i-1,j,k))/(zt(k+1)-zt(k))     &
                          *(w3d(i-1,j,k)+w3d(i,j,k))*0.5)/DX                   &
-                       +((u3dy(i,j,k+1)-u3dy(i,j,k))/(zt(k+1)-zt(k)) &
-                         *(w3d(i,j,k)+w3d(i,j+1,k))*0.5                   &
-                         -(u3dy(i,j-1,k+1)-u3dx(i,j-1,k))/(zt(k+1)-zt(k)) &
-                         *(w3d(i,j-1,k)+w3d(i,j,k))*0.5)/DYNEW               &
-                      -((u3dx(i,j,k)-u3dx(i,j,k-1))/(zt(k)-zt(k-1)) &
+                       +((u3dy(i,j,k+1)-u3dy(i,j,k))/(zt(k+1)-zt(k))          &
+                         *(w3d(i,j,k)+w3d(i,j+1,k))*0.5                       &
+                         -(u3dy(i,j-1,k+1)-u3dx(i,j-1,k))/(zt(k+1)-zt(k))     &
+                         *(w3d(i,j-1,k)+w3d(i,j,k))*0.5)/DYNEW                &
+                      -((u3dx(i,j,k)-u3dx(i,j,k-1))/(zt(k)-zt(k-1))           &
                          *(w3d(i,j,k-1)+w3d(i+1,j,k-1))*0.5                   &
-                         -(u3dx(i-1,j,k)-u3dx(i-1,j,k-1))/(zt(k)-zt(k-1)) &
-                         *(w3d(i-1,j,k-1)+w3d(i,j,k-1))*0.5)/DX                   &
-                       +((u3dy(i,j,k)-u3dy(i,j,k-1))/(zt(k)-zt(k-1)) &
+                         -(u3dx(i-1,j,k)-u3dx(i-1,j,k-1))/(zt(k)-zt(k-1))     &
+                         *(w3d(i-1,j,k-1)+w3d(i,j,k-1))*0.5)/DX               &
+                       +((u3dy(i,j,k)-u3dy(i,j,k-1))/(zt(k)-zt(k-1))          &
                          *(w3d(i,j,k-1)+w3d(i,j+1,k-1))*0.5                   &
-                         -(u3dy(i,j-1,k)-u3dx(i,j-1,k-1))/(zt(k)-zt(k-1)) &
+                         -(u3dy(i,j-1,k)-u3dx(i,j-1,k-1))/(zt(k)-zt(k-1))     &
                          *(w3d(i,j-1,k-1)+w3d(i,j,k-1))*0.5)/DYNEW)/(zz(k)-zz(k-1))
        enddo
       enddo
@@ -898,10 +895,11 @@ CONTAINS
       do k=2,nk2
        do j=1,mj1
         do i=1,mi1
-         diag3d(i,j,k,11)=(u3dy(i,j,k)*(z3dz(i,j,k)-z3dz(i-1,j,k))              &
+         dummy_diag(i,j,k)=(u3dy(i,j,k)*(z3dz(i,j,k)-z3dz(i-1,j,k))              &
                           +u3dy(i,j-1,k)*(z3dz(i,j-1,k)-z3dz(i-1,j-1,k)))*0.5/DX  &
                          -(u3dx(i,j,k)*(z3dz(i,j,k)-z3dz(i,j-1,k))              &
                           +u3dx(i-1,j,k)*(z3dz(i-1,j,k)-z3dz(i-1,j-1,k)))*0.5/DYNEW  &
+                         +F*(z3dx(i-1,j,k)+z3dx(i,j,k)+z3dz(i,j-1,k)+z3dz(i-1,j-1,k))*0.25 & 
                          +(z3dx(i-1,j,k)+z3dx(i,j,k)+z3dz(i,j-1,k)+z3dz(i-1,j-1,k))*0.25 &
                          *(z3dx(i-1,j,k)+z3dx(i,j,k)+z3dz(i,j-1,k)+z3dz(i-1,j-1,k))*0.25
         enddo
@@ -909,7 +907,11 @@ CONTAINS
       enddo
 
       do k=2,nk1
-      diag3d(:,:,k,11)=-1.*(diag3d(:,:,k+1,11)-diag3d(:,:,k-1,11))/((ZT(k+1)-ZT(k-1)))
+       do j=1,mj1
+        do i=1,mi1
+         diag3d(i,j,k,11)=-1.*(dummy_diag(i,j,k+1)-dummy_diag(i,j,k-1))/(ZT(k+1)-ZT(k-1))
+        enddo
+       enddo 
       enddo
 
 #endif                          
