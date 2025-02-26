@@ -39,12 +39,12 @@ CONTAINS
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
 
-      INTEGER (KIND=int_kind), PARAMETER :: NT1=71
+      INTEGER (KIND=int_kind), PARAMETER :: NT1=62
       REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), U1(NT1), V1(NT1)
       CHARACTER(len=300)   :: fname
       INTEGER              :: k
       
-      fname = './user_files/20220623.txt'
+      fname = './user_files/20171221_80.txt'
       OPEN(10, FILE=trim(fname))
       READ(10,*)  ! read header
       DO k=1,NT1
@@ -53,6 +53,7 @@ CONTAINS
     
       P1(:)  = P1*100.
       QV1(:) = QV1*1E-3
+      T1(:)=T1(:)+273.
 
       ! interpolate thermoaldynamics profile
       ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
@@ -81,7 +82,7 @@ CONTAINS
       WLS(:)    = 0.
       Q1LS(:)   = 0.
       Q2LS(:)   = 0.
-      SST       = 300.
+      SST       = T1(1)
   
   ENDSUBROUTINE USER_set_mean_profile_and_SST
 
@@ -160,11 +161,11 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
          hour0
   
-      iyear0 = 2020
-      imonth0 = 8 
-      iday0 = 1
+      iyear0 = 2017
+      imonth0 = 12
+      iday0 = 20
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 21.
+      hour0 = 22.
   ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_topography_and_land_type(&
@@ -187,6 +188,8 @@ CONTAINS
 
       integer :: i, j, k
 
+      real(kind=dbl_kind) ::  tmp,tmp1,tmp2
+
       taiwanvvm_flag = .False.
 
       ! initialization with ocean
@@ -199,62 +202,52 @@ CONTAINS
       ioutput_user(:,:,1)=16   ! land type 
       ioutput_user(:,:,2)=0    ! slope type
       ioutput_user(:,:,3)=14   ! soil type
-!!ccwu half land
-      DO 501 J = 1,MJ_GLOB
-      DO 501 I = MI_GLOB*3/4,MI_GLOB
 
-! add 1000m height mountain
-! move three points to the left
+      DO 500 J = 156,356
+      DO 500 I = 206,306
 
-      if(I .lt. MI_GLOB*7/8) then
-      routput_user(i,j,1) = &
-                 (I-MI_GLOB*3/4)*1000./(MI_GLOB/8.)
-      else
-      routput_user(i,j,1) = &
-                 1000.+(MI_GLOB*7/8-I)*1000/(MI_GLOB/8.)
+      if(I .lt. 281) then
+      tmp1=(I-256)*2000./25.
+       else
+      tmp1=2000.+(281-I)*2000./25.
       endif
 
-  501 CONTINUE
-      DO J = 1,MJ_GLOB
-      DO I = MI_GLOB/2+1,MI_GLOB*3/4
+      tmp=tmp1
 
-      ! Urban
-      routput_user(i,j,2)=15.   ! albedo (%)
-      routput_user(i,j,3)=10.   ! green vegetation fraction (%)
-      routput_user(i,j,4)=1.   ! leaf area index (m^2/m^2)
-      routput_user(i,j,5)=10.   ! max. GVF (%)
-      routput_user(i,j,6)=10.   ! min. GVF (%)
-      ioutput_user(i,j,1)=1   ! land type
-      ioutput_user(i,j,2)=1    ! slope type
-      ioutput_user(i,j,3)=13   ! soil type
+      if(J .lt.166 .and. I .gt.256) then
+      tmp2=(J-156)*2000/10.
+      tmp=tmp2
+       if(tmp2 .gt. tmp1) then
+      tmp=tmp1
+       endif
+      endif
 
-      !grassland
-!      LU(I,J) = 7
-!      alb(I,J) = 19.
-!      grf(I,J) = 80.
-!      lai(I,J) = 4.
-!      SHDMAX(I,J) = 80.
-!      SHDMIN(I,J) = 80.
-!      SLOPE(I,J) = 1
-!      SOIL(I,J) = 13
+      if(J .gt.346 .and. I .gt.256) then
+      tmp2=2000.+(346-J)*2000/10.
+      tmp=tmp2
+       if(tmp2 .gt. tmp1) then
+      tmp=tmp1
+       endif
+      endif
 
-      ENDDO
-      ENDDO
+      routput_user(i,j,1)=tmp   ! height (m)
+      
+      if(routput_user(i,j,1) .lt. 0) then
+      routput_user(i,j,1)= 1.
+      endif
 
-      DO J = 1,MJ_GLOB
-      DO I = MI_GLOB*3/4+1,MI_GLOB
-      !evergreen broadleaf forest
-      routput_user(i,j,2)=12.   ! albedo (%)
-      routput_user(i,j,3)=95.   ! green vegetation fraction (%)
-      routput_user(i,j,4)=6.48   ! leaf area index (m^2/m^2)
-      routput_user(i,j,5)=95.   ! max. GVF (%)
-      routput_user(i,j,6)=95.   ! min. GVF (%)
-      ioutput_user(i,j,1)=13   ! land type
-      ioutput_user(i,j,2)=1    ! slope type
-      ioutput_user(i,j,3)=13   ! soil type
-      ENDDO
-      ENDDO
+      if (routput_user(i,j,1) .gt. 0) then
+      routput_user(i,j,2)=19.   ! albedo (%)
+      routput_user(i,j,3)=80.   ! green vegetation fraction (%)
+      routput_user(i,j,4)=4.    ! leaf area index (m^2/m^2)
+      routput_user(i,j,5)=80.   ! max. GVF (%)
+      routput_user(i,j,6)=80.   ! min. GVF (%)
+      ioutput_user(i,j,1)=7     ! land type
+      ioutput_user(i,j,2)=1     ! slope type
+      ioutput_user(i,j,3)=1     ! soil type
+      endif
 
+  500 CONTINUE
 
   ENDSUBROUTINE USER_set_topography_and_land_type
 

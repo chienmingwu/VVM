@@ -52,6 +52,16 @@ CONTAINS
 
 !      call bound_arb(1,UTOP)
 
+      do k=1,nk3
+       do j=1,mj1
+        do i=1,mi1
+        DIAG3D(i,j,k,14)=DIAG3D(i,j,k,14)*ITYPEW(i,j,k)
+        enddo
+       enddo
+      enddo
+
+        DIAG3D(:,:,1,14)=DIAG3D(:,:,2,14)
+
       DO 210 J=1,MJ1
       DO 210 I=1,MI1
       U3DX(I,J,NK2) = UTMN + (UTOP(I,J) - UTOPM) 
@@ -67,6 +77,16 @@ CONTAINS
       DIAG3D(I,J,K,15)=DIAG3D(I,J,K+1,15)        &
             -((DIAG3D(I+1,J,K,14)-DIAG3D(I,J,K,14))/DX-DIAG3D(I,J,K,13))*DZ/FNZ(K)
   212 CONTINUE
+
+      do k=1,nk3
+       do j=1,mj1
+        do i=1,mi1
+        DIAG3D(i,j,k,15)=DIAG3D(i,j,k,15)*ITYPEU(i,j,k)
+        enddo  
+       enddo 
+      enddo 
+
+        DIAG3D(:,:,1,15)=DIAG3D(:,:,2,15)
 
       DO 240 J=1,MJ1
       DO 240 I=1,MI1
@@ -97,6 +117,16 @@ CONTAINS
         -((DIAG3D(I,J+1,K,14)-DIAG3D(I,J,K,14))/DYNEW-DIAG3D(I,J,K,12))*DZ/FNZ(K)
 
   312 CONTINUE
+
+      do k=1,nk3
+       do j=1,mj1
+        do i=1,mi1
+        DIAG3D(i,j,k,16)=DIAG3D(i,j,k,16)*ITYPEV(i,j,k)
+        enddo
+       enddo
+      enddo
+        
+        DIAG3D(:,:,1,16)=DIAG3D(:,:,2,16)
 
       DO 340 J=1,MJ1
       DO 340 I=1,MI1
@@ -275,6 +305,9 @@ SUBROUTINE DIRECTIB
       ENDIF
  550  CONTINUE
 
+      DIAG3D(:,:,:,12)=0.
+      DIAG3D(:,:,:,13)=0.
+
       DO 600 K = 1,NK2
       DO 600 J = 1,MJ1
       DO 600 I = 1,MI1
@@ -294,12 +327,15 @@ SUBROUTINE DIRECTIB
 !      ELSE
       IF (ITYPEV(I,J,K) .NE. 1) THEN
       Z3DXT(I,J,K) = (W3DT(I,J+1,K)-W3DT(I,J,K))/DYNEW &
-                -(U3DYT(I,J,K+1) - U3DYT(I,J,K))*FNZ(K)/DZ
+                -(U3DYT(I,J,K+1) - U3DYT(I,J,K))*FNZ(K)/DZ        
+! for d z3dx/dy
       DIAG3D(I,J,K,12)=(W3DT(I,J+1,K)-W3DT(I,J,K))/DYNEW &
                 -(U3DYT(I,J,K+1) - U3DYT(I,J,K))*FNZ(K)/DZ
+      DIAG3D(I,J+1,K,12)=Z3DX(I,J+1,K)
+      DIAG3D(I,J-1,K,12)=Z3DX(I,J-1,K)
+! for d z3dx/dy     
       ELSE
       Z3DXT(I,J,K) = Z3DX(I,J,K)
-      DIAG3D(I,J,K,12)=0.
       ENDIF
   600 CONTINUE
 
@@ -321,11 +357,14 @@ SUBROUTINE DIRECTIB
       IF (ITYPEU(I,J,K) .NE. 1) THEN
       Z3DYT(I,J,K) =  (W3DT(I+1,J,K)-W3DT(I,J,K))/DX &
                 -(U3DXT(I,J,K+1) - U3DXT(I,J,K))*FNZ(K)/DZ
+! for d z3dy/dx        
       DIAG3D(I,J,K,13)= (W3DT(I+1,J,K)-W3DT(I,J,K))/DX &
                 -(U3DXT(I,J,K+1) - U3DXT(I,J,K))*FNZ(K)/DZ
+      DIAG3D(I+1,J,K,13)=Z3DY(I+1,J,K)        
+      DIAG3D(I-1,J,K,13)=Z3DY(I-1,J,K)
+! for d z3dy/dx      
       ELSE
       Z3DYT(I,J,K) = Z3DY(I,J,K)
-      DIAG3D(I,J,K,13)=0.
       ENDIF
   700 CONTINUE
 
