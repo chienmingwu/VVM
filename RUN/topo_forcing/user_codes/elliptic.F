@@ -35,6 +35,7 @@ CONTAINS
 ! local variables
       REAL (KIND=dbl_kind) ::  ytem(mi1,mj1,nk2-2),ytem1(mi1,mj1,nk2-2)
       real (kind=dbl_kind), save :: tmp_w(mim:mip,mjm:mjp,nk2)
+      real (kind=dbl_kind), save :: tmp_w1(mim:mip,mjm:mjp,nk2)
       real (kind=dbl_kind) :: tmp_y(mim:mip,mjm:mjp,nk2), norm
       integer :: idum1
       INTEGER (KIND=int_kind)  ::     &
@@ -69,11 +70,11 @@ CONTAINS
       tmp_y = 0._dbl_kind
       tmp_y(1:mi1,1:mj1,2:nk2-1) = - ytem1
       idum1 = 0
-      call multigrid_v(3,tmp_w,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,multilevel,norm,tol_3d,niterw,idum1,.True.)
+      call multigrid_v(3,tmp_w1,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,multilevel,norm,tol_3d,niterw,idum1,.True.)
       if (my_task==0) write(*,'(A14,I8,A20,ES15.7)') "w iter = ", idum1,",norm of error=", norm
 
       do k=1,nk2
-        DIAG3D(:,:,k,14)=tmp_w(:,:,k)/rhoz(k)
+        DIAG3D(:,:,k,14)=tmp_w1(:,:,k)/rhoz(k)
       enddo
 
       call timer_stop('MGsolver_3d')
