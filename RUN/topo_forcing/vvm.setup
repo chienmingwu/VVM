@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = topo_forcing_idealized2
+set expname = topo_forcing_nudge
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -64,10 +64,10 @@ cat > definesld.com << 'END1'
 #define PHYSICS
 #define MICROCODE
 #define MICROP3
-#define DIAG
 #define HEATING
 #define TOPOGRAPHY
 #define AREAMN
+#define DIAG
 'END1'
 cat definesld.com
 #define CHEM
@@ -98,7 +98,7 @@ cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=17280./
+ &INPUT1 NEWRUN=T, ITTADD=8640./
  &INPUT2 RLAT=10., RLON=120.95 /
  &INPUT3 DX=2000.,DYNEW=2000.,DZ=500.,DZ1=100.,DT=5.,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)
