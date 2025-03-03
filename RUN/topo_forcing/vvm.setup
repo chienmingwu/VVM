@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = topo_forcing_nudge
+set expname = topo_forcing_nudge_zero
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -66,8 +66,8 @@ cat > definesld.com << 'END1'
 #define MICROP3
 #define HEATING
 #define TOPOGRAPHY
-#define AREAMN
 #define DIAG
+#DEFINE AREAMN
 'END1'
 cat definesld.com
 #define CHEM
