@@ -67,7 +67,7 @@ cat > definesld.com << 'END1'
 #define HEATING
 #define TOPOGRAPHY
 #define DIAG
-#DEFINE AREAMN
+#define AREAMN
 'END1'
 cat definesld.com
 #define CHEM
