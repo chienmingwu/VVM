@@ -16,8 +16,8 @@ set echo  # echoes the commands
 set expname = case_taiwanvvm
 
 # set job system and compiler
-set compiler = 'fujitsu_fugaku'
-set jobsys   = 'pjm_fugaku'
+set compiler = 'intel_f1'
+set jobsys   = 'slurm_f1'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
