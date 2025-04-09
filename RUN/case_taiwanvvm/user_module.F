@@ -203,7 +203,8 @@ CONTAINS
   ENDSUBROUTINE USER_set_topography_and_land_type
 
   SUBROUTINE USER_set_CHEM_reaction_file(filename_chem_table, &
-                                         number_of_reactions)
+                                         number_of_reactions, &
+                                         chem_output_flag)
       !! --------------------
       !! if defined (CHEM), the filename of chemistry table and 
       !! the total reaction in this table are set in this function.
@@ -211,8 +212,50 @@ CONTAINS
       IMPLICIT NONE
       CHARACTER(len=300), INTENT(out)       :: filename_chem_table
       INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
+#if !defined(CHEM)
+      LOGICAL, INTENT(out)                  :: chem_output_flag(1)
+#else
+      LOGICAL, INTENT(out)                  :: chem_output_flag(nchem)
+
+      INTEGER, PARAMETER                    :: nchem_out=5
+      character(len=6)                      :: chem_name_list(nchem)
+      character(len=6)                      :: chem_name_list_out(nchem_out)
+      character(len=300)                    :: line
+      INTEGER                               :: i, j
+
+      DATA chem_name_list_out /'O3', 'NO', 'NO2', 'CH2O', 'OH'/
       number_of_reactions = 25
       filename_chem_table = './user_files/chem.inp.001'
+
+
+      !chem species and atol and rtol
+      chem_output_flag(:) = .False.
+      open (unit=10,file=trim(filename_chem_table),&
+            err=100,status='old',form='formatted')
+      do while(.TRUE.)
+        read(10,'(a)',err=100) line
+        if (line(1:1) == '@') then
+            read(10,'(a)',err=100) line
+            read(line,*)(chem_name_list(j),j=1,nchem)
+            
+            ! find corresponding output chem name
+            do i=1,nchem_out
+            do j=1,nchem
+                if (chem_name_list(j) == chem_name_list_out(i)) then
+                    chem_output_flag(j) = .True.
+                    exit
+                endif
+            enddo
+            enddo
+            exit
+        endif
+      enddo
+      100 continue
+      close(10)
+
+      WRITE(*,*) chem_output_flag
+#endif
+
   ENDSUBROUTINE USER_set_chem_reaction_file
 
   SUBROUTINE USER_set_vertical_coordinate
