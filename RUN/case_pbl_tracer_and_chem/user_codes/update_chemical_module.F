@@ -86,7 +86,7 @@ CONTAINS
       use timeinfo, only : rjday, utc_time
       use constld, only : rlon, rlat
       use const3d, only : hx
-      use petscsys
+      use mpi
       use pnetcdf
 
       INTEGER (KIND=int_kind) ::   &

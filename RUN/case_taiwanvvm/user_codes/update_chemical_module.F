@@ -87,7 +87,7 @@ CONTAINS
       use timeinfo, only : rjday, utc_time
       use constld, only : rlon, rlat
       use const3d, only : hx
-      use petscsys
+      use mpi
       use pnetcdf
 
       INTEGER (KIND=int_kind) ::   &
@@ -112,8 +112,6 @@ CONTAINS
       !!! Emission for TaiwanVVM_large
       !!filename="./RUNDATA/EMISAT_large.nc"
 
-      if (my_task.eq.0) WRITE(*,*) trim(filename)
-
       if (first) then
         CO_emi=0.
         CH4_emi=0.
@@ -121,6 +119,7 @@ CONTAINS
         FORM_emi=0.
         NO_SAT_emi=0.
 
+        if (my_task.eq.0) WRITE(*,*) trim(filename)
         nc_err = nfmpi_open(mpi_comm_world, &
                  trim(filename), &
                  nf_nowrite,mpi_info_null,ncid)
