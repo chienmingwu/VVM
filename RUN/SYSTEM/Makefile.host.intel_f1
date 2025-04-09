@@ -56,9 +56,9 @@ SUF      = f
 
 INC = -I/work1/der0318zxc/vvmlibs/include -I$(CDECKS) -I$(EXPDIR)
 
-CH = -g -traceback #-check all,noarg_temp_created -debug all
+CH = -g -traceback -debug all #-check all,noarg_temp_created,nouninit
 
-FC = mpiifort -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large -fp-model precise 
+FC = mpiifx -fPIC -O3 -heap-arrays 10 -shared-intel -mcmodel=large -fp-model precise
 
 LDLIBS = -L/work1/der0318zxc/vvmlibs/lib -lpnetcdf -lnetcdff -lnetcdf -qmkl
 
