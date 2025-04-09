@@ -30,13 +30,9 @@ use user_module, only: USER_set_chem_reaction_file
   !         h_ref       = 12.      if above is FALSE use this hour to calculate the photolysis rates
   !         lchconst    = .false.  SWITCH: if TRUE then the calculation of the reaction rates
   !                                        uses t_ref, p_ref, q_ref and not the model temp, humidity and pressure
-  !         lcloudKconst   = .false.  SWITCH: if TRUE then if there are clouds they will not change the K of the photolysis reactions
   !         t_ref       = 298.
   !         p_ref       = 100000.
   !         q_ref       = 5.e-3
-  !         lchmovie    = .false.  SWITCH: if TRUE gives extra output for movies(experimental)
-  !         dtchmovie   = 60.      when to write extra output
-  !         lsegr       = .false.  SWITCH: if TRUE gives information about segregation in a Mixed Layer approach
   !       /
   !-----------------------------------------------------------------
 
@@ -134,15 +130,13 @@ implicit none
 #if defined (CHEM)
 
 private
-PUBLIC :: lchem, initchem,inputchem, twostep, PL_scheme, nchsp, firstchem, lastchem, RH, choffset, CO2, chem_name_list
+PUBLIC :: lchem, initchem,inputchem, twostep, PL_scheme, nchsp, firstchem, lastchem, choffset, chem_name_list, chem_output_index, nchem_out
 save
 
   ! namoptions
   integer tnor, firstchem, lastchem
-  real itermin,dtchmovie
   real t_ref,q_ref,p_ref,h_ref
-  logical lchem, ldiuvar,lchconst,lchmovie,lcloudKconst,lsegr
-  integer(kind=int_kind) ::     itimeav,tnextwrite,idtchmovie
+  logical lchem, ldiuvar,lchconst
 
   logical switch
 
@@ -165,6 +159,7 @@ save
   integer nr_raddep !number of photolysis reactions
   integer nchsp     !number of chemical species calculated from lastchem - firstchem
   integer choffset  !=firstchem -1 => offset for chemicals in sv0
+  integer nchem_out
 
   type RCdef
     character*6 rname
@@ -218,6 +213,7 @@ save
   real, allocatable :: rk1(:,:),rk2(:,:),rk(:,:),kreact(:,:)
   real, allocatable :: T_abs(:,:),convppb(:,:)
   character*6, allocatable :: chem_name_list(:) !nchsp
+  integer, allocatable :: chem_output_index(:)
 
   real, allocatable :: ynew(:,:,:),yold(:,:,:),ysum(:,:,:)
   real, allocatable,target :: yl(:,:,:),yp(:,:,:)
@@ -230,30 +226,13 @@ save
     integer   loc
   end type location
 
- type (location) :: INERT, PRODUC , O3, NO2, NO, NO3, N2O5, HNO3, RH, R, ISO, H2O2, HO2, HO, CO, CO2, H2O, NH3, H2SO4
+ type (location) :: INERT, H2O
 
 
   real, allocatable :: kefftemp(:,:)  !(1:kmax,1:nr_raddep)
 
-  real, allocatable :: segregation(:)          !segregation calculated (amount of reactions)
-  real, allocatable :: segregation_vert(:,:)   !segregation calculated (amount of reactions,height)
-  real, allocatable :: seg_conc_prod(:)        !average of multiplied concentrations (amount of reactions)
-  real, allocatable :: seg_conc_prod_vert(:,:) !average of multiplied concentrations (amount of reactions,height)
-  real, allocatable :: seg_conc(:,:,:)         !individual averaged concentration (max. input chemicals involved per reaction,height,amount of reactions)
-  real, allocatable :: seg_conc_mult(:)        !multiplication of the relevant averaged concentrations (amount of reactions)
-  real, allocatable :: seg_conc_mult_vert(:,:) !multiplication of the relevant averaged concentrations (amount of reactions,height)
-  real, allocatable :: seg_concl(:,:)          !summation parameter for individual averaged concentration (max. amount of input chemicals involved,height)
-  real, allocatable :: seg_conc_prodl(:)       !summation parameter for average of multiplied concentrations (height)
-  logical, allocatable :: reaction_ev(:)       !switch to check whether the reaction is already evaluated (amount of reactions)
 
-
-  integer, parameter :: ifnamopt=991, ifoutput=992
-  character(50) :: fname_options = 'namoptions'
-  real :: timeav_glob=3600.
-  integer :: iexpnr=1
-  integer :: btime=0
-  real :: tres=0.001
-  character(3) :: cexpnr   
+!  integer, parameter :: ifoutput=992
   character(len=300) :: filename_chem_table
 
 contains
@@ -263,15 +242,14 @@ SUBROUTINE initchem
   implicit none
 
   logical :: lCHon= .false.
-  integer i, ierr
+  integer i, ierr, icount
   INTEGER(KIND=int_kind)  :: rec_int
+  logical                 :: chem_output_flag(nchem)
 
   character*999 :: line
 
-  write(cexpnr,'(i3.3)') iexpnr
 
-  itermin  = 0.1 
-  CALL USER_set_chem_reaction_file(filename_chem_table, rec_int)
+  CALL USER_set_chem_reaction_file(filename_chem_table, rec_int, chem_output_flag)
   tnor        = rec_int
   
   lchem       = .true.
@@ -281,20 +259,27 @@ SUBROUTINE initchem
   t_ref       = 300.
   p_ref       = 100000.
   q_ref       = 10.0e-3
-  lchmovie    = .false.
-  dtchmovie   = 60.
   firstchem   = 1
   lastchem    = nchem
-  lcloudKconst= .false.
-  lsegr       = .false.
-  idtchmovie = dtchmovie/tres
+
+  !!! 
+  ! chem output 
+  !!!
+  nchem_out = COUNT(chem_output_flag)
+  allocate(chem_output_index(nchem_out))
+  icount = 1
+  do i=1,nchem
+    if(chem_output_flag(i)) then
+      chem_output_index(icount) = i
+      icount = icount + 1
+    endif
+  enddo
+  if(myid .eq. 0) print*, 'modchem ......', nchem_out
+  if(myid .eq. 0) print*, 'modchem ......', chem_output_index
 
   call MPI_BCAST(lchem     ,1,mpi_logical , 0,comm3d, mpierr)
   call MPI_BCAST(ldiuvar   ,1,mpi_logical , 0,comm3d, mpierr)
   call MPI_BCAST(lchconst  ,1,mpi_logical , 0,comm3d, mpierr)
-  call MPI_BCAST(lchmovie  ,1,mpi_logical , 0,comm3d, mpierr)
-  call MPI_BCAST(lsegr     ,1,mpi_logical , 0,comm3d, mpierr)
-  call MPI_BCAST(lcloudKconst,1,mpi_logical ,0,comm3d,mpierr)
   call MPI_BCAST(tnor      ,1,mpi_integer , 0,comm3d, mpierr)
   call MPI_BCAST(firstchem ,1,mpi_integer , 0,comm3d, mpierr)
   call MPI_BCAST(lastchem  ,1,mpi_integer , 0,comm3d, mpierr)
@@ -302,14 +287,10 @@ SUBROUTINE initchem
   call MPI_BCAST(q_ref     ,1,MY_REAL     , 0,comm3d, mpierr)
   call MPI_BCAST(p_ref     ,1,MY_REAL     , 0,comm3d, mpierr)
   call MPI_BCAST(h_ref     ,1,MY_REAL     , 0,comm3d, mpierr)
-  call MPI_BCAST(itermin   ,1,MY_REAL     , 0,comm3d, mpierr)
-  call MPI_BCAST(dtchmovie ,1,MY_REAL     , 0,comm3d, mpierr)
 
   lCHon = lchem
 
   if (.not. (lchem)) return
-  itimeav = floor(timeav_glob/tres)
-  tnextwrite = itimeav+btime
   switch = .false.
   nchsp = lastchem - firstchem  + 1
   choffset = firstchem - 1
@@ -328,7 +309,6 @@ SUBROUTINE initchem
   PL_scheme(1)%rtol = 0.
   PL_scheme(1)%chem_number = 0
   PL_scheme(1)%nr_PL = 0
-  !debug undefined
   PL_scheme(1)%active = .False.
 
   do i=1,mrpcc
@@ -343,29 +323,12 @@ SUBROUTINE initchem
     PL_scheme(1)%PL(i)%exp3 = 0
     PL_scheme(1)%PL(i)%comp4 = 0
     PL_scheme(1)%PL(i)%exp4 = 0
-    !debug undefined
     PL_scheme(1)%PL(i)%PorL = 0
   enddo
 
   do i=2, nchsp
     pl_scheme(i)=pl_scheme(1)
   enddo
-
-  if(myid==0)then
-  !  open (ifoutput,file='cloudstat.'//cexpnr,status='replace')
-  !  write(ifoutput,'(A)') "#  time   UTC #zbase #cloud zbaseavg max_ztop cld_hght max_hght qlintmax qlintavg allqlmax allqlavg"
-  !  close (ifoutput)
-  !  open (ifoutput,file='keffs.'//cexpnr,status='replace')
-  !  close (ifoutput)
-  !  if (lsegr .EQV. .true.) then
-  !    open (ifoutput,file='seg.'//cexpnr,status='replace') !File that describes segregation over whole Mixed Layer
-  !    close(ifoutput)
-  !    open (ifoutput,file='seg_h.'//cexpnr,status='replace') !File that describes segregation per height
-  !    close(ifoutput)
-  !  endif !Output for segregation
-    continue
-  endif
-
 
   call inputchem
 
@@ -616,30 +579,6 @@ subroutine inputchem
   allocate (kefftemp(kmax,keff_nr))
   allocate (keffT(1:i1,1:j1,keffT_nr))
   allocate (writearray(k1,tnor+2))
-
-!  if (lsegrk .EQV. .true.) then                    ! As of yet unused expansion of segregation
-!    allocate (keffT3D(2:i1,2:j1,keffT_nr,kmax))
-!  endif
-
-  if (lsegr .EQV. .true.) then
-    allocate (segregation(tnor))
-    allocate (segregation_vert(tnor,kmax))
-    allocate (seg_conc_prod(tnor))
-    allocate (seg_conc_prod_vert(tnor,kmax))
-    allocate (seg_conc(NCCBA,kmax,tnor))
-    allocate (seg_conc_mult(tnor))
-    allocate (seg_conc_mult_vert(tnor,kmax))
-    allocate (seg_concl(NCCBA,kmax))
-    allocate (seg_conc_prodl(kmax))
-    allocate (reaction_ev(tnor))
-
-    if (myid == 0) then
-      open (ifoutput,file='seg.'//cexpnr,position='append') !File that describes segregation over whole Mixed Layer
-        write(formatstring,'(a,i3,a)') '(a9,1x,a7,',tnor,'(2x,a5,i3.3,a4))'
-        write(ifoutput,formatstring) '#Time [s]','z_i [m]',('IsegR',i,' [-]',i=1,tnor)
-      close(ifoutput)
-    endif
-  endif
 
   !fill raddep_RCindex and keffT
   do i=1,react
@@ -995,7 +934,7 @@ subroutine inputchem
     endif
   enddo
 
-  call write_chem_scheme(chem_name)
+!  call write_chem_scheme(chem_name)
 
   deallocate(PL_temp, reactions)
 
@@ -1014,32 +953,13 @@ end subroutine inputchem
 SUBROUTINE read_chem(chem_name)
   implicit none
   
-  integer :: CO2loc=-1
+!  integer :: CO2loc=-1
   character*6, dimension(nchsp) ::chem_name
   character*999 scalarline
   integer i,j
 
   INERT%name  = 'INERT'
-  PRODUC%name = 'PRODUC'
-  O3%name     = 'O3'
-  NO%name     = 'NO'
-  NO2%name    = 'NO2'
-  NO3%name    = 'NO3'
-  N2O5%name   = 'N2O5'
-  HNO3%name   = 'HNO3'
-  HO2%name    = 'HO2'
-  HO%name     = 'HO'
-  H2O2%name   = 'H2O2'
   H2O%name    = 'H2O'
-  CO%name     = 'CO'
-  CO2%name    = 'CO2'
-  RH%name     = 'RH'
-  R%name      = 'R'
-  NH3%name    = 'NH3'
-  H2SO4%name  = 'H2SO4'
-  ISO%name    = 'ISO'
-
-  CO2%loc     = -1
 
   !chem species and atol and rtol
   read(10,'(a)',err=100)scalarline
@@ -1047,33 +967,9 @@ SUBROUTINE read_chem(chem_name)
   read(scalarline,*)(chem_name(j),j=1,nchsp)
 
   do i=1, nchsp
-    if (O3%name    == chem_name(i)) then ; O3%loc   = i;  cycle; endif
-    if (NO%name    == chem_name(i)) then ; NO%loc   = i;  cycle; endif
-    if (NO2%name   == chem_name(i)) then ; NO2%loc  = i;  cycle; endif
-    if (NO3%name   == chem_name(i)) then ; NO3%loc  = i;  cycle; endif
-    if (N2O5%name  == chem_name(i)) then ; N2O5%loc = i;  cycle; endif
-    if (HNO3%name  == chem_name(i)) then ; HNO3%loc = i;  cycle; endif
-    if (HO%name    == chem_name(i)) then ; HO%loc   = i;  cycle; endif
-    if (HO2%name   == chem_name(i)) then ; HO2%loc  = i;  cycle; endif
-    if (H2O2%name  == chem_name(i)) then ; H2O2%loc = i;  cycle; endif
     if (H2O%name   == chem_name(i)) then ; H2O%loc  = i;  cycle; endif
-    if (CO%name    == chem_name(i)) then ; CO%loc   = i;  cycle; endif
-    if (CO2%name   == chem_name(i)) then ; CO2%loc  = i;  cycle; endif
-    if (RH%name    == chem_name(i)) then ; RH%loc   = i;  cycle; endif
-    if (R%name     == chem_name(i)) then ; R%loc    = i;  cycle; endif
-    if (ISO%name   == chem_name(i)) then ; ISO%loc    = i;  cycle; endif
-    if (NH3%name   == chem_name(i)) then ; NH3%loc  = i;  cycle; endif
-    if (H2SO4%name == chem_name(i)) then ; H2SO4%loc  = i;  cycle; endif
     if (INERT%name == chem_name(i)) then ; INERT%loc  = i;  cycle; endif
-    if (PRODUC%name== chem_name(i)) then ; PRODUC%loc  = i;  cycle; endif
   enddo
-
-  CO2loc = CO2%loc
-  if (CO2%loc .gt. 0) CO2loc = CO2loc + choffset
-
-! the above loc gives the location of a chemical component relative to the first chemical position
-! in SV0. The loc of the first chemical is always 1.  If you need the absolute
-! position in SV0 you have to add CHOFFSET to the above loc position
 
   read(10,'(a)',err=100)scalarline
   read(scalarline,*)(atol(j),j=1,nchsp)
@@ -1129,15 +1025,8 @@ real, dimension(1:k1) :: rho, exnf, pres, zf, dzf
     enddo 
   ENDDO
 
-  !if ((.not. lchem) .and. lrsAgs) then
-  !  nr_raddep = 0
-  !  if (.not. allocated(keff)) allocate (keff(2:i1,2:j1,0,kmax))
-  !  if (.not. allocated(kefftemp)) allocate (kefftemp(kmax,0))
-  !  CALL ratech
-  !endif
   if (.not. (lchem)) return
 
-  !if (rk3step/=3) return
   if(timee==0) return
 
   !!!! We only use the chemistry scalars in svm,
@@ -1146,9 +1035,6 @@ real, dimension(1:k1) :: rho, exnf, pres, zf, dzf
   call twostep2(svm(1:i1,1:j1,1:k1,firstchem:lastchem),qv(1:i1,1:j1,1:k1) &
                ,thl(1:i1,1:j1,1:k1),ql(1:i1,1:j1,1:k1),rho(1:k1) &
                ,exnf(1:k1),pres(1:k1),zf(1:k1),dzf(1:k1),timee)
-  !if (timee >= tnextwrite ) then
-  !  tnextwrite = tnextwrite + itimeav
-  !endif
 
   ! return to CHEM3D
   DO k=1,k1
@@ -1188,7 +1074,7 @@ SUBROUTINE twostep2(y,qt0,thl,ql,rho,exnf,pres,zf,dzf,timee)
 
 implicit none
 
-!!!!! we acces the chemicals from 1 to nchsp so we are independend of other scalars in svm
+!!!!! we acces the chemicals from 1 to nchsp so we are independent of other scalars in svm
   real    y(1:i1,1:j1,k1,1:nchsp)
   real    qt0(1:i1,1:j1,k1)
   real    thl(1:i1,1:j1,k1)
@@ -1230,12 +1116,6 @@ implicit none
     else
       y(1:i1,1:j1,:,H2O%loc) = qt0(1:i1,1:j1,:) * MW_air / MW_h2o * ppb
     endif
-  endif
-
-  if(lchmovie .and. mod(timee,idtchmovie)==0 ) then
-    allocate(k3d(1:i1,1:j1,k1,tnor+2))  !2 extra for T_abs and convppb
-    allocate(ybegin(1:i1,1:j1,k1,nchsp))
-    ybegin = y
   endif
 
   !c Chemical solver
@@ -1283,18 +1163,9 @@ implicit none
 
     if (restart) kdt=kdt/10.0
     restart=.true.
-    kdt=max(dtmin,min(kdt,kdtmax))
-    !!! aries(2024.07.15) dt check
-    !!if ((myid==0) .and. (nstart>1)) then
-    !!  write(*,*) "restart (before fit) kdt=",kdt,"dtmin=",dtmin,"nstart=",nstart
-    !!endif
+    kdt=max(dtmin,min(kdt,kdtmax))    
     call FIT(t,te,kdt)
     kdt=min(kdt,(te-t)/2)
-    !!! aries(2024.07.15) dt check
-    !!if ((myid==0) .and. (nstart>1)) then
-    !!  write(*,*) "restart (after fit) kdt=",kdt,"(te-t)/2=",(te-t)/2,"nstart=",nstart
-    !!endif
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !aries(2024.07.16) cycle bug
     if (nstart>10000) then
@@ -1304,8 +1175,6 @@ implicit none
       endif
     endif
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ! sta=kdt
 
     !c The starting step is carried out, using the implicit Euler method.
     ynew(:,:,1:nchsp)  = y(1:i1,1:j1, pl,1:nchsp)
@@ -1332,11 +1201,6 @@ implicit none
     a1  = ((c+1.0)**2)/(c*c+2.0*c)
     a2  =-1.0/(c*c+2.0*c)
     dtg = kdt*(1.0+c)/(2.0+c)
-    
-    !!! aries(2024.07.15) dt check
-    !!if ((failer) .and. (myid==0)) then
-    !!  write(*,*) "60 continue: p=",pl,"c=",c,"a1=",a1,"a2=",a2,"dtg=",dtg
-    !!endif
 
     ysum(:,:,1:nchsp) = a1*y(1:i1,1:j1,pl,1:nchsp)+a2*yold(:,:,1:nchsp)
     ynew(:,:,1:nchsp) = max(0.0,y(1:i1,1:j1,pl,1:nchsp)+ ratio*(y(1:i1,1:j1,pl,1:nchsp)-yold(:,:,1:nchsp)))
@@ -1354,12 +1218,6 @@ implicit none
         do i=1,i1
           ytol=atol(n)+rtol(n)*abs(y(i,j,pl,n))
           errltel=max(errltel,abs(c*ynew(i,j,n)-cp1* y(i,j,pl,n)+yold(i,j,n))/ytol)
-          !!! aries(2024.07.15) dt check
-          !!if (myid==0) then
-          !!  if ((errltel>1.0) .and. (failer)) then
-          !!    write(*,*) "error! i=",i,"j=",j,"p=",pl,"nch=",nchsp,"err=",errltel
-          !!  endif
-          !!endif
         enddo
       enddo
     enddo
@@ -1367,17 +1225,8 @@ implicit none
     call MPI_ALLREDUCE(errltel, errlte, 1,MY_REAL,MPI_MAX, comm3d, mpierr)
 
     errlte=2.0*errlte/(c+c*c)
-    !!if ((myid .eq. 0) .and. (failer)) then
-    !!  write(*,*) "ITERMPI fail! kdt=",kdt,"c=",c,"ratio=",ratio,"errlte=",errlte
-    !!endif
 
     call NEWDT(t,te,kdt,dtold,ratio,errlte,accept,dtmin,kdtmax)
-     
-    !!! aries(2024.07.15) dt check
-    !!if ((myid .eq. 0) .and. (failer)) then
-    !!  write(*,*) "NEWDT fail!,accept",accept,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
-    !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
-    !!endif
 
     !c Check if step has been accepted.
     if (accept) then
@@ -1389,12 +1238,6 @@ implicit none
       y(1:i1,1:j1, pl,1:nchsp) = ynew(:,:,1:nchsp)
 
       t = t+dtold
-      
-      !!! aries(2024.07.11) dt check
-      !!if (kdt .le. 0.01) then
-      !!  write(*,*) "accept!,myid=",myid,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
-      !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
-      !!endif
 
       if (t.ge.te) goto 120
         goto 60
@@ -1407,321 +1250,18 @@ implicit none
       naccpt = naccpt-1
       t=t-dtold
       y(1:i1,1:j1, pl,1:nchsp) = yold(:,:,1:nchsp)
-      
-      !!! aries(2024.07.15) dt check
-      !!if ((myid .eq. 0) .and. (restart)) then
-      !!  write(*,*) "restart fail!,myid=",myid,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
-      !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
-      !!endif
- 
-      !!! aries(2024.07.11) dt check
-      !!if ((myid .eq. 0) .and. (restart==.false.)) then
-      !!  write(*,*) "check fail!,myid=",myid,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
-      !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
-      !!endif
-
       goto 25
     endif
 
     !c Here the step has been rejected.
     nrejec=nrejec+1
     failer=.true.
-
-    !!! aries(2024.07.11) dt check
-    !!if ((myid .eq. 0) .and. (te .ne. t)) then
-    !!  write(*,*) "fail!,nrejec=",nrejec,"t=",t,"te=",te,"ratio=",ratio,"errlte=",errlte
-    !!  write(*,*) "kdt=",kdt,"dtold=",dtold,"dtmin=",dtmin,"kdtmax=",kdtmax
-    !!endif
-
     goto 60
 
 120 t=tb
   enddo  !pl=1,kmax
 
-
-  !if (lsegr .EQV. .true.) then
-  !  if(timee>=tnextwrite) then
-  !    we_temp = we
-  !    zi_temp = ziold
-  !    call calcblheight
-  !    we      = we_temp
-  !    ziold   = zi_temp
-  !    k_zi    = int(zi/dz)
-  !    rest_zi = (zi/dz)-k_zi
-
-  !    reaction_ev = .FALSE.
-  !    do n=1,nchsp
-  !      if (PL_scheme(n)%active .EQV. .TRUE.) then
-  !        do j=1,PL_scheme(n)%nr_PL
-  !        if(PL_scheme(n)%PL(j)%PorL == PRODUCTION) then !Only look at the reaction formulas from the perspective of produced chemicals
-  !          Rnr = PL_scheme(n)%PL(j)%r_nr  !Number of the reaction evaluated
-  !          if (reaction_ev(Rnr) .EQV. .FALSE.) then !Only look at reactions that are not evaluated yet
-  !            seg_concl = 0.0
-  !            seg_conc_prodl = 0.0
-  !            select case (PL_scheme(n)%PL(j)%formula) ! Determine the chemical equation type
-
-  !            case (0) ! No input chemicals, so segregation is always 0 everywhere
-  !              seg_conc_prod      = 1.0
-  !              seg_conc_mult      = 1.0
-  !              seg_conc_prod_vert = 1.0
-  !              seg_conc_mult_vert = 1.0
-
-  !            case (1) ! A -> ...
-  !              do it_k=1,kmax
-  !                do it_j=2,j1
-  !                  do it_i=2,i1
-  !                    seg_concl(1,it_k)    = seg_concl(1,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1)
-  !                    seg_conc_prodl(it_k) = seg_conc_prodl(it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1)
-  !                  enddo
-  !                enddo
-  !              enddo
-  !              do it_l=1,1
-  !                call MPI_ALLREDUCE(seg_concl(it_l,:) ,seg_conc(it_l,:,Rnr) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              enddo
-  !              call MPI_ALLREDUCE(seg_conc_prodl(:) ,seg_conc_prod_vert(Rnr,:) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              seg_conc_mult_vert(Rnr,:) = seg_conc(1,:,Rnr)
-  !              seg_conc_prod(Rnr) = sum(seg_conc_prod_vert(Rnr,1:k_zi))+rest_zi*seg_conc_prod_vert(Rnr,k_zi+1)
-  !              seg_conc_mult(Rnr) = (sum(seg_conc(1,1:k_zi,Rnr)) + rest_zi*seg_conc(1,k_zi+1,Rnr))
-
-  !            case(2) ! A + B -> ...
-  !              do it_k=1,kmax
-  !                do it_j=2,j1
-  !                  do it_i=2,i1
-  !                    seg_concl(1,it_k)    = seg_concl(1,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1)
-  !                    seg_concl(2,it_k)    = seg_concl(2,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2)
-  !                    seg_conc_prodl(it_k) = seg_conc_prodl(it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1)*y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2)
-  !                  enddo
-  !                enddo
-  !              enddo
-  !              do it_l=1,2
-  !                call MPI_ALLREDUCE(seg_concl(it_l,:) ,seg_conc(it_l,:,Rnr) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              enddo
-  !              call MPI_ALLREDUCE(seg_conc_prodl(:) ,seg_conc_prod_vert(Rnr,:) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              seg_conc_mult_vert(Rnr,:) = seg_conc(1,:,Rnr)*seg_conc(2,:,Rnr)/ijtot
-  !              seg_conc_prod(Rnr) = sum(seg_conc_prod_vert(Rnr,1:k_zi))+rest_zi*seg_conc_prod_vert(Rnr,k_zi+1)
-  !              seg_conc_mult(Rnr) = (sum(seg_conc(1,1:k_zi,Rnr)) + rest_zi*seg_conc(1,k_zi+1,Rnr)) &
-  !                                 * (sum(seg_conc(2,1:k_zi,Rnr)) + rest_zi*seg_conc(2,k_zi+1,Rnr))/(ijtot*(k_zi+rest_zi))
-  !            case(3) ! A^a -> ...
-  !              do it_k=1,kmax
-  !                do it_j=2,j1
-  !                  do it_i=2,i1
-  !                    seg_concl(1,it_k)    = seg_concl(1,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1)
-  !                    seg_conc_prodl(it_k) = seg_conc_prodl(it_k) + (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1)
-  !                  enddo
-  !                enddo
-  !              enddo
-  !              do it_l=1,1
-  !                call MPI_ALLREDUCE(seg_concl(it_l,:) ,seg_conc(it_l,:,Rnr) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              enddo
-  !              call MPI_ALLREDUCE(seg_conc_prodl(:) ,seg_conc_prod_vert(Rnr,:) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              seg_conc_mult_vert(Rnr,:) = (seg_conc(1,:,Rnr) ** PL_scheme(n)%PL(j)%exp1) / (ijtot ** (PL_scheme(n)%PL(j)%exp1 - 1))
-  !              seg_conc_prod(Rnr) = sum(seg_conc_prod_vert(Rnr,1:k_zi))+rest_zi*seg_conc_prod_vert(Rnr,k_zi+1)
-  !              seg_conc_mult(Rnr) = ((sum(seg_conc(1,1:k_zi,Rnr)) + rest_zi*seg_conc(1,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp1)&
-  !                                 / ((ijtot*(k_zi+rest_zi)) ** (PL_scheme(n)%PL(j)%exp1 - 1))
-
-  !            case(4) !A^a + B^b -> ...
-  !              do it_k=1,kmax
-  !                do it_j=2,j1
-  !                  do it_i=2,i1
-  !                    seg_concl(1,it_k)    = seg_concl(1,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1)
-  !                    seg_concl(2,it_k)    = seg_concl(2,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2)
-  !                    seg_conc_prodl(it_k) = seg_conc_prodl(it_k) + (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1) &
-  !                                         * (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2) ** PL_scheme(n)%PL(j)%exp2)
-  !                  enddo
-  !                enddo
-  !              enddo
-  !              do it_l=1,2
-  !                call MPI_ALLREDUCE(seg_concl(it_l,:) ,seg_conc(it_l,:,Rnr) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              enddo
-  !              call MPI_ALLREDUCE(seg_conc_prodl(:) ,seg_conc_prod_vert(Rnr,:) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              seg_conc_mult_vert(Rnr,:) = (seg_conc(1,:,Rnr) ** PL_scheme(n)%PL(j)%exp1) * (seg_conc(2,:,Rnr) ** PL_scheme(n)%PL(j)%exp2) &
-  !                                        / (ijtot ** (PL_scheme(n)%PL(j)%exp1 + PL_scheme(n)%PL(j)%exp2 - 1))
-  !              seg_conc_prod(Rnr) = sum(seg_conc_prod_vert(Rnr,1:k_zi))+rest_zi*seg_conc_prod_vert(Rnr,k_zi+1)
-  !              seg_conc_mult(Rnr) = ((sum(seg_conc(1,1:k_zi,Rnr)) + rest_zi*seg_conc(1,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp1)&
-  !                                 * ((sum(seg_conc(2,1:k_zi,Rnr)) + rest_zi*seg_conc(2,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp2)&
-  !                                 / ((ijtot*(k_zi+rest_zi)) ** (PL_scheme(n)%PL(j)%exp1 + PL_scheme(n)%PL(j)%exp2 - 1))
-
-  !            case(5) ! A + B + C -> ...
-  !              do it_k=1,kmax
-  !                do it_j=2,j1
-  !                  do it_i=2,i1
-  !                    seg_concl(1,it_k)    = seg_concl(1,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1)
-  !                    seg_concl(2,it_k)    = seg_concl(2,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2)
-  !                    seg_concl(3,it_k)    = seg_concl(3,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp3)
-  !                    seg_conc_prodl(it_k) = seg_conc_prodl(it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1) &
-  !                                         * y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2) * y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp3)
-  !                  enddo
-  !                enddo
-  !              enddo
-  !              do it_l=1,3
-  !                call MPI_ALLREDUCE(seg_concl(it_l,:) ,seg_conc(it_l,:,Rnr) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              enddo
-  !              call MPI_ALLREDUCE(seg_conc_prodl(:) ,seg_conc_prod_vert(Rnr,:) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              seg_conc_mult_vert(Rnr,:) = seg_conc(1,:,Rnr)*seg_conc(2,:,Rnr)*seg_conc(3,:,Rnr)/(ijtot**2)
-  !              seg_conc_prod(Rnr) = sum(seg_conc_prod_vert(Rnr,1:k_zi))+rest_zi*seg_conc_prod_vert(Rnr,k_zi+1)
-  !              seg_conc_mult(Rnr) = (sum(seg_conc(1,1:k_zi,Rnr)) + rest_zi*seg_conc(1,k_zi+1,Rnr)) &
-  !                                 * (sum(seg_conc(2,1:k_zi,Rnr)) + rest_zi*seg_conc(2,k_zi+1,Rnr)) &
-  !                                 * (sum(seg_conc(3,1:k_zi,Rnr)) + rest_zi*seg_conc(3,k_zi+1,Rnr)) / ((ijtot*(k_zi+rest_zi))**2)
-
-  !            case(6) ! A^a + B^b + C^c -> ...
-  !              do it_k=1,kmax
-  !                do it_j=2,j1
-  !                  do it_i=2,i1
-  !                    seg_concl(1,it_k)    = seg_concl(1,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1)
-  !                    seg_concl(2,it_k)    = seg_concl(2,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2)
-  !                    seg_concl(3,it_k)    = seg_concl(3,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp3)
-  !                    seg_conc_prodl(it_k) = seg_conc_prodl(it_k) + (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1) &
-  !                                         * (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2) ** PL_scheme(n)%PL(j)%exp2) &
-  !                                         * (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp3) ** PL_scheme(n)%PL(j)%exp3)
-  !                  enddo
-  !                enddo
-  !              enddo
-  !              do it_l=1,3
-  !                call MPI_ALLREDUCE(seg_concl(it_l,:) ,seg_conc(it_l,:,Rnr) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              enddo
-  !              call MPI_ALLREDUCE(seg_conc_prodl(:) ,seg_conc_prod_vert(Rnr,:) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              seg_conc_mult_vert(Rnr,:) = (seg_conc(1,:,Rnr) ** PL_scheme(n)%PL(j)%exp1) &
-  !                                        * (seg_conc(2,:,Rnr) ** PL_scheme(n)%PL(j)%exp2) &
-  !                                        * (seg_conc(3,:,Rnr) ** PL_scheme(n)%PL(j)%exp3) &
-  !                                        / (ijtot ** (PL_scheme(n)%PL(j)%exp1 + PL_scheme(n)%PL(j)%exp2 + PL_scheme(n)%PL(j)%exp3 - 1))
-  !              seg_conc_prod(Rnr) = sum(seg_conc_prod_vert(Rnr,1:k_zi))+rest_zi*seg_conc_prod_vert(Rnr,k_zi+1)
-  !              seg_conc_mult(Rnr) = ((sum(seg_conc(1,1:k_zi,Rnr)) + rest_zi*seg_conc(1,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp1)&
-  !                                 * ((sum(seg_conc(2,1:k_zi,Rnr)) + rest_zi*seg_conc(2,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp2)&
-  !                                 * ((sum(seg_conc(3,1:k_zi,Rnr)) + rest_zi*seg_conc(3,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp3)&
-  !                                 / ((ijtot*(k_zi+rest_zi)) ** (PL_scheme(n)%PL(j)%exp1 + PL_scheme(n)%PL(j)%exp2 + PL_scheme(n)%PL(j)%exp3 - 1))
-
-  !            case(7) ! A^a + B^b + C^c + D^d -> ...
-  !              do it_k=1,kmax
-  !                do it_j=2,j1
-  !                  do it_i=2,i1
-  !                    seg_concl(1,it_k)    = seg_concl(1,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1)
-  !                    seg_concl(2,it_k)    = seg_concl(2,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2)
-  !                    seg_concl(3,it_k)    = seg_concl(3,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp3)
-  !                    seg_concl(4,it_k)    = seg_concl(4,it_k) + y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp4)
-  !                    seg_conc_prodl(it_k) = seg_conc_prodl(it_k) + (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1) &
-  !                                         * (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp2) ** PL_scheme(n)%PL(j)%exp2) &
-  !                                         * (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp3) ** PL_scheme(n)%PL(j)%exp3) &
-  !                                         * (y(it_i,it_j,it_k,PL_scheme(n)%PL(j)%comp4) ** PL_scheme(n)%PL(j)%exp4)
-  !                  enddo
-  !                enddo
-  !              enddo
-  !              do it_l=1,4
-  !                call MPI_ALLREDUCE(seg_concl(it_l,:) ,seg_conc(it_l,:,Rnr) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              enddo
-  !              call MPI_ALLREDUCE(seg_conc_prodl(:) ,seg_conc_prod_vert(Rnr,:) ,kmax ,MY_REAL ,MPI_SUM ,comm3d ,mpierr)
-  !              seg_conc_mult_vert(Rnr,:) = (seg_conc(1,:,Rnr) ** PL_scheme(n)%PL(j)%exp1) &
-  !                                        * (seg_conc(2,:,Rnr) ** PL_scheme(n)%PL(j)%exp2) &
-  !                                        * (seg_conc(3,:,Rnr) ** PL_scheme(n)%PL(j)%exp3) &
-  !                                        * (seg_conc(4,:,Rnr) ** PL_scheme(n)%PL(j)%exp4) &
-  !                                        / (ijtot ** (PL_scheme(n)%PL(j)%exp1 + PL_scheme(n)%PL(j)%exp2 &
-  !                                                    + PL_scheme(n)%PL(j)%exp3 + PL_scheme(n)%PL(j)%exp4 - 1))
-  !              seg_conc_prod(Rnr) = sum(seg_conc_prod_vert(Rnr,1:k_zi))+rest_zi*seg_conc_prod_vert(Rnr,k_zi+1)
-  !              seg_conc_mult(Rnr) = ((sum(seg_conc(1,1:k_zi,Rnr)) + rest_zi*seg_conc(1,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp1)&
-  !                                 * ((sum(seg_conc(2,1:k_zi,Rnr)) + rest_zi*seg_conc(2,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp2)&
-  !                                 * ((sum(seg_conc(3,1:k_zi,Rnr)) + rest_zi*seg_conc(3,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp3)&
-  !                                 * ((sum(seg_conc(4,1:k_zi,Rnr)) + rest_zi*seg_conc(4,k_zi+1,Rnr)) ** PL_scheme(n)%PL(j)%exp4)&
-  !                                 / ((ijtot*(k_zi+rest_zi)) ** (PL_scheme(n)%PL(j)%exp1 + PL_scheme(n)%PL(j)%exp2 &
-  !                                                              + PL_scheme(n)%PL(j)%exp3 + PL_scheme(n)%PL(j)%exp4 - 1))
-  !            case default
-  !              if(myid==0) then
-  !                Print *,'Reaction type of reaction #',Rnr,' is not supported for segregation calculations'
-  !              endif
-  !            end select !select case as function of the equation type
-!
-! !             if(myid==0) then
-! !               Print *,'Finished segregation calculation for reaction #',Rnr
-! !             endif
-!
-  !            reaction_ev(PL_scheme(n)%PL(j)%r_nr) = .TRUE. ! Reaction #<r_nr> has been evaluated
-  !          endif !reaction evaluated yet?
-  !        endif   !only PRODUCTION terms for chemical n
-  !        enddo   !j=1,reactions for chemical n
-  !      endif     !active
-  !    enddo       !n=1,nchsp
-  !    do j=1,tnor
-  !      if(reaction_ev(j) .EQV. .FALSE.) then
-  !        if(myid==0) then
-  !          Print *,'Reaction ',j,' has no production terms and is therefore not evaluated'
-  !        endif
-  !      endif
-  !    enddo
-
-  !    where (seg_conc_mult .ne. 0)
-  !      segregation = (seg_conc_prod-seg_conc_mult)/seg_conc_mult
-  !    elsewhere
-  !      segregation = -9999.0 !Error code, devision by 0
-  !    endwhere
-  !    where (seg_conc_mult_vert .ne. 0)
-  !      segregation_vert = (seg_conc_prod_vert-seg_conc_mult_vert)/seg_conc_mult_vert
-  !    elsewhere
-  !      segregation_vert = -9999.0 !Error code, devision by 0
-  !    endwhere
-
-  !    if(myid==0) then
-  !      open (ifoutput,file='seg.'//cexpnr,position='append')
-  !        write(formatstring,'(a,i3,a)') '(F9.2,1x,F7.2,',tnor,'(2x,e12.6))'
-  !        write(ifoutput,formatstring) rtimee,zi,(segregation(i),i=1,tnor)
-  !      close(ifoutput)
-
-  !      nsecs   = nint(real(timee)/1000.)
-  !      nhrs    = int(nsecs/3600)
-  !      nminut  = int(nsecs/60)-nhrs*60
-  !      nsecs   = mod(nsecs,60)
-  !      open (ifoutput,file='seg_h.'//cexpnr,position='append')
-  !        write(ifoutput,'(A,/A,F5.0,A,I4,A,I2.2,A,I2.2,A,/A)') &
-  !        '#-----------------------------------------------------------------------------'&
-  !        ,'#',(timeav_glob),'--- AVERAGING TIMESTEP --- '      &
-  !        ,nhrs,':',nminut,':',nsecs      &
-  !        ,'   HRS:MIN:SEC AFTER INITIALIZATION ','#-----------------------------------------------------------------------------'
-
-  !        write(formatstring,'(a,i3,a)') '(a9,1x,a7,1x,a7,',tnor,'(2x,a5,i3.3,a4))'
-  !        write(ifoutput,formatstring) '#Time [s]','z_i [m]','h [m]',('IsegR',i,' [-]',i=1,tnor)
-
-  !        write(formatstring,'(a,i3,a)') '(F9.2,1x,F7.2,1x,F7.2,',tnor,'(2x,e12.6))'
-  !        do it_k=1,kmax
-  !          write(ifoutput,formatstring) rtimee,zi,(it_k-0.5)*dz,(segregation_vert(i,it_k),i=1,tnor)
-  !        enddo !Loop over height
-  !        write(ifoutput,'(//)')
-  !      close(ifoutput)
-  !    endif !(myid == 0)
-  !  endif   !timee>=tnextwrite
-  !endif     !lsegr .EQV. .true.
-
-
-  !if( timee>=tnextwrite) then
-  !  allocate (writearrayg(k1,tnor+2))
-  !  writearrayg = 0.
-  !  do n=1,tnor+2
-  !    call MPI_ALLREDUCE(writearray(:,n), writearrayg(:,n) ,k1, MY_REAL, MPI_SUM, comm3d, mpierr)
-  !  enddo
-  !  if(myid==0) then
-  !    open(ifoutput,file='keffs.'//cexpnr,position='append')
-  !    write(ifoutput,'(a,f8.1)') 'time =',rtimee
-  !    write(formatstring,'(a,i3,a)') '(5x,',tnor+2,'(2x,a6,3x))'
-  !    write(ifoutput,formatstring) (RC(i)%rname,i=1,tnor),'Tabs','convppb'
-  !    write(formatstring,'(a,i3,a)') '(5x,',tnor+2,'(3x,i3,5x))'
-  !    write(ifoutput,formatstring)( RC(i)%func1,i=1,tnor)
-! !     do pl=1,kmax
-! !       write(ifoutput,'(i3,x,19e11.4)') pl,(writearray(pl,i),i=1,tnor+2)
-! !     enddo
-  !    do pl=1,kmax
-  !      write(formatstring,'(a,i3,a)') '(i3,1x,',tnor+2,'e11.4)'
-  !      write(ifoutput,formatstring) pl,(writearrayg(pl,i)/nprocs,i=1,tnor+2)
-  !    enddo
-
-  !    close(ifoutput)
-  !  endif !(myid == 0)
-  !  deallocate(writearrayg)
-  !endif
-
-  !if (lchmovie .and. (mod(timee,idtchmovie)==0 )) then
-  !  call chemmovie(ybegin)
-  !  deallocate(k3d,ybegin)
-  !endif
-
-  !close (100)
 return
-
 end subroutine twostep2
 
 
@@ -1788,44 +1328,15 @@ implicit none
 
   if (lchconst .EQV. .false.) then
     T_abs(:,:) = thl0(1:i1,1:j1,k) * exnf(k) + (rlv/cp) * ql0(1:i1,1:j1,k)
-     !do j=1,j1
-     !do i=1,i1
-     !  if (T_abs(i,j)/=T_abs(i,j)) write(*,*) thl0(i,j,k),exnf(k),rlv,cp,ql0(i,j,k)
-     !enddo
-     !enddo
-    ! concentrations are in ppb reactionconstant are1 cm3/moleculer.s =>convppb
-    ! if K in
-  !  convppb(:,:) = 6.023e8 * (presf(k)/100) / (8.314e-2 * T_abs(:,:))
-    convppb(:,:) = Avogrado * 1.e-9 * 1e-6/8.314e-2/100 * (presf(k)) / ( T_abs(:,:))
-     ! 2.46e10*1.e9 = 2.46e19     <= 0.7224*P/T
+    ! concentrations are in ppb reaction constant are 1 cm3/moleculer.s =>convppb
+    convppb(:,:) = Avogrado * 1.e-9 * 1e-6 / 8.314e-2 / 100 * (presf(k)) / ( T_abs(:,:))
   else
     T_abs(:,:) = t_ref
     convppb(:,:) = Avogrado * 1.e-9 * 1e-6 * (p_ref/100) / (8.314e-2 * t_ref)
   endif
 
-  !if (lchmovie .and. (mod(timee,idtchmovie)==0)) then
-  !  k3d(:,:,k,tnor+1) = T_abs
-  !  k3d(:,:,k,tnor+2) = convppb
-  !endif
-
-  !if( timee>=tnextwrite) then
-  !   writearray(k,tnor+1)=sum(T_abs)/(imax*jmax)
-  !   writearray(k,tnor+2)=sum(convppb)/(imax*jmax)
-  !endif
-
-  !if( lchmovie .and. (mod(timee,idtchmovie)==0)) then
-  !   writearray(k,tnor+1)=sum(T_abs)/(imax*jmax)
-  !   writearray(k,tnor+2)=sum(convppb)/(imax*jmax)
-  !endif
-
   do i=1, tnor
     if (RC(i)%RadDep == 1 ) then
-      !if (timee>=tnextwrite) then
-      !  writearray(k,i) = sum(keff(:,:,RC(i)%Kindex,k))/(imax*jmax)
-      !endif
-      !if( lchmovie .and. (mod(timee,idtchmovie)==0)) then
-      !  k3d(:,:,k,i) = keff(:,:,RC(i)%Kindex,k)
-      !endif
       !do nothing this is done in ratech
     else   ! not hv reaction func1 can have different meaning
       select case ( RC(i)%func1 )
@@ -1860,16 +1371,6 @@ implicit none
         STOP
       end select
 
-      !if( timee>=tnextwrite) then
-      !  writearray(k,i)=sum(keffT(:,:,RC(i)%Kindex))/(imax*jmax)
-!     !   if (lsegrk .EQV. .true.) then
-!     !     keffT3D(:,:,:,k) = keffT(:,:,:)
-!     !   endif
-      !endif
-
-      !if (lchmovie .and. (mod(timee,idtchmovie)==0)) then
-      !  k3d(:,:,k,i) = keffT(:,:,RC(i)%Kindex)
-      !endif
     endif
 
   end do !tnor
@@ -1948,10 +1449,6 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
   xhr = utc_time
   xlon = rlon
   xlat = rlat
-!!  ! SHAO  time debug
-!!  IF(myid==0) then
-!!    WRITE(*,*) '(modchem) xday=',xday,'xhr=',xhr,'xlon=',xlon, 'xlat=',xlat
-!!  ENDIF
 
 !   --------------------------
 !   Calculating reaction rates
@@ -1969,7 +1466,6 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
     if (ldiuvar .eqv. .false.) then ! we have to fix the sza to the fixed hour h_ref
       sza = getth(xday,xlat,xlon,h_ref)
       coszen = max(0.0,cos(sza))
-!write(*,*)sza,coszen
     endif
   else
     lday = .false.
@@ -1991,12 +1487,10 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
         RC(r)%Keff = RC(r)%A
       case (2) ! exponential function
         RC(r)%Keff = RC(r)%A * exp(RC(r)%B / coszen)
-!write(*,*)'func 2',RC(r)%Keff
       case (3) ! powerfunction
         RC(r)%Keff = RC(r)%A * coszen ** RC(r)%B
       case (4) ! powerfunction but special for JO3
         RC(r)%Keff = RC(r)%A * coszen ** RC(r)%B
-!write(*,*)'func 4',RC(r)%Keff
       case default
         RC(r)%Keff = 1.
       end select
@@ -2011,7 +1505,6 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
       if(lchconst .eqv. .true.) then
         keff(:,:,i,:) = RC(r)%Keff * RC(r)%D *  (q_ref * MW_air/MW_h2o ) / &
          (RC(r)%D * q_ref * MW_air/MW_h2o + RC(r)%E * (1.- q_ref* MW_air/MW_h2o))
-!write(*,*)'func 4', keff(2,2,i,2),RC(r)%Keff,RC(r)%D *  (q_ref * MW_air/MW_h2o ),RC(r)%D * q_ref * MW_air/MW_h2o,RC(r)%E * (1.- q_ref* MW_air/MW_h2o)
       else
         keff(:,:,i,:) = RC(r)%Keff * RC(r)%D * ( qt0(1:i1,1:j1,1:k1) * MW_air/MW_h2o ) / &
          (RC(r)%D * ( qt0(1:i1,1:j1,1:k1) * MW_air/MW_h2o ) + RC(r)%E * (1.- qt0(1:i1,1:j1,1:k1)* MW_air/MW_h2o))
@@ -2037,18 +1530,13 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
   qlintallsum = 0.0
   qlintallmax = 0.0
 
-  if( sum(ql0) == 0.0 .or. (lcloudKconst  .eqv. .true.)) then  ! maybe < 0.01
+  if( sum(ql0) == 0.0) then ! maybe < 0.01
     !there is no liquid water in the domain so no clouds
-    !or we like constamnt value's for K so we are finished here
   else
     !we have to look for the individual clouds
 
     !for clouds the the max solar zenith angle is cutoff at 60 degrees
     coszenmax = min(60*pi/180,coszen)
-
-    !if (lrsAgs .and. (iradiation/=irad_par)) then !irad_par get tau with ql0 theshold
-    !  tauField   = 0.0
-    !endif
 
     do j=1,j1
       do i=1,i1
@@ -2107,7 +1595,6 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
                 !inside cloud
                 diff = fab - fba
                 ks = fab
-       !if(myid==0)write(*,*) raddep_RCindex(m),'fab=',fab,'fba=',fba
                 ! scale inside cloud with ql0
                 ! not sure this is correct with non equidistant grid
                 do n=l-1,k,-1
@@ -2115,7 +1602,6 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
                   kefftemp(n,m) = ks
                 enddo
                 keff(i,j,m,:) = keff(i,j,m,:) * kefftemp(:,m)
-       !if(myid==0)write (*,*) myid,'xxx',timee,m,r,RC(r)%func1, RC(r)%Keff,keff(i,j,m,1)
               enddo !m = 1, nr_raddep
 
             endif !dense cloud
@@ -2126,44 +1612,9 @@ subroutine ratech(zf,dzf,rhof,qt0,ql0)
     enddo !j loop
   endif !ql0(:,:,:) = 0
 
+  !Output check
   if(myid==0 .and. ANY(keff>0)) write (*,*) xhr*3600,'photolysis reactions run'
  
- !if(timee>=tnextwrite) then
-  !   ztopmaxl = ztopmax
-  !   zbasesuml = zbasesum
-  !   zbasecountl = zbasecount
-  !   cloudheightmaxl = cloudheightmax
-  !   cloudheightsuml = cloudheightsum
-  !   cloudcountl = cloudcount
-  !   qlintsuml = qlintsum
-  !   qlintmaxl = qlintmax
-  !   qlintallsuml = qlintallsum
-  !   qlintallmaxl = qlintallmax
-
-  !   call MPI_ALLREDUCE(zbasecountl   , zbasecount   , 1,    MY_REAL,  MPI_SUM, comm3d, mpierr)
-  !   call MPI_ALLREDUCE(cloudcountl   , cloudcount   , 1,    MY_REAL,  MPI_SUM, comm3d, mpierr)
-
-  !   call MPI_ALLREDUCE(zbasesuml, zbasesum, 1,    MY_REAL,  MPI_SUM, comm3d, mpierr)
-  !   call MPI_ALLREDUCE(ztopmaxl, ztopmax, 1,    MY_REAL,  MPI_MAX, comm3d, mpierr)
-
-  !   call MPI_ALLREDUCE(cloudheightmaxl, cloudheightmax, 1,    MY_REAL,  MPI_MAX, comm3d, mpierr)
-  !   call MPI_ALLREDUCE(cloudheightsuml, cloudheightsum, 1,    MY_REAL,  MPI_SUM, comm3d, mpierr)
-
-  !   call MPI_ALLREDUCE(qlintmaxl, qlintmax, 1,    MY_REAL,  MPI_MAX, comm3d, mpierr)
-  !   call MPI_ALLREDUCE(qlintsuml, qlintsum, 1,    MY_REAL,  MPI_SUM, comm3d, mpierr)
-
-  !   call MPI_ALLREDUCE(qlintallmaxl, qlintallmax, 1,    MY_REAL,  MPI_MAX, comm3d, mpierr)
-  !   call MPI_ALLREDUCE(qlintallsuml, qlintallsum, 1,    MY_REAL,  MPI_SUM, comm3d, mpierr)
-
-  !   if ( myid ==0 ) then
-  !     open (ifoutput,file='cloudstat.'//cexpnr,position='append')
-  !     write(ifoutput,'(f7.0,f6.2,2f7.2,4f9.1,4f9.4)')rtimee, xhr, zbasecount/ijtot, cloudcount/ijtot, zbasesum / (zbasecount+1.0e-5), &
-  !       ztopmax, cloudheightsum/(zbasecount+1.0e-5), cloudheightmax, qlintsum / (zbasecount+1.0e-5), &
-  !       qlintmax, qlintallsum / (cloudcount + 1.0e-5), qlintallmax
-  !     close (ifoutput)
-  !   endif
-  !endif
-
   RETURN
 
   end  subroutine ratech
@@ -2198,30 +1649,34 @@ implicit none
         case (0)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k)
         case (1)
-          YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) * ynew(:,:,PL_scheme(n)%PL(j)%comp1)
+          YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp1)
         case (2)
-          YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) * ynew(:,:,PL_scheme(n)%PL(j)%comp1) * ynew(:,:,PL_scheme(n)%PL(j)%comp2)
+          YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp1) * ynew(:,:,PL_scheme(n)%PL(j)%comp2)
         case (3)
-          YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1
+          YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1
         case (4)
-          YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) * ynew(:,:,PL_scheme(n)%PL(j)%comp1)  ** PL_scheme(n)%PL(j)%exp1 &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp2)  ** PL_scheme(n)%PL(j)%exp2
+          YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1 &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp2) ** PL_scheme(n)%PL(j)%exp2
         case (5)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp1) &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp2) &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp3)
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp1) &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp2) &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp3)
         case (6)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1 &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp2) ** PL_scheme(n)%PL(j)%exp2 &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp3) ** PL_scheme(n)%PL(j)%exp3
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1 &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp2) ** PL_scheme(n)%PL(j)%exp2 &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp3) ** PL_scheme(n)%PL(j)%exp3
         case (7)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + PL_scheme(n)%PL(j)%coef * keff(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex,k) &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1 &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp2) ** PL_scheme(n)%PL(j)%exp2 &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp3) ** PL_scheme(n)%PL(j)%exp3 &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp4) ** PL_scheme(n)%PL(j)%exp4
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1 &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp2) ** PL_scheme(n)%PL(j)%exp2 &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp3) ** PL_scheme(n)%PL(j)%exp3 &
+                                                    * ynew(:,:,PL_scheme(n)%PL(j)%comp4) ** PL_scheme(n)%PL(j)%exp4
         end select
       else
         kreact(:,:) = PL_scheme(n)%PL(j)%coef * KeffT(:,:,RC(PL_scheme(n)%PL(j)%r_nr)%Kindex)
@@ -2236,7 +1691,7 @@ implicit none
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + kreact(:,:) * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1
         case (4)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + kreact(:,:) * ynew(:,:,PL_scheme(n)%PL(j)%comp1) ** PL_scheme(n)%PL(j)%exp1 &
-                   * ynew(:,:,PL_scheme(n)%PL(j)%comp2)  ** PL_scheme(n)%PL(j)%exp2
+                                                                * ynew(:,:,PL_scheme(n)%PL(j)%comp2) ** PL_scheme(n)%PL(j)%exp2
         case (5)
           YPL_pointer(:,:,n) = YPL_pointer(:,:,n) + kreact(:,:) * ynew(:,:,PL_scheme(n)%PL(j)%comp1) &
                                                                 * ynew(:,:,PL_scheme(n)%PL(j)%comp2) &
@@ -2287,225 +1742,107 @@ implicit none
   return
 end function getth
 
-!subroutine chemmovie(ybegin)
-!use modglobal, only : i1,j1,ih,jh,k1,kmax,iexpnr
-!use modfields, only: svm,qt0,ql0
-!use modmpi, only: myidx, myidy
+!subroutine write_chem_scheme(chem_name)
 !implicit none
 !
-!  real*4, allocatable ::dummy(:,:,:)
-!  real ,dimension(2-ih:i1+ih,2-jh:j1+jh,k1,nchsp)::ybegin
-!  integer fileout,i,j,k,n
+!  character*6, dimension(nchsp) :: chem_name(:)
+!  integer i,j
+!  character (len=4) coef_str
 !
-!  character (len=30) ::filenaam
-!  character (len=13) ::id
+!  if ( myid == 0 ) then
 !
-!  allocate(dummy(2:i1,2:j1,kmax))
-!
-!  fileout=20
-!  write(id,'(2a,i3.3,a,i3.3,a,i3.3)')'.','x', myidx, 'y', myidy,'.',iexpnr
-!  do n=1,nchsp
-!    write(filenaam,'(a,a)')trim(PL_scheme(n)%name),id
-!    open(fileout,file=filenaam,form='unformatted',position='append',action='write')
-!    dummy(:,:,:)=svm(2:i1,2:j1,1:kmax,n)
-!     write(fileout) (((dummy(i,j,k),i=2,i1),j=2,j1),k=1,kmax)
-!    close(fileout)
-!  enddo
-!
-!  do n=1,nchsp
-!    write(filenaam,'(a,a,a)')'PL_',trim(PL_scheme(n)%name),id
-!    open(fileout,file=filenaam,form='unformatted',position='append',action='write')
-!    dummy(:,:,:) = svm(2:i1,2:j1,1:kmax,n) - ybegin(2:i1,2:j1,1:kmax,n)
-!     write(fileout) (((dummy(i,j,k),i=2,i1),j=2,j1),k=1,kmax)
-!    close(fileout)
-!  enddo
-!
-!  do n=1,tnor
-!    write(filenaam,'(a,a)')trim(RC(n)%rname),id
-!    open(fileout,file=filenaam,form='unformatted',position='append',action='write')
-!    write(fileout)k3d(:,:,:,n)
-!    close(fileout)
-!  enddo
-!
-!  write(filenaam,'(a,a)')'T_abs',id
-!  open(fileout,file=filenaam,form='unformatted',position='append',action='write')
-!  write(fileout)k3d(:,:,:,tnor+1)
-!  close(fileout)
-!
-!  write(filenaam,'(a,a)')'conv',id
-!  open(fileout,file=filenaam,form='unformatted',position='append',action='write')
-!  write(fileout)k3d(:,:,:,tnor+2)
-!  close(fileout)
-!
-!  write(filenaam,'(a,a)')'qt',id
-!  open(fileout,file=filenaam,form='unformatted',position='append',action='write')
-!  dummy(:,:,:) = qt0(2:i1,2:j1,1:kmax)
-!  write(fileout) dummy
-!  close(fileout)
-!
-!  write(filenaam,'(a,a)')'ql',id
-!  open(fileout,file=filenaam,form='unformatted',position='append',action='write')
-!  dummy(:,:,:) = ql0(2:i1,2:j1,1:kmax)
-!  write(fileout) dummy
-!  close(fileout)
-!
-!  deallocate(dummy)
-!
-!end subroutine chemmovie
-
-!XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-subroutine write_chem_scheme(chem_name)
-implicit none
-
-  character*6, dimension(nchsp) :: chem_name(:)
-  integer i,j
-  character (len=4) coef_str
-
-  if ( myid == 0 ) then
-
-  !Print out the reaction schemes
-  open(ifoutput,file='reaction_scheme.'//CEXPNR,RECL=132)
-  write(ifoutput,*)' '
-  do i=1,nchsp
-  write(ifoutput,*)'---------------------------------------'
-  write(ifoutput,*)' '
- if (PL_scheme(i)%active .EQV. .FALSE. ) then
-    write(ifoutput,'(a6,a2,i2,a,a)')PL_scheme(i)%name,'(',i,')','NO REACTION'
-    write(ifoutput,*)' '
-  else
-    write(ifoutput,'(a6,a2,i2,a)')PL_scheme(i)%name,'(',i,')'
-    write(ifoutput,'(a5)') 'YP = '
-    do j=1,PL_scheme(i)%nr_PL
-      !write(coef_str,'(f4.2)')PL_scheme(i)%PL(j)%coef
-      if (PL_scheme(i)%PL(j)%PorL == PRODUCTION ) then
-        select case (PL_scheme(i)%PL(j)%formula)
-        case (0)
-          write(ifoutput,*) '    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),')  ( F=',PL_scheme(i)%PL(j)%formula,')'
-        case (1)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']','( F=',PL_scheme(i)%PL(j)%formula,')'
-        case (2)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']', &
-                    '* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ( F=',PL_scheme(i)%PL(j)%formula,')'
-        case (3)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),'] ** (',PL_scheme(i)%PL(j)%exp1,')','( F=',PL_scheme(i)%PL(j)%formula,')'
-        case(4)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),'] ** (',PL_scheme(i)%PL(j)%exp1,')', &
-                    ' * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),']** (',PL_scheme(i)%PL(j)%exp2,') ( F=',PL_scheme(i)%PL(j)%formula,')'
-        case(5)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']', &
-                    '* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)), &
-                    '] * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ( F=',PL_scheme(i)%PL(j)%formula,')'
-        case(6)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']** (',PL_scheme(i)%PL(j)%exp1, &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ** (',PL_scheme(i)%PL(j)%exp2, &
-                    ') *  Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ** (',PL_scheme(i)%PL(j)%exp3,')( F=',PL_scheme(i)%PL(j)%formula,')'
-        case(7)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']** (',PL_scheme(i)%PL(j)%exp1, &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ** (',PL_scheme(i)%PL(j)%exp2, &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ** (',PL_scheme(i)%PL(j)%exp3, &
-                    ')* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp4)),'] ** (',PL_scheme(i)%PL(j)%exp4,')( F=',PL_scheme(i)%PL(j)%formula,')'
-        end select
-      endif
-    enddo
-
-    write(ifoutput,'(a5)') 'YL = '
-    do j=1,PL_scheme(i)%nr_PL
-      if (PL_scheme(i)%PL(j)%PorL == LOSS ) then
-        !write(coef_str,'(f4.2)')PL_scheme(i)%PL(j)%coef
-        select case (PL_scheme(i)%PL(j)%formula)
-        case (0)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),')  ( F=',PL_scheme(i)%PL(j)%formula,')'
-        case (1)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']','( F=',PL_scheme(i)%PL(j)%formula,')'
-        case (2)
-          write(ifoutput,*) '    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']', &
-                    '* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ( F=',PL_scheme(i)%PL(j)%formula,')'
-        case (3)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),'] ** (',PL_scheme(i)%PL(j)%exp1,') ( F=',PL_scheme(i)%PL(j)%formula,')'
-        case(4)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),'] ** (',PL_scheme(i)%PL(j)%exp1,')', &
-                    ' * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),']** (',PL_scheme(i)%PL(j)%exp2,') ( F=',PL_scheme(i)%PL(j)%formula,')'
-        case(5)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']', &
-                    '* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)), &
-                    '] * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ( F=',PL_scheme(i)%PL(j)%formula,')'
-        case(6)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']** (',PL_scheme(i)%PL(j)%exp1, &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ** (',PL_scheme(i)%PL(j)%exp2, &
-                    ') *  Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ** (',PL_scheme(i)%PL(j)%exp3,')( F=',PL_scheme(i)%PL(j)%formula,')'
-        case(7)
-          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']** (',PL_scheme(i)%PL(j)%exp1, &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ** (',PL_scheme(i)%PL(j)%exp2, &
-                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ** (',PL_scheme(i)%PL(j)%exp3, &
-                    ')* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp4)),'] ** (',PL_scheme(i)%PL(j)%exp4,')( F=',PL_scheme(i)%PL(j)%formula,')'
-        end select
-      endif
-    enddo
-    write(ifoutput,*) ' '
-  endif
-  enddo
-
+!  !Print out the reaction schemes
+!  open(ifoutput,file='reaction_scheme.001',RECL=132)
+!  write(ifoutput,*)' '
 !  do i=1,nchsp
 !  write(ifoutput,*)'---------------------------------------'
 !  write(ifoutput,*)' '
 !  if (PL_scheme(i)%active .EQV. .FALSE. ) then
-!    write(ifoutput,*)PL_scheme(i)%name,'(',i,')'
-!      write(ifoutput,*)' '
+!    write(ifoutput,'(a6,a2,i2,a,a)')PL_scheme(i)%name,'(',i,')','NO REACTION'
+!    write(ifoutput,*)' '
 !  else
-!    write(ifoutput,*)PL_scheme(i)%name,'(',i,')'
+!    write(ifoutput,'(a6,a2,i2,a)')PL_scheme(i)%name,'(',i,')'
+!    write(ifoutput,'(a5)') 'YP = '
 !    do j=1,PL_scheme(i)%nr_PL
-!      if (PL_scheme(i)%PL(j)%PorL  == 1 ) then
+!      write(coef_str,'(f4.2)')PL_scheme(i)%PL(j)%coef
+!      if (PL_scheme(i)%PL(j)%PorL == PRODUCTION ) then
 !        select case (PL_scheme(i)%PL(j)%formula)
 !        case (0)
-!          write(ifoutput,*) '   YPtemp = YPtemp +',PL_scheme(i)%PL(j)%coef,' * K(',PL_scheme(i)%PL(j)%r_nr,')'
+!          write(ifoutput,*) '    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),')  ( F=',PL_scheme(i)%PL(j)%formula,')'
 !        case (1)
-!          write(ifoutput,*) '   YPtemp = YPtemp +',PL_scheme(i)%PL(j)%coef,' * K(',RC(PL_scheme(i)%PL(j)%r_nr)%rname,') * Y[',chem_name(PL_scheme(i)%PL(j)%comp1),']'
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']','( F=',PL_scheme(i)%PL(j)%formula,')'
 !        case (2)
-!          write(ifoutput,*) '   YPtemp = YPtemp +',PL_scheme(i)%PL(j)%coef,' * K(',RC(PL_scheme(i)%PL(j)%r_nr)%rname,') * Y[',chem_name(PL_scheme(i)%PL(j)%comp1),']', &
-!                    '* Y[',chem_name(PL_scheme(i)%PL(j)%comp2),']'
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']', &
+!                    '* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ( F=',PL_scheme(i)%PL(j)%formula,')'
 !        case (3)
-!          write(ifoutput,*) '   YPtemp = YPtemp +',PL_scheme(i)%PL(j)%coef,' * K(',RC(PL_scheme(i)%PL(j)%r_nr)%rname,') * Y[',chem_name(PL_scheme(i)%PL(j)%comp1),'] ** (',PL_scheme(i)%PL(j)%exp1,')'
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),'] ** (',PL_scheme(i)%PL(j)%exp1,')','( F=',PL_scheme(i)%PL(j)%formula,')'
 !        case(4)
-!          write(ifoutput,*) '   YPtemp = YPtemp +',PL_scheme(i)%PL(j)%coef,' * K(',RC(PL_scheme(i)%PL(j)%r_nr)%rname,') * Y[',chem_name(PL_scheme(i)%PL(j)%comp1),'] ** (',PL_scheme(i)%PL(j)%exp1,')', &
-!                    ' * Y[',chem_name(PL_scheme(i)%PL(j)%comp2),']** (',PL_scheme(i)%PL(j)%exp2,')'
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),'] ** (',PL_scheme(i)%PL(j)%exp1,')', &
+!                    ' * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),']** (',PL_scheme(i)%PL(j)%exp2,') ( F=',PL_scheme(i)%PL(j)%formula,')'
+!        case(5)
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']', &
+!                    '* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)), &
+!                    '] * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ( F=',PL_scheme(i)%PL(j)%formula,')'
+!        case(6)
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']** (',PL_scheme(i)%PL(j)%exp1, &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ** (',PL_scheme(i)%PL(j)%exp2, &
+!                    ') *  Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ** (',PL_scheme(i)%PL(j)%exp3,')( F=',PL_scheme(i)%PL(j)%formula,')'
+!        case(7)
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']** (',PL_scheme(i)%PL(j)%exp1, &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ** (',PL_scheme(i)%PL(j)%exp2, &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ** (',PL_scheme(i)%PL(j)%exp3, &
+!                    ')* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp4)),'] ** (',PL_scheme(i)%PL(j)%exp4,')( F=',PL_scheme(i)%PL(j)%formula,')'
 !        end select
 !      endif
 !    enddo
-!    write(ifoutput,*)'YP(',PL_scheme(i)%name,') = YPtemp'
 !
+!    write(ifoutput,'(a5)') 'YL = '
 !    do j=1,PL_scheme(i)%nr_PL
-!      if (PL_scheme(i)%PL(j)%PorL == 2 ) then
+!      if (PL_scheme(i)%PL(j)%PorL == LOSS ) then
+!        write(coef_str,'(f4.2)')PL_scheme(i)%PL(j)%coef
 !        select case (PL_scheme(i)%PL(j)%formula)
 !        case (0)
-!          write(ifoutput,*) '   YLtemp = YLtemp +',PL_scheme(i)%PL(j)%coef,' * K(',RC(PL_scheme(i)%PL(j)%r_nr)%rname,')'
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),')  ( F=',PL_scheme(i)%PL(j)%formula,')'
 !        case (1)
-!          write(ifoutput,*) '   YLtemp = YLtemp +',PL_scheme(i)%PL(j)%coef,' * K(',RC(PL_scheme(i)%PL(j)%r_nr)%rname,') * Y[',chem_name(PL_scheme(i)%PL(j)%comp1),']'
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']','( F=',PL_scheme(i)%PL(j)%formula,')'
 !        case (2)
-!          write(ifoutput,*) '   YLtemp = YLtemp +',PL_scheme(i)%PL(j)%coef,' * K(',RC(PL_scheme(i)%PL(j)%r_nr)%rname,') * Y[',chem_name(PL_scheme(i)%PL(j)%comp1),']', &
-!                    '* Y[',chem_name(PL_scheme(i)%PL(j)%comp2),']'
+!          write(ifoutput,*) '    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']', &
+!                    '* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ( F=',PL_scheme(i)%PL(j)%formula,')'
 !        case (3)
-!          write(ifoutput,*) '   YLtemp = YLtemp +',PL_scheme(i)%PL(j)%coef,' * K(',RC(PL_scheme(i)%PL(j)%r_nr)%rname,') * Y[',chem_name(PL_scheme(i)%PL(j)%comp1),'] ** (',PL_scheme(i)%PL(j)%exp1,')'
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),'] ** (',PL_scheme(i)%PL(j)%exp1,') ( F=',PL_scheme(i)%PL(j)%formula,')'
 !        case(4)
-!          write(ifoutput,*) '   YLtemp = YLtemp +',PL_scheme(i)%PL(j)%coef,' * K(',RC(PL_scheme(i)%PL(j)%r_nr)%rname,') * Y[',chem_name(PL_scheme(i)%PL(j)%comp1),'] ** (',PL_scheme(i)%PL(j)%exp1,')', &
-!                    ' * Y[',chem_name(PL_scheme(i)%PL(j)%comp2),']** (',PL_scheme(i)%PL(j)%exp2,')'
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname),') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),'] ** (',PL_scheme(i)%PL(j)%exp1,')', &
+!                    ' * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),']** (',PL_scheme(i)%PL(j)%exp2,') ( F=',PL_scheme(i)%PL(j)%formula,')'
+!        case(5)
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']', &
+!                    '* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)), &
+!                    '] * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ( F=',PL_scheme(i)%PL(j)%formula,')'
+!        case(6)
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']** (',PL_scheme(i)%PL(j)%exp1, &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ** (',PL_scheme(i)%PL(j)%exp2, &
+!                    ') *  Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ** (',PL_scheme(i)%PL(j)%exp3,')( F=',PL_scheme(i)%PL(j)%formula,')'
+!        case(7)
+!          write(ifoutput,*)'    +',coef_str,' * K(',trim(RC(PL_scheme(i)%PL(j)%r_nr)%rname), &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp1)),']** (',PL_scheme(i)%PL(j)%exp1, &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp2)),'] ** (',PL_scheme(i)%PL(j)%exp2, &
+!                    ') * Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp3)),'] ** (',PL_scheme(i)%PL(j)%exp3, &
+!                    ')* Y[',trim(chem_name(PL_scheme(i)%PL(j)%comp4)),'] ** (',PL_scheme(i)%PL(j)%exp4,')( F=',PL_scheme(i)%PL(j)%formula,')'
 !        end select
 !      endif
 !    enddo
-!    write(ifoutput,*)'YL(',PL_scheme(i)%name,') = YLtemp'
 !    write(ifoutput,*) ' '
 !  endif
 !  enddo
-  close(ifoutput)
-  endif !if myid==0
-
-end subroutine write_chem_scheme
+!
+!  close(ifoutput)
+!  endif !if myid==0
+!
+!end subroutine write_chem_scheme
 #endif
 
 end module modchem

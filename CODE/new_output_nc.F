@@ -17,7 +17,7 @@ USE pnetcdf
 use land_module, only: olev, depth
 #endif
 #if defined (CHEM)
-use modchem, only: chem_name_list
+use modchem, only: chem_name_list, chem_output_index, nchem_out
 #endif
       
 IMPLICIT NONE
@@ -252,7 +252,7 @@ CONTAINS
 ! Create and initialize NetCDF output variables and datasets
 
       integer (KIND=int_kind) :: &
-          time_len, i, nt, &
+          time_len, i, nt, idx, &
           itp0, itp1, itp2    ! Logical unit numbers
 
       Character (LEN=2) :: trnum  ! character string for tracer number
@@ -559,13 +559,14 @@ CONTAINS
                            nk2, mj_glob, mi_glob, zt(1:nk2), &
                            yt(1:mj_glob), xt(1:mi_glob))
 
-        do nt = 1,nchem
-          write(unit=trnum,fmt='(i2.2)')nt
+        do nt = 1,nchem_out
+          !! write(unit=trnum,fmt='(i2.2)')nt
           !! CALL pCDF_INI_4DVAR (ncid_chem, 'chem'//trnum, 'passive chemicals mixing ratio '//trnum, &
           !!                 'chemicals_mixing_ratio '//trnum, 'ppb', &
           !!                 'zt', 'yt', 'xt')
-          CALL pCDF_INI_4DVAR (ncid_chem, trim(chem_name_list(nt)), trim(chem_name_list(nt)), &
-                          trim(chem_name_list(nt)), 'ppb', &
+          idx = chem_output_index(nt)
+          CALL pCDF_INI_4DVAR (ncid_chem, trim(chem_name_list(idx)), trim(chem_name_list(idx)), &
+                          trim(chem_name_list(idx)), 'ppb', &
                           'zt', 'yt', 'xt')
         enddo
 
@@ -3276,7 +3277,7 @@ CONTAINS
 
 #if defined (CHEM)      
 ! chem --------------------------------------------------------------------------
-        temlen=ntracer
+        temlen=nchem_out
         nc_err = nfmpi_def_dim(ncid, 'chem_dim', temlen, chem_dim)
         if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
