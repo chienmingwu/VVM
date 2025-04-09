@@ -251,13 +251,13 @@ CONTAINS
 #else
       LOGICAL, INTENT(out)                  :: chem_output_flag(nchem)
 
-      INTEGER, PARAMETER                    :: nchem_out=5
+      INTEGER, PARAMETER                    :: nchem_out=3
       character(len=6)                      :: chem_name_list(nchem)
       character(len=6)                      :: chem_name_list_out(nchem_out)
       character(len=300)                    :: line
       INTEGER                               :: i, j
 
-      DATA chem_name_list_out /'O3', 'NO', 'NO2', 'CH2O', 'OH'/
+      DATA chem_name_list_out /'O3', 'NO', 'NO2'/
       number_of_reactions = 25
       filename_chem_table = './user_files/chem.inp.001'
 
