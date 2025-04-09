@@ -124,7 +124,10 @@ CONTAINS
         nc_err = nfmpi_open(mpi_comm_world, &
                  trim(filename), &
                  nf_nowrite,mpi_info_null,ncid)
-        IF (nc_err/=0) WRITE(*,*) "emission file doesn't exist"
+        IF (nc_err/=0) THEN
+            WRITE(*,*) "emission file doesn't exist"
+            STOP
+        ENDIF
 
         arraystart(1) = (NI_SBDM)*MI1 + 1
         arraystart(2) = (NJ_SBDM)*MJ1 + 1
