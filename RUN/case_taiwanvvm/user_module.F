@@ -212,8 +212,10 @@ CONTAINS
       IMPLICIT NONE
       CHARACTER(len=300), INTENT(out)       :: filename_chem_table
       INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
+#if !defined(CHEM)
+      LOGICAL, INTENT(out)                  :: chem_output_flag(1)
+#else
       LOGICAL, INTENT(out)                  :: chem_output_flag(nchem)
-
 
       INTEGER, PARAMETER                    :: nchem_out=5
       character(len=6)                      :: chem_name_list(nchem)
@@ -252,6 +254,7 @@ CONTAINS
       close(10)
 
       WRITE(*,*) chem_output_flag
+#endif
 
   ENDSUBROUTINE USER_set_chem_reaction_file
 

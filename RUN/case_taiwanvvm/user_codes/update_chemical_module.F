@@ -106,8 +106,13 @@ CONTAINS
                     ISO_emi(mi1,mj1,4,24),FORM_emi(mi1,mj1,4,24), &
                     NO_SAT_emi(mi1,mj1,24)
 
-      !filename="/nwpr/gfs/xb136/aries/EMISAT.nc"
+      ! Emission for TaiwanVVM
       filename="./RUNDATA/EMISAT.nc"
+
+      !!! Emission for TaiwanVVM_large
+      !!filename="./RUNDATA/EMISAT_large.nc"
+
+      if (my_task.eq.0) WRITE(*,*) trim(filename)
 
       if (first) then
         CO_emi=0.
@@ -118,7 +123,7 @@ CONTAINS
 
         nc_err = nfmpi_open(mpi_comm_world, &
                  trim(filename), &
-                 ,nf_nowrite,mpi_info_null,ncid)
+                 nf_nowrite,mpi_info_null,ncid)
         IF (nc_err/=0) WRITE(*,*) "emission file doesn't exist"
 
         arraystart(1) = (NI_SBDM)*MI1 + 1
