@@ -33,7 +33,7 @@ USE land_module
 #endif
 USE mpi
 #if defined (CHEM)
-use modchem, only: chem_name_list
+use modchem, only: chem_name_list, chem_output_index, nchem_out
 #endif
 
 
@@ -309,9 +309,9 @@ CONTAINS
 
 #if defined (CHEM)
 !---- CHEM -------------
-      start(4) = 1; count(4) = nchem
+      start(4) = 1; count(4) = nchem_out
       nc_err = nfmpi_put_vara_double_all(ncid_rst, chem3d_id_rst,       &
-                  start(1:4), count(1:4), chem3d(1:mi1,1:mj1,1:nk2,1:nchem) )
+                  start(1:4), count(1:4), chem3d(1:mi1,1:mj1,1:nk2,1:nchem_out) )
 !---- CHEM end ---------
 #endif 
 
@@ -463,9 +463,9 @@ CONTAINS
 
 #if defined (CHEM)
 ! Chem tendency
-      start(5) = 1; count(5) = nchem
+      start(5) = 1; count(5) = nchem_out
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fchem3d_id_rst,       &
-                start(1:5), count(1:5), fchem3d )
+                start(1:5), count(1:5), fchem3d(1:mi1,1:mj1,1:nk2,1:2,1:nchem_out))
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
 #endif
 
@@ -576,7 +576,7 @@ CONTAINS
 
       LOGICAL (KIND=log_kind) :: OPENF,COPYF, fexist
       INTEGER (KIND=int_kind) ::   &
-         i, j, k, nt    ! do loop indices for zonal, meridional, vertical 
+         i, j, k, nt, idx    ! do loop indices for zonal, meridional, vertical 
                         ! and tracer dimensions
 #if defined (LSM) 
       INTEGER (KIND=int_kind) :: ivar ! index for LSM masking out
@@ -1145,11 +1145,12 @@ CONTAINS
       endif
 
 #if defined (CHEM)
-      do nt = 1,nchem
-        OUT_tm1(:,:,1:nk2) = chem3d(1:mi1,1:mj1,1:nk2,nt)
+      do nt = 1,nchem_out
+        idx = chem_output_index(nt)
+        OUT_tm1(:,:,1:nk2) = chem3d(1:mi1,1:mj1,1:nk2,idx)
         write(unit=trnum,fmt='(i2.2)')nt
-        !! call pCDF_WRITE_4D(ncid_chem, 'chem'//trnum, TIME_L, time_start, out_tm1, nk2 )
-        call pCDF_WRITE_4D(ncid_chem, trim(chem_name_list(nt)), TIME_L, time_start, out_tm1, nk2 )
+        !! call pCDF_WRITE_4D_slice(ncid_chem, 'chem'//trnum, TIME_L, time_start, out_tm1, nk2 )
+        call pCDF_WRITE_4D_slice(ncid_chem, trim(chem_name_list(idx)), TIME_L, time_start, out_tm1, nk2 )
       enddo
 #endif
 

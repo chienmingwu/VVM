@@ -44,7 +44,11 @@ ln -s ${vvmdir}/CODE/LSM/VEGPARM.TBL .
 ln -s ${vvmdir}/RUNDATA/fort.91 fort.91
 ln -s ${vvmdir}/RUNDATA/rrtmg_lw.nc RUNDATA/rrtmg_lw.nc
 ln -s ${vvmdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
+
+# for TaiwanVVM
 ln -s ${vvmdir}/RUNDATA/topolsm_TW.nc RUNDATA/topolsm_TW.nc
+ln -s ${vvmdir}/RUNDATA/EMISAT.nc RUNDATA/EMISAT.nc
+ln -s ${vvmdir}/RUNDATA/EMISAT_large.nc RUNDATA/EMISAT_large.nc
 
 # for P3 scheme
 ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-2momI .
