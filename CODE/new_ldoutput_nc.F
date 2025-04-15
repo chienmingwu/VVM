@@ -1150,7 +1150,7 @@ CONTAINS
         OUT_tm1(:,:,1:nk2) = chem3d(1:mi1,1:mj1,1:nk2,idx)
         write(unit=trnum,fmt='(i2.2)')nt
         !! call pCDF_WRITE_4D_slice(ncid_chem, 'chem'//trnum, TIME_L, time_start, out_tm1, nk2 )
-        call pCDF_WRITE_4D_slice(ncid_chem, trim(chem_name_list(idx)), TIME_L, time_start, out_tm1, nk2 )
+        call pCDF_WRITE_4D(ncid_chem, trim(chem_name_list(idx)), TIME_L, time_start, out_tm1, nk2 )
       enddo
 #endif
 
