@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 #SBATCH -J expname        # Job name
 #SBATCH -A MST114049      # Account number
-#SBATCH -p ct1k
+#SBATCH -p dc-MST114049-01
 #SBATCH -c 1              # cores per MPI rank
 #SBATCH -n total_cores    # Run a single task
 #SBATCH -o expname%j.out  # output file
