@@ -15,6 +15,7 @@ export OMPI_MCA_btl="^vader,tcp,openib,uct"
 export OMPI_MCA_pml="ucx"
 export KMP_AFFINITY="compact,noverbose"
 export UCX_NET_DEVICES=mlx5_0:1
+export I_MPI_HYDRA_BOOTSTRAP=slurm
 
 export LANG=en_US.utf8
 export LC_ALL=en_US.utf8
