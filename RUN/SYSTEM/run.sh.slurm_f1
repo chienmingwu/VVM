@@ -1,21 +1,21 @@
 #!/usr/bin/bash
 #SBATCH -J expname        # Job name
 #SBATCH -A MST114049      # Account number
-#SBATCH -p ct1k
+#SBATCH -p dc-MST114049-01
 #SBATCH -c 1              # cores per MPI rank
 #SBATCH -n total_cores    # Run a single task
-#SBATCH -o expname%j.out  # output file
-#SBATCH -e expname%j.err  # error file
+#SBATCH -o expname.%j.out  # output file
+#SBATCH -e expname.%j.err  # error file
 
 module purge
+module load intel/2021_4
 
-module load intel/2024_01_46
-
-#export UCX_TLS="ud,dc,rc,sm,self"
-#export OMPI_MCA_btl="^vader,tcp,openib,uct"
-#export OMPI_MCA_pml="ucx"
-#export KMP_AFFINITY="compact,noverbose"
-#export UCX_NET_DEVICES=mlx5_0:1
+export UCX_TLS="ud,dc,rc,sm,self"
+export OMPI_MCA_btl="^vader,tcp,openib,uct"
+export OMPI_MCA_pml="ucx"
+export KMP_AFFINITY="compact,noverbose"
+export UCX_NET_DEVICES=mlx5_0:1
+export I_MPI_HYDRA_BOOTSTRAP=slurm
 
 export LANG=en_US.utf8
 export LC_ALL=en_US.utf8
