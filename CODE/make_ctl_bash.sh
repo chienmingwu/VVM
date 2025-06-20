@@ -146,13 +146,18 @@ for dtype in ${dtype_list};do
     varstring="${varstring}\n${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
   done
   echo ${dtype} ${nvar}
+
+  dum=$(ncdump -h ${ncdir}/${ncheader}.${dtype}-000000.nc|grep "${vname}:_FillValue")
+  fillvalue=$(echo ${dum}|cut -d ' ' -f3|rev|cut -c2-|rev)
+  #echo ${dtype} ${vname} ${fillvalue}
+
   
   string="
   DSET ^../archive/${ncheader}.${dtype}-%tm6.nc\n
   DTYPE netcdf\n
   OPTIONS template\n
   TITLE ${dtype} variables\n
-  UNDEF 99999.\n
+  UNDEF ${fillvalue}\n
   CACHESIZE 10000000\n
   XDEF ${nx} LINEAR ${lon0} ${dlon}\n
   YDEF ${ny} LINEAR ${lat0} ${dlat}\n
