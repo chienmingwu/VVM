@@ -31,8 +31,7 @@ set blddir = ${vvmdir}'/RUN/SYSTEM'
 # prepare for compiling code
 cd ${expdir}
 rsync -av ${vvmdir}'/CODE' .
-set user_codes_list = `find ${casedir}/user_codes/ -type f`
-cp ${user_codes_list} ${codedir}
+eval "cp -r ${casedir}/user_codes/* ${codedir}"
 cp ${casedir}/user_module.F ${codedir}
 csh DOMAIN
 
