@@ -287,18 +287,18 @@ CONTAINS
       ELSE
 
 
-      !current time
-      xday = rjday
-      xhr = utc_time
-      xlon = rlon
-      xlat = rlat
+      !! !current time
+      !! xday = rjday
+      !! xhr = utc_time
+      !! xlon = rlon
+      !! xlat = rlat
 
-      sza = getth(xday,xlat,xlon,xhr)
-      coszen = max(0.0,cos(sza)) !to avoid negative values
-      
-      xday=xday+1./3.
-      if (xday>=1.) xday=xday-1.
-      TG(i,j) = SST+0.4*max(sin((xday*24.-6.)*3.14159265/12.),0.)
+      !! sza = getth(xday,xlat,xlon,xhr)
+      !! coszen = max(0.0,cos(sza)) !to avoid negative values
+      !! 
+      !! xday=xday+1./3.
+      !! if (xday>=1.) xday=xday-1.
+      !! TG(i,j) = SST+0.4*max(sin((xday*24.-6.)*3.14159265/12.),0.)
 
       CALL SFLUX_2D (0._dbl_kind,TB(I,J),THVSMD(I,J),SFCSPD(I,J), &
                      ZD(I,J),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
