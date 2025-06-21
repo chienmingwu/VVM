@@ -709,8 +709,8 @@ CONTAINS
       INTEGER :: nc_err
       INTEGER :: ncid,varid
       INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart,readlen
-      REAL(KIND=dbl_kind),DIMENSION(MI1,MI1) :: read_temp      
-      INTEGER(KIND=int_kind),DIMENSION(MI1,MI1) :: ocean_temp
+      REAL(KIND=dbl_kind),DIMENSION(MI1,MJ1) :: read_temp      
+      INTEGER(KIND=int_kind),DIMENSION(MI1,MJ1) :: ocean_temp
 
       nc_err = nfmpi_open(mpi_comm_world,sst_filename,nf_nowrite,mpi_info_null,ncid)
       IF (nc_err/=0)THEN

@@ -717,7 +717,7 @@ CONTAINS
       CALL pCDF_INI_XY_VAR(ncid_lsm, 'cm', 'surface exchange coefficient for momentum', &
                           'sfc_exchange_coef_momentum', 'm s-1', &
                           'yt','xt')
-      CALL pCDF_INI_XY_VAR(ncid_lsm, 'eta', 'latent heat flux(evapotranspiration)', &
+      CALL pCDF_INI_XY_VAR(ncid_lsm, 'flx_eta', 'latent heat flux(evapotranspiration)', &
                           'latent_heat_flux', 'W m-2', &
                           'yt','xt')
       CALL pCDF_INI_XY_VAR(ncid_lsm, 'fdown', 'radiation forcing at the surface', &

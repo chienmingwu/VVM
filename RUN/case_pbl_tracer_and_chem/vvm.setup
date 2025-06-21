@@ -33,7 +33,7 @@ mkdir archive
 
 # prepare tables for model
 cp ${casedir}/vvm.setup .
-cp ${vvmdir}/CODE/make_ctl.sh .
+cp ${vvmdir}/CODE/make_ctl_bash.sh .
 
 # for NOAH LSM
 ln -s ${vvmdir}/CODE/LSM/GENPARM.TBL .
