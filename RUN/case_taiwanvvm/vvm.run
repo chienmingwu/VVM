@@ -13,11 +13,11 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = case_taiwanvvm
+set expname = case_taiwanvvm_at
 
 # set job system and compiler
-set compiler = 'fujitsu_cwb'
-set jobsys   = 'pjm_cwb'
+set compiler = 'intel_mogamd'
+set jobsys   = 'slurm_mogamd_intel'
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -31,7 +31,8 @@ set blddir = ${vvmdir}'/RUN/SYSTEM'
 # prepare for compiling code
 cd ${expdir}
 rsync -av ${vvmdir}'/CODE' .
-eval "cp -r ${casedir}/user_codes/* ${codedir}"
+set user_codes_list = `find ${casedir}/user_codes/ -type f`
+cp ${user_codes_list} ${codedir}
 cp ${casedir}/user_module.F ${codedir}
 csh DOMAIN
 
@@ -58,7 +59,7 @@ sed -e 's/expname.out/'${expname}'.out/g' \
     -e 's/total_cores/1024/g' ${blddir}/run.sh.${jobsys} > ${expdir}/run.sh
 
 cd ${expdir}
-pjsub run.sh
+sbatch run.sh
 
 exit
 
