@@ -39,36 +39,45 @@ CONTAINS
       !! --------------------
       IMPLICIT NONE
 
-      INTEGER (KIND=int_kind), PARAMETER :: NT1=51
-      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), U1(NT1), V1(NT1)
-      REAL (KIND=dbl_kind) :: sounding(8), ES1
+      INTEGER (KIND=int_kind) :: NT1
+      REAL (KIND=dbl_kind), allocatable :: P1(:), T1(:), QV1(:), U1(:), V1(:)
+      REAL (KIND=dbl_kind) :: sounding(5)
       CHARACTER(len=300)   :: fname
-      INTEGER              :: i, k, ik1
+      INTEGER              :: i, k, ik1, ios
 
 
-      ! Read sounding data with edt format
+      ! Read sounding data
+      ! calculate data length
+      fname = './user_files/tpe_20100802_at001.txt'
+      NT1 = 0
+      OPEN(unit=88, file=TRIM(fname), status='old', action='read')
+      READ(88, *) ! skip header
+      DO
+        READ(88, *, iostat=ios) sounding
+        if (ios /= 0) exit
+        NT1 = NT1 + 1
+      ENDDO
+      if (my_task.eq.1) WRITE(*,*) "NT1 = ", NT1
+      close(88)
+      
       ! convert data into P1, T1, QV1, U1, V1
-      fname = './user_files/46692-2024080100_short.edt.txt'
+      allocate(P1(NT1), T1(NT1), QV1(NT1), U1(NT1), V1(NT1))
       OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
       READ(88, *) ! read first line
-      READ(88, *) ! read second line
-      READ(88, *) ! read third line
       ik1 = -1
       DO i=1,NT1
         READ(88, *) sounding(:)
         ! Pressure [Pa]
-        P1(i) = sounding(3) * 100.
+        P1(i)  = sounding(1) * 100.
         ! Temperature [K]
-        T1(i) = sounding(4) + 273.15
-        ! Qv from RH, mixing ratio [kg/kg]
-        ES1 = sounding(5) * 0.01 * ES ( T1(i) )  ! vapor pressure [Pa]
-        QV1(i) = ES1 * 0.622 / ( P1(i) - ES1 )
-        !if(my_task .eq. 0)  PRINT*, 'i, E, P1, QV, RH = ', i, ES1, QV1(i), P1(i), sounding(5)
-        ! U, V from Wind Speed and Wind Direction [m/s]
-        U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
-        V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
-        ! set constant U, V when >= 6km
-        IF ( sounding(2) >= 6000. .and. ik1 <= 0 )  ik1 = i
+        T1(i)  = sounding(2)
+        ! Qv [kg/kg]
+        QV1(i) = sounding(3) * 0.001
+        ! U, V [m/s]
+        U1(i)  = sounding(4)
+        V1(i)  = sounding(5)
+        ! set constant U, V when >= 10km
+        IF ( sounding(1) <= 250. .and. ik1 <= 0 )  ik1 = i
         IF ( ik1 > 0 ) THEN
           U1(i) = U1(ik1)
           V1(i) = V1(ik1)
@@ -110,7 +119,6 @@ CONTAINS
       Q1LS(:)   = 0.
       Q2LS(:)   = 0.
       SST       = T1(1)
-
 
   ENDSUBROUTINE USER_set_mean_profile_and_SST
  
@@ -164,9 +172,9 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
          hour0
   
-      iyear0 = 2024
-      imonth0 = 7
-      iday0 = 31
+      iyear0 = 2010
+      imonth0 = 8
+      iday0 = 1
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 16.0
   ENDSUBROUTINE USER_set_start_time
@@ -214,6 +222,9 @@ CONTAINS
       INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
 #if !defined(CHEM)
       LOGICAL, INTENT(out)                  :: chem_output_flag(1)
+      chem_output_flag    = (/0/)
+      filename_chem_table = ''
+      number_of_reactions = 0
 #else
       LOGICAL, INTENT(out)                  :: chem_output_flag(nchem)
 
@@ -328,6 +339,45 @@ CONTAINS
       FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
 
   ENDSUBROUTINE USER_set_vertical_coordinate
+
+  SUBROUTINE read_edt_format(NT1, P1, T1, QV1, U1, V1)
+      INTEGER (KIND=int_kind), INTENT(out), parameter :: NT1=51
+      REAL (KIND=dbl_kind), dimension(NT1), INTENT(out):: P1, T1, QV1, U1, V1
+      REAL (KIND=dbl_kind) :: sounding(5)
+      CHARACTER(len=300)   :: fname
+      INTEGER              :: i, k, ik1, ios
+
+      ! Read sounding data with edt format
+      ! convert data into P1, T1, QV1, U1, V1
+      fname = './user_files/46692-2024080100_short.edt.txt'
+      OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
+      READ(88, *) ! read first line
+      READ(88, *) ! read second line
+      READ(88, *) ! read third line
+      ik1 = -1
+      DO i=1,NT1
+        READ(88, *) sounding(:)
+        ! Pressure [Pa]
+        P1(i) = sounding(3) * 100.
+        ! Temperature [K]
+        T1(i) = sounding(4) + 273.15
+        ! Qv from RH, mixing ratio [kg/kg]
+        ES1 = sounding(5) * 0.01 * ES ( T1(i) )  ! vapor pressure [Pa]
+        QV1(i) = ES1 * 0.622 / ( P1(i) - ES1 )
+        !if(my_task .eq. 0)  PRINT*, 'i, E, P1, QV, RH = ', i, ES1, QV1(i), P1(i), sounding(5)
+        ! U, V from Wind Speed and Wind Direction [m/s]
+        U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
+        V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
+        ! set constant U, V when >= 6km
+        IF ( sounding(2) >= 6000. .and. ik1 <= 0 )  ik1 = i
+        IF ( ik1 > 0 ) THEN
+          U1(i) = U1(ik1)
+          V1(i) = V1(ik1)
+        ENDIF
+      ENDDO
+      close(88)
+
+  ENDSUBROUTINE read_edt_format
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!                                      !!!!
@@ -501,7 +551,7 @@ CONTAINS
       QV8 = QV1(K)
       QC8 = 0.D0
       QI8 = 0.D0
-      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
+!      CALL saturation ( 1, 1, K, T8, P8, QV8, QC8, QI8, DUMMY )
       QV1(K) = QV8
       QC1(K) = QC8 
   120 CONTINUE
