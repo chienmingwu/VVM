@@ -39,16 +39,6 @@ CONTAINS
       !! --------------------
 
       REAL (KIND=dbl_kind), PARAMETER :: RGAS = 287.04
-      INTEGER (KIND=int_kind), PARAMETER :: NQ1=20
-      REAL (KIND=dbl_kind) ::  PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), WLS1(NQ1)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-      DATA WLS1/20*0./
 
       INTEGER (KIND=int_kind) :: k
       CHARACTER(len=300)      :: filename
@@ -84,10 +74,6 @@ CONTAINS
         RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
       ENDDO
 
-      ! GIVEN Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
-      CALL USER_interpolate_largescale_profile( &
-           NQ1, PQ1*100., Q1OBS, Q2OBS, WLS1 &
-           )
   
   ENDSUBROUTINE USER_set_mean_profile_and_SST
  
@@ -191,6 +177,9 @@ CONTAINS
       INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
 #if !defined(CHEM)
       LOGICAL, INTENT(out)                  :: chem_output_flag(1)
+      chem_output_flag    = (/0/)
+      filename_chem_table = ''
+      number_of_reactions = 0
 #else
       LOGICAL, INTENT(out)                  :: chem_output_flag(nchem)
 

@@ -39,51 +39,44 @@ CONTAINS
       !! --------------------
       IMPLICIT NONE
 
+      INTEGER (KIND=int_kind), PARAMETER :: NTMAX=10000
       INTEGER (KIND=int_kind) :: NT1
-      REAL (KIND=dbl_kind), allocatable :: P1(:), T1(:), QV1(:), U1(:), V1(:)
-      REAL (KIND=dbl_kind) :: sounding(5)
+      REAL (KIND=dbl_kind) :: P1(NTMAX), T1(NTMAX), QV1(NTMAX)
+      REAL (KIND=dbl_kind) :: U1(NTMAX), V1(NTMAX)
       CHARACTER(len=300)   :: fname
-      INTEGER              :: i, k, ik1, ios
+      INTEGER              :: k, ios, ik1
 
 
-      ! Read sounding data with edt format
-      ! calculate data length
       fname = './user_files/prof_20140107.txt'
+
+      ! get data length
       NT1 = 0
+      k   = 1
       OPEN(unit=88, file=TRIM(fname), status='old', action='read')
       READ(88, *) ! skip header
       DO
-        READ(88, *, iostat=ios) sounding
+        READ(88, *, iostat=ios) P1(k), T1(k), QV1(k), U1(k), V1(k)
         if (ios /= 0) exit
-        NT1 = NT1 + 1
-      ENDDO
-      if (my_task.eq.1) WRITE(*,*) "NT1 = ", NT1
-      close(88)
-      
-      ! convert data into P1, T1, QV1, U1, V1
-      allocate(P1(NT1), T1(NT1), QV1(NT1), U1(NT1), V1(NT1))
-      OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
-      READ(88, *) ! read first line
-      ik1 = -1
-      DO i=1,NT1
-        READ(88, *) sounding(:)
-        ! Pressure [Pa]
-        P1(i)  = sounding(1) * 100.
-        ! Temperature [K]
-        T1(i)  = sounding(2)
-        ! Qv [kg/kg]
-        QV1(i) = sounding(3) * 0.001
-        ! U, V [m/s]
-        U1(i)  = sounding(4)
-        V1(i)  = sounding(5)
-        ! set constant U, V when >= 10km
-        IF ( sounding(1) <= 500. .and. ik1 <= 0 )  ik1 = i
+
+        ! set constant U, V when pressure < 500mb
+        IF ( P1(1) <= 500. .and. ik1 <= 0 )  ik1 = k
         IF ( ik1 > 0 ) THEN
-          U1(i) = U1(ik1)
-          V1(i) = V1(ik1)
+          U1(k) = U1(ik1)
+          V1(k) = V1(ik1)
         ENDIF
+
+        NT1 = NT1 + 1
+        k   = k + 1
+        if (k>NTMAX) then
+          stop '!! ERROR !! please increase the NTMAX &
+                when read sounding profile in user_module.f'
+        endif
       ENDDO
       close(88)
+      if (my_task.eq.1) WRITE(*,*) "NT1 = ", NT1
+
+      P1(:)  = P1*100.
+      QV1(:) = QV1*1e-3
 
       if (my_task.eq.1) then
         DO i=1,NT1
