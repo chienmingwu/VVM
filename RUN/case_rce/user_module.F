@@ -38,41 +38,62 @@ CONTAINS
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
 
-      REAL (KIND=dbl_kind), PARAMETER :: RGAS = 287.04
+      REAL (KIND=dbl_kind), PARAMETER :: RGAS = 287.04, PZERO = 100000._dbl_kind
+      REAL (KIND=dbl_kind) :: ESI
 
       INTEGER (KIND=int_kind) :: k
-      CHARACTER(len=300)      :: filename
+      CHARACTER(len=300)      :: init_file
   
       SST = 300.
+      UG(:) = 0.
+      VG(:) = 0.
 
-!     initialization for rcemip
-      filename="./user_files/snd_rcemip_anal300_v3"
-      OPEN(939,FILE=trim(filename))
-      READ(939,*)
-      DO k=1,nk2
-        READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1), UG(k+1), VG(k+1)
-        111 FORMAT(32X,5F16.4)
+!     initialization for rcemip (idealized)
+      PBAR(1)=1014.8*100.
+      ESI=ES(SST)
+      QVBAR(1)=0.8*ESI*0.622/(PBAR(1)-ESI)
+      THBAR(1)=SST*(1+0.608*QVBAR(1))
+      DO k=2,nk3
+        IF (ZT(K)<=15000.) THEN
+          QVBAR(K)=QVBAR(1)*exp(-ZT(K)/4000.)*exp(-(ZT(K)/7500.)**2)
+          THBAR(K)=THBAR(1)-0.0067*ZT(K)
+          PBAR(K)=PBAR(1)*(THBAR(K)/THBAR(1))**(grav/(rgas*0.0067))
+          THBAR(K)=THBAR(K)/(1+0.608*QVBAR(K))*(pzero/PBAR(K))**(rgas/cp)
+        ELSE
+          QVBAR(K)=1.e-11
+          THBAR(K)=THBAR(1)-0.0067*(15000.)
+          PBAR(K)=PBAR(1)*(THBAR(K)/THBAR(1))**(grav/(rgas*0.0067))&
+                         *exp(-(grav*(ZT(K)-15000.)/(rgas*THBAR(K))))
+          THBAR(K)=THBAR(K)/(1+0.608*QVBAR(K))*(pzero/PBAR(K))**(rgas/cp)
+        ENDIF
       ENDDO
-      CLOSE(939)
+      THBAR(1)=THBAR(1)/(1+0.608*QVBAR(1))*(pzero/PBAR(1))**(rgas/cp)
 
-      PBAR(1)=PBAR(2)
-      THBAR(1)=THBAR(2)
-      QVBAR(1)=QVBAR(2)
-      VG(1) = VG(2)
-      UG(1) = UG(2)
-
-      PBAR(nk3)=PBAR(nk2)+(PBAR(nk2)-PBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-      THBAR(nk3)=THBAR(nk2)+(THBAR(nk2)-THBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-      QVBAR(nk3)=QVBAR(nk2)+(QVBAR(nk2)-QVBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-
-      QVBAR=QVBAR*0.001
-      PBAR=PBAR*100.
+      !     domain mean initial profile
+      init_file='./user_files/RCEMIP_VVM_300k_init.txt'
+      open(unit=88,file=TRIM(init_file),form='formatted',status='old')
+      DO K = 1, NK3-1
+          READ(88, 20000) PBAR(K), THBAR(K), QVBAR(K)
+          QVBAR(K) = QVBAR(K)/1000.
+      ENDDO
+      close(88)
+      20000 format(3F15.6)
+      THBAR(NK3) = THBAR(NK3-1)
 
       PIBAR=(PBAR/100000.)**(2./7.)
       RHO=PBAR/(rgas*THBAR*PIBAR)
       DO k=1,nk2
         RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
       ENDDO
+      RHOZ(nk3)=RHOZ(nk2)+(RHOZ(nk2)-RHOZ(nk1))/(ZZ(nk2)-ZZ(nk1))*(ZZ(nk3)-ZZ(nk2))
+
+      IF (my_task == 0) THEN
+      WRITE(*,*) "initial profiles"
+      DO k=1,nk3
+        WRITE(*,256) pbar(k)/100.,pibar(k),thbar(k),qvbar(k)*1000.,rho(k),rhoz(k)
+        256 FORMAT(6F15.5)
+      ENDDO
+      ENDIF
 
   
   ENDSUBROUTINE USER_set_mean_profile_and_SST
@@ -235,7 +256,7 @@ CONTAINS
       filename="./user_files/snd_rcemip_anal300_v3"
       OPEN(939,FILE=trim(filename))
       READ(939,*)
-      DO k=1,nk2
+      DO k=1,nk2-1
         READ(939,111) ZZ(k+1), ZT(k+1)
         111 FORMAT(2F16.4)
       ENDDO
