@@ -49,7 +49,7 @@ ln -s ${vvmdir}/RUNDATA/rrtmg_sw.nc RUNDATA/rrtmg_sw.nc
 ln -s ${vvmdir}/RUNDATA/topolsm_TW.nc RUNDATA/topolsm_TW.nc
 ln -s ${vvmdir}/RUNDATA/EMISAT.nc RUNDATA/EMISAT.nc
 ln -s ${vvmdir}/RUNDATA/EMISAT_large.nc RUNDATA/EMISAT_large.nc
-ln -s ${vvmdir}/RUNDATA/EMISAT_large.nc RUNDATA/EMISAT_taiwanvvm_s.nc
+ln -s ${vvmdir}/RUNDATA/EMISAT_taiwanvvm_s.nc RUNDATA/EMISAT_taiwanvvm_s.nc
 
 # for P3 scheme
 ln -s ${vvmdir}/RUNDATA/p3_lookupTable_1.dat-v6.4-2momI .
