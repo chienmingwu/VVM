@@ -39,55 +39,48 @@ CONTAINS
       !! --------------------
       IMPLICIT NONE
 
+      INTEGER (KIND=int_kind), PARAMETER :: NTMAX=10000
       INTEGER (KIND=int_kind) :: NT1
-      REAL (KIND=dbl_kind), allocatable :: P1(:), T1(:), QV1(:), U1(:), V1(:)
-      REAL (KIND=dbl_kind) :: sounding(5)
+      REAL (KIND=dbl_kind) :: P1(NTMAX), T1(NTMAX), QV1(NTMAX)
+      REAL (KIND=dbl_kind) :: U1(NTMAX), V1(NTMAX)
       CHARACTER(len=300)   :: fname
-      INTEGER              :: i, k, ik1, ios
+      INTEGER              :: k, ios, ik1
 
 
-      ! Read sounding data
-      ! calculate data length
       fname = './user_files/tpe_20100802_at001.txt'
+
+      ! get data length
       NT1 = 0
+      k   = 1
       OPEN(unit=88, file=TRIM(fname), status='old', action='read')
       READ(88, *) ! skip header
       DO
-        READ(88, *, iostat=ios) sounding
+        READ(88, *, iostat=ios) P1(k), T1(k), QV1(k), U1(k), V1(k)
         if (ios /= 0) exit
-        NT1 = NT1 + 1
-      ENDDO
-      if (my_task.eq.1) WRITE(*,*) "NT1 = ", NT1
-      close(88)
-      
-      ! convert data into P1, T1, QV1, U1, V1
-      allocate(P1(NT1), T1(NT1), QV1(NT1), U1(NT1), V1(NT1))
-      OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
-      READ(88, *) ! read first line
-      ik1 = -1
-      DO i=1,NT1
-        READ(88, *) sounding(:)
-        ! Pressure [Pa]
-        P1(i)  = sounding(1) * 100.
-        ! Temperature [K]
-        T1(i)  = sounding(2)
-        ! Qv [kg/kg]
-        QV1(i) = sounding(3) * 0.001
-        ! U, V [m/s]
-        U1(i)  = sounding(4)
-        V1(i)  = sounding(5)
-        ! set constant U, V when >= 10km
-        IF ( sounding(1) <= 250. .and. ik1 <= 0 )  ik1 = i
+
+        ! set constant U, V when pressure < 250mb
+        IF ( P1(1) <= 250. .and. ik1 <= 0 )  ik1 = k
         IF ( ik1 > 0 ) THEN
-          U1(i) = U1(ik1)
-          V1(i) = V1(ik1)
+          U1(k) = U1(ik1)
+          V1(k) = V1(ik1)
         ENDIF
+
+        NT1 = NT1 + 1
+        k   = k + 1
+        if (k>NTMAX) then
+          stop '!! ERROR !! please increase the NTMAX &
+                when read sounding profile in user_module.f'
+        endif
       ENDDO
       close(88)
+      if (my_task.eq.1) WRITE(*,*) "NT1 = ", NT1
+
+      P1(:)  = P1*100.
+      QV1(:) = QV1*1e-3
 
       if (my_task.eq.1) then
-        DO i=1,NT1
-          WRITE(*,*) P1(i), T1(i), QV1(i), U1(i), V1(i)
+        DO k=1,NT1
+          WRITE(*,*) P1(k), T1(k), QV1(k), U1(k), V1(k)
         ENDDO
       endif
 
@@ -339,45 +332,6 @@ CONTAINS
       FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
 
   ENDSUBROUTINE USER_set_vertical_coordinate
-
-  SUBROUTINE read_edt_format(NT1, P1, T1, QV1, U1, V1)
-      INTEGER (KIND=int_kind), INTENT(out), parameter :: NT1=51
-      REAL (KIND=dbl_kind), dimension(NT1), INTENT(out):: P1, T1, QV1, U1, V1
-      REAL (KIND=dbl_kind) :: sounding(5)
-      CHARACTER(len=300)   :: fname
-      INTEGER              :: i, k, ik1, ios
-
-      ! Read sounding data with edt format
-      ! convert data into P1, T1, QV1, U1, V1
-      fname = './user_files/46692-2024080100_short.edt.txt'
-      OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
-      READ(88, *) ! read first line
-      READ(88, *) ! read second line
-      READ(88, *) ! read third line
-      ik1 = -1
-      DO i=1,NT1
-        READ(88, *) sounding(:)
-        ! Pressure [Pa]
-        P1(i) = sounding(3) * 100.
-        ! Temperature [K]
-        T1(i) = sounding(4) + 273.15
-        ! Qv from RH, mixing ratio [kg/kg]
-        ES1 = sounding(5) * 0.01 * ES ( T1(i) )  ! vapor pressure [Pa]
-        QV1(i) = ES1 * 0.622 / ( P1(i) - ES1 )
-        !if(my_task .eq. 0)  PRINT*, 'i, E, P1, QV, RH = ', i, ES1, QV1(i), P1(i), sounding(5)
-        ! U, V from Wind Speed and Wind Direction [m/s]
-        U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
-        V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
-        ! set constant U, V when >= 6km
-        IF ( sounding(2) >= 6000. .and. ik1 <= 0 )  ik1 = i
-        IF ( ik1 > 0 ) THEN
-          U1(i) = U1(ik1)
-          V1(i) = V1(ik1)
-        ENDIF
-      ENDDO
-      close(88)
-
-  ENDSUBROUTINE read_edt_format
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!                                      !!!!
