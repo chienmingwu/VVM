@@ -39,18 +39,35 @@ CONTAINS
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
 
-      INTEGER (KIND=int_kind), PARAMETER :: NT1=29
-      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), U1(NT1), V1(NT1)
+      INTEGER (KIND=int_kind), PARAMETER :: NTMAX=10000
+      INTEGER (KIND=int_kind) :: NT1
+      REAL (KIND=dbl_kind) :: P1(NTMAX), T1(NTMAX), QV1(NTMAX)
+      REAL (KIND=dbl_kind) :: U1(NTMAX), V1(NTMAX)
       CHARACTER(len=300)   :: fname
-      INTEGER              :: k
+      INTEGER              :: k, ios
       
-      fname = './user_files/profile_sounding.txt'
-      OPEN(10, FILE=trim(fname))
-      READ(10,*)  ! read header
-      DO k=1,NT1
-        READ(10,*) P1(k), T1(k), QV1(k), U1(k), V1(k)
+
+      fname = './user_files/sounding_kuo2019.txt'
+
+      ! get data length
+      NT1 = 0
+      k   = 1
+      OPEN(unit=88, file=TRIM(fname), status='old', action='read')
+      READ(88, *) ! skip header
+      DO
+        READ(88, *, iostat=ios) P1(k), T1(k), QV1(k), U1(k), V1(k)
+        if (ios /= 0) exit
+        NT1 = NT1 + 1
+        k   = k + 1
+        if (k>NTMAX) then 
+          stop '!! ERROR !! please increase the NTMAX &
+                when read sounding profile in user_module.f'
+        endif
       ENDDO
-    
+      close(88)
+      if (my_task.eq.1) WRITE(*,*) "NT1 = ", NT1
+
+
       P1(:)  = P1*100.
       QV1(:) = QV1*1e-3
 
@@ -60,14 +77,14 @@ CONTAINS
       ! SET RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
 
       CALL USER_interpolate_thermoal_profile( &
-           NT1, P1, T1, QV1 &
+           NT1, P1(1:NT1), T1(1:NT1), QV1(1:NT1) &
            )
 
       ! interpolate dynamics profile
       ! SET UG(NK3)[m/s], VG(NK3)[m/s]
 
       CALL USER_interpolate_wind_profile( &
-           NT1, P1, U1, V1 &
+           NT1, P1(1:NT1), U1(1:NT1), V1(1:NT1) &
            )
 
 
@@ -75,7 +92,7 @@ CONTAINS
       !!  ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
 
       !!  CALL USER_interpolate_largescale_profile( &
-      !!       NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
+      !!       NQ1, PQ1(1:NT1), Q1OBS(1:NT1), Q2OBS(1:NT1), WLS1(1:NT1) &
       !!       )
 
       WLS(:)    = 0.
@@ -136,11 +153,11 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
          hour0
   
-      iyear0 = 2020
-      imonth0 = 8 
-      iday0 = 1
+      iyear0 = 2019
+      imonth0 = 6
+      iday0 = 21
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 21.
+      hour0 = 22.
   ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_topography_and_land_type(&
@@ -195,44 +212,44 @@ CONTAINS
 
 
       DO J = 1,MJ_GLOB
-      DO I = MI_GLOB/2+1,MI_GLOB*3/4
- 
-      ! Urban
-      routput_user(i,j,2)=15.   ! albedo (%)
-      routput_user(i,j,3)=10.   ! green vegetation fraction (%)
-      routput_user(i,j,4)=1.   ! leaf area index (m^2/m^2)
-      routput_user(i,j,5)=10.   ! max. GVF (%)
-      routput_user(i,j,6)=10.   ! min. GVF (%)
-      ioutput_user(i,j,1)=1   ! land type 
+      DO I = MI_GLOB/2+1,MI_GLOB
+
+      ! grass land
+      routput_user(i,j,2)=19.   ! albedo (%)
+      routput_user(i,j,3)=80.   ! green vegetation fraction (%)
+      routput_user(i,j,4)=4.   ! leaf area index (m^2/m^2)
+      routput_user(i,j,5)=80.   ! max. GVF (%)
+      routput_user(i,j,6)=80.   ! min. GVF (%)
+      ioutput_user(i,j,1)=7     ! land type 
       ioutput_user(i,j,2)=1    ! slope type
       ioutput_user(i,j,3)=13   ! soil type
 
-      !grassland
-!      LU(I,J) = 7
-!      alb(I,J) = 19.
-!      grf(I,J) = 80.
-!      lai(I,J) = 4.
-!      SHDMAX(I,J) = 80.
-!      SHDMIN(I,J) = 80.
-!      SLOPE(I,J) = 1
-!      SOIL(I,J) = 13
+      ! ! Urban
+      ! routput_user(i,j,2)=15.   ! albedo (%)
+      ! routput_user(i,j,3)=10.   ! green vegetation fraction (%)
+      ! routput_user(i,j,4)=1.   ! leaf area index (m^2/m^2)
+      ! routput_user(i,j,5)=10.   ! max. GVF (%)
+      ! routput_user(i,j,6)=10.   ! min. GVF (%)
+      ! ioutput_user(i,j,1)=1   ! land type 
+      ! ioutput_user(i,j,2)=1    ! slope type
+      ! ioutput_user(i,j,3)=13   ! soil type
 
       ENDDO
       ENDDO
 
-      DO J = 1,MJ_GLOB
-      DO I = MI_GLOB*3/4+1,MI_GLOB
-      !evergreen broadleaf forest
-      routput_user(i,j,2)=12.   ! albedo (%)
-      routput_user(i,j,3)=95.   ! green vegetation fraction (%)
-      routput_user(i,j,4)=6.48   ! leaf area index (m^2/m^2)
-      routput_user(i,j,5)=95.   ! max. GVF (%)
-      routput_user(i,j,6)=95.   ! min. GVF (%)
-      ioutput_user(i,j,1)=13   ! land type 
-      ioutput_user(i,j,2)=1    ! slope type
-      ioutput_user(i,j,3)=13   ! soil type
-      ENDDO
-      ENDDO
+      ! DO J = 1,MJ_GLOB
+      ! DO I = MI_GLOB*3/4+1,MI_GLOB
+      ! !evergreen broadleaf forest
+      ! routput_user(i,j,2)=12.   ! albedo (%)
+      ! routput_user(i,j,3)=95.   ! green vegetation fraction (%)
+      ! routput_user(i,j,4)=6.48   ! leaf area index (m^2/m^2)
+      ! routput_user(i,j,5)=95.   ! max. GVF (%)
+      ! routput_user(i,j,6)=95.   ! min. GVF (%)
+      ! ioutput_user(i,j,1)=13   ! land type 
+      ! ioutput_user(i,j,2)=1    ! slope type
+      ! ioutput_user(i,j,3)=13   ! soil type
+      ! ENDDO
+      ! ENDDO
 
   ENDSUBROUTINE USER_set_topography_and_land_type
 
@@ -248,6 +265,9 @@ CONTAINS
       INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
 #if !defined(CHEM)
       LOGICAL, INTENT(out)                  :: chem_output_flag(1)
+      chem_output_flag    = (/0/)
+      filename_chem_table = ''
+      number_of_reactions = 0
 #else
       LOGICAL, INTENT(out)                  :: chem_output_flag(nchem)
 
