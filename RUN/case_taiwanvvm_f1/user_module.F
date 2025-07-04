@@ -59,7 +59,7 @@ CONTAINS
         if (ios /= 0) exit
 
         ! set constant U, V when pressure < 250mb
-        IF ( P1(1) <= 250. .and. ik1 <= 0 )  ik1 = k
+        IF ( P1(k) <= 250. .and. ik1 <= 0 )  ik1 = k
         IF ( ik1 > 0 ) THEN
           U1(k) = U1(ik1)
           V1(k) = V1(ik1)
