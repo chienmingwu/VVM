@@ -47,7 +47,7 @@ CONTAINS
       INTEGER              :: k, ios, ik1
 
 
-      fname = './user_files/tpe_20100802_at001.txt'
+      fname = './user_files/tpe_20120819_at004.txt'
 
       ! get data length
       NT1 = 0
@@ -165,9 +165,9 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
          hour0
   
-      iyear0 = 2010
+      iyear0 = 2012
       imonth0 = 8
-      iday0 = 1
+      iday0 = 19
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 16.0
   ENDSUBROUTINE USER_set_start_time
