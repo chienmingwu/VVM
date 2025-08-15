@@ -47,7 +47,7 @@ CONTAINS
       INTEGER              :: k, ios
       
 
-      fname = './user_files/sounding_wang2024.txt'
+      fname = './user_files/Wang_et_al_2024.txt'
 
       ! get data length
       NT1 = 0
