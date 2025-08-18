@@ -25,6 +25,7 @@ PUBLIC :: &
 
 CONTAINS
   SUBROUTINE USER_set_mean_profile_and_SST
+      IMPLICIT NONE
       !! --------------------
       !! Object of this function give the MEAN profile at model levels
       !! using the template subrountine.
@@ -38,59 +39,85 @@ CONTAINS
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
 
-      REAL (KIND=dbl_kind), PARAMETER :: RGAS = 287.04
-      INTEGER (KIND=int_kind), PARAMETER :: NQ1=20
-      REAL (KIND=dbl_kind) ::  PQ1(NQ1), Q1OBS(NQ1), Q2OBS(NQ1), WLS1(NQ1)
-      DATA PQ1/1012.0,991.2,945.5,893.8,836.1,772.8,705.2,635.0,564.5  &
-              ,495.7,430.7,370.8,316.7,268.8,227.0,190.8,159.9,133.6   &
-              ,111.3,92.6/
-      DATA Q1OBS/-0.25,0.18,1.41,2.51,3.29,3.71,3.95,4.09,4.07,3.81  &
-                ,3.42,2.92,2.16,1.27,0.64,0.32,0.13,0.03,0.01,0.0/
-      DATA Q2OBS/0.60,1.37,3.89,5.28,5.49,5.12,4.54,3.82,3.14, 2.52  &
-                ,1.90,1.34,0.85,0.45,0.18,0.05,0.01,0.00,0.00,0.0/
-      DATA WLS1/20*0./
+      INTEGER (KIND=int_kind), PARAMETER :: NTMAX=100000
+      INTEGER (KIND=int_kind) :: NT1, NQ1
+      REAL (KIND=dbl_kind), DIMENSION(NTMAX) :: P1,  T1, QV1, U1, V1
+      REAL (KIND=dbl_kind), DIMENSION(NTMAX) :: PQ1, Q1OBS, Q2OBS, WLS1
+      CHARACTER(len=300)   :: fname
+      INTEGER              :: k, ios
+      
 
-      INTEGER (KIND=int_kind) :: k
-      CHARACTER(len=300)      :: filename
-  
-      SST = 300.
+      ! ----- read thermodynamics profile -----
+      fname = './user_files/sounding_GATE_III.txt'
+      NT1 = 0
+      k   = 1
+      OPEN(unit=88, file=TRIM(fname), status='old', action='read')
+      READ(88, *) ! skip header
+      DO
+        READ(88, *, iostat=ios) P1(k), T1(k), QV1(k), U1(k), V1(k)
+        if (ios /= 0) exit
 
-!     initialization for rcemip
-      filename="./user_files/snd_rcemip_anal300_v3"
-      OPEN(939,FILE=trim(filename))
-      READ(939,*)
-      DO k=1,nk2
-        READ(939,111) PBAR(k+1), THBAR(k+1), QVBAR(k+1), UG(k+1), VG(k+1)
-        111 FORMAT(32X,5F16.4)
+        P1(k)  = P1(k)*100.
+        QV1(k) = QV1(k)*1e-3
+        NT1 = NT1 + 1
+        k   = k + 1
+        if (k>NTMAX) then 
+          stop '!! ERROR !! please increase the NTMAX &
+                when read sounding profile in user_module.f'
+        endif
       ENDDO
-      CLOSE(939)
+      close(88)
+      if (my_task.eq.1) WRITE(*,*) "NT1 = ", NT1
 
-      PBAR(1)=PBAR(2)
-      THBAR(1)=THBAR(2)
-      QVBAR(1)=QVBAR(2)
-      VG(1) = VG(2)
-      UG(1) = UG(2)
+      ! ----- read large scale forcing profile  -----
+      fname = './user_files/sounding_LS.txt'
+      NQ1 = 0
+      k   = 1
+      OPEN(unit=88, file=TRIM(fname), status='old', action='read')
+      READ(88, *) ! skip header
+      DO
+        READ(88, *, iostat=ios) PQ1(k), Q1OBS(k), Q2OBS(k), WLS1(k)
+        if (ios /= 0) exit
 
-      PBAR(nk3)=PBAR(nk2)+(PBAR(nk2)-PBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-      THBAR(nk3)=THBAR(nk2)+(THBAR(nk2)-THBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-      QVBAR(nk3)=QVBAR(nk2)+(QVBAR(nk2)-QVBAR(nk1))/(ZT(nk2)-ZT(nk1))*(ZT(nk3)-ZT(nk2))
-
-      QVBAR=QVBAR*0.001
-      PBAR=PBAR*100.
-
-      PIBAR=(PBAR/100000.)**(2./7.)
-      RHO=PBAR/(rgas*THBAR*PIBAR)
-      DO k=1,nk2
-        RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
+        PQ1(k) = PQ1(k)*100.
+        NQ1 = NQ1 + 1
+        k   = k + 1
+        if (k>NTMAX) then 
+          stop '!! ERROR !! please increase the NTMAX &
+                when read sounding profile in user_module.f'
+        endif
       ENDDO
+      close(88)
+      if (my_task.eq.1) WRITE(*,*) "NQ1 = ", NQ1
 
-      ! GIVEN Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
-      CALL USER_interpolate_largescale_profile( &
-           NQ1, PQ1*100., Q1OBS, Q2OBS, WLS1 &
+      ! interpolate thermoaldynamics profile
+      ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
+      ! SET THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
+      ! SET RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+
+      CALL USER_interpolate_thermoal_profile( &
+           NT1, P1(1:NT1), T1(1:NT1), QV1(1:NT1) &
            )
+
+      ! interpolate dynamics profile
+      ! SET UG(NK3)[m/s], VG(NK3)[m/s]
+
+      CALL USER_interpolate_wind_profile( &
+           NT1, P1(1:NT1), U1(1:NT1), V1(1:NT1) &
+           )
+
+
+      ! interpolate large-scale profile
+      ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
+
+      CALL USER_interpolate_largescale_profile( &
+           NQ1, PQ1(1:NQ1), Q1OBS(1:NQ1), Q2OBS(1:NQ1), WLS1(1:NQ1) &
+           )
+
+      SST       = 299.8
   
   ENDSUBROUTINE USER_set_mean_profile_and_SST
- 
+
   SUBROUTINE USER_set_3D_perturbation
       IMPLICIT NONE
       !! --------------------
@@ -128,6 +155,7 @@ CONTAINS
       
       continue
 
+
   ENDSUBROUTINE USER_set_3D_perturbation
  
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
@@ -141,11 +169,11 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
          hour0
   
-      iyear0 = 2020
-      imonth0 = 12
-      iday0 = 24
+      iyear0 = 2019
+      imonth0 = 6
+      iday0 = 21
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 4.
+      hour0 = 22.
   ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_topography_and_land_type(&
@@ -159,10 +187,14 @@ CONTAINS
       !! --
       !! if taiwanvvm_flag is .False., prescibe idealized 
       !! land surface data through routput_user and ioutput_user.
+      !! --
+      !! Please follow ./CODE/create_topo.F manual
       !! --------------------
       integer(kind=int_kind), dimension(mi_glob,mj_glob,3), intent(out) :: ioutput_user
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
       logical, intent(out) :: taiwanvvm_flag
+
+      integer :: i, j, k
 
       taiwanvvm_flag = .False.
 
@@ -191,6 +223,9 @@ CONTAINS
       INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
 #if !defined(CHEM)
       LOGICAL, INTENT(out)                  :: chem_output_flag(1)
+      chem_output_flag    = (/0/)
+      filename_chem_table = ''
+      number_of_reactions = 0
 #else
       LOGICAL, INTENT(out)                  :: chem_output_flag(nchem)
 
@@ -238,37 +273,43 @@ CONTAINS
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE
       !! --------------------
-      !! This vertical coordinate setting is from file
+      !! stretching vertical coordinate
       !! --------------------
-      INTEGER (KIND=int_kind) :: k  ! vertical loop index
-      CHARACTER(100) :: filename
 
-      filename="./user_files/snd_rcemip_anal300_v3"
-      OPEN(939,FILE=trim(filename))
-      READ(939,*)
-      DO k=1,nk2
-        READ(939,111) ZZ(k+1), ZT(k+1)
-        111 FORMAT(2F16.4)
-      ENDDO
-      CLOSE(939)
+      INTEGER (KIND=int_kind) :: k,kk,kt,kt1  ! vertical loop index
 
-      ZZ(1)=ZB
-      ZT(1)=ZB
+      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
+      CZ1 = 1. - CZ2 * DOMAIN
 
-      ZZ(NK3)=2*ZZ(NK2)-ZZ(NK1)
-      ZT(NK3)=2*ZT(NK2)-ZT(NK1)
+      Zz(1) = ZB
 
-      DO k=1,NK2
-        FNZ(k)=DZ/(ZT(k+1)-ZT(k))
-      ENDDO
-      FNZ(NK3)=FNZ(NK2)
-      DO k=2,NK3
-        FNT(k)=DZ/(ZZ(k)-ZZ(k-1))
-      ENDDO
-      FNT(1)=FNT(2)
+      DO 10 K = 2, NK3
+      Zz(K) = Zz(K-1) + DZ
+   10 CONTINUE
+
+      ZT(1) = Zz(1)
+      ZT(2) = Zz(1) + DZ / 2.
+
+      DO 20 K = 3, NK3
+      ZT(K) = ZT(K-1) + DZ
+   20 CONTINUE
+
+!     DEFINE TRANSFORMATION FUNCTIONS ( KLEMP & CHEN ,1982 )
+!     AND PHYSICAL COORDINATES
+
+      DO 40 K = 1, NK3
+      FNZ(K) = 1. / ( CZ1 + 2. * CZ2 * ZZ(K) )
+      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
+   40 CONTINUE
+
+      DO 50 K = 1, NK3
+      FNT(K) = 1. / ( CZ1 + 2. * CZ2 * ZT(K) )
+      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
+   50 CONTINUE
+
 
   ENDSUBROUTINE USER_set_vertical_coordinate
-
+ 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!                                      !!!!
 !!!!  privite subroutine for this module  !!!!
@@ -277,7 +318,6 @@ CONTAINS
  
   SUBROUTINE USER_interpolate_wind_profile(NU1, PU1, U1, V1)
       IMPLICIT NONE
-      ! given UG(NK3), VG(NK3) [m/s]
 ! ********************
 !     This function will convert the sounding data (u1, v1)
 !     to the model input with pressure interpolation.

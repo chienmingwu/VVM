@@ -107,10 +107,14 @@ CONTAINS
                     NO_SAT_emi(mi1,mj1,24)
 
       ! Emission for TaiwanVVM
-      filename="./RUNDATA/EMISAT.nc"
+      !!filename="./RUNDATA/EMISAT.nc"
 
       !!! Emission for TaiwanVVM_large
       !!filename="./RUNDATA/EMISAT_large.nc"
+
+      ! Emission for TaiwanVVM_s
+      filename="./RUNDATA/EMISAT_taiwanvvm_s.nc"
+
 
       if (first) then
         CO_emi=0.

@@ -96,7 +96,7 @@ cat DOMAIN
 
 # input data
 cat > INPUT << 'END6'
- &INPUT1 NEWRUN=T, ITTADD=108000 /
+ &INPUT1 NEWRUN=T, ITTADD=72000 /
  &INPUT2 RLAT=23.458, RLON=120.95 /
  &INPUT3 DX=100.,DYNEW=100.,DZ=100.,DZ1=100.,DT=0.1,NOTURB=F,NOSFX=F,NSFLUX=12,ALADV=1.,UVTAU=7200. /
 #           (m)          (m)     (m)     (m)    (s)                (time step)

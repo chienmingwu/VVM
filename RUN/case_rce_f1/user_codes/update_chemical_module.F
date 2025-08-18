@@ -1,12 +1,12 @@
 #include "definesld.com"
-MODULE update_tracer_module
+MODULE update_chemical_module
 
 ! This is default code for no tracers. Other cases should be saved with
 !  a suffix added to this filename and the build system should copy to
 !  this file.
 
 ! WARNING! This code could fail Array-Bounds-Checking (generally with no consequence)
-! User must make sure the ntracer assignment in the set up script is compatible with
+! User must make sure the nchemical assignment in the set up script is compatible with
 ! the case he sets up here.
 
 USE kinds
@@ -15,16 +15,18 @@ USE constld
 USE const3d
 USE domain_decomposition
 USE bound
+USE modchem
 
 IMPLICIT NONE
 PRIVATE
 
-PUBLIC :: update_tracer,  &
-          update_tracer_init
+#if defined (CHEM)
+PUBLIC :: update_chemical,  &
+          update_chemical_init
 
 CONTAINS
 
-   SUBROUTINE UPDATE_TRACER_init
+   SUBROUTINE UPDATE_CHEMICAL_init
 ! This subroutine initializes the tracer, tc3d with an initial 
 !   value.
 ! Default is no tracer.
@@ -32,16 +34,16 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
-!  Initialize tracer
-      IF (ntracer > 0) THEN
-        TC3D(:,:,:,:) = 0.
-      ENDIF
-     continue
+      ! initiation of chemistry module
+      call initchem
 
-   END SUBROUTINE update_tracer_init
+!!  !  Initialize tracer
+!!        CHEM3D(:,:,:,:) = 0.
+
+   END SUBROUTINE update_chemical_init
 
 !=======================================================================
-   SUBROUTINE UPDATE_TRACER ( ITT )
+   SUBROUTINE UPDATE_CHEMICAL ( ITT )
 
 !  This subroutine updates the tracer field with sources or sinks
 !  Default is no source or sink
@@ -49,11 +51,16 @@ CONTAINS
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
       INTEGER (KIND=int_kind),intent(in) :: ITT
 
-      call update_tracer_source
+      call update_chemical_source
 
-   END SUBROUTINE update_tracer
+      ! chemical reactions
+      IF (my_task==0) WRITE(*,*) "update chemistry"
+      call twostep(ITT)
+      IF (my_task==0) WRITE(*,*) "chemistry update successfully"
 
-   SUBROUTINE UPDATE_TRACER_source
+   END SUBROUTINE update_chemical
+
+   SUBROUTINE UPDATE_CHEMICAL_source
    
       use timeinfo, only : rjday, utc_time
       use constld, only : rlon, rlat
@@ -62,46 +69,21 @@ CONTAINS
       use pnetcdf
 
       INTEGER (KIND=int_kind) ::   &
-         i, j, k, t, hr, tempim, tempjm
-      INTEGER (KIND=int_kind) ::   &
-         idxm
+         i, j, k,t, hr, tempim, tempjm, idxkm
       ! do loop indices for zonal, meridional and vertical dimensions
       REAL xday, xhr, xlon, xlat, sza, coszen
-      integer :: i_idx(500), j_idx(500), n, p
-      character(len=100) :: filename
-      logical, allocatable :: coastmask(:,:)
-      allocate(coastmask(0:1023, 0:1023))
 
       !current time
       xday = rjday
       xhr = utc_time
+      xlon = rlon
+      xlat = rlat
 
-      ! source
-      IF (xhr .LT. 8) THEN
-        do k = 1, 5
-           write(filename, '("/work1/ariesfan405/sw_coastline/sw_coastline_group", I1, ".txt")') k
-           call read_index_file(TRIM(filename), i_idx, j_idx, n)
-           
-           coastmask = .FALSE.
-           do p = 1, n
-              coastmask(i_idx(p), j_idx(p)) = .TRUE.
-           enddo
-  
-           DO j = mjm, mjp
-           DO i = mim, mip
-             tempim = mi1*ni_sbdm+i
-             tempjm = mj1*nj_sbdm+j
-             IF (coastmask(tempim, tempjm)) THEN
-               TC3D(i,j,2,k) = TC3D(i,j,2,k) + 1.
-             ENDIF
-           ENDDO
-           ENDDO
-      
-           IF ((my_task==0) .and. (mod(xhr,1.0)<0.001)) THEN 
-             print *, "Group", k, "assigned to", n, "points."
-           ENDIF
-        enddo
-      ENDIF
+      sza = getth(xday,xlat,xlon,xhr)
+      coszen = max(0.0,cos(sza)) !to avoid negative values
+
+!!       ! source
+!!       CHEM3D(10,10,5,1) = CHEM3D(10,10,5,1) + 1 * Pass_small_dt
 
 !!        ! remove around the boundaries
 !!        DO j = mjm, mjp
@@ -109,13 +91,13 @@ CONTAINS
 !!          tempim = mi1*ni_sbdm+i
 !!          tempjm = mj1*nj_sbdm+j
 !!          IF ( tempim .EQ. INT(mi_glob/4) ) THEN
-!!            TC3D(i,j,:,:) = 0.
+!!            CHEM3D(i,j,:,:) = 0.
 !!          ENDIF
 !!          IF ( tempim .EQ. INT(mi_glob/4)+1 ) THEN
-!!            TC3D(i,j,:,:) = 0.
+!!            CHEM3D(i,j,:,:) = 0.
 !!          ENDIF
 !!          IF ( tempim .EQ. INT(mi_glob/4)-1 ) THEN
-!!            TC3D(i,j,:,:) = 0.
+!!            CHEM3D(i,j,:,:) = 0.
 !!          ENDIF
 !!  
 !!        ENDDO
@@ -123,29 +105,10 @@ CONTAINS
 
      call bound_3d
 
-   END SUBROUTINE update_tracer_source
+   END SUBROUTINE update_chemical_source
 !c
 !c ---- Function to calculate solar zenith angle
 !c
-
-   subroutine read_index_file(fname, i_index, j_index, n)
-     character(len=*), intent(in) :: fname
-     integer, intent(out) :: i_index(:), j_index(:), n
-     integer :: ios
-     character(len=200) :: line
-
-     n = 0
-     open(unit=10, file=fname, status='old', action='read')
-     read(10,'(A)', iostat=ios) line  ! skip header
-
-     do
-       read(10, *, iostat=ios) j_index(n+1), i_index(n+1)
-       if (ios /= 0) exit
-       n = n + 1
-     end do
-     close(10)
-   end subroutine
-
 real function getth(daynr,lat,lon,xhr)
 implicit none
   real daynr, lat, lon, xhr
@@ -165,6 +128,7 @@ implicit none
 
   return
 end function getth
+#endif
 
-END MODULE update_tracer_module
+END MODULE update_chemical_module
 

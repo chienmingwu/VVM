@@ -1,0 +1,9 @@
+|------ case name ---------|-------- ref. --------|------ note ------|
+ case_bubble,               Chien and Wu (2016),   cold bubble over mountain
+ case_half_land_mountain,   Wang et al. (2024),    Small version
+ case_pbl_tracer_and_chem,  N/A,                   PBL with idealized AWESOME sounding
+ case_rce_f1,               Huang et al. (2023),   RCEMIP, square domain (1152km)
+ case_q1_q2_strong_forcing, Tsai and Wu (2017),    Shear case
+ case_taiwanvvm_f1,         Chen et al. (2024),    500m, Summer ATS
+ case_taiwanvvm_s,          Hsieh and Wu (2024),   2km, Winter lee-vortex with tracer and chem
+

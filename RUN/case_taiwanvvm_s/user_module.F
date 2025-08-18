@@ -25,7 +25,6 @@ PUBLIC :: &
 
 CONTAINS
   SUBROUTINE USER_set_mean_profile_and_SST
-      IMPLICIT NONE
       !! --------------------
       !! Object of this function give the MEAN profile at model levels
       !! using the template subrountine.
@@ -38,38 +37,85 @@ CONTAINS
       !! Q1LS(NK3)  [K/s],   Q2LS(NK3)  [g/g/s], WLS(NK3)  [m/s]
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
+      IMPLICIT NONE
 
-      INTEGER(KIND=int_kind), PARAMETER :: nt1=2
-      REAL(KIND=dbl_kind),    DIMENSION(nt1) :: P1(nt1), T1(nt1), QV1(nt1)
-      INTEGER(KIND=int_kind) :: k
+      INTEGER (KIND=int_kind), PARAMETER :: NTMAX=10000
+      INTEGER (KIND=int_kind) :: NT1
+      REAL (KIND=dbl_kind) :: P1(NTMAX), T1(NTMAX), QV1(NTMAX)
+      REAL (KIND=dbl_kind) :: U1(NTMAX), V1(NTMAX)
+      CHARACTER(len=300)   :: fname
+      INTEGER              :: k, ios, ik1
 
-      ! stable enviroment
-      DATA P1/1000., 500./
-      DATA T1/300.,  250./
-      DATA QV1/2*1.e-15/
 
-      SST=300.
-      P1 = P1*100.
-      CALL USER_interpolate_thermoal_profile(NT1, P1, T1, QV1)
+      fname = './user_files/prof_20140107.txt'
 
-      !! ! stable environment
-      !! do k=2,nk2
-      !!   THBAR(k)=300.+0.0015*zt(k)
-      !! enddo
-      !! thbar(1)=thbar(2)
-      !! thbar(nk3)=thbar(nk2)
-      !! QVBAR=1e-15
+      ! get data length
+      NT1 = 0
+      k   = 1
+      OPEN(unit=88, file=TRIM(fname), status='old', action='read')
+      READ(88, *) ! skip header
+      DO
+        READ(88, *, iostat=ios) P1(k), T1(k), QV1(k), U1(k), V1(k)
+        if (ios /= 0) exit
 
-      Q1LS=0.
-      Q2LS=0.
-      WLS=0.
+        ! set constant U, V when pressure < 500mb
+        IF ( P1(k) <= 500. .and. ik1 <= 0 )  ik1 = k
+        IF ( ik1 > 0 ) THEN
+          U1(k) = U1(ik1)
+          V1(k) = V1(ik1)
+        ENDIF
 
-      UG=0.
-      VG=0.
+        NT1 = NT1 + 1
+        k   = k + 1
+        if (k>NTMAX) then
+          stop '!! ERROR !! please increase the NTMAX &
+                when read sounding profile in user_module.f'
+        endif
+      ENDDO
+      close(88)
+      if (my_task.eq.1) WRITE(*,*) "NT1 = ", NT1
+
+      P1(:)  = P1*100.
+      QV1(:) = QV1*1e-3
+
+      if (my_task.eq.1) then
+        DO i=1,NT1
+          WRITE(*,*) P1(i), T1(i), QV1(i), U1(i), V1(i)
+        ENDDO
+      endif
+
+      ! interpolate thermoaldynamics profile
+      ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
+      ! SET THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
+      ! SET RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+
+      CALL USER_interpolate_thermoal_profile( &
+           NT1, P1, T1, QV1 &
+           )
+
+      ! interpolate dynamics profile
+      ! SET UG(NK3)[m/s], VG(NK3)[m/s]
+
+      CALL USER_interpolate_wind_profile( &
+           NT1, P1, U1, V1 &
+           )
+
+
+      ! interpolate large-scale profile
+      !!  ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
+
+      !!  CALL USER_interpolate_largescale_profile( &
+      !!       NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
+      !!       )
+
+      WLS(:)    = 0.
+      Q1LS(:)   = 0.
+      Q2LS(:)   = 0.
+      SST       = T1(1)
+
 
   ENDSUBROUTINE USER_set_mean_profile_and_SST
-
-
+ 
   SUBROUTINE USER_set_3D_perturbation
       IMPLICIT NONE
       !! --------------------
@@ -104,34 +150,10 @@ CONTAINS
       !! mjm = 1 - nhalo       ! starting meridional index
       !! mjp = mj1 + nhalo     ! ending meridional index
       !! --------------------
-
-      INTEGER(int_kind) :: i, j, k
-      REAL(dbl_kind)    :: glob_idx_i, glob_idx_j
-      REAL(dbl_kind)    :: radius_norm
-   
-
-      !! bubble example
-      DO K = 1, NK3
-      DO J = mjm,mjp
-      DO I = mim,mip
-        glob_idx_j = real(mj1*nj_sbdm+j)
-        glob_idx_i = real(mi1*ni_sbdm+i)
-
-        radius_norm = sqrt( &
-                             ((glob_idx_i-mi_glob/2)*DX/4000.)**2 &
-                          !+  ((glob_idx_j-mj_glob/2)*DYNEW/5000.)**2 &
-                          + ((ZT(K)-3200.)/2000.)**2 &
-                          )
-        IF ( radius_norm <= 1 ) THEN
-          TH3D(I,J,K) = TH3D(I,J,K) &
-                        - 15.*(cos(3.14159265*0.5*radius_norm))
-        ENDIF
-      ENDDO
-      ENDDO
-      ENDDO
+      
+      continue
 
   ENDSUBROUTINE USER_set_3D_perturbation
-
  
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
       !! --------------------
@@ -144,11 +166,11 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
          hour0
   
-      iyear0 = 2019
+      iyear0 = 2014
       imonth0 = 1
-      iday0 = 18
+      iday0 = 6
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 22.0 !06(UTC+8)
+      hour0 = 22.0
   ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_topography_and_land_type(&
@@ -166,10 +188,8 @@ CONTAINS
       integer(kind=int_kind), dimension(mi_glob,mj_glob,3), intent(out) :: ioutput_user
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
       logical, intent(out) :: taiwanvvm_flag
-      integer :: i
-      real(kind=dbl_kind) :: distance
 
-      taiwanvvm_flag = .False.
+      taiwanvvm_flag = .True.
 
       ! initialization with ocean
       routput_user(:,:,1)=0.   ! height (m)
@@ -182,25 +202,13 @@ CONTAINS
       ioutput_user(:,:,2)=0    ! slope type
       ioutput_user(:,:,3)=14   ! soil type
 
-      ! add mountain (Chien and Wu, 2016)
-      do i=1,mi_glob
-        distance=abs(dble(i)-dble(mi_glob)/2.)*DX
-        if (distance<5000.) then
-          routput_user(i,:,1) = 1200.
-        else if (distance<=20000. .and. distance>=5000.) then
-          routput_user(i,:,1) = -0.08*(distance-20000.)
-        endif
-      enddo
-
   ENDSUBROUTINE USER_set_topography_and_land_type
-
-
 
   SUBROUTINE USER_set_CHEM_reaction_file(filename_chem_table, &
                                          number_of_reactions, &
                                          chem_output_flag)
       !! --------------------
-      !! if defined (CHEM), the filename of chemistry table and
+      !! if defined (CHEM), the filename of chemistry table and 
       !! the total reaction in this table are set in this function.
       !! --------------------
       IMPLICIT NONE
@@ -234,7 +242,7 @@ CONTAINS
         if (line(1:1) == '@') then
             read(10,'(a)',err=100) line
             read(line,*)(chem_name_list(j),j=1,nchem)
-
+            
             ! find corresponding output chem name
             do i=1,nchem_out
             do j=1,nchem
@@ -258,7 +266,7 @@ CONTAINS
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE
       !! --------------------
-      !! stretching z-coordinate
+      !! stretching vertical coordinate
       !! --------------------
 
       INTEGER (KIND=int_kind) :: k,kk,kt,kt1  ! vertical loop index
@@ -292,8 +300,9 @@ CONTAINS
       ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
    50 CONTINUE
 
+
   ENDSUBROUTINE USER_set_vertical_coordinate
- 
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!                                      !!!!
 !!!!  privite subroutine for this module  !!!!
@@ -570,49 +579,6 @@ CONTAINS
       RHO(K) = 1. / ALPHA(K)
   190 CONTINUE
 
-
   ENDSUBROUTINE  USER_interpolate_thermoal_profile
   
-  SUBROUTINE USER_TPE_sounding
-       IMPLICIT NONE
-!ccwu Taipei TSA sounding
-
-!      do  K = 1, NK3
-!      IF (ZT(K) .LT. 3000.) THEN
-!        THBAR(K) = 298.13 + 5.2E-3 * ZT(K)
-!      ELSEIF (ZT(K) .LT. 8000.) THEN
-!        THBAR(K) = THBAR(K-1)+4.7E-3*(ZT(K)-ZT(K-1))
-!      ELSEIF (ZT(K) .LT. 13000.) THEN
-!        THBAR(K) = THBAR(K-1)+3.4E-3*(ZT(K)-ZT(K-1))
-!      ELSE
-!        THBAR(K) = THBAR(K-1)+10.9E-3*(ZT(K)-ZT(K-1))
-!      ENDIF
-
-!      T(K) = THBAR(K) * PIBAR(K)
-!      ESW = 611.2*EXP(17.67*(T(K)-273.15)/(T(K)-29.65))
-!      ESI = 611.2*EXP(21.8745584*(T(K)-273.15)/(T(K)-7.66))
-!      IF (T(K) .LE. 233.15) THEN
-!        ES1 = ESI
-!      ELSE IF (T(K) .LT. 273.15) THEN
-!        ES1 = ( ESI*(273.15-T(K)) + ESW*(T(K)-233.15) )/40.0
-!      ELSE
-!        ES1 = ESW
-!      ENDIF
-!      QVSBAR(K) = ES1 * 0.622 / ( PBAR(K) - ES1 )
-!CCCCCCCCCCCCCCCCCC
-!      IF (ZT(K) .LE. 1500) THEN
-!        H(K) = 0.82
-!      ELSE IF (ZT(K) .LE. 12000) THEN
-!        H(K) = (ZT(K)-8000)**2/132031250.+0.5
-!      ELSE
-!        H(K) = 0.50
-!      END IF
-!CCCCCCCCCCCCCCCCCC
-!      QVBAR(K) = H(K) * QVSBAR(K)
-
-!      ENDDO
-
-  ENDSUBROUTINE USER_TPE_sounding
-
-
 ENDMODULE user_module

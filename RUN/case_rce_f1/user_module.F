@@ -37,81 +37,65 @@ CONTAINS
       !! Q1LS(NK3)  [K/s],   Q2LS(NK3)  [g/g/s], WLS(NK3)  [m/s]
       !! UG(NK3)    [m/s],   VG(NK3)    [m/s]
       !! --------------------
-      IMPLICIT NONE
 
-      INTEGER (KIND=int_kind), PARAMETER :: NT1=51
-      REAL (KIND=dbl_kind) :: P1(NT1),  T1(NT1),  QV1(NT1), U1(NT1), V1(NT1)
-      REAL (KIND=dbl_kind) :: sounding(8), ES1
-      CHARACTER(len=300)   :: fname
-      INTEGER              :: i, k, ik1
+      REAL (KIND=dbl_kind), PARAMETER :: RGAS = 287.04, PZERO = 100000._dbl_kind
+      REAL (KIND=dbl_kind) :: ESI
 
+      INTEGER (KIND=int_kind) :: k
+      CHARACTER(len=300)      :: init_file
+  
+      SST = 300.
+      UG(:) = 0.
+      VG(:) = 0.
 
-      ! Read sounding data with edt format
-      ! convert data into P1, T1, QV1, U1, V1
-      fname = './user_files/46692-2024080100_short.edt.txt'
-      OPEN(unit=88, file=TRIM(fname), form='formatted', status='old')
-      READ(88, *) ! read first line
-      READ(88, *) ! read second line
-      READ(88, *) ! read third line
-      ik1 = -1
-      DO i=1,NT1
-        READ(88, *) sounding(:)
-        ! Pressure [Pa]
-        P1(i) = sounding(3) * 100.
-        ! Temperature [K]
-        T1(i) = sounding(4) + 273.15
-        ! Qv from RH, mixing ratio [kg/kg]
-        ES1 = sounding(5) * 0.01 * ES ( T1(i) )  ! vapor pressure [Pa]
-        QV1(i) = ES1 * 0.622 / ( P1(i) - ES1 )
-        !if(my_task .eq. 0)  PRINT*, 'i, E, P1, QV, RH = ', i, ES1, QV1(i), P1(i), sounding(5)
-        ! U, V from Wind Speed and Wind Direction [m/s]
-        U1(i)  = sounding(6) * COS( (270. - sounding(7)) * 3.141592 / 180. )
-        V1(i)  = sounding(6) * SIN( (270. - sounding(7)) * 3.141592 / 180. )
-        ! set constant U, V when >= 6km
-        IF ( sounding(2) >= 6000. .and. ik1 <= 0 )  ik1 = i
-        IF ( ik1 > 0 ) THEN
-          U1(i) = U1(ik1)
-          V1(i) = V1(ik1)
+!     initialization for rcemip (idealized)
+      PBAR(1)=1014.8*100.
+      ESI=ES(SST)
+      QVBAR(1)=0.8*ESI*0.622/(PBAR(1)-ESI)
+      THBAR(1)=SST*(1+0.608*QVBAR(1))
+      DO k=2,nk3
+        IF (ZT(K)<=15000.) THEN
+          QVBAR(K)=QVBAR(1)*exp(-ZT(K)/4000.)*exp(-(ZT(K)/7500.)**2)
+          THBAR(K)=THBAR(1)-0.0067*ZT(K)
+          PBAR(K)=PBAR(1)*(THBAR(K)/THBAR(1))**(grav/(rgas*0.0067))
+          THBAR(K)=THBAR(K)/(1+0.608*QVBAR(K))*(pzero/PBAR(K))**(rgas/cp)
+        ELSE
+          QVBAR(K)=1.e-11
+          THBAR(K)=THBAR(1)-0.0067*(15000.)
+          PBAR(K)=PBAR(1)*(THBAR(K)/THBAR(1))**(grav/(rgas*0.0067))&
+                         *exp(-(grav*(ZT(K)-15000.)/(rgas*THBAR(K))))
+          THBAR(K)=THBAR(K)/(1+0.608*QVBAR(K))*(pzero/PBAR(K))**(rgas/cp)
         ENDIF
       ENDDO
+      THBAR(1)=THBAR(1)/(1+0.608*QVBAR(1))*(pzero/PBAR(1))**(rgas/cp)
+
+      !     domain mean initial profile
+      init_file='./user_files/RCEMIP_VVM_300k_init.txt'
+      open(unit=88,file=TRIM(init_file),form='formatted',status='old')
+      DO K = 1, NK3-1
+          READ(88, 20000) PBAR(K), THBAR(K), QVBAR(K)
+          QVBAR(K) = QVBAR(K)/1000.
+      ENDDO
       close(88)
+      20000 format(3F15.6)
+      THBAR(NK3) = THBAR(NK3-1)
 
-      if (my_task.eq.1) then
-        DO i=1,NT1
-          WRITE(*,*) P1(i), T1(i), QV1(i), U1(i), V1(i)
-        ENDDO
-      endif
+      PIBAR=(PBAR/100000.)**(2./7.)
+      RHO=PBAR/(rgas*THBAR*PIBAR)
+      DO k=1,nk2
+        RHOZ(k)=RHO(k)+(RHO(k+1)-RHO(k))/(ZT(k+1)-ZT(k))*(ZZ(k)-ZT(k))
+      ENDDO
+      RHOZ(nk3)=RHOZ(nk2)+(RHOZ(nk2)-RHOZ(nk1))/(ZZ(nk2)-ZZ(nk1))*(ZZ(nk3)-ZZ(nk2))
 
-      ! interpolate thermoaldynamics profile
-      ! SET PBAR(NK3)  [Pa],     PIBAR(NK3)
-      ! SET THBAR(NK3) [K],      QVBAR(NK3)[kg/kg]
-      ! SET RHO(NK3)   [kg/m3],  RHOZ(NK3) [kg/m3]
+      IF (my_task == 0) THEN
+      WRITE(*,*) "initial profiles"
+      DO k=1,nk3
+        WRITE(*,256) pbar(k)/100.,pibar(k),thbar(k),qvbar(k)*1000.,rho(k),rhoz(k)
+        256 FORMAT(6F15.5)
+      ENDDO
+      ENDIF
 
-      CALL USER_interpolate_thermoal_profile( &
-           NT1, P1, T1, QV1 &
-           )
-
-      ! interpolate dynamics profile
-      ! SET UG(NK3)[m/s], VG(NK3)[m/s]
-
-      CALL USER_interpolate_wind_profile( &
-           NT1, P1, U1, V1 &
-           )
-
-
-      ! interpolate large-scale profile
-      !!  ! SET Q1LS(NK3)[K/s], Q2LS(NK3)[g/g/s], WLS(NK3) [m/s]
-
-      !!  CALL USER_interpolate_largescale_profile( &
-      !!       NQ1, PQ1, Q1OBS, Q2OBS, WLS1 &
-      !!       )
-
-      WLS(:)    = 0.
-      Q1LS(:)   = 0.
-      Q2LS(:)   = 0.
-      SST       = T1(1)
-
-
+  
   ENDSUBROUTINE USER_set_mean_profile_and_SST
  
   SUBROUTINE USER_set_3D_perturbation
@@ -164,11 +148,11 @@ CONTAINS
       REAL (KIND=dbl_kind), INTENT(out)    ::  &
          hour0
   
-      iyear0 = 2024
-      imonth0 = 7
-      iday0 = 31
+      iyear0 = 2020
+      imonth0 = 12
+      iday0 = 24
 ! Specify hour in fractional UTC time (Greenwich)
-      hour0 = 16.0
+      hour0 = 4.
   ENDSUBROUTINE USER_set_start_time
 
   SUBROUTINE USER_set_topography_and_land_type(&
@@ -187,7 +171,7 @@ CONTAINS
       real(kind=dbl_kind),    dimension(mi_glob,mj_glob,6), intent(out) :: routput_user
       logical, intent(out) :: taiwanvvm_flag
 
-      taiwanvvm_flag = .True.
+      taiwanvvm_flag = .False.
 
       ! initialization with ocean
       routput_user(:,:,1)=0.   ! height (m)
@@ -206,7 +190,7 @@ CONTAINS
                                          number_of_reactions, &
                                          chem_output_flag)
       !! --------------------
-      !! if defined (CHEM), the filename of chemistry table and 
+      !! if defined (CHEM), the filename of chemistry table and
       !! the total reaction in this table are set in this function.
       !! --------------------
       IMPLICIT NONE
@@ -214,6 +198,9 @@ CONTAINS
       INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
 #if !defined(CHEM)
       LOGICAL, INTENT(out)                  :: chem_output_flag(1)
+      chem_output_flag    = (/0/)
+      filename_chem_table = ''
+      number_of_reactions = 0
 #else
       LOGICAL, INTENT(out)                  :: chem_output_flag(nchem)
 
@@ -237,7 +224,7 @@ CONTAINS
         if (line(1:1) == '@') then
             read(10,'(a)',err=100) line
             read(line,*)(chem_name_list(j),j=1,nchem)
-            
+
             ! find corresponding output chem name
             do i=1,nchem_out
             do j=1,nchem
@@ -261,71 +248,34 @@ CONTAINS
   SUBROUTINE USER_set_vertical_coordinate
       IMPLICIT NONE
       !! --------------------
-      !! This vertical coordinate setting is for TaiwanVVM
+      !! This vertical coordinate setting is from file
       !! --------------------
+      INTEGER (KIND=int_kind) :: k  ! vertical loop index
+      CHARACTER(100) :: filename
 
-      INTEGER (KIND=int_kind) :: k,kk,kt,kt1  ! vertical loop index
+      filename="./user_files/snd_rcemip_anal300_v3"
+      OPEN(939,FILE=trim(filename))
+      READ(939,*)
+      DO k=1,nk2-1
+        READ(939,111) ZZ(k+1), ZT(k+1)
+        111 FORMAT(2F16.4)
+      ENDDO
+      CLOSE(939)
 
-      CZ2 = ( DZ - DZ1 ) / ( DZ * ( DOMAIN - DZ ) )
-      CZ1 = 1. - CZ2 * DOMAIN
+      ZZ(1)=ZB
+      ZT(1)=ZB
 
-      Zz(1) = ZB
+      ZZ(NK3)=2*ZZ(NK2)-ZZ(NK1)
+      ZT(NK3)=2*ZT(NK2)-ZT(NK1)
 
-      DO 10 K = 2, NK3
-      Zz(K) = Zz(K-1) + DZ
-   10 CONTINUE
-
-      ZT(1) = Zz(1)
-      ZT(2) = Zz(1) + DZ / 2.
-
-      DO 20 K = 3, NK3
-      ZT(K) = ZT(K-1) + DZ
-   20 CONTINUE
-
-!     DEFINE TRANSFORMATION FUNCTIONS ( KLEMP & CHEN ,1982 )
-!     AND PHYSICAL COORDINATES
-
-      DO 40 K = 1, NK3
-      FNZ(K) = 1. / ( CZ1 + 2. * CZ2 * ZZ(K) )
-      ZZ(K) = ZZ(K) * ( CZ1 + CZ2 * ZZ(K) )
-   40 CONTINUE
-
-      KT = INT((1-CZ1)/CZ2/2/DZ)
-      KT1 = INT(ZZ(KT)/DZ1+0.999)
-
-      !PRINT*,KT,KT1,ZZ(KT)
-
-      ZZ(1) = ZB
-      FNZ(1) = DZ/DZ1
-
-      DO 42 K = 2,KT1-1
-      DO 43 KK = NK3,K+1,-1
-      FNZ(KK) = FNZ(KK-1)
-      ZZ(KK) = ZZ(KK-1) + DZ1
-   43 CONTINUE
-      FNZ(K) = DZ/DZ1
-      ZZ(K) = ZZ(K-1) + DZ1
-   42 CONTINUE
-
-      DO 50 K = 1, NK3
-      FNT(K) = 1. / ( CZ1 + 2. * CZ2 * ZT(K) )
-      ZT(K) = ZT(K) * ( CZ1 + CZ2 * ZT(K) )
-   50 CONTINUE
-
-      ZT(1) = ZB
-      FNT(1) = DZ/DZ1
-      ZT(2) = ZZ(1) + DZ1/2
-      FNT(2) = DZ/DZ1
-      DO 52 K = 3,KT1
-      DO 53 KK = NK3,K+1,-1
-      FNT(KK) = FNT(KK-1)
-      ZT(KK) = ZT(KK-1) +DZ1
-   53 CONTINUE
-      FNT(K) = DZ/DZ1
-      ZT(K) = ZT(K-1) + DZ1
-   52 CONTINUE
-
-      FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
+      DO k=1,NK2
+        FNZ(k)=DZ/(ZT(k+1)-ZT(k))
+      ENDDO
+      FNZ(NK3)=FNZ(NK2)
+      DO k=2,NK3
+        FNT(k)=DZ/(ZZ(k)-ZZ(k-1))
+      ENDDO
+      FNT(1)=FNT(2)
 
   ENDSUBROUTINE USER_set_vertical_coordinate
 

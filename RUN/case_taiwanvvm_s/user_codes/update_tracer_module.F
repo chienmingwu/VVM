@@ -32,11 +32,11 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k ,nt ! do loop indices for zonal, meridional and vertical dimensions
 
-!  Initialize tracer
-      IF (ntracer > 0) THEN
-        TC3D(:,:,:,:) = 0.
-      ENDIF
-     continue
+!! !  Initialize tracer
+!!       IF (ntracer > 0) THEN
+!!         TC3D(:,:,:,:) = 0.
+!!       ENDIF
+      continue
 
    END SUBROUTINE update_tracer_init
 
@@ -62,46 +62,24 @@ CONTAINS
       use pnetcdf
 
       INTEGER (KIND=int_kind) ::   &
-         i, j, k, t, hr, tempim, tempjm
+         i, j, k,t, hr, tempim, tempjm
       INTEGER (KIND=int_kind) ::   &
          idxm
       ! do loop indices for zonal, meridional and vertical dimensions
       REAL xday, xhr, xlon, xlat, sza, coszen
-      integer :: i_idx(500), j_idx(500), n, p
-      character(len=100) :: filename
-      logical, allocatable :: coastmask(:,:)
-      allocate(coastmask(0:1023, 0:1023))
+      REAL :: TCtpp
 
       !current time
       xday = rjday
       xhr = utc_time
+      xlon = rlon
+      xlat = rlat
 
-      ! source
-      IF (xhr .LT. 8) THEN
-        do k = 1, 5
-           write(filename, '("/work1/ariesfan405/sw_coastline/sw_coastline_group", I1, ".txt")') k
-           call read_index_file(TRIM(filename), i_idx, j_idx, n)
-           
-           coastmask = .FALSE.
-           do p = 1, n
-              coastmask(i_idx(p), j_idx(p)) = .TRUE.
-           enddo
-  
-           DO j = mjm, mjp
-           DO i = mim, mip
-             tempim = mi1*ni_sbdm+i
-             tempjm = mj1*nj_sbdm+j
-             IF (coastmask(tempim, tempjm)) THEN
-               TC3D(i,j,2,k) = TC3D(i,j,2,k) + 1.
-             ENDIF
-           ENDDO
-           ENDDO
-      
-           IF ((my_task==0) .and. (mod(xhr,1.0)<0.001)) THEN 
-             print *, "Group", k, "assigned to", n, "points."
-           ENDIF
-        enddo
-      ENDIF
+      sza = getth(xday,xlat,xlon,xhr)
+      coszen = max(0.0,cos(sza)) !to avoid negative values
+
+!!       ! source
+!!       TC3D(10,10,5,1) = TC3D(10,10,5,1) + 1 * Pass_small_dt
 
 !!        ! remove around the boundaries
 !!        DO j = mjm, mjp
@@ -127,25 +105,6 @@ CONTAINS
 !c
 !c ---- Function to calculate solar zenith angle
 !c
-
-   subroutine read_index_file(fname, i_index, j_index, n)
-     character(len=*), intent(in) :: fname
-     integer, intent(out) :: i_index(:), j_index(:), n
-     integer :: ios
-     character(len=200) :: line
-
-     n = 0
-     open(unit=10, file=fname, status='old', action='read')
-     read(10,'(A)', iostat=ios) line  ! skip header
-
-     do
-       read(10, *, iostat=ios) j_index(n+1), i_index(n+1)
-       if (ios /= 0) exit
-       n = n + 1
-     end do
-     close(10)
-   end subroutine
-
 real function getth(daynr,lat,lon,xhr)
 implicit none
   real daynr, lat, lon, xhr
