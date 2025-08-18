@@ -379,6 +379,7 @@ CONTAINS
       twtopo(mi_glob,mj_glob) 
       integer(kind=int_kind) :: ncid,varid,ierr
       INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart,readlen
+      INTEGER(KIND=mpi_offset_kind), DIMENSION(1) :: arraystart1d, readlen1d
 
       ITYPEU = 1
       ITYPEV = 1
@@ -396,6 +397,20 @@ CONTAINS
       IF (ierr/=0) stop "inqtopo"
       ierr = nfmpi_get_vara_double_all(ncid,varid,arraystart,readlen,HX(1:MI1,1:MJ1))
       IF (ierr/=0) stop "readtopo"
+
+      ! prepare lon/lat offset for vapor/taiwanvvm output (Shao, 2025.08.18)
+      arraystart1d = (/1/)
+      readlen1d    = (/mi_glob/)
+      ierr = nfmpi_inq_varid(ncid,'lon',varid)
+      IF (ierr/=0) stop "! STOP ! inq_lon"
+      ierr = nfmpi_get_vara_double_all(ncid,varid,arraystart1d,readlen1d,lonc_topo)
+      IF (ierr/=0) stop "! STOP ! read_lonc_topo"
+
+      readlen1d    = (/mj_glob/)
+      ierr = nfmpi_inq_varid(ncid,'lat',varid)
+      IF (ierr/=0) stop "! STOP ! inq_lat"
+      ierr = nfmpi_get_vara_double_all(ncid,varid,arraystart1d,readlen1d,latc_topo)
+      IF (ierr/=0) stop "! STOP ! read_latc_topo"
 
       ierr = nfmpi_close(ncid)
       IF (ierr/=0) stop "closetopo"
@@ -454,6 +469,12 @@ CONTAINS
 #else
       hx=1
       maxtopo=2
+      DO i=1,mi_glob
+          lonc_topo(i) = (dx*i-dx/2.-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
+      ENDDO
+      DO j=1,mj_glob
+          latc_topo(j) = (dynew*j-dynew/2.-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
+      ENDDO
 #endif
 
       ENDSUBROUTINE PTSPEC
