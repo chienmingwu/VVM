@@ -29,8 +29,7 @@ CONTAINS
       INTEGER (KIND=int_kind) ::   &
          i, j, k    ! do loop indices for zonal, meridional and vertical dimensions
 
-   SELECT CASE (TRIM(casename))
-      CASE ('TWP-ICE')
+   IF (.FALSE.) THEN
 ! This subroutine applies the TWP-ICE condition of horizontally uniform
 ! nuding of mean water vapor and mean potential temperature to mean
 ! observed profiles with a 6-hour time scale.
@@ -80,8 +79,7 @@ CONTAINS
         THBARZ(K) = 0.5 * (THBAR(K) + THBAR(K+1))
       ENDDO
 
-   END SELECT
-  
+   ENDIF ! nuding SWITCH 
    END SUBROUTINE nudge
 
 END MODULE nudge_module

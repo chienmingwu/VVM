@@ -119,39 +119,6 @@ CONTAINS
   800 CONTINUE
 !--------------------------------------------------------------
 
-   SELECT CASE (TRIM(casename))
-      
-      CASE('TWP-ICE')
-!--------------------------------------------------------------
-!     Sponge Layer Nudging of horiz winds and theta to horizontal means
-! - Modified for TWP-ICE, SIN2 VERTICAL DEPENDENCE 20-24KM
-!------------------------------------------
-      CALL XYAVG2(TH3D,nhalo,mi1,mj1,NK3,2,NK2,THMN)
-      CALL XYAVG2(Z3DX,nhalo,mi1,mj1,NK3,2,NK2,Z3DXMN)
-      CALL XYAVG2(Z3DY,nhalo,mi1,mj1,NK3,2,NK2,Z3DYMN)
-      DO 801 K = 2, NK2
-
-      IF ( ZT(K) .LT. 20.E3 ) THEN
-      CNT = 0.
-      ELSE IF ( ZT(K) .GE. 24.E3 ) THEN
-      CNT = 1./100.
-      ELSE
-      CNT = (1./100.) * SIN( PI*ZT(K)/8000. + (3./2.)*PI)**2
-      END IF
-
-      DO 811 J = 1, MJ1
-      DO 811 I = 1, MI1
-      TH3D(I,J,K)=TH3D(I,J,K)-DT*CNT*(TH3D(I,J,K)-THMN(K))
-      Z3DX(I,J,K)=Z3DX(I,J,K)-DT*CNT*(Z3DX(I,J,K)-Z3DXMN(K))
-      Z3DY(I,J,K)=Z3DY(I,J,K)-DT*CNT*(Z3DY(I,J,K)-Z3DYMN(K))
-      THTD3D(I,J,K)=(THTD3D(I,J,K)                  &
-                    -DT*CNT*(TH3D(I,J,K)-THMN(K)))
-      THNTD(I,J,K)=(THNTD(I,J,K)                    &
-                    -DT*CNT*(TH3D(I,J,K)-THMN(K)))
-  811 CONTINUE
-  
-  801 CONTINUE
-   END SELECT
    ENDIF
 
    END SUBROUTINE damping_therm

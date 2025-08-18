@@ -3,7 +3,7 @@ MODULE force_3d_module
 USE kinds
 USE parmsld
 USE const3d
-USE constld, only: ix, dt, zt, casename
+USE constld, only: ix, dt, zt
 USE utils
 USE domain_decomposition
 
@@ -57,93 +57,6 @@ CONTAINS
 
       SAVE ISTEP,NSTEP,TEM,K1,K2, RAND, PERT ! add PERT (Der 3 March 2022) 
       
-   SELECT CASE(TRIM(casename))
-   
-   CASE('TWP-ICE')
-   
-!----------------------------------------------------------------------
-      IF (FIRST) THEN
-      
-      FIRST = .FALSE.
-      
-! Get vertical indices
-      K1 = INDEXR(Z1,NK3,ZT,LF) + 1
-      K2 = INDEXR(Z2,NK3,ZT,LF)
-      
-! Initialize to zero
-      DO 20 K=K1,K2
-      DO 20 J=mjm,mjp
-      DO 20 I=mim,mip
-        RAND(I,J,K) = 0.0
-   20 CONTINUE
-
-! Select random deviates between zero and one
-      IDUM = 5 + my_task*mi1*mj1
-      DO 25 K=K1,K2
-      DO 25 J=1,MJ1
-      DO 25 I=1,MI1
-        RAND(I,J,K) = RAN3(IDUM)
-   25 CONTINUE
-
-! Calculate and subtract the perturbation mean
-! at each level
-      amean = 0.0
-      call xyavg2(rand,nhalo,mi1,mj1,nk3,k1,k2,amean)
-!      NSUM = (MI1_glob)*(MJ1_glob)
-!      DO 30 K=K1,K2
-!        ASUM(K) = 0.0
-!      DO 30 J=1,MJ1
-!      DO 30 I=1,MI1
-!        ASUM(K) = ASUM(K) + RAND(I,J,K)
-!   30 CONTINUE
-
-      DO 35 K=K1,K2
-!        AMEAN(K) = ASUM(K) / REAL(NSUM)
-      DO 35 J=1,MJ1
-      DO 35 I=1,MI1
-        RAND(I,J,K)= RAND(I,J,K) - AMEAN(K)
-   35 CONTINUE
-
-! Find the max value at each level
-      call xymax2(rand,nhalo,mi1,mj1,nk3,k1,k2,amean)
-      amax = maxval(amean(k1:k2))
-      call xymin2(rand,nhalo,mi1,mj1,nk3,k1,k2,amean)
-      amin = maxval(amean(k1:k2))
-!      DO 40 K=K1,K2
-!        AMAX = -9999.
-!        AMIN = 9999.
-!      DO 40 J=1,MJ1
-!      DO 40 I=1,MI1
-!        IF (RAND(I,J,K) .ge. AMAX) then
-!          AMAX = RAND(I,J,K)
-!        ELSEIF (RAND(I,J,K) .LE. AMIN) then
-!          AMIN = RAND(I,J,K)
-!        ENDIF
-!   40 CONTINUE
-      
-! Normalize to perturbation magnitude (MAG)
-      DO 50 K=K1,K2
-      DO 50 J=1,MJ1
-      DO 50 I=1,MI1
-        IF (RAND(I,J,K).LT.0.) RAND(I,J,K) = -RAND(I,J,K) * A / AMIN
-        IF (RAND(I,J,K).GT.0.) RAND(I,J,K) =  RAND(I,J,K) * A / AMAX
-   50 CONTINUE
-
-      ENDIF ! (FIRST)
-!----------------------------------------------------------------------
-
-      if(my_task == 0) write(6,*) 'RANDOM PERTURBATION: ZT = ',ZT(K1),ZT(K2)
-
-      DO 60 K = K1, K2
-      DO 60 J = 1, MJ1
-      DO 60 I = 1, MI1
-       TH3D(I,J,K) = TH3D(I,J,K) + RAND(I,J,K)
-   60 CONTINUE
-   
-   
-   CASE DEFAULT
-
-
       IF ( FIRST ) THEN
         FIRST = .FALSE.
         ISTEP = 0
@@ -174,8 +87,6 @@ CONTAINS
    12 CONTINUE
 
       ISTEP = ISTEP + 1
-
-   END SELECT
 
    END SUBROUTINE FORCE_3D
       
