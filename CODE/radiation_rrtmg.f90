@@ -26,7 +26,6 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       USE radoutld
       USE timeinfo
       USE const3d
-      USE constld, only : casename
       USE bound
       USE utils, only : xyavg2
       USE domain_decomposition
