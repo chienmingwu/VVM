@@ -201,27 +201,17 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
 ! Read in trace gases
       CALL trace_gas_input(MI1, MJ1, NK2-1, PBAR(2:NK3-1), PBARZ)
 
-   SELECT CASE(trim(casename))
-      CASE ('TWP-ICE')
 !-----------------------------------------------------------------------
-! Override ozone data with TWP-ICE ozone, if needed
-      ch4(:,:,:) = 0.0
-      n2o(:,:,:) = 0.0
-      
-      DO k = 1, NK2-1
-!        o3(:,:,k) = O3BAR_twp(NK2-k+1)
-      o3(:,:,k)= .4800E-07
-      ENDDO
-      CASE ('GATE_PHASE_III')
-      DO k = 1, NK2-1
-!        o3(:,:,k) = O3BAR_gate(NK2-k+1)
-      o3(:,:,k)= .4800E-07
-      co2(:,:,k)=0.54e-3
-      ch4(:,:,k)=0.94e-6
-      n2o(:,:,k)=0.486e-6
-      o2(:,:,k)=0.23
-      ENDDO
-      END SELECT
+! Override ozone data with gas profile, if needed
+      !! use for GATE_PAHSED_III
+      !DO k = 1, NK2-1
+      !! o3(:,:,k) = O3BAR_gate(NK2-k+1)
+      !  o3(:,:,k)= .4800E-07
+      !  co2(:,:,k)=0.54e-3
+      !  ch4(:,:,k)=0.94e-6
+      !  n2o(:,:,k)=0.486e-6
+      !  o2(:,:,k)=0.23
+      !ENDDO
 
       !! use for rcemip (Der)
       !DO k = 1, NK2-1
