@@ -277,7 +277,7 @@ CONTAINS
       lonz=(xz-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
       latc=(yt-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
       latz=(yz-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
-      levc=zt(1:nk2)/1000.
+      levc=zt(1:nk2) ! moidfy in meter (shao)
 
 !      yt(:) = xt(:)
 !      yz(:) = xz(:)
@@ -1206,7 +1206,7 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
-                                    5_mpi_offset_kind, 'level')
+                                    1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
@@ -1495,7 +1495,7 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
-                                    5_mpi_offset_kind, 'level')
+                                    1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
@@ -1817,7 +1817,7 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
-                                    5_mpi_offset_kind, 'level')
+                                    1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
