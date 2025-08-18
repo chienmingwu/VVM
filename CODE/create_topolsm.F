@@ -307,8 +307,8 @@ else
   ! setup idealized topography and land use 
   do j=1,mj_glob
   do i=1,mi_glob
-    olon(i)=real(i)*dx
-    olat(j)=real(j)*dynew  
+    olon(i)=real(i)*dx - dx/2.       ! add half grid (shao)
+    olat(j)=real(j)*dynew - dynew/2. ! add half grid (shao)
   enddo
   enddo
 

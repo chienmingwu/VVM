@@ -148,6 +148,11 @@ PRIVATE
       solvar,    &  ! formerly lc(38)
       camrc,     &  ! formerly lc(39)    CAM radiation scheme
       rrtmrc        ! formerly lc(40)    RRTM radiation scheme
+
+   REAL (KIND=dbl_kind), PUBLIC :: &  ! initial lon/lat for output
+      lonc_topo(mi_glob), &
+      latc_topo(mj_glob)
+
    
 !---------------------------------------------------------------------
 !  formerly common/cardld/
