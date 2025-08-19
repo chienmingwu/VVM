@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = topo_ish_20160202_topoa
+set expname = topo_ish_20160202_topo
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
