@@ -147,7 +147,7 @@ SUBROUTINE DIAG_topo_directib
       DO I=mim,mip
           U3DXT(I,J,K) = real(ITYPEU(I,J,K)) * U3DX(I,J,K)
           U3DYT(I,J,K) = real(ITYPEV(I,J,K)) * U3DY(I,J,K)
-          W3D(I,J,K) = real(ITYPEW(I,J,K)) * W3D(I,J,K)
+          W3DT(I,J,K)  = real(ITYPEW(I,J,K)) * W3D(I,J,K)
       ENDDO
       ENDDO
       ENDDO
