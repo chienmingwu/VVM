@@ -164,6 +164,24 @@ CONTAINS
 
 ! nudge all levels
       nudgelim = 0.
+
+#if defined (TOPOGRAPHY)
+!ccwu set vorticity inside topograhy to be zero
+      DO  K = 2,NK1
+      IF ( ZZ(K) .GE. nudgelim) THEN
+       DO  J = 1,MJ1
+        DO  I = 1,MI1
+        IF(ITYPEV(I,J,K) .EQ. 1) THEN
+        Z3DX(I,J,K) = Z3DX(I,J,K) - SUMX(K) + SUMXN(K)
+        ENDIF
+        IF(ITYPEU(I,J,K) .EQ. 1) THEN
+        Z3DY(I,J,K) = Z3DY(I,J,K) - SUMY(K) + SUMYN(K)
+        ENDIF
+        ENDDO
+       ENDDO
+      END IF
+     ENDDO
+#else
       DO 420 K = 2,NK1
       IF ( ZZ(K) .GE. nudgelim) THEN
       DO 421 J = 1,MJ1
@@ -173,6 +191,7 @@ CONTAINS
   421 CONTINUE
       END IF
   420 CONTINUE
+#endif
 
 !      SUMZ=0.
       call xyavg1(z3dz(mim,mjm,nk2),nhalo,mi1,mj1,sumz)
