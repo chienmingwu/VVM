@@ -81,6 +81,9 @@ PRIVATE
          STD_TMD2(mi1,mj1,ndiag_2d),    &
          STD_TMD3(mi1,mj1,nk2,ndiag_3d),&
 #endif
+#if defined (DIAG_TOPO)
+         STD_TMDTOPO(mi1,mj1,nk2,5),&
+#endif
          STD_RAD(mi1,mj1,nk2,8)
 #if defined (RAS)
       REAL (KIND=tm_kind) ::            &
@@ -635,6 +638,21 @@ CONTAINS
       endif
 #endif
 
+#if defined (DIAG_TOPO)
+      CALL DIAG_topo_forcing
+      DO K=1,nk2
+      DO J=1,mj1
+      DO I=1,mi1
+      STD_TMDTOPO(I,J,K,1)=STD_TMDTOPO(I,J,K,1) + Z3DX_topo(I,J,K) * dtfac 
+      STD_TMDTOPO(I,J,K,2)=STD_TMDTOPO(I,J,K,2) + Z3DY_topo(I,J,K) * dtfac 
+      STD_TMDTOPO(I,J,K,3)=STD_TMDTOPO(I,J,K,3) + W3DZ_topo(I,J,K) * dtfac 
+      STD_TMDTOPO(I,J,K,4)=STD_TMDTOPO(I,J,K,4) + U3DX_topo(I,J,K) * dtfac 
+      STD_TMDTOPO(I,J,K,5)=STD_TMDTOPO(I,J,K,5) + U3DY_topo(I,J,K) * dtfac 
+      ENDDO
+      ENDDO
+      ENDDO
+#endif
+
 #if defined (RAS)
       DO 1231 J=1,mj1
       DO 1231 I=1,mi1
@@ -803,6 +821,9 @@ CONTAINS
 #if defined (DIAG)
       if(ndiag_2d > 0) std_tmd2 = std_tmd2 * fac
       if(ndiag_3d > 0) std_tmd3 = std_tmd3 * fac
+#endif
+#if defined (DIAG_TOPO)
+      std_tmdtopo = std_tmdtopo * fac
 #endif
       out_tm9 = out_tm9 * fac
 #if defined (RAS)
@@ -1053,17 +1074,24 @@ CONTAINS
 
 #if defined (DIAG_TOPO)
 ! Diagnose package of TOPO forcing
-      call DIAG_topo_forcing
-      OUT_tm1(:,:,1:nk2) = Z3DX_topo(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_diag, 'topo_xi', TIME_L, time_start, out_tm1, nk2 )
-      OUT_tm1(:,:,1:nk2) = Z3DY_topo(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_diag, 'topo_eta', TIME_L, time_start, out_tm1, nk2 )
-      OUT_tm1(:,:,1:nk2) = W3DZ_topo(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_diag, 'topo_w', TIME_L, time_start, out_tm1, nk2 )
-      OUT_tm1(:,:,1:nk2) = U3DX_topo(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_diag, 'topo_u', TIME_L, time_start, out_tm1, nk2 )
-      OUT_tm1(:,:,1:nk2) = U3DY_topo(1:mi1,1:mj1,1:nk2)
-      call pCDF_WRITE_4D(ncid_diag, 'topo_v', TIME_L, time_start, out_tm1, nk2 )
+      !call DIAG_topo_forcing
+      !OUT_tm1(:,:,1:nk2) = Z3DX_topo(1:mi1,1:mj1,1:nk2)
+      !call pCDF_WRITE_4D(ncid_diag, 'topo_xi', TIME_L, time_start, out_tm1, nk2 )
+      !OUT_tm1(:,:,1:nk2) = Z3DY_topo(1:mi1,1:mj1,1:nk2)
+      !call pCDF_WRITE_4D(ncid_diag, 'topo_eta', TIME_L, time_start, out_tm1, nk2 )
+      !OUT_tm1(:,:,1:nk2) = W3DZ_topo(1:mi1,1:mj1,1:nk2)
+      !call pCDF_WRITE_4D(ncid_diag, 'topo_w', TIME_L, time_start, out_tm1, nk2 )
+      !OUT_tm1(:,:,1:nk2) = U3DX_topo(1:mi1,1:mj1,1:nk2)
+      !call pCDF_WRITE_4D(ncid_diag, 'topo_u', TIME_L, time_start, out_tm1, nk2 )
+      !OUT_tm1(:,:,1:nk2) = U3DY_topo(1:mi1,1:mj1,1:nk2)
+      !call pCDF_WRITE_4D(ncid_diag, 'topo_v', TIME_L, time_start, out_tm1, nk2 )
+
+      ! accumulated 
+      call pCDF_WRITE_4D(ncid_diag, 'topo_xi',  TIME_L, time_start, STD_TMDTOPO(:,:,1:nk2,1), nk2 )
+      call pCDF_WRITE_4D(ncid_diag, 'topo_eta', TIME_L, time_start, STD_TMDTOPO(:,:,1:nk2,2), nk2 )
+      call pCDF_WRITE_4D(ncid_diag, 'topo_w',   TIME_L, time_start, STD_TMDTOPO(:,:,1:nk2,3), nk2 )
+      call pCDF_WRITE_4D(ncid_diag, 'topo_u',   TIME_L, time_start, STD_TMDTOPO(:,:,1:nk2,4), nk2 )
+      call pCDF_WRITE_4D(ncid_diag, 'topo_v',   TIME_L, time_start, STD_TMDTOPO(:,:,1:nk2,5), nk2 )
 #endif
 
 
@@ -1245,6 +1273,11 @@ CONTAINS
       if(ndiag_2d > 0) std_tmd2 = 0.0
       if(ndiag_3d > 0) std_tmd3 = 0.0
 #endif
+
+#if defined (DIAG_TOPO)
+      std_tmdtopo = 0.0
+#endif
+
 #if defined (RAS)
       std_tm91= 0.0
       std_tm92= 0.0

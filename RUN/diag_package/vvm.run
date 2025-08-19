@@ -13,7 +13,7 @@
 # Example: make INTEL=true DEBUG=true
 
 set echo  # echoes the commands
-set expname = topo_ish_20160202_topo
+set expname = topo_ish_20160202_topoa
 
 # set job system and compiler
 set compiler = 'intel_f1'
