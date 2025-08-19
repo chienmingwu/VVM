@@ -44,7 +44,7 @@ PRIVATE
 #if defined (CHEM)
           ncid_chem, &
 #endif
-#if defined (DIAG)
+#if defined (DIAG) || defined (DIAG_TOPO)
           ncid_diag, &                       ! diagnostics output ID
 #endif
           ncid_rad, ncid_phys                ! radiation and surface variables output ID
@@ -581,9 +581,8 @@ CONTAINS
 ! -- CHEM -------------------------------------------------------------------
 #endif
 
-#if defined (DIAG)
+#if defined (DIAG) || defined (DIAG_TOPO)
 ! Tracers ---------------------------------------------------------------------
-      if (ndiag_2d > 0 .or. ndiag_3d > 0) then
       call fname_nc(itp1, EXPHDR, 'Diag', ITT_OUTPUT, filnam_nc)
       nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
                             mpi_info_null, ncid_diag)
@@ -591,6 +590,9 @@ CONTAINS
                            nk2, mj_glob, mi_glob, zt(1:nk2), &
                            yt(1:mj_glob), xt(1:mi_glob))
 
+#endif
+
+#if defined (DIAG)
       if (ndiag_2d > 0) then
         do nt = 1,ndiag_2d
           write(unit=trnum,fmt='(i2.2)')nt
@@ -610,12 +612,37 @@ CONTAINS
                           'zt', 'yt', 'xt')
         enddo
       endif
+#endif
 
+#if defined (DIAG_TOPO)
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_xi',&
+                          'x-component of vorticity by topography', &
+                          'x_component_of_vorticity_by_topography', 's-1', &
+                          'zt', 'yt', 'xt')
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_eta',&
+                          'y-component of vorticity by topography', &
+                          'y_component_of_vorticity_by_topography', 's-1', &
+                          'zt', 'yt', 'xt')
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_w',&
+                          'w-component of velocity by topography', &
+                          'w_component_of_velocity_by_topography', 'm s-1', &
+                          'zt', 'yt', 'xt')
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_u',&
+                          'u-component of velocity by topography', &
+                          'u_component_of_velocity_by_topography', 'm s-1', &
+                          'zt', 'yt', 'xt')
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_v',&
+                          'v-component of velocity by topography', &
+                          'v_component_of_velocity_by_topography', 'm s-1', &
+                          'zt', 'yt', 'xt')
+#endif
+
+#if defined (DIAG) || defined (DIAG_TOPO)
       nc_err = nfmpi_enddef(ncid_diag)
       call put_3d_coord(ncid_diag,nk2,mj_glob,mi_glob,zt(1:nk2),&
                           yt(1:mj_glob),xt(1:mi_glob))
-      endif
 #endif
+
 
 #if defined (PHYSICS)
 ! Dataset C (time-averaged physics fields) ------------------------------------
@@ -962,7 +989,7 @@ CONTAINS
       nc_err = nfmpi_close(ncid_chem)
 #endif
 
-#if defined (DIAG)
+#if defined (DIAG) || defined (DIAG_TOPO)
      nc_err = nfmpi_close(ncid_diag)
 #endif
 
