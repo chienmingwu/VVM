@@ -5,7 +5,7 @@
 #--------------------------------------------------------------------- 
 
 set echo  # echoes the commands
-set expname = topo_ish_20160202_merg
+set expname = topo_ish_20160202_topo
 
 # set paths
 set vvmdir = ` pwd | rev | cut -d/ -f 3- | rev `
@@ -91,7 +91,7 @@ sed -i 's/merid_decomposition/32/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/vert_dimension/70/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/tracer_dimension/1/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/diag2d_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
-sed -i 's/diag3d_dimension/16/g' ${codedir}/cdecks/PARMSLD.F90
+sed -i 's/diag3d_dimension/11/g' ${codedir}/cdecks/PARMSLD.F90
 sed -i 's/chemical_dimension/0/g' ${codedir}/cdecks/PARMSLD.F90
 'END3'
 cat DOMAIN

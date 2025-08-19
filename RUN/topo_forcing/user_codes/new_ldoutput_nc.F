@@ -37,6 +37,10 @@ USE mpi
 use modchem, only: chem_name_list, chem_output_index, nchem_out
 #endif
 
+#if defined (DIAG_TOPO)
+use diag_topo_module
+#endif
+
 
       
 IMPLICIT NONE
@@ -1226,6 +1230,20 @@ CONTAINS
           call pCDF_WRITE_4D(ncid_diag, 'dm'//trnum, TIME_C, time_start, std_tmd3(:,:,1:nk2,nt), nk2 )
         enddo
       endif
+#endif
+
+#if defined (DIAG_TOPO)
+      CALL DIAG_topo_forcing
+      OUT_tm1(:,:,1:nk2) = U3DX_topo(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D(ncid_diag, 'topo_u', TIME_L, time_start, out_tm1, nk2 )
+      OUT_tm1(:,:,1:nk2) = U3DY_topo(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D(ncid_diag, 'topo_v', TIME_L, time_start, out_tm1, nk2 )
+      OUT_tm1(:,:,1:nk2) = W3DZ_topo(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D(ncid_diag, 'topo_w', TIME_L, time_start, out_tm1, nk2 )
+      OUT_tm1(:,:,1:nk2) = Z3DX_topo(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D(ncid_diag, 'topo_xi', TIME_L, time_start, out_tm1, nk2 )
+      OUT_tm1(:,:,1:nk2) = Z3DY_topo(1:mi1,1:mj1,1:nk2)
+      call pCDF_WRITE_4D(ncid_diag, 'topo_eta', TIME_L, time_start, out_tm1, nk2 )
 #endif
 
 
