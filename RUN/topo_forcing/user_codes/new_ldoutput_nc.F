@@ -6,6 +6,7 @@ MODULE new_ldoutput_nc
 !USE netcdf
 USE pnetcdf
 USE bound
+
 USE kinds
 USE parmsld
 USE constld
@@ -33,7 +34,7 @@ USE land_module
 #endif
 USE mpi
 #if defined (CHEM)
-use modchem, only: chem_name_list
+use modchem, only: chem_name_list, chem_output_index, nchem_out
 #endif
 
 
@@ -309,9 +310,9 @@ CONTAINS
 
 #if defined (CHEM)
 !---- CHEM -------------
-      start(4) = 1; count(4) = nchem
+      start(4) = 1; count(4) = nchem_out
       nc_err = nfmpi_put_vara_double_all(ncid_rst, chem3d_id_rst,       &
-                  start(1:4), count(1:4), chem3d(1:mi1,1:mj1,1:nk2,1:nchem) )
+                  start(1:4), count(1:4), chem3d(1:mi1,1:mj1,1:nk2,1:nchem_out) )
 !---- CHEM end ---------
 #endif 
 
@@ -463,9 +464,9 @@ CONTAINS
 
 #if defined (CHEM)
 ! Chem tendency
-      start(5) = 1; count(5) = nchem
+      start(5) = 1; count(5) = nchem_out
       nc_err = nfmpi_put_vara_double_all(ncid_rst_tend, fchem3d_id_rst,       &
-                start(1:5), count(1:5), fchem3d )
+                start(1:5), count(1:5), fchem3d(1:mi1,1:mj1,1:nk2,1:2,1:nchem_out))
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst_tend)
 #endif
 
@@ -488,50 +489,6 @@ CONTAINS
 
 #endif
 
-!------------------------------------------------------------------------------
-! TWP-ICE profiles and forcing data
-
-      SELECT CASE (TRIM(casename))
-      CASE ('TWP-ICE')
-
-      nc_err = nfmpi_begin_indep_data(ncid_rst)
-      if(my_task == 0) then
-      nc_err = nfmpi_put_var_double(ncid_rst, rdhour_id_rst, dtem(1) )
-      rdhour = dtem(1)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, thbar_id_rst, THBAR )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, qvbar_id_rst, QVBAR )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, wls_id_rst, WLS )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, q1ls_id_rst, Q1LS )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, q2ls_id_rst, Q2LS )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, z3dx0_id_rst, Z3DX0 )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, z3dy0_id_rst, Z3DY0 )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, thinc_id_rst, THINC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, qvinc_id_rst, QVINC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, wlsinc_id_rst, WLSINC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, q1inc_id_rst, Q1INC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, q2inc_id_rst, Q2INC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, dx0inc_id_rst, DX0INC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      nc_err = nfmpi_put_var_double(ncid_rst, dy0inc_id_rst, DY0INC )
-      if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
-      endif
-      nc_err = nfmpi_end_indep_data(ncid_rst)
-
-      END SELECT
-      
       nc_err = nfmpi_close(ncid_rst)
       if (nc_err /= NF90_NOERR) call check_err(nc_err, ncid_rst)
       nc_err = nfmpi_close(ncid_rst_tend)
@@ -576,7 +533,7 @@ CONTAINS
 
       LOGICAL (KIND=log_kind) :: OPENF,COPYF, fexist
       INTEGER (KIND=int_kind) ::   &
-         i, j, k, nt    ! do loop indices for zonal, meridional, vertical 
+         i, j, k, nt, idx    ! do loop indices for zonal, meridional, vertical 
                         ! and tracer dimensions
 #if defined (LSM) 
       INTEGER (KIND=int_kind) :: ivar ! index for LSM masking out
@@ -635,77 +592,6 @@ CONTAINS
 
 
 ! accumulate physical variables all timesteps (except twp-ice case)
-   SELECT CASE (TRIM(casename))
-   CASE('TWP-ICE')
-      isample = 1
-!     Store the real-time raw-vectors into output-arrays for dataset C
-      DO 226 J=1,mj1
-      DO 226 I=1,mi1
-      STD_TM5(I,J,1)=UW(I,J)
-      STD_TM5(I,J,2)=WV(I,J)
-      STD_TM5(I,J,3)=WTH(I,J)
-      STD_TM5(I,J,4)=WQV(I,J)
-      STD_TM5(I,J,5)=SPREC(I,J)
-      STD_TM5(I,J,6)=TG(I,J)
-      STD_TM5(I,J,7)=OLR(I,J)
-  226 CONTINUE
-
-#if defined (DIFFUSION)
-#if defined (LSM)
-
-      DO 227 J=1,mj1
-      DO 227 I=1,mi1
-!===hchun
-      STD_LSM(I,J,1)=lST(I,J,1)
-      STD_LSM(I,J,2)=lST(I,J,2)
-      STD_LSM(I,J,3)=lST(I,J,3)
-      STD_LSM(I,J,4)=lST(I,J,4)
-      STD_LSM(I,J,5)=lSM(I,J,1)
-      STD_LSM(I,J,6)=lSM(I,J,2)
-      STD_LSM(I,J,7)=lSM(I,J,3)
-      STD_LSM(I,J,8)=lSM(I,J,4)
-!=======
-  227 CONTINUE
-#endif
-#endif
-
-
-      DO 2226 k=1,nk2
-      DO 2226 J=1,mj1
-      DO 2226 I=1,mi1
-      STD_RAD(I,J,k,1)=FUSWO(I,J,k)
-      STD_RAD(I,J,k,2)=FDSWO(I,J,k)
-      STD_RAD(I,J,k,3)=FULWO(I,J,k)
-      STD_RAD(I,J,k,4)=FDLWO(I,J,k)
-      STD_RAD(I,J,k,5)=DTRADSW(I,J,k)
-      STD_RAD(I,J,k,6)=DTRADLW(I,J,k)
- 2226 CONTINUE
-      DO 2227 J=1,mj1
-      DO 2227 I=1,mi1
-      STD_RAD(I,J,1,8)=FUSWTOA(I,J)
-      STD_RAD(I,J,2,8)=FDSWTOA(I,J)
-      STD_RAD(I,J,3,8)=FULWTOA(I,J)
- 2227 CONTINUE
-
-      DO 1040 K=1, NK2
-      OUT_TM9(K,1)=RLHR(K)
-      OUT_TM9(K,2)=QVTEND(K)
-      OUT_TM9(K,3)=QVSGS(K)
-      OUT_TM9(K,4)=QVMICR(K)
-      OUT_TM9(K,5)=QVNUDT(K)
-      OUT_TM9(K,6)=HYDROT(K)
-      OUT_TM9(K,7)=HYLS(K)
-      OUT_TM9(K,8)=HYSGS(K)
-      OUT_TM9(K,9)=THTEND(K)
-      OUT_TM9(K,10)=THSGS(K)
-      OUT_TM9(K,11)=THMICR(K)
-      OUT_TM9(K,12)=THNUDT(K)
-      OUT_TM9(K,13)=THRADT(K)
-      OUT_TM9(K,14)=WLS(K)
-      OUT_TM9(K,15)=FSED(K)
- 1040 CONTINUE
-      
-   CASE DEFAULT
       isample = isample + 1
 !     Store the real-time raw-vectors into output-arrays for dataset C
       DO 1226 J=1,mj1
@@ -1074,7 +960,6 @@ CONTAINS
       OUT_TM9(K,15)=OUT_TM9(K,15)+FSED(K)
  1041 CONTINUE
       
-   END SELECT
 #endif
 
    if( (mod(itt,nxsavg) .ne. 0 ) .OR. ( itt .eq. out_itt ) ) return
@@ -1083,10 +968,6 @@ CONTAINS
 
 
 #if defined (PHYSICS)
-   SELECT CASE (TRIM(casename))
-   CASE('TWP-ICE')
-      TIME_C = TIME1
-   CASE DEFAULT
       FAC = 1. / FLOAT ( NXSAVG )
 !      TIME_C = TIME1 -0.5*dt / ( FAC * 60.)
       TIME_C = TIME1
@@ -1119,7 +1000,6 @@ CONTAINS
       ENDDO
 #endif
 
-   END SELECT
 #endif
 
 
@@ -1323,11 +1203,12 @@ CONTAINS
       endif
 
 #if defined (CHEM)
-      do nt = 1,nchem
-        OUT_tm1(:,:,1:nk2) = chem3d(1:mi1,1:mj1,1:nk2,nt)
+      do nt = 1,nchem_out
+        idx = chem_output_index(nt)
+        OUT_tm1(:,:,1:nk2) = chem3d(1:mi1,1:mj1,1:nk2,idx)
         write(unit=trnum,fmt='(i2.2)')nt
         !! call pCDF_WRITE_4D(ncid_chem, 'chem'//trnum, TIME_L, time_start, out_tm1, nk2 )
-        call pCDF_WRITE_4D(ncid_chem, trim(chem_name_list(nt)), TIME_L, time_start, out_tm1, nk2 )
+        call pCDF_WRITE_4D(ncid_chem, trim(chem_name_list(idx)), TIME_L, time_start, out_tm1, nk2 )
       enddo
 #endif
 
@@ -1382,7 +1263,7 @@ CONTAINS
         call pCDF_WRITE_xy(ncid_lsm, 'albedo', TIME_C, time_start, std_lsm(:,:,18) )
         call pCDF_WRITE_xy(ncid_lsm, 'ch', TIME_C, time_start, std_lsm(:,:,19) )
         call pCDF_WRITE_xy(ncid_lsm, 'cm', TIME_C, time_start, std_lsm(:,:,20) )
-        call pCDF_WRITE_xy(ncid_lsm, 'eta', TIME_C, time_start, std_lsm(:,:,21) )
+        call pCDF_WRITE_xy(ncid_lsm, 'flx_eta', TIME_C, time_start, std_lsm(:,:,21) )
         call pCDF_WRITE_xy(ncid_lsm, 'fdown', TIME_C, time_start, std_lsm(:,:,22) )
         call pCDF_WRITE_xy(ncid_lsm, 'ec', TIME_C, time_start, std_lsm(:,:,23) )
         call pCDF_WRITE_xy(ncid_lsm, 'edir', TIME_C, time_start, std_lsm(:,:,24) )

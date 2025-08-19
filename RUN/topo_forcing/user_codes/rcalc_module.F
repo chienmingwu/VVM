@@ -145,8 +145,7 @@ CONTAINS
       FTH3D(I,J,K,L)=FTH3D(I,J,K,L) + Q1LS (K)
       FQV3D(I,J,K,L)=FQV3D(I,J,K,L) + Q2LS (K)
   309 CONTINUE
-  SELECT CASE (TRIM(casename))
-  CASE ('TWP-ICE','BOMEX','GATE_PHASE_III')
+
       fntddz = FNT(K)/DZ
       IF (WLS(K) .LT. 0.) THEN
       
@@ -280,7 +279,7 @@ CONTAINS
 
 
       END IF
-  END SELECT 
+
   300 CONTINUE
       END IF
       call timer_stop('forcing')

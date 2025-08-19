@@ -162,14 +162,8 @@ CONTAINS
   410 CONTINUE
       END IF
 
-   SELECT CASE (TRIM(casename))
-   CASE ('TWP-ICE')
-! - TWP-ICE CONDITION ^^ nudge ONLY above 500 m
-      nudgelim = 500.
-   CASE DEFAULT
 ! nudge all levels
       nudgelim = 0.
-   END SELECT
 
 #if defined (TOPOGRAPHY)
 !ccwu set vorticity inside topograhy to be zero
