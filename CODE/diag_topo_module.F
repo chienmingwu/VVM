@@ -8,11 +8,6 @@ USE const3d
 USE domain_decomposition
 USE bound
 use multigrid
-!! ! ---
-!! USE workcom
-!! USE utils
-!! USE timer
-!! ! ---
 
 IMPLICIT NONE
 PRIVATE
@@ -30,14 +25,15 @@ CONTAINS
 SUBROUTINE DIAG_topo_forcing
       IMPLICIT NONE
       !! initialized
-      Z3DX_topo = 0. ! 12
-      Z3DY_topo = 0. ! 13
-      W3DZ_topo = 0. ! 14
-      U3DX_topo = 0. ! 15
-      U3DY_topo = 0. ! 16
-
+      Z3DX_topo = 0.
+      Z3DY_topo = 0.
       CALL DIAG_topo_directib
+
+      W3DZ_topo = 0.
       CALL DIAG_topo_direct3d
+
+      U3DX_topo = 0.
+      U3DY_topo = 0.
       CALL DIAG_topo_wind3d
 
 ENDSUBROUTINE DIAG_topo_forcing
@@ -138,43 +134,42 @@ SUBROUTINE DIAG_topo_wind3d
 ENDSUBROUTINE DIAG_topo_wind3d
 
 SUBROUTINE DIAG_topo_directib
+      IMPLICIT NONE
       INTEGER (KIND=int_kind) ::  i, j, k
       REAL (KIND=dbl_kind) :: &
       U3DXT(mim:mip,mjm:mjp,nk3), &
       U3DYT(mim:mip,mjm:mjp,nk3), &
       W3DT(mim:mip,mjm:mjp,nk2)
 
+      !! set zero in topography
       DO K=1,maxtopo+1
       DO J=mjm,mjp
       DO I=mim,mip
-          IF (ITYPEU(I,J,K) .NE. 1) THEN
-              U3DXT(I,J,K)=0.
-          ELSE
-              U3DXT(I,J,K)=U3DX(I,J,K)
-          ENDIF
-
-          IF (ITYPEV(I,J,K) .NE. 1) THEN
-              U3DYT(I,J,K)=0.
-          ELSE
-              U3DYT(I,J,K)=U3DY(I,J,K)
-          ENDIF
-
-          IF (ITYPEW(I,J,K) .NE. 1) THEN
-              W3DT(I,J,K)=0.
-          ELSE
-              W3DT(I,J,K)=W3D(I,J,K)
-          ENDIF
+          U3DXT(I,J,K) = real(ITYPEU(I,J,K)) * U3DX(I,J,K)
+          U3DYT(I,J,K) = real(ITYPEV(I,J,K)) * U3DY(I,J,K)
+          W3D(I,J,K) = real(ITYPEW(I,J,K)) * W3D(I,J,K)
       ENDDO
       ENDDO
       ENDDO
 
 ! for d z3dx/dy
+      !! filled the air around topography
       DO K = 1,NK2
       DO J = 1,MJ1
       DO I = 1,MI1
           IF (ITYPEV(I,J,K) .NE. 1) THEN
               Z3DX_topo(I,J+1,K) = Z3DX(I,J+1,K)
               Z3DX_topo(I,J-1,K) = Z3DX(I,J-1,K)
+          ENDIF
+      ENDDO
+      ENDDO
+      ENDDO
+
+      !! filled the inner topography (overwrite the privious value in topo)
+      DO K = 1,NK2
+      DO J = 1,MJ1
+      DO I = 1,MI1
+          IF (ITYPEV(I,J,K) .NE. 1) THEN
               Z3DX_topo(I,J  ,K) = (W3DT(I,J+1,K)-W3DT(I,J,K))/DYNEW &
                                    -(U3DYT(I,J,K+1) - U3DYT(I,J,K))*FNZ(K)/DZ
           ENDIF
@@ -183,16 +178,27 @@ SUBROUTINE DIAG_topo_directib
       ENDDO
 
 ! for d z3dy/dx        
+      !! filled the air around topography
       DO K = 1,NK2
       DO J = 1,MJ1
       DO I = 1,MI1
           IF (ITYPEU(I,J,K) .NE. 1) THEN
               Z3DY_topo(I+1,J,K) = Z3DY(I+1,J,K)
               Z3DY_topo(I-1,J,K) = Z3DY(I-1,J,K)
+          ENDIF
+
+      ENDDO
+      ENDDO
+      ENDDO
+
+      !! filled the inner topography (overwrite the privious value in topo)
+      DO K = 1,NK2
+      DO J = 1,MJ1
+      DO I = 1,MI1
+          IF (ITYPEU(I,J,K) .NE. 1) THEN
               Z3DY_topo(I,  J,K) = (W3DT(I+1,J,K)-W3DT(I,J,K))/DX &
                                    -(U3DXT(I,J,K+1) - U3DXT(I,J,K))*FNZ(K)/DZ
           ENDIF
-
       ENDDO
       ENDDO
       ENDDO
