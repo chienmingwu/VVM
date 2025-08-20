@@ -76,6 +76,7 @@ cat > definesld.com << 'END1'
 cat definesld.com
 #define CHEM
 #define DIAG
+#define DIAG_TOPO
 
 # Grid parameter declarations.
 # changed from 'cat' to 'sed' - DD 2010.02.09

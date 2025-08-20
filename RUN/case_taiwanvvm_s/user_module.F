@@ -79,8 +79,8 @@ CONTAINS
       QV1(:) = QV1*1e-3
 
       if (my_task.eq.1) then
-        DO i=1,NT1
-          WRITE(*,*) P1(i), T1(i), QV1(i), U1(i), V1(i)
+        DO k=1,NT1
+          WRITE(*,*) P1(k), T1(k), QV1(k), U1(k), V1(k)
         ENDDO
       endif
 

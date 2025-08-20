@@ -44,7 +44,7 @@ PRIVATE
 #if defined (CHEM)
           ncid_chem, &
 #endif
-#if defined (DIAG)
+#if defined (DIAG) || defined (DIAG_TOPO)
           ncid_diag, &                       ! diagnostics output ID
 #endif
           ncid_rad, ncid_phys                ! radiation and surface variables output ID
@@ -273,11 +273,16 @@ CONTAINS
         yz(i) = yt(i) + dynew/2.
       enddo
 
-      lonc=(xt-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
-      lonz=(xz-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
-      latc=(yt-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
-      latz=(yz-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
-      levc=zt(1:nk2)/1000.
+      !! lonc=(xt-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
+      !! lonz=(xz-0.5*(dx*mi_glob))/6.37E6/(2.*pi)*360.
+      !! latc=(yt-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
+      !! latz=(yz-0.5*(dynew*mj_glob))/6.37E6/(2.*pi)*360.
+      !! levc=zt(1:nk2)/1000.
+
+      ! add lon/lat offset, read in PTSPEC (shao)
+      lonc = lonc_topo
+      latc = latc_topo
+      levc=zt(1:nk2) ! moidfy in meter (shao)
 
 !      yt(:) = xt(:)
 !      yz(:) = xz(:)
@@ -576,9 +581,8 @@ CONTAINS
 ! -- CHEM -------------------------------------------------------------------
 #endif
 
-#if defined (DIAG)
+#if defined (DIAG) || defined (DIAG_TOPO)
 ! Tracers ---------------------------------------------------------------------
-      if (ndiag_2d > 0 .or. ndiag_3d > 0) then
       call fname_nc(itp1, EXPHDR, 'Diag', ITT_OUTPUT, filnam_nc)
       nc_err = nfmpi_create(mpi_comm_world,filnam_nc, or(nf_clobber,nf_64bit_offset),   &
                             mpi_info_null, ncid_diag)
@@ -586,6 +590,9 @@ CONTAINS
                            nk2, mj_glob, mi_glob, zt(1:nk2), &
                            yt(1:mj_glob), xt(1:mi_glob))
 
+#endif
+
+#if defined (DIAG)
       if (ndiag_2d > 0) then
         do nt = 1,ndiag_2d
           write(unit=trnum,fmt='(i2.2)')nt
@@ -605,12 +612,37 @@ CONTAINS
                           'zt', 'yt', 'xt')
         enddo
       endif
+#endif
 
+#if defined (DIAG_TOPO)
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_xi',&
+                          'x-component of vorticity by topography', &
+                          'x_component_of_vorticity_by_topography', 's-1', &
+                          'zt', 'yt', 'xt')
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_eta',&
+                          'y-component of vorticity by topography', &
+                          'y_component_of_vorticity_by_topography', 's-1', &
+                          'zt', 'yt', 'xt')
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_w',&
+                          'w-component of velocity by topography', &
+                          'w_component_of_velocity_by_topography', 'm s-1', &
+                          'zt', 'yt', 'xt')
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_u',&
+                          'u-component of velocity by topography', &
+                          'u_component_of_velocity_by_topography', 'm s-1', &
+                          'zt', 'yt', 'xt')
+      CALL pCDF_INI_4DVAR (ncid_diag, 'topo_v',&
+                          'v-component of velocity by topography', &
+                          'v_component_of_velocity_by_topography', 'm s-1', &
+                          'zt', 'yt', 'xt')
+#endif
+
+#if defined (DIAG) || defined (DIAG_TOPO)
       nc_err = nfmpi_enddef(ncid_diag)
       call put_3d_coord(ncid_diag,nk2,mj_glob,mi_glob,zt(1:nk2),&
                           yt(1:mj_glob),xt(1:mi_glob))
-      endif
 #endif
+
 
 #if defined (PHYSICS)
 ! Dataset C (time-averaged physics fields) ------------------------------------
@@ -957,7 +989,7 @@ CONTAINS
       nc_err = nfmpi_close(ncid_chem)
 #endif
 
-#if defined (DIAG)
+#if defined (DIAG) || defined (DIAG_TOPO)
      nc_err = nfmpi_close(ncid_diag)
 #endif
 
@@ -1206,7 +1238,7 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
-                                    5_mpi_offset_kind, 'level')
+                                    1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
@@ -1495,7 +1527,7 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
-                                    5_mpi_offset_kind, 'level')
+                                    1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
@@ -1817,7 +1849,7 @@ CONTAINS
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'units',      &
-                                    5_mpi_offset_kind, 'level')
+                                    1_mpi_offset_kind, 'm')
 !        if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
 
         nc_err = nfmpi_put_att_text(ncid, zc_id, 'positive',   &
@@ -3928,297 +3960,6 @@ CONTAINS
       nc_err = nfmpi_put_att_double(ncid, vtmn_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
       if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
       
-
-!------------------------------------------------------------------------------
-! TWP-ICE profiles and forcing data
-
-     SELECT CASE (TRIM(casename))
-     CASE ('TWP-ICE')
-
-! RDHOUR ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'rdhour', NF_int, 0, (/ zf_dim /), rdhour_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, rdhour_id_rst, 'long_name', 68_mpi_offset_kind, 'time stamp (hour) &
-                            &of last input data profile that was read from file')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, rdhour_id_rst, 'units', 32_mpi_offset_kind, 'hours since 1900-01-01 00:00')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-! THBAR ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'thbar', NF_double, 1, (/ zf_dim /), thbar_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, thbar_id_rst, 'long_name', 34_mpi_offset_kind, 'mean potential temperature profile')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, thbar_id_rst, 'standard_name', 26_mpi_offset_kind, 'mean_potential_temperature')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, thbar_id_rst, 'units', 1_mpi_offset_kind, 'K')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, thbar_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, thbar_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! QVBAR ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'qvbar', NF_double, 1, (/ zf_dim /), qvbar_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, qvbar_id_rst, 'long_name', 24_mpi_offset_kind, 'mean water vapor profile')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, qvbar_id_rst, 'standard_name', 16_mpi_offset_kind, 'mean_water_vapor')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, qvbar_id_rst, 'units', 7_mpi_offset_kind, 'kg kg-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, qvbar_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, qvbar_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! WLS ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'wls', NF_double, 1, (/ zf_dim /), wls_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, wls_id_rst, 'long_name', 40_mpi_offset_kind, 'large-scale profile of vertical velocity')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, wls_id_rst, 'standard_name', 13_mpi_offset_kind, 'w_large_scale')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, wls_id_rst, 'units', 5_mpi_offset_kind, 'm s-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, wls_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, wls_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! Q1LS ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'q1ls', NF_double, 1, (/ zf_dim /), q1ls_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, q1ls_id_rst, 'long_name', 53_mpi_offset_kind, 'large-scale forcing profile for &
-                            &potential temperature')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, q1ls_id_rst, 'standard_name', 14_mpi_offset_kind, 'q1_large_scale')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, q1ls_id_rst, 'units', 5_mpi_offset_kind, 'K s-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, q1ls_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, q1ls_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! Q2LS ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'q2ls', NF_double, 1, (/ zf_dim /), q2ls_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, q2ls_id_rst, 'long_name', 43_mpi_offset_kind, 'large-scale forcing profile for &
-                            &water vapor')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, q2ls_id_rst, 'standard_name', 14_mpi_offset_kind, 'q2_large_scale')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, q2ls_id_rst, 'units', 11_mpi_offset_kind, 'kg kg-1 s-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, q2ls_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, q2ls_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! Z3DX0 ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'z3dx0', NF_double, 1, (/ zb_dim /), z3dx0_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, z3dx0_id_rst, 'long_name', 37_mpi_offset_kind, 'area mean of x-component of vorticity')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, z3dx0_id_rst, 'standard_name', 7_mpi_offset_kind, 'xi_mean')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, z3dx0_id_rst, 'units', 3_mpi_offset_kind, 's-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, z3dx0_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, z3dx0_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! Z3DY0 ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'z3dy0', NF_double, 1, (/ zb_dim /), z3dy0_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, z3dy0_id_rst, 'long_name', 37_mpi_offset_kind, 'area mean of y-component of vorticity')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, z3dy0_id_rst, 'standard_name', 8_mpi_offset_kind, 'eta_mean')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, z3dy0_id_rst, 'units', 3_mpi_offset_kind, 's-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, z3dy0_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, z3dy0_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! THINC ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'thinc', NF_double, 1, (/ zf_dim /), thinc_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, thinc_id_rst, 'long_name', 41_mpi_offset_kind, 'mean potential temperature time increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, thinc_id_rst, 'standard_name', 36_mpi_offset_kind, 'mean_potential_temperature_increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, thinc_id_rst, 'units', 1_mpi_offset_kind, 'K')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, thinc_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, thinc_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! QVINC ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'qvinc', NF_double, 1, (/ zf_dim /), qvinc_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, qvinc_id_rst, 'long_name', 31_mpi_offset_kind, 'mean water vapor time increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, qvinc_id_rst, 'standard_name', 26_mpi_offset_kind, 'mean_water_vapor_increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, qvinc_id_rst, 'units', 7_mpi_offset_kind, 'kg kg-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, qvinc_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, qvinc_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! WLSINC ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'wlsinc', NF_double, 1, (/ zf_dim /), wlsinc_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, wlsinc_id_rst, 'long_name', 37_mpi_offset_kind, 'mean vertical velocity time increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, wlsinc_id_rst, 'standard_name', 16_mpi_offset_kind, 'mean_w_increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, wlsinc_id_rst, 'units', 5_mpi_offset_kind, 'm s-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, wlsinc_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, wlsinc_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! Q1INC ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'q1inc', NF_double, 1, (/ zf_dim /), q1inc_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, q1inc_id_rst, 'long_name', 72_mpi_offset_kind, 'mean large-scale potential &
-                            &temperature advective tendency time increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, q1inc_id_rst, 'standard_name', 17_mpi_offset_kind, 'mean_q1_increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, q1inc_id_rst, 'units', 5_mpi_offset_kind, 'K s-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, q1inc_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, q1inc_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! Q2INC ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'q2inc', NF_double, 1, (/ zf_dim /), q2inc_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, q2inc_id_rst, 'long_name', 62_mpi_offset_kind, 'mean large-scale water &
-                            &vapor advective tendency time increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, q2inc_id_rst, 'standard_name', 17_mpi_offset_kind, 'mean_q2_increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, q2inc_id_rst, 'units', 11_mpi_offset_kind, 'kg kg-1 s-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, q2inc_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, q2inc_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! DX0INC ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'dx0inc', NF_double, 1, (/ zb_dim /), dx0inc_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, dx0inc_id_rst, 'long_name', 44_mpi_offset_kind, 'mean x-component of &
-                            &vorticity time increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, dx0inc_id_rst, 'standard_name', 17_mpi_offset_kind, 'mean_xi_increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, dx0inc_id_rst, 'units', 3_mpi_offset_kind, 's-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, dx0inc_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, dx0inc_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-! DY0INC ------------------------------------------------------------------------
-      nc_err = nfmpi_def_var(ncid, 'dy0inc', NF_double, 1, (/ zb_dim /), dy0inc_id_rst)
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-
-      nc_err = nfmpi_put_att_text(ncid, dy0inc_id_rst, 'long_name', 44_mpi_offset_kind, 'mean y-component of &
-                            &vorticity time increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, dy0inc_id_rst, 'standard_name', 18_mpi_offset_kind, 'mean_eta_increment')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_text(ncid, dy0inc_id_rst, 'units', 3_mpi_offset_kind, 's-1')
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, dy0inc_id_rst, '_FillValue', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      nc_err = nfmpi_put_att_double(ncid, dy0inc_id_rst, 'missing_value', NF_double, 1_mpi_offset_kind, (/dblval/))
-      if (nc_err /= NF90_NOERR) call check_err(nc_err,ncid)
-      
-      END SELECT
 
 !------------------------------------------------------------------------------
 ! Global attributes
