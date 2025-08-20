@@ -203,8 +203,8 @@ SUBROUTINE DIAG_topo_directib
       ENDDO
       ENDDO
 
-      call bound_arb(nk2,Z3DX_topo)
-      call bound_arb(nk2,Z3DY_topo)
+      call bound_arb(nk3,Z3DX_topo)
+      call bound_arb(nk3,Z3DY_topo)
 
 ENDSUBROUTINE DIAG_topo_directib
 
