@@ -12,7 +12,7 @@ use multigrid
 IMPLICIT NONE
 PRIVATE
 
-PUBLIC :: DIAG_topo_forcing
+PUBLIC :: DIAG_topo_calculate_forcing
 
 REAL(kind=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3), PUBLIC ::&
     Z3DX_topo, Z3DY_topo
@@ -22,7 +22,7 @@ REAL(kind=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk3), PUBLIC ::&
 
 CONTAINS
 
-SUBROUTINE DIAG_topo_forcing
+SUBROUTINE DIAG_topo_calculate_forcing
       IMPLICIT NONE
       !! initialized
       Z3DX_topo = 0.
@@ -36,7 +36,7 @@ SUBROUTINE DIAG_topo_forcing
       U3DY_topo = 0.
       CALL DIAG_topo_wind3d
 
-ENDSUBROUTINE DIAG_topo_forcing
+ENDSUBROUTINE DIAG_topo_calculate_forcing
 
 SUBROUTINE DIAG_topo_direct3d
 ! local variables
@@ -62,7 +62,7 @@ SUBROUTINE DIAG_topo_direct3d
       tmp_y(1:mi1,1:mj1,2:nk2-1) = - ytem1
       idum1 = 0
       call multigrid_v(3,tmp_w1,mi1,mj1,nk2,2,nk2-1,dx,dynew,dz,tmp_y,multilevel,norm,tol_3d,niterw,idum1,.True.)
-      if (my_task==0) write(*,'(A14,I8,A20,ES15.7)') "DIAG_TOPO: w iter = ", idum1,",norm of error=", norm
+      if (my_task==0) write(*,'(A,I8,A20,ES15.7)') "DIAG_TOPO: w iter = ", idum1,",norm of error=", norm
 
       do k=1,nk2
         W3DZ_topo(:,:,k)=tmp_w1(:,:,k)/rhoz(k)

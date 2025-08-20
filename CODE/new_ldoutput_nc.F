@@ -825,6 +825,9 @@ CONTAINS
 
 #endif
 
+#if defined(DIAG_TOPO)
+      call DIAG_topo_calculate_forcing
+#endif
 
 !------------------------------------------------------------------------------
 ! *** WRITE MODEL OUTPUT ***
@@ -1053,7 +1056,6 @@ CONTAINS
 
 #if defined (DIAG_TOPO)
 ! Diagnose package of TOPO forcing
-      call DIAG_topo_forcing
       OUT_tm1(:,:,1:nk2) = Z3DX_topo(1:mi1,1:mj1,1:nk2)
       call pCDF_WRITE_4D_slice(ncid_diag, 'topo_xi', TIME_L, time_start, out_tm1, nk2 )
       OUT_tm1(:,:,1:nk2) = Z3DY_topo(1:mi1,1:mj1,1:nk2)
