@@ -65,6 +65,7 @@ cat > definesld.com << 'END1'
 'END1'
 cat definesld.com
 #define DIAG
+#define DIAG_TOPO
 #define AREAMN
 #define CHEM
 #define DIFFUSION
