@@ -198,7 +198,7 @@ CONTAINS
       INTEGER(KIND=int_kind), INTENT(out)   :: number_of_reactions
 #if !defined(CHEM)
       LOGICAL, INTENT(out)                  :: chem_output_flag(1)
-      chem_output_flag    = (/0/)
+      chem_output_flag    = (/.False./)
       filename_chem_table = ''
       number_of_reactions = 0
 #else
