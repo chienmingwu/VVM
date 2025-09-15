@@ -20,6 +20,7 @@ PRIVATE
 ! public member functions
 PUBLIC ::     &
    relax_2d,  &
+   relax_3d,  &
    direct_3d, &
    direct_xy
 
@@ -160,12 +161,13 @@ CONTAINS
       CALL BOUND_ARB(1,AOUT)
 !---------------------------
 
-      temp=abs(aout-atemp) 
-      call XYmax2(temp,nhalo,mi1,mj1,1,1,1,dum1)
-      temp=aout
-      call XYmax2(temp,nhalo,mi1,mj1,1,1,1,dum2)
-
-      if (my_task==0) write(*,*) iter,dum1,dum2
+!check convergence
+!      temp=abs(aout-atemp) 
+!      call XYmax2(temp,nhalo,mi1,mj1,1,1,1,dum1)
+!      temp=aout
+!      call XYmax2(temp,nhalo,mi1,mj1,1,1,1,dum2)
+!
+!      if (my_task==0) write(*,*) iter,dum1,dum2
 
 !=================================
       ENDDO    ! iteration-loop
@@ -173,6 +175,153 @@ CONTAINS
 
       end subroutine relax_2d
 
+      SUBROUTINE RELAX_3D
+
+      REAL (KIND=dbl_kind) ::  YTEM(mi1,mj1,nk2-2)
+      REAL (kind=dbl_kind) ::  W3DNP1(mim:mip,mjm:mjp,nk2),W3DN(mim:mip,mjm:mjp,nk2)
+      REAL (KIND=dbl_kind) ::  DXSQ,DYSQ,DZSQ
+      REAL (kind=dbl_kind), DIMENSION(NK2) :: &
+         AGAU,        & ! coefficient a in gaussian elimination
+         BGAU,        & ! coefficient b in gaussian elimination
+         CGAU,        & ! coefficient c in gaussian elimination
+         AN,BN,CN
+
+      REAL (kind=dbl_kind) :: RHSV(NK2),ROUT(NK2)
+
+      INTEGER (KIND=int_kind)  ::     &
+         i, j, k, iter   ! do loop indices for zonal, meridional and vertical dimensions
+
+      call timer_start('DIRECT_3D')
+!
+!     GENERATE RIGHT SIDE OF EQUATION
+!
+      DO 120 K = 1, Nk2-2
+      DO 120 J = 1, mj1
+      DO 120 I = 1, mi1
+
+      YTEM(I,J,K)=-(Z3DYT(I,J,K+1)-Z3DYT(I-1,J,K+1))/DX &
+                  -(Z3DXT(I,J,K+1)-Z3DXT(I,J-1,K+1))/DYNEW
+
+  120 CONTINUE
+
+      DXSQ = DX*DX
+      DYSQ = DYNEW*DYNEW
+      DZSQ = DZ*DZ
+
+      DO 10 K=2,NK1
+
+      AGAU(K)=-FNZ(K)*FNU(K)/(DZSQ*RHOU(K))
+      BGAU(K)=(WRXMU+ 2./DXSQ + 2./DYSQ)/RHOZ(K)   &
+              +FNZ(K)*(FNU(K+1)/RHOU(K+1)+FNU(K)/RHOU(K))/DZSQ
+      CGAU(K)=-FNZ(K)*FNU(K+1)/(DZSQ*RHOU(K+1))
+
+   10 CONTINUE
+
+
+!     Linear Extrapolation of initial guess
+
+      DO 30 K = 2, NK1
+      DO 30 J = mjm,mjp
+      DO 30 I = mim,mip
+      W3DNP1(I,J,K-1)=2.*W3D(I,J,K)-W3DNM1(I,J,K)
+   30 CONTINUE
+
+      W3DNM1(:,:,:)=W3D(:,:,:)
+
+      DO 31 K = 2, NK1
+      DO 31 J = mjm,mjp
+      DO 31 I = mim,mip
+      W3D(i,j,k)=W3DNP1(i,j,k-1)
+   31 CONTINUE
+
+!==============================
+      DO 1000 ITER=1,NITERW
+!==============================
+
+      DO K = 2, NK1
+       DO J =  mjm,mjp
+        DO I = mim,mip
+         W3DN(I,J,K-1) = W3D(I,J,K)
+        ENDDO
+       ENDDO
+      ENDDO
+
+      DO 100 J=1,MJ1
+      DO 100 I=1,MI1
+      DO 105 K=1,NK2
+      AN(K)=AGAU(K)
+      BN(K)=BGAU(K)
+      CN(K)=CGAU(K)
+  105 CONTINUE
+
+!     GENERATE RIGHT HAND SIDE OF EQUATION
+
+      DO 110 K=2,NK1
+      RHSV(K)=WRXMU*W3DN(I,J,K-1)  &
+             +(W3DN(I+1,J,K-1)+W3DN(I-1,J,K-1))/DXSQ  &
+             +(W3DN(I,J+1,K-1)+W3DN(I,J-1,K-1))/DYSQ  &
+             +YTEM(I,J,K-1)
+  110 CONTINUE
+
+      CALL GAUSS_LD(2,NK2,AN,BN,CN,RHSV,ROUT)
+
+      DO 150 K = 2, NK1
+      W3D(I,J,K) = ROUT(K)/RHOZ(K)
+  150 CONTINUE
+
+  100 CONTINUE
+
+!---------------------------
+      CALL BOUND_ARB (NK2,W3D)
+!---------------------------
+
+ 1000 CONTINUE
+
+       call timer_stop('DIRECT_3D')
+
+      end subroutine relax_3d
+      SUBROUTINE GAUSS_LD(KMIN,KP2,AN,BN,CN,ZM,PM)
+!
+! bn(2)*pm(2)+cn(2)*pm(3)                            = zm(2)
+! an(3)*pm(2)+bn(3)*pm(3)+cn(3)*pm(4)                = zm(3)
+!           an(k)*pm(k-1)+bn(k)*pm(k)+cn(k)*pn(k+1)  = zm(k)
+!
+!            an(kp2-1)*pm(kp2-2)+bn(kp2-1)*pm(kp2-1) = zm(kp2-1)
+!
+!     tridiagonal system [an,bn,cn].pm = zm
+!     loop 20: a=l.u, l=(modif-bn in diag, an in subdiag)
+!                     u=(ones in diag, modif cn in supdiag)
+!     loop 30: u.pm = g = zm \ l, stored it on pm
+!     loop 40: pm = g \ u, stored it on pm
+
+      integer (kind=int_kind), intent(in) :: kp2,kmin
+      real (kind=dbl_kind), intent(in) :: zm(kp2),an(kp2),bn(kp2),cn(kp2)
+      real (kind=dbl_kind), intent(out):: pm(kp2)
+
+      real (kind=dbl_kind) :: bn_new(kp2),cn_new(kp2),pm_temp(kp2)
+      integer (kind=int_kind) :: k
+
+      cn_new(kmin) = cn(kmin) / bn(kmin)
+      do k = kmin+1, kp2-1
+      bn_new(k) = bn(k) - an(k) * cn_new(k-1)
+      cn_new(k) = cn(k) / bn_new(k)
+      enddo
+
+      pm_temp(kmin) = zm(kmin) / bn(kmin)
+
+      do k = kmin+1, kp2-1
+      pm_temp(k) = ( zm(k) - an(k) * pm_temp(k-1) ) / bn_new(k)
+      enddo
+
+      pm(kp2-1) = pm_temp(kp2-1)
+      do k = kp2-2, kmin, -1
+      pm(k) = pm_temp(k) - cn_new(k) * pm(k+1)
+      enddo
+      do k = 1, kmin-1
+      pm(k) = 0.
+      enddo
+
+      end subroutine gauss_ld      
 
     subroutine CG_2d(phi,f,tol,max_iter,iter)
       integer, intent(in) :: max_iter

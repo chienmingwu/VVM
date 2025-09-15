@@ -74,6 +74,8 @@ PRIVATE
       u3dy        ! meridional velocity, v (m/s)
    REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk2), PUBLIC ::       &
       w3d         ! vertical velocity, w (m/s)
+   REAL (KIND=dbl_kind), DIMENSION(mim:mip,mjm:mjp,nk2), PUBLIC ::       &
+      w3dnm1      ! vertical velocity at one timestep before (m/s)
 
 !*****************************
 ! Used in the calculations of twisting terms in the vorticity eq.
