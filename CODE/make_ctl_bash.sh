@@ -58,12 +58,15 @@ nz=$(grep "vert_dimension" ${rundir}/DOMAIN|cut -d"'" -f2|cut -d"/" -f3)
 ### lat0=$(echo "scale=3;${lat0}-(${dlat}*${ny}/2)"|bc )
 
 ### # method 2 ---- from TOPO.nc using ncdump
-lon0=$(ncdump -v,lon ${rundir}/TOPO.nc |grep ' lon ='|cut -c7-|cut -d',' -f1)
-lon1=$(ncdump -v,lon ${rundir}/TOPO.nc |grep ' lon ='|cut -c7-|cut -d',' -f2)
-lat0=$(ncdump -v,lat ${rundir}/TOPO.nc |grep ' lat ='|cut -c7-|cut -d',' -f1)
-lat1=$(ncdump -v,lat ${rundir}/TOPO.nc |grep ' lat ='|cut -c7-|cut -d',' -f2)
-dlon=$(echo "scale=1;${lon1}-(${lon0})"|bc)
-dlat=$(echo "scale=1;${lon1}-(${lon0})"|bc)
+fname=${ncdir}/${ncheader}.L.Dynamic-000000.nc
+lon0=$(ncdump -v,lon ${fname} |grep ' lon ='|cut -c7-|cut -d',' -f1)
+lon1=$(ncdump -v,lon ${fname} |grep ' lon ='|cut -c7-|cut -d',' -f2)
+lat0=$(ncdump -v,lat ${fname} |grep ' lat ='|cut -c7-|cut -d',' -f1)
+lat1=$(ncdump -v,lat ${fname} |grep ' lat ='|cut -c7-|cut -d',' -f2)
+dlon=$(echo "scale=7;(${lon1}-(${lon0}))/1"|bc)
+dlat=$(echo "scale=7;(${lon1}-(${lon0}))/1"|bc)
+lon0=$(printf "%.7f" "$lon0")
+lat0=$(printf "%.7f" "$lat0")
 
 # -------------------------------------------
 # ----- get dt 
@@ -181,60 +184,64 @@ outnz1=1
 
 # ------ get varables
 fname="${rundir}/TOPO.nc"
-table=""
-for dtype in 'float' 'int' ;do
-dum=$(ncdump -h ${fname}|grep "${dtype}")
-dum=${dum// /.}
-table="${table} ${dum}"
-done
+if [ -f ${fname} ]; then
+    table=""
+    for dtype in 'float' 'int' ;do
+    dum=$(ncdump -h ${fname}|grep "${dtype}")
+    dum=${dum// /.}
+    table="${table} ${dum}"
+    done
+    
+    table2=$(ncdump -h ${fname}|grep "long_name")
+    table2=${table2// /.}
+    varstring=""
+    nvar=0
+    for dum in ${table};do
+      vname=$(echo ${dum}|cut -d. -f2|cut -d"(" -f1)
+      if [ "${vname}" == "time" ]; then continue; fi
+      if [ "${vname}" == "lon" ]; then continue; fi
+      if [ "${vname}" == "lat" ]; then continue; fi
+      if [ "${vname}" == "lev" ]; then continue; fi
+      
+      longname="${vname}"
+      for dum2 in ${table2};do
+        vlname=$(echo ${dum2}|cut -d':' -f1)
+        if [ "${vlname}" == "${vname}" ]; then
+          longname=$(echo ${dum2}|cut -d'"' -f2)
+          break
+        fi
+      done
+      #echo ${vname} ${longname}
+    
+      nvar=$((${nvar}+1))
+      dim=$(echo ${dum}|cut -d"(" -f2|cut -d")" -f1)
+      dimstr=""
+      for v in ${dim//,./ };do
+        dimstr="${dimstr},${vtab[$v]}"
+      done
+      dimstr=$(echo ${dimstr}|cut -c2-10000)
+      varstring="${varstring}\n${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
+    done
+    echo "TOPO.nc ${nvar}"
 
-table2=$(ncdump -h ${fname}|grep "long_name")
-table2=${table2// /.}
-varstring=""
-nvar=0
-for dum in ${table};do
-  vname=$(echo ${dum}|cut -d. -f2|cut -d"(" -f1)
-  if [ "${vname}" == "time" ]; then continue; fi
-  if [ "${vname}" == "lon" ]; then continue; fi
-  if [ "${vname}" == "lat" ]; then continue; fi
-  if [ "${vname}" == "lev" ]; then continue; fi
-  
-  longname="${vname}"
-  for dum2 in ${table2};do
-    vlname=$(echo ${dum2}|cut -d':' -f1)
-    if [ "${vlname}" == "${vname}" ]; then
-      longname=$(echo ${dum2}|cut -d'"' -f2)
-      break
-    fi
-  done
-  #echo ${vname} ${longname}
-
-  nvar=$((${nvar}+1))
-  dim=$(echo ${dum}|cut -d"(" -f2|cut -d")" -f1)
-  dimstr=""
-  for v in ${dim//,./ };do
-    dimstr="${dimstr},${vtab[$v]}"
-  done
-  dimstr=$(echo ${dimstr}|cut -c2-10000)
-  varstring="${varstring}\n${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
-done
-echo "TOPO.nc ${nvar}"
-
-string="
-DSET ^../TOPO.nc\n
-DTYPE netcdf\n
-TITLE TOPO\n
-UNDEF 99999.\n
-CACHESIZE 10000000\n
-XDEF ${nx} LINEAR ${lon0} ${dlon}\n
-YDEF ${ny} LINEAR ${lat0} ${dlat}\n
-ZDEF ${outnz1} LEVELS ${outz}\n
-TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn\n
-VARS ${nvar}
-${varstring}\n
-ENDVARS
-"
-echo -e ${string}>${outdir}/topo.ctl
+    string="
+    DSET ^../TOPO.nc\n
+    DTYPE netcdf\n
+    TITLE TOPO\n
+    UNDEF 99999.\n
+    CACHESIZE 10000000\n
+    XDEF ${nx} LINEAR ${lon0} ${dlon}\n
+    YDEF ${ny} LINEAR ${lat0} ${dlat}\n
+    ZDEF ${outnz1} LEVELS ${outz}\n
+    TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn\n
+    VARS ${nvar}
+    ${varstring}\n
+    ENDVARS
+    "
+    echo -e ${string}>${outdir}/topo.ctl
+else
+    echo "skip ... TOPO.nc"
+fi
 
 #########################################
 ## bar.ctl
