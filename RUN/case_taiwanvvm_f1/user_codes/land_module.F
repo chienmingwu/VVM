@@ -287,18 +287,18 @@ CONTAINS
       ELSE
 
 
-!      !current time
-!      xday = rjday
-!      xhr = utc_time
-!      xlon = rlon
-!      xlat = rlat
-!
-!      sza = getth(xday,xlat,xlon,xhr)
-!      coszen = max(0.0,cos(sza)) !to avoid negative values
-!      
-!      xday=xday+1./3.
-!      if (xday>=1.) xday=xday-1.
-!      TG(i,j) = SST+0.4*max(sin((xday*24.-6.)*3.14159265/12.),0.)
+      !! !current time
+      !! xday = rjday
+      !! xhr = utc_time
+      !! xlon = rlon
+      !! xlat = rlat
+
+      !! sza = getth(xday,xlat,xlon,xhr)
+      !! coszen = max(0.0,cos(sza)) !to avoid negative values
+      !! 
+      !! xday=xday+1./3.
+      !! if (xday>=1.) xday=xday-1.
+      !! TG(i,j) = SST+0.4*max(sin((xday*24.-6.)*3.14159265/12.),0.)
 
       CALL SFLUX_2D (0._dbl_kind,TB(I,J),THVSMD(I,J),SFCSPD(I,J), &
                      ZD(I,J),ZROUGH(I,J),USTAR,VENTFC,MOLEN)
@@ -581,6 +581,44 @@ CONTAINS
          !soil moisture from May to Sep. (1991-2010 GLDAS)
          lSM(I,J,:)       = 0.3415875
          lSL(I,J,:)       = 0.3415875
+!!         !climo of the month (Jan.)
+!         lSM(I,J,1)       = 0.3054033
+!         lSM(I,J,2)       = 0.3054033
+!         lSM(I,J,3)       = 0.3054033
+!         lSM(I,J,4)       = 0.3054033
+!         lSL(I,J,1)       = 0.3054033
+!         lSL(I,J,2)       = 0.3054033
+!         lSL(I,J,3)       = 0.3054033
+!         lSL(I,J,4)       = 0.3054033
+! climo of the month (Dec.)
+!         lSM(I,J,1)       = 0.3106048
+!         lSM(I,J,2)       = 0.3106048
+!         lSM(I,J,3)       = 0.3106048
+!         lSM(I,J,4)       = 0.3106048
+!         lSL(I,J,1)       = 0.3106048
+!         lSL(I,J,2)       = 0.3106048
+!         lSL(I,J,3)       = 0.3106048
+!         lSL(I,J,4)       = 0.3106048
+! climo of the month (Feb.)
+!         lSM(I,J,1)       = 0.3132417
+!         lSM(I,J,2)       = 0.3132417
+!         lSM(I,J,3)       = 0.3132417
+!         lSM(I,J,4)       = 0.3132417
+!         lSL(I,J,1)       = 0.3132417
+!         lSL(I,J,2)       = 0.3132417
+!         lSL(I,J,3)       = 0.3132417
+!         lSL(I,J,4)       = 0.3132417
+! soil moisture on Oct 1991-2010
+!         lSM(I,J,1)       = 0.3233905
+!         lSM(I,J,2)       = 0.3233905
+!         lSM(I,J,3)       = 0.3233905
+!         lSM(I,J,4)       = 0.3233905
+!         lSL(I,J,1)       = 0.3233905
+!         lSL(I,J,2)       = 0.3233905
+!         lSL(I,J,3)       = 0.3233905
+!         lSL(I,J,4)       = 0.3233905
+!         lSM(I,J,:)       = 0.343039 ! 20190722
+!         lSL(I,J,:)       = 0.343039
 !         ST(I,J,1)       = ST1(I,J)
 !         ST(I,J,2)       = ST2(I,J)
 !         ST(I,J,3)       = ST3(I,J)
@@ -627,7 +665,7 @@ CONTAINS
          lRC         = -9.9999996E+35 
          lPC         = -9.9999996E+35 
          lRSMIN      = -9.9999996E+35 
-         lXLAI       = -9.9999996E+35 
+         lXLAI       = LAIM !! Shao, Aaron
          lRCS        = -9.9999996E+35 
          lRCT        = -9.9999996E+35 
          lRCQ        = -9.9999996E+35 
