@@ -329,7 +329,7 @@ CONTAINS
       ZT(K) = ZT(K-1) + DZ1
    52 CONTINUE
 
-      FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
+      FNZ(KT1+1) = DZ/(ZT(KT1+2)-ZT(KT1+1))
 
   ENDSUBROUTINE USER_set_vertical_coordinate
 
