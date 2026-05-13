@@ -2954,9 +2954,13 @@ END subroutine p3_init
           if (qitot(i,k,iice).ge.qsmall .and. (qc(i,k)+qr(i,k)).ge.1.e-6 .and. t(i,k).lt.273.15) then
 
              qsat0  = 0.622*e0/(pres(i,k)-e0)
-             qwgrth(iice) = ((f1pr05+f1pr14*sc**thrd*(rhofaci(i,k)*rho(i,k)/mu)**0.5)*((t(i,k)-   &
-                           273.15)*(-kap)+rho(i,k)*xxls(i,k)*dv*(qsat0-Qv_cld(k))*2.*pi/xlf(i,k)))*   &
-                          nitot(i,k,iice)
+             !!! qwgrth(iice) = ((f1pr05+f1pr14*sc**thrd*(rhofaci(i,k)*rho(i,k)/mu)**0.5)*((t(i,k)-   &
+             !!!               273.15)*(-kap)+rho(i,k)*xxls(i,k)*dv*(qsat0-Qv_cld(k))*2.*pi/xlf(i,k)))*   &
+             !!!              nitot(i,k,iice)
+             qwgrth(iice) = (f1pr05 + f1pr14 * sc**thrd * (rhofaci(i,k)*rho(i,k)/mu)**0.5) * &
+               (2.0*pi * (rho(i,k)*xxlv(i,k)*dv*(qsat0-Qv_cld(k)) - kap*(t(i,k)-273.15)) / &
+               (xlf(i,k) + cpw*(t(i,k)-273.15))) * &
+               nitot(i,k,iice)
              qwgrth(iice) = max(qwgrth(iice),0.)
 
           if (log_LiquidFrac) then
