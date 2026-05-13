@@ -492,7 +492,7 @@ contains
   green_vegetation_min      = 0.01
   green_vegetation_max      = 0.96
   usemonalb                 = .False.
-  rdlai2d                   = .False.
+  rdlai2d                   = .True. !Shao, Aaron. Using LAI in TOPO.nc
   sfcdif_option             = 1
   iz0tlnd                   = 0
   landuse_dataset           = "USGS"

@@ -696,7 +696,8 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   STinout_ini = ST(I,J,:)
   SMinout_ini = SM(I,J,:)
   SLinout_ini = SL(I,J,:)
-  
+ 
+
   call open_forcing_file(iunit, output_dir, forcing_filename, nsoil(I,J), startdate, enddate,          &
        loop_for_a_while, latitude, longitude, &
        forcing_timestep, noahlsm_timestep, ice, t11, stc1, smc1, sh2o1, sldpth, cmc(I,J), &
@@ -859,11 +860,13 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
      ! user-specified
      ! trend through the year, rather than let SFLX calculate it for us.
      !
+     !! shao, aaron
+     !! XLAI already is replaced with TOPO.nc in land_module.F
 
 !     if (RDLAI2D) then
 !        xlai = month_d(lai_monthly, nowdate)
 !     else
-        xlai = badval
+!        xlai = badval
 !        xlai = lai1
 !        xlai = LAIM1!xlai
 !     endif
