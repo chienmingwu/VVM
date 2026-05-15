@@ -167,7 +167,7 @@ CONTAINS
   
       iyear0 = 2012
       imonth0 = 8
-      iday0 = 19
+      iday0 = 18
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 16.0
   ENDSUBROUTINE USER_set_start_time
@@ -329,7 +329,7 @@ CONTAINS
       ZT(K) = ZT(K-1) + DZ1
    52 CONTINUE
 
-      FNZ(KT1+1) = DZ/(ZT(KT1+1)-ZT(KT1))
+      FNZ(KT1+1) = DZ/(ZT(KT1+2)-ZT(KT1+1))
 
   ENDSUBROUTINE USER_set_vertical_coordinate
 

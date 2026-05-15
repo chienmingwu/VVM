@@ -662,7 +662,7 @@ CONTAINS
          lRC         = -9.9999996E+35 
          lPC         = -9.9999996E+35 
          lRSMIN      = -9.9999996E+35 
-         lXLAI       = -9.9999996E+35 
+         lXLAI       = LAIM !! Shao, Aaron
          lRCS        = -9.9999996E+35 
          lRCT        = -9.9999996E+35 
          lRCQ        = -9.9999996E+35 
