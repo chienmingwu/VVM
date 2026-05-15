@@ -167,7 +167,7 @@ CONTAINS
   
       iyear0 = 2012
       imonth0 = 8
-      iday0 = 19
+      iday0 = 18
 ! Specify hour in fractional UTC time (Greenwich)
       hour0 = 16.0
   ENDSUBROUTINE USER_set_start_time
