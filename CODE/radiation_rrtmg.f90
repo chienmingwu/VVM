@@ -198,7 +198,7 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
 !      sstxy(:,:) = tg(:,:)
 
 ! Read in trace gases
-      CALL trace_gas_input(MI1, MJ1, NK2-1, PBAR(2:NK3-1), PBARZ)
+      CALL trace_gas_input(MI1, MJ1, NK2-1, PBAR(2:NK3-1)/100., PBARZ/100.)
 
 !-----------------------------------------------------------------------
 ! Override ozone data with gas profile, if needed
@@ -212,14 +212,15 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       !  o2(:,:,k)=0.23
       !ENDDO
 
-      !! use for rcemip (Der)
-      !DO k = 1, NK2-1
-      !o3(:,:,k)=(3.64478*pres(k)**(0.83209))*exp(-pres(k)/11.3515)*1.e-6
-      !co2(:,:,k)=348.e-6
-      !ch4(:,:,k)=1650.e-9
-      !n2o(:,:,k)=306.e-9
-      !o2(:,:,k)=0.23
-      !ENDDO
+      ! use for rcemip (Der) and default
+      DO k = 1, NK2-1
+      o3(:,:,k)=(3.6478*pres(k)**(0.83209))*exp(-pres(k)/11.3515)*1.e-6
+      co2(:,:,k)=348.e-6
+      ch4(:,:,k)=1650.e-9
+      n2o(:,:,k)=306.e-9
+      ! o2(:,:,k)=0.23
+      o2(:,:,k)=0.209
+      ENDDO
 
   if(masterproc) then
       print*,' '
