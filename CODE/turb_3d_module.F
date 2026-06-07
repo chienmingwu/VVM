@@ -1283,10 +1283,11 @@ CONTAINS
 
       T2(I,J) = TH3D(I,J,hxp)
       QG(I,J) = QV3D(I,J,hxp)
-      swD(I,J) = swDown_3D(I,J,hxp)
-      lwD(I,J) = lwDown_3D(I,J,hxp)
-      swU(I,J) = swUp_3D(I,J,hxp)
-      lwU(I,J) = lwUp_3D(I,J,hxp)
+      ! fixed radiation flux at surface, shao, aaron
+      swD(I,J) = swDown_3D(I,J,hx1)
+      lwD(I,J) = lwDown_3D(I,J,hx1)
+      swU(I,J) = swUp_3D(I,J,hx1)
+      lwU(I,J) = lwUp_3D(I,J,hx1)
 
 
 
