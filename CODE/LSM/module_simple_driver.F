@@ -714,7 +714,9 @@ SUBROUTINE LSM_DRV_ini(dt1,LU1,SOIL1,SLOPE1,                                  &
   ENDDO
   ENDDO
 
-  dt = real(noahlsm_timestep)
+  ! (shao, aaron) let the DT in land is same as input [dt1]
+  ! in the land module, the recommand DT is > 60sec, < 3600sec by land module comments
+  ! dt = real(noahlsm_timestep)
   nsoil = 4
   shdfac                    = shdfac
   shdmax                    = shdmax1/100.0
