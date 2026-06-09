@@ -94,6 +94,9 @@ for i in $(seq ${nz});do
   dum=$(echo ${table}|cut -d" " -f${idx})
   dum=$(echo "scale=0;(${dum}/1.)"|bc)
   zlist="${zlist} ${dum}"
+  if [ $((i % 10)) -eq 0 ] && [ ${i} -ne ${nz} ]; then
+    zlist="${zlist}\n"
+  fi
 done
 
 #########################################
@@ -109,7 +112,7 @@ for dtype in ${dtype_list};do
     outnz=${nz}
     outnz1=${nz}
   else
-    outz=1000
+    outz=$(echo "${zlist}" | xargs | cut -d' ' -f1)
     outnz=0
     outnz1=1
   fi
@@ -146,7 +149,7 @@ for dtype in ${dtype_list};do
       dimstr="${dimstr},${vtab[$v]}"
     done
     dimstr=$(echo ${dimstr}|cut -c2-10000)
-    varstring="${varstring}\n${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
+    varstring="${varstring}\n ${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
   done
   echo ${dtype} ${nvar}
 
@@ -156,21 +159,21 @@ for dtype in ${dtype_list};do
 
   
   string="
-  DSET ^../archive/${ncheader}.${dtype}-%tm6.nc\n
-  DTYPE netcdf\n
-  OPTIONS template\n
-  TITLE ${dtype} variables\n
-  UNDEF ${fillvalue}\n
-  CACHESIZE 10000000\n
-  XDEF ${nx} LINEAR ${lon0} ${dlon}\n
-  YDEF ${ny} LINEAR ${lat0} ${dlat}\n
-  ZDEF ${outnz1} LEVELS ${outz}\n
-  TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn\n
-  VARS ${nvar}
-  ${varstring}\n
-  ENDVARS
+DSET ^../archive/${ncheader}.${dtype}-%tm6.nc
+DTYPE netcdf
+OPTIONS template
+TITLE ${dtype} variables
+UNDEF ${fillvalue}
+CACHESIZE 10000000
+XDEF ${nx} LINEAR ${lon0} ${dlon}
+YDEF ${ny} LINEAR ${lat0} ${dlat}
+ZDEF ${outnz1} LEVELS ${outz}
+TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn
+VARS ${nvar} ${varstring}
+ENDVARS
   "
-  echo -e ${string}>${outdir}/${type1_lower}.ctl
+  echo -e "${string}" > "${outdir}/${type1_lower}.ctl"
+
 
 done
 
@@ -186,7 +189,7 @@ outnz1=1
 fname="${rundir}/TOPO.nc"
 if [ -f ${fname} ]; then
     table=""
-    for dtype in 'float' 'int' ;do
+    for dtype in 'float' 'int' 'double topo' ;do
     dum=$(ncdump -h ${fname}|grep "${dtype}")
     dum=${dum// /.}
     table="${table} ${dum}"
@@ -220,25 +223,24 @@ if [ -f ${fname} ]; then
         dimstr="${dimstr},${vtab[$v]}"
       done
       dimstr=$(echo ${dimstr}|cut -c2-10000)
-      varstring="${varstring}\n${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
+      varstring="${varstring}"$'\n'" ${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
     done
     echo "TOPO.nc ${nvar}"
 
     string="
-    DSET ^../TOPO.nc\n
-    DTYPE netcdf\n
-    TITLE TOPO\n
-    UNDEF 99999.\n
-    CACHESIZE 10000000\n
-    XDEF ${nx} LINEAR ${lon0} ${dlon}\n
-    YDEF ${ny} LINEAR ${lat0} ${dlat}\n
-    ZDEF ${outnz1} LEVELS ${outz}\n
-    TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn\n
-    VARS ${nvar}
-    ${varstring}\n
-    ENDVARS
+DSET ^../TOPO.nc
+DTYPE netcdf
+TITLE TOPO
+UNDEF 99999.
+CACHESIZE 10000000
+XDEF ${nx} LINEAR ${lon0} ${dlon}
+YDEF ${ny} LINEAR ${lat0} ${dlat}
+ZDEF ${outnz1} LEVELS ${outz}
+TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn
+VARS ${nvar} ${varstring}
+ENDVARS
     "
-    echo -e ${string}>${outdir}/topo.ctl
+    echo -e "${string}" > "${outdir}/topo.ctl"
 else
     echo "skip ... TOPO.nc"
 fi
@@ -251,27 +253,27 @@ outnz=${nz}
 outnz1=${nz}
 
 string="
-DSET ^../bar.dat\n
-TITLE mean profile\n
-UNDEF 99999.\n
-XDEF 1 LINEAR ${lon0} ${dlon}\n
-YDEF 1 LINEAR ${lat0} ${dlat}\n
-ZDEF ${outnz1} LEVELS ${outz}\n
-TDEF 1 LINEAR 01JAN1998 ${deltatime}mn\n
-VARS 13 \n
- pbar   ${outnz} 99 pbar  [Pa]   \n
- pibar  ${outnz} 99 pibar  \n
- rho    ${outnz} 99 rho   [kg/m3] \n
- th     ${outnz} 99 thbar     [K] \n
- qv     ${outnz} 99 qvbar     [kg/kg] \n
- UG     ${outnz} 99 UG        [m/s] \n
- VG     ${outnz} 99 VG        [m/s] \n
- Q1LS   ${outnz} 99 Q1LS      [K/s] \n
- Q2LS   ${outnz} 99 Q2LS      [g/g/s] \n
- WLS    ${outnz} 99 WLS       [m/s] \n
- DZT    ${outnz} 99 delta ZT  [m] \n
- the    ${outnz} 99 th_e bar  [K] \n
- thes   ${outnz} 99 th_es bar [K] \n
+DSET ^../bar.dat
+TITLE mean profile
+UNDEF 99999.
+XDEF 1 LINEAR ${lon0} ${dlon}
+YDEF 1 LINEAR ${lat0} ${dlat}
+ZDEF ${outnz1} LEVELS ${outz}
+TDEF 1 LINEAR 01JAN1998 ${deltatime}mn
+VARS 13 
+ pbar   ${outnz} 99 pbar  [Pa]   
+ pibar  ${outnz} 99 pibar  
+ rho    ${outnz} 99 rho   [kg/m3] 
+ th     ${outnz} 99 thbar     [K] 
+ qv     ${outnz} 99 qvbar     [kg/kg] 
+ UG     ${outnz} 99 UG        [m/s] 
+ VG     ${outnz} 99 VG        [m/s] 
+ Q1LS   ${outnz} 99 Q1LS      [K/s] 
+ Q2LS   ${outnz} 99 Q2LS      [g/g/s] 
+ WLS    ${outnz} 99 WLS       [m/s] 
+ DZT    ${outnz} 99 delta ZT  [m] 
+ the    ${outnz} 99 th_e bar  [K] 
+ thes   ${outnz} 99 th_es bar [K] 
 ENDVARS
 "
-echo -e ${string}>${outdir}/bar.ctl
+echo -e "${string}" > "${outdir}/bar.ctl"
