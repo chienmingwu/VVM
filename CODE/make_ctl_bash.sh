@@ -15,6 +15,88 @@ vtab[lon]='x'
 vtab[lat]='y'
 vtab[lev]='z'
 
+parse_ctl_vars() {
+  local fname=$1
+  local attr_name=$2
+  local outnz=$3
+  local type_regex=$4
+  local skip_regex=$5
+
+  ncdump -h "${fname}" | awk \
+    -v attr_name="${attr_name}" \
+    -v outnz="${outnz}" \
+    -v type_regex="${type_regex}" \
+    -v skip_regex="${skip_regex}" '
+    function trim(s) {
+      gsub(/^[ \t]+|[ \t]+$/, "", s)
+      return s
+    }
+    function dim_to_ctl(dim, i, n, parts, out, d) {
+      gsub(/[ \t]/, "", dim)
+      n = split(dim, parts, ",")
+      out = ""
+      for (i = 1; i <= n; i++) {
+        d = parts[i]
+        if (d == "time") d = "t"
+        else if (d == "lon") d = "x"
+        else if (d == "lat") d = "y"
+        else if (d == "lev") d = "z"
+        out = out (out == "" ? "" : ",") d
+      }
+      return out
+    }
+    function quoted_value(line, val) {
+      val = line
+      sub(/^[^"]*"/, "", val)
+      sub(/" ;.*/, "", val)
+      return val
+    }
+    /^[ \t]*(float|int|double)[ \t]+[A-Za-z_][A-Za-z0-9_]*\(/ {
+      line = trim($0)
+      type = line
+      sub(/[ \t].*/, "", type)
+      if (type !~ "^(" type_regex ")$") next
+
+      name = line
+      sub(/^[^ \t]+[ \t]+/, "", name)
+      sub(/\(.*/, "", name)
+      if (skip_regex != "" && name ~ "^(" skip_regex ")$") next
+
+      dim = line
+      sub(/^[^(]*\(/, "", dim)
+      sub(/\).*/, "", dim)
+
+      order[++nvar] = name
+      dims[name] = dim_to_ctl(dim)
+      longname[name] = name
+      next
+    }
+    index($0, ":" attr_name " = ") {
+      line = trim($0)
+      name = line
+      sub(/:.*/, "", name)
+      longname[name] = quoted_value(line)
+      next
+    }
+    /:_FillValue[ \t]*=/ {
+      line = trim($0)
+      val = line
+      sub(/^.*= */, "", val)
+      sub(/ ;.*/, "", val)
+      sub(/f$/, "", val)
+      fillvalue = val
+      next
+    }
+    END {
+      if (fillvalue == "") fillvalue = "99999."
+      printf "%d %s\n", nvar, fillvalue
+      for (i = 1; i <= nvar; i++) {
+        name = order[i]
+        printf "%s=>%s %s %s %s\n", name, name, outnz, dims[name], longname[name]
+      }
+    }'
+}
+
 # -------------------------------------------
 # ----- number of data type and ncheader
 dtype_list=""
@@ -118,44 +200,10 @@ for dtype in ${dtype_list};do
   fi
 
   # ------ get varables
-  table=""
-  for outprec in 'float' ;do
-    dum=$(ncdump -h ${ncdir}/${ncheader}.${dtype}-000000.nc|grep "${outprec}")
-    dum=${dum// /.}
-    table="${table} ${dum}"
-  done
-  table2=$(ncdump -h ${ncdir}/${ncheader}.${dtype}-000000.nc|grep "standard_name")
-  table2=${table2// /.}
-  varstring=""
-  nvar=0
-  for dum in ${table};do
-    vname=$(echo ${dum}|cut -d. -f2|cut -d"(" -f1)
-    if [ "${vname}" == "time" ]; then continue; fi
-    
-    longname="${vname}"
-    for dum2 in ${table2};do
-      vlname=$(echo ${dum2}|cut -d':' -f1)
-      if [ "${vlname}" == "${vname}" ]; then
-        longname=$(echo ${dum2}|cut -d'"' -f2)
-        break
-      fi
-    done
-    #echo ${vname} ${longname}
-
-    nvar=$((${nvar}+1))
-    dim=$(echo ${dum}|cut -d"(" -f2|cut -d")" -f1)
-    dimstr=""
-    for v in ${dim//,./ };do
-      dimstr="${dimstr},${vtab[$v]}"
-    done
-    dimstr=$(echo ${dimstr}|cut -c2-10000)
-    varstring="${varstring}\n ${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
-  done
+  mapfile -t parsed_vars < <(parse_ctl_vars "${ncdir}/${ncheader}.${dtype}-000000.nc" "standard_name" "${outnz}" "float" "time")
+  read -r nvar fillvalue <<< "${parsed_vars[0]}"
+  varstring=$(printf '\n %s' "${parsed_vars[@]:1}")
   echo ${dtype} ${nvar}
-
-  dum=$(ncdump -h ${ncdir}/${ncheader}.${dtype}-000000.nc|grep "${vname}:_FillValue")
-  fillvalue=$(echo ${dum}|cut -d ' ' -f3|rev|cut -c2-|rev)
-  #echo ${dtype} ${vname} ${fillvalue}
 
   
   string="
@@ -188,43 +236,9 @@ outnz1=1
 # ------ get varables
 fname="${rundir}/TOPO.nc"
 if [ -f ${fname} ]; then
-    table=""
-    for dtype in 'float' 'int' 'double topo' ;do
-    dum=$(ncdump -h ${fname}|grep "${dtype}")
-    dum=${dum// /.}
-    table="${table} ${dum}"
-    done
-    
-    table2=$(ncdump -h ${fname}|grep "long_name")
-    table2=${table2// /.}
-    varstring=""
-    nvar=0
-    for dum in ${table};do
-      vname=$(echo ${dum}|cut -d. -f2|cut -d"(" -f1)
-      if [ "${vname}" == "time" ]; then continue; fi
-      if [ "${vname}" == "lon" ]; then continue; fi
-      if [ "${vname}" == "lat" ]; then continue; fi
-      if [ "${vname}" == "lev" ]; then continue; fi
-      
-      longname="${vname}"
-      for dum2 in ${table2};do
-        vlname=$(echo ${dum2}|cut -d':' -f1)
-        if [ "${vlname}" == "${vname}" ]; then
-          longname=$(echo ${dum2}|cut -d'"' -f2)
-          break
-        fi
-      done
-      #echo ${vname} ${longname}
-    
-      nvar=$((${nvar}+1))
-      dim=$(echo ${dum}|cut -d"(" -f2|cut -d")" -f1)
-      dimstr=""
-      for v in ${dim//,./ };do
-        dimstr="${dimstr},${vtab[$v]}"
-      done
-      dimstr=$(echo ${dimstr}|cut -c2-10000)
-      varstring="${varstring}"$'\n'" ${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
-    done
+    mapfile -t parsed_vars < <(parse_ctl_vars "${fname}" "long_name" "${outnz}" "float|int|double" "time|lon|lat|lev")
+    read -r nvar fillvalue <<< "${parsed_vars[0]}"
+    varstring=$(printf '\n %s' "${parsed_vars[@]:1}")
     echo "TOPO.nc ${nvar}"
 
     string="
