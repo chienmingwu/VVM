@@ -84,6 +84,21 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
          qvmin = 1.E-06, &   ! Minimum value of qv used in radiation calculation
          qcmin = 1.E-07, &   ! Minimum value of qc used in radiation calculation
          qimin = 1.E-08      ! Minimum value of qi used in radiation calculation
+
+ ! Molecular weights (taken from CAM shrc_const_mod.F90 and physconst.F90)
+      real, parameter :: &
+          mwdry  = 28.966,   & ! molecular weight dry air
+          mwco2  = 44.,      & ! molecular weight co2
+          mwh2o  = 18.016,   & ! molecular weight h2o
+          mwn2o  = 44.,      & ! molecular weight n2o
+          mwch4  = 16.,      & ! molecular weight ch4
+          mwf11  = 136.,     & ! molecular weight cfc11
+          mwf12  = 120.,     & ! molecular weight cfc12
+          mwf22  = 86.,      & ! molecular weight cfc22
+          mwccl4 = 154.,     & ! molecular weight ccl4
+          mwo3   = 48.,      & ! molecular weight ozone
+          mwo2   = 31.9988     ! molecular weight oxygen
+
          
 !------------------------------------------------------------------
 ! Thermodynamic variables
@@ -197,12 +212,12 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       nrestart = 0
 !      sstxy(:,:) = tg(:,:)
 
-! Read in trace gases
-      CALL trace_gas_input(MI1, MJ1, NK2-1, PBAR(2:NK3-1), PBARZ)
+! Read in trace gases (mass mixing ratio, g/g)
+      CALL trace_gas_input(MI1, MJ1, NK2-1, PBAR(2:NK3-1)/100., PBARZ/100.)
 
 !-----------------------------------------------------------------------
 ! Override ozone data with gas profile, if needed
-      !! use for GATE_PAHSED_III
+      !! use for GATE_PAHSED_III [mass mixing ratio, g/g]
       !DO k = 1, NK2-1
       !! o3(:,:,k) = O3BAR_gate(NK2-k+1)
       !  o3(:,:,k)= .4800E-07
@@ -212,14 +227,15 @@ SUBROUTINE RADIATION_RRTMG(ITT, NRADD, tg, PBAR, PIBAR, DX, &
       !  o2(:,:,k)=0.23
       !ENDDO
 
-      !! use for rcemip (Der)
-      !DO k = 1, NK2-1
-      !o3(:,:,k)=(3.64478*pres(k)**(0.83209))*exp(-pres(k)/11.3515)*1.e-6
-      !co2(:,:,k)=348.e-6
-      !ch4(:,:,k)=1650.e-9
-      !n2o(:,:,k)=306.e-9
-      !o2(:,:,k)=0.23
-      !ENDDO
+      ! -- [fixed, shao] Convert from volume mixing ratio to mass mixing ratio [g/g].
+      ! use for rcemip (Der) and default
+      DO k = 1, NK2-1
+      o3(:,:,k) = mwo3/mwdry  * (3.6478*pres(k)**(0.83209))*exp(-pres(k)/11.3515)*1.e-6
+      co2(:,:,k)= mwco2/mwdry * 348.e-6
+      ch4(:,:,k)= mwch4/mwdry * 1650.e-9
+      n2o(:,:,k)= mwn2o/mwdry * 306.e-9
+      o2(:,:,k) = mwo2/mwdry  * 0.209
+      ENDDO
 
   if(masterproc) then
       print*,' '

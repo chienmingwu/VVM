@@ -55,7 +55,7 @@
 
       real, parameter :: &
           Pi = 3.14159265358979312, &
-          scon = 1367.                 ! solar constant 
+          scon = 1360.9                 ! solar constant 
 
 ! Molecular weights (taken from CAM shrc_const_mod.F90 and physconst.F90)
       real, parameter :: &

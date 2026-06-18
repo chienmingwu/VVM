@@ -15,6 +15,88 @@ vtab[lon]='x'
 vtab[lat]='y'
 vtab[lev]='z'
 
+parse_ctl_vars() {
+  local fname=$1
+  local attr_name=$2
+  local outnz=$3
+  local type_regex=$4
+  local skip_regex=$5
+
+  ncdump -h "${fname}" | awk \
+    -v attr_name="${attr_name}" \
+    -v outnz="${outnz}" \
+    -v type_regex="${type_regex}" \
+    -v skip_regex="${skip_regex}" '
+    function trim(s) {
+      gsub(/^[ \t]+|[ \t]+$/, "", s)
+      return s
+    }
+    function dim_to_ctl(dim, i, n, parts, out, d) {
+      gsub(/[ \t]/, "", dim)
+      n = split(dim, parts, ",")
+      out = ""
+      for (i = 1; i <= n; i++) {
+        d = parts[i]
+        if (d == "time") d = "t"
+        else if (d == "lon") d = "x"
+        else if (d == "lat") d = "y"
+        else if (d == "lev") d = "z"
+        out = out (out == "" ? "" : ",") d
+      }
+      return out
+    }
+    function quoted_value(line, val) {
+      val = line
+      sub(/^[^"]*"/, "", val)
+      sub(/" ;.*/, "", val)
+      return val
+    }
+    /^[ \t]*(float|int|double)[ \t]+[A-Za-z_][A-Za-z0-9_]*\(/ {
+      line = trim($0)
+      type = line
+      sub(/[ \t].*/, "", type)
+      if (type !~ "^(" type_regex ")$") next
+
+      name = line
+      sub(/^[^ \t]+[ \t]+/, "", name)
+      sub(/\(.*/, "", name)
+      if (skip_regex != "" && name ~ "^(" skip_regex ")$") next
+
+      dim = line
+      sub(/^[^(]*\(/, "", dim)
+      sub(/\).*/, "", dim)
+
+      order[++nvar] = name
+      dims[name] = dim_to_ctl(dim)
+      longname[name] = name
+      next
+    }
+    index($0, ":" attr_name " = ") {
+      line = trim($0)
+      name = line
+      sub(/:.*/, "", name)
+      longname[name] = quoted_value(line)
+      next
+    }
+    /:_FillValue[ \t]*=/ {
+      line = trim($0)
+      val = line
+      sub(/^.*= */, "", val)
+      sub(/ ;.*/, "", val)
+      sub(/f$/, "", val)
+      fillvalue = val
+      next
+    }
+    END {
+      if (fillvalue == "") fillvalue = "99999."
+      printf "%d %s\n", nvar, fillvalue
+      for (i = 1; i <= nvar; i++) {
+        name = order[i]
+        printf "%s=>%s %s %s %s\n", name, name, outnz, dims[name], longname[name]
+      }
+    }'
+}
+
 # -------------------------------------------
 # ----- number of data type and ncheader
 dtype_list=""
@@ -94,6 +176,9 @@ for i in $(seq ${nz});do
   dum=$(echo ${table}|cut -d" " -f${idx})
   dum=$(echo "scale=0;(${dum}/1.)"|bc)
   zlist="${zlist} ${dum}"
+  if [ $((i % 10)) -eq 0 ] && [ ${i} -ne ${nz} ]; then
+    zlist="${zlist}\n"
+  fi
 done
 
 #########################################
@@ -109,68 +194,34 @@ for dtype in ${dtype_list};do
     outnz=${nz}
     outnz1=${nz}
   else
-    outz=1000
+    outz=$(echo "${zlist}" | xargs | cut -d' ' -f1)
     outnz=0
     outnz1=1
   fi
 
   # ------ get varables
-  table=""
-  for outprec in 'float' ;do
-    dum=$(ncdump -h ${ncdir}/${ncheader}.${dtype}-000000.nc|grep "${outprec}")
-    dum=${dum// /.}
-    table="${table} ${dum}"
-  done
-  table2=$(ncdump -h ${ncdir}/${ncheader}.${dtype}-000000.nc|grep "standard_name")
-  table2=${table2// /.}
-  varstring=""
-  nvar=0
-  for dum in ${table};do
-    vname=$(echo ${dum}|cut -d. -f2|cut -d"(" -f1)
-    if [ "${vname}" == "time" ]; then continue; fi
-    
-    longname="${vname}"
-    for dum2 in ${table2};do
-      vlname=$(echo ${dum2}|cut -d':' -f1)
-      if [ "${vlname}" == "${vname}" ]; then
-        longname=$(echo ${dum2}|cut -d'"' -f2)
-        break
-      fi
-    done
-    #echo ${vname} ${longname}
-
-    nvar=$((${nvar}+1))
-    dim=$(echo ${dum}|cut -d"(" -f2|cut -d")" -f1)
-    dimstr=""
-    for v in ${dim//,./ };do
-      dimstr="${dimstr},${vtab[$v]}"
-    done
-    dimstr=$(echo ${dimstr}|cut -c2-10000)
-    varstring="${varstring}\n${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
-  done
+  mapfile -t parsed_vars < <(parse_ctl_vars "${ncdir}/${ncheader}.${dtype}-000000.nc" "standard_name" "${outnz}" "float" "time")
+  read -r nvar fillvalue <<< "${parsed_vars[0]}"
+  varstring=$(printf '\n %s' "${parsed_vars[@]:1}")
   echo ${dtype} ${nvar}
-
-  dum=$(ncdump -h ${ncdir}/${ncheader}.${dtype}-000000.nc|grep "${vname}:_FillValue")
-  fillvalue=$(echo ${dum}|cut -d ' ' -f3|rev|cut -c2-|rev)
-  #echo ${dtype} ${vname} ${fillvalue}
 
   
   string="
-  DSET ^../archive/${ncheader}.${dtype}-%tm6.nc\n
-  DTYPE netcdf\n
-  OPTIONS template\n
-  TITLE ${dtype} variables\n
-  UNDEF ${fillvalue}\n
-  CACHESIZE 10000000\n
-  XDEF ${nx} LINEAR ${lon0} ${dlon}\n
-  YDEF ${ny} LINEAR ${lat0} ${dlat}\n
-  ZDEF ${outnz1} LEVELS ${outz}\n
-  TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn\n
-  VARS ${nvar}
-  ${varstring}\n
-  ENDVARS
+DSET ^../archive/${ncheader}.${dtype}-%tm6.nc
+DTYPE netcdf
+OPTIONS template
+TITLE ${dtype} variables
+UNDEF ${fillvalue}
+CACHESIZE 10000000
+XDEF ${nx} LINEAR ${lon0} ${dlon}
+YDEF ${ny} LINEAR ${lat0} ${dlat}
+ZDEF ${outnz1} LEVELS ${outz}
+TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn
+VARS ${nvar} ${varstring}
+ENDVARS
   "
-  echo -e ${string}>${outdir}/${type1_lower}.ctl
+  echo -e "${string}" > "${outdir}/${type1_lower}.ctl"
+
 
 done
 
@@ -185,60 +236,25 @@ outnz1=1
 # ------ get varables
 fname="${rundir}/TOPO.nc"
 if [ -f ${fname} ]; then
-    table=""
-    for dtype in 'float' 'int' ;do
-    dum=$(ncdump -h ${fname}|grep "${dtype}")
-    dum=${dum// /.}
-    table="${table} ${dum}"
-    done
-    
-    table2=$(ncdump -h ${fname}|grep "long_name")
-    table2=${table2// /.}
-    varstring=""
-    nvar=0
-    for dum in ${table};do
-      vname=$(echo ${dum}|cut -d. -f2|cut -d"(" -f1)
-      if [ "${vname}" == "time" ]; then continue; fi
-      if [ "${vname}" == "lon" ]; then continue; fi
-      if [ "${vname}" == "lat" ]; then continue; fi
-      if [ "${vname}" == "lev" ]; then continue; fi
-      
-      longname="${vname}"
-      for dum2 in ${table2};do
-        vlname=$(echo ${dum2}|cut -d':' -f1)
-        if [ "${vlname}" == "${vname}" ]; then
-          longname=$(echo ${dum2}|cut -d'"' -f2)
-          break
-        fi
-      done
-      #echo ${vname} ${longname}
-    
-      nvar=$((${nvar}+1))
-      dim=$(echo ${dum}|cut -d"(" -f2|cut -d")" -f1)
-      dimstr=""
-      for v in ${dim//,./ };do
-        dimstr="${dimstr},${vtab[$v]}"
-      done
-      dimstr=$(echo ${dimstr}|cut -c2-10000)
-      varstring="${varstring}\n${vname}=>${vname} ${outnz} ${dimstr} ${longname}"
-    done
+    mapfile -t parsed_vars < <(parse_ctl_vars "${fname}" "long_name" "${outnz}" "float|int|double" "time|lon|lat|lev")
+    read -r nvar fillvalue <<< "${parsed_vars[0]}"
+    varstring=$(printf '\n %s' "${parsed_vars[@]:1}")
     echo "TOPO.nc ${nvar}"
 
     string="
-    DSET ^../TOPO.nc\n
-    DTYPE netcdf\n
-    TITLE TOPO\n
-    UNDEF 99999.\n
-    CACHESIZE 10000000\n
-    XDEF ${nx} LINEAR ${lon0} ${dlon}\n
-    YDEF ${ny} LINEAR ${lat0} ${dlat}\n
-    ZDEF ${outnz1} LEVELS ${outz}\n
-    TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn\n
-    VARS ${nvar}
-    ${varstring}\n
-    ENDVARS
+DSET ^../TOPO.nc
+DTYPE netcdf
+TITLE TOPO
+UNDEF 99999.
+CACHESIZE 10000000
+XDEF ${nx} LINEAR ${lon0} ${dlon}
+YDEF ${ny} LINEAR ${lat0} ${dlat}
+ZDEF ${outnz1} LEVELS ${outz}
+TDEF ${nt} LINEAR 01JAN1998 ${deltatime}mn
+VARS ${nvar} ${varstring}
+ENDVARS
     "
-    echo -e ${string}>${outdir}/topo.ctl
+    echo -e "${string}" > "${outdir}/topo.ctl"
 else
     echo "skip ... TOPO.nc"
 fi
@@ -251,27 +267,27 @@ outnz=${nz}
 outnz1=${nz}
 
 string="
-DSET ^../bar.dat\n
-TITLE mean profile\n
-UNDEF 99999.\n
-XDEF 1 LINEAR ${lon0} ${dlon}\n
-YDEF 1 LINEAR ${lat0} ${dlat}\n
-ZDEF ${outnz1} LEVELS ${outz}\n
-TDEF 1 LINEAR 01JAN1998 ${deltatime}mn\n
-VARS 13 \n
- pbar   ${outnz} 99 pbar  [Pa]   \n
- pibar  ${outnz} 99 pibar  \n
- rho    ${outnz} 99 rho   [kg/m3] \n
- th     ${outnz} 99 thbar     [K] \n
- qv     ${outnz} 99 qvbar     [kg/kg] \n
- UG     ${outnz} 99 UG        [m/s] \n
- VG     ${outnz} 99 VG        [m/s] \n
- Q1LS   ${outnz} 99 Q1LS      [K/s] \n
- Q2LS   ${outnz} 99 Q2LS      [g/g/s] \n
- WLS    ${outnz} 99 WLS       [m/s] \n
- DZT    ${outnz} 99 delta ZT  [m] \n
- the    ${outnz} 99 th_e bar  [K] \n
- thes   ${outnz} 99 th_es bar [K] \n
+DSET ^../bar.dat
+TITLE mean profile
+UNDEF 99999.
+XDEF 1 LINEAR ${lon0} ${dlon}
+YDEF 1 LINEAR ${lat0} ${dlat}
+ZDEF ${outnz1} LEVELS ${outz}
+TDEF 1 LINEAR 01JAN1998 ${deltatime}mn
+VARS 13 
+ pbar   ${outnz} 99 pbar  [Pa]   
+ pibar  ${outnz} 99 pibar  
+ rho    ${outnz} 99 rho   [kg/m3] 
+ th     ${outnz} 99 thbar     [K] 
+ qv     ${outnz} 99 qvbar     [kg/kg] 
+ UG     ${outnz} 99 UG        [m/s] 
+ VG     ${outnz} 99 VG        [m/s] 
+ Q1LS   ${outnz} 99 Q1LS      [K/s] 
+ Q2LS   ${outnz} 99 Q2LS      [g/g/s] 
+ WLS    ${outnz} 99 WLS       [m/s] 
+ DZT    ${outnz} 99 delta ZT  [m] 
+ the    ${outnz} 99 th_e bar  [K] 
+ thes   ${outnz} 99 th_es bar [K] 
 ENDVARS
 "
-echo -e ${string}>${outdir}/bar.ctl
+echo -e "${string}" > "${outdir}/bar.ctl"
