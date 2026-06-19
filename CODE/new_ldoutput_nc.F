@@ -1082,7 +1082,7 @@ CONTAINS
 !===hchun
 #if defined (DIFFUSION)
 #if defined (LSM)
-        if (ITT==0 .or. ITT_OUTPUT==0 ) std_lsm=0.
+        !if (ITT==0 .or. ITT_OUTPUT==0 ) std_lsm=0.
         call pCDF_WRITE_xy_slice(ncid_lsm, 'emissi', TIME_C, time_start, std_lsm(:,:,1) )
         call pCDF_WRITE_xy_slice(ncid_lsm, 'cmc', TIME_C, time_start, std_lsm(:,:,2) )
         call pCDF_WRITE_xy_slice(ncid_lsm, 't1', TIME_C, time_start, std_lsm(:,:,3) )

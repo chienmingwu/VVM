@@ -8,7 +8,7 @@ USE workcom
 USE const3d
 USE utils
 USE bound
-use domain_decomposition, only : my_task
+USE domain_decomposition, only : my_task
 
 IMPLICIT NONE
 PRIVATE
@@ -54,8 +54,7 @@ CONTAINS
   
   ENDSUBROUTINE USER_set_mean_profile_and_SST
 
-
-  ENDSUBROUTINE USER_set_3D_perturbation
+  SUBROUTINE USER_set_3D_perturbation
       !! --------------------
       !! this subroutine can modify the 3D fields after
       !! setting mean_profile. if you dont's want to add
@@ -93,7 +92,7 @@ CONTAINS
 
   ENDSUBROUTINE USER_set_3D_perturbation
 
- 
+
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
       !! --------------------
       !! This module is used in time_manager_module.F 

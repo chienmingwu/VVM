@@ -77,6 +77,7 @@ CONTAINS
       ! chemical reactions
       IF (my_task==0) WRITE(*,*) "update chemistry"
       call twostep(ITT)
+      call bound_3d
       IF (my_task==0) WRITE(*,*) "chemistry update successfully"
 
    END SUBROUTINE update_chemical
