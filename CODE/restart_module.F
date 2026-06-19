@@ -9,7 +9,7 @@ USE const3d
 USE bound
 USE domain_decomposition
 #if defined (LSM)
-USE land_module, only : lT1, lST, lSM, lSL, lALBEDO
+USE land_module, only : lT1, lST, lSM, lSL, lALBEDO, LU
 #endif
 #if defined (RADCODE)
 USE rrtm_vars, only : sstxy, albdo
@@ -436,26 +436,26 @@ CONTAINS
       ENDIF
       nc_err = nfmpi_close(ncid)
 
-      ! read LU in topo.nc
-      nc_err = nfmpi_open(mpi_comm_world, topo_filename, nf_nowrite, &
-                          mpi_info_null, ncid)
-      IF (nc_err /= 0) THEN
-      WRITE(*,*) "restart topo file don't exist"
-      STOP
-      ENDIF
+      !! ! read LU in topo.nc
+      !! nc_err = nfmpi_open(mpi_comm_world, topo_filename, nf_nowrite, &
+      !!                     mpi_info_null, ncid)
+      !! IF (nc_err /= 0) THEN
+      !! WRITE(*,*) "restart topo file don't exist"
+      !! STOP
+      !! ENDIF
 
-      topo_start = (/ NI_SBDM*MI1+1, NJ_SBDM*MJ1+1, 1, 1 /)
-      topo_len   = (/ MI1, MJ1, 1, 1 /)
+      !! topo_start = (/ NI_SBDM*MI1+1, NJ_SBDM*MJ1+1, 1, 1 /)
+      !! topo_len   = (/ MI1, MJ1, 1, 1 /)
 
-      nc_err = nfmpi_inq_varid(ncid, 'lu', varid)
-      nc_err = nfmpi_get_vara_int_all(ncid, varid, topo_start, &
-               topo_len, ocean_temp(1:MI1,1:MJ1))
-      IF (nc_err /= 0) THEN
-      WRITE(*,*) "restart lu read fail", nc_err
-      STOP
-      ENDIF
+      !! nc_err = nfmpi_inq_varid(ncid, 'lu', varid)
+      !! nc_err = nfmpi_get_vara_int_all(ncid, varid, topo_start, &
+      !!          topo_len, ocean_temp(1:MI1,1:MJ1))
+      !! IF (nc_err /= 0) THEN
+      !! WRITE(*,*) "restart lu read fail", nc_err
+      !! STOP
+      !! ENDIF
 
-      nc_err = nfmpi_close(ncid)
+      !! nc_err = nfmpi_close(ncid)
 
       DO j = 1, MJ1
       DO i = 1, MI1
@@ -529,8 +529,11 @@ CONTAINS
 
 #if defined (LSM)
       INTEGER :: nc_err
-      INTEGER :: ncid, varid
+      INTEGER :: ncid
+      INTEGER :: I, J
       INTEGER(KIND=mpi_offset_kind), DIMENSION(3) :: arraystart, readlen
+      REAL(KIND=int_kind), DIMENSION(MI1,MJ1) :: read_albedo
+      REAL(KIND=int_kind), DIMENSION(MI1,MJ1,4) :: read_st, read_sm, read_sl
 
       nc_err = nfmpi_open(mpi_comm_world, restart_filename, nf_nowrite, &
                           mpi_info_null, ncid)
@@ -547,37 +550,44 @@ CONTAINS
       readlen(2) = MJ1
       readlen(3) = 1
 
-      nc_err = nfmpi_inq_varid(ncid, 't1', varid)
-      nc_err = nfmpi_get_vara_real_all(ncid, varid, arraystart, &
-               readlen, lT1(1:MI1,1:MJ1))
-      IF (nc_err /= 0) THEN
-      WRITE(*,*) "restart t1 read fail", nc_err
-      STOP
-      ENDIF
-
-      CALL READ_LANDSURFACE_LAYER(ncid, 'ST1', lST(:,:,1), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'ST2', lST(:,:,2), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'ST3', lST(:,:,3), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'ST4', lST(:,:,4), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'SM1', lSM(:,:,1), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'SM2', lSM(:,:,2), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'SM3', lSM(:,:,3), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'SM4', lSM(:,:,4), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'SL1', lSL(:,:,1), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'SL2', lSL(:,:,2), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'SL3', lSL(:,:,3), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'SL4', lSL(:,:,4), arraystart, readlen)
-      CALL READ_LANDSURFACE_LAYER(ncid, 'albedo', lALBEDO(:,:), arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'ST1', read_st(:,:,1), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'ST2', read_st(:,:,2), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'ST3', read_st(:,:,3), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'ST4', read_st(:,:,4), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'SM1', read_sm(:,:,1), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'SM2', read_sm(:,:,2), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'SM3', read_sm(:,:,3), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'SM4', read_sm(:,:,4), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'SL1', read_sl(:,:,1), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'SL2', read_sl(:,:,2), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'SL3', read_sl(:,:,3), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'SL4', read_sl(:,:,4), &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'albedo', read_albedo, &
+                                  arraystart, readlen)
 
       nc_err = nfmpi_close(ncid)
 
-      DO I=1:MI1
-      DO J=1:MI1
+      DO J=1,MJ1
+      DO I=1,MI1
           IF (LU(I,J) .NE. 16) THEN
-              TG(I,J) = lT1(I,J)
+              lST(I,J,1:4) = read_st(I,J,1:4)
+              lSM(I,J,1:4) = read_sm(I,J,1:4)
+              lSL(I,J,1:4) = read_sl(I,J,1:4)
+              lALBEDO(I,J) = read_albedo(I,J)
 #if defined (RADCODE)
               albdo(I,J) = lALBEDO(I,J)
-              sstxy(I,J) = lT1(I,J)
 #endif
           ENDIF
       ENDDO

@@ -276,6 +276,18 @@ CONTAINS
   660 CONTINUE
       CALL BOUND_3D_XY
 
+!! prepare tracer and chemical
+      IF(itt == 0 .and. ntracer > 0) THEN
+        CALL UPDATE_TRACER_init
+      ENDIF
+
+#if defined (CHEM)
+      IF(itt == 0) THEN
+        CALL UPDATE_chemical_init
+      ENDIF
+#endif
+
+
       CALL APPLY_3D_RESTART(-1_int_kind)
 
 #if defined (AREAMN)
@@ -316,16 +328,6 @@ CONTAINS
       UTMN0 = UTMN
       VTMN0 = VTMN
       
-      IF(itt == 0 .and. ntracer > 0) THEN
-        CALL UPDATE_TRACER_init
-      ENDIF
-
-#if defined (CHEM)
-      IF(itt == 0) THEN
-        CALL UPDATE_chemical_init
-      ENDIF
-#endif
-
 #if defined (RADCODE)
   
       albdo = 0.30
