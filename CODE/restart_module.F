@@ -38,6 +38,7 @@ PUBLIC :: &
   READ_DYNAMIC_RESTART, &
   READ_SURFACE_RESTART, &
   READ_TRACER_RESTART, &
+  READ_CHEMICAL_RESTART, &
   READ_LANDSURFACE_RESTART
 
 LOGICAL(KIND=log_kind) :: restart_enabled = .false.
@@ -54,6 +55,15 @@ INTEGER(KIND=int_kind) :: default_restart_it = 7
 CHARACTER(LEN=900) :: restart_prefix = &
   '/data3/C.shaoyu/VVM/DATA/nb_g_eb_chemoff/archive/nb_g_eb_chemoff'
 CHARACTER(LEN=900) :: restart_topo_file = 'TOPO.nc'
+
+#if defined (CHEM)
+CHARACTER(LEN=6), DIMENSION(nchem), PARAMETER :: &
+  restart_chem_name_list = (/ &
+  'INERT ', 'O3    ', 'NO    ', 'NO2   ', 'NO3   ', 'N2O5  ', &
+  'H2O   ', 'HNO3  ', 'O1D   ', 'CH4   ', 'CH2O  ', 'CH3O2 ', &
+  'OH    ', 'HO2   ', 'CO    ', 'PRODUC', 'O2    ', 'N2    ', &
+  'H2O2  ', 'ISO   ', 'MVK   ', 'RO2   ' /)
+#endif
 
 CONTAINS
 
@@ -75,6 +85,7 @@ CONTAINS
       WRITE(restart_step, '(I6.6)') read_restart_it
 
       IF (my_task == 0) WRITE(*,'(A,A)') '--- RESTART_STEP: ', restart_step
+      CALL INIT_RESTART_LOG(restart_step)
 
       thermo_file = trim(restart_prefix)//'.L.Thermodynamic-'// &
                     restart_step//'.nc'
@@ -86,25 +97,28 @@ CONTAINS
       IF (do_thermo_restart) THEN
       IF (my_task == 0) WRITE(*,'(A,A)') 'thermo_file:', trim(thermo_file)
       IF (my_task == 0) WRITE(*,*) 'hydro:', read_hydrometeor_restart
+      CALL WRITE_RESTART_LOG(trim(thermo_file))
       CALL READ_THERMODYNAMIC_RESTART(trim(thermo_file), &
                                       read_hydrometeor_restart)
       ENDIF
 
       IF (do_dynamic_restart) THEN
       IF (my_task == 0) WRITE(*,'(A,A)') 'dynamic_file:', trim(dynamic_file)
+      CALL WRITE_RESTART_LOG(trim(dynamic_file))
       CALL READ_DYNAMIC_RESTART(trim(dynamic_file))
       ENDIF
 
       IF (ntracer > 0 .AND. do_tracer_restart) THEN
       IF (my_task == 0) WRITE(*,'(A,A)') 'tracer_file:', trim(tracer_file)
+      CALL WRITE_RESTART_LOG(trim(tracer_file))
       CALL READ_TRACER_RESTART(trim(tracer_file))
       ENDIF
 
       IF (do_chemical_restart) THEN
       IF (my_task == 0) WRITE(*,'(A,A)') 'chemical_file:', &
         trim(chemical_file)
-      IF (my_task == 0) WRITE(*,'(A)') &
-        'chemical restart not implemented: species mapping is unresolved'
+      CALL WRITE_RESTART_LOG(trim(chemical_file))
+      CALL READ_CHEMICAL_RESTART(trim(chemical_file))
       ENDIF
 
       ENDSUBROUTINE APPLY_3D_RESTART
@@ -133,16 +147,60 @@ CONTAINS
       IF (my_task == 0) WRITE(*,'(A,A)') 'surface_file:', trim(surface_file)
       IF (my_task == 0) WRITE(*,'(A,A)') 'topo_file:', &
         trim(restart_topo_file)
+      CALL WRITE_RESTART_LOG(trim(surface_file))
       CALL READ_SURFACE_RESTART(trim(surface_file), trim(restart_topo_file))
       ENDIF
 
       IF (do_landsurface_restart) THEN
       IF (my_task == 0) WRITE(*,'(A,A)') 'landsurface_file:', &
         trim(landsurface_file)
+      CALL WRITE_RESTART_LOG(trim(landsurface_file))
       CALL READ_LANDSURFACE_RESTART(trim(landsurface_file))
       ENDIF
 
       ENDSUBROUTINE APPLY_SURFACE_RESTART
+
+
+      SUBROUTINE INIT_RESTART_LOG(restart_step)
+      IMPLICIT NONE
+
+      CHARACTER(LEN=*), INTENT(IN) :: restart_step
+
+      INTEGER :: log_ioerr
+
+      IF (my_task /= 0) RETURN
+
+      OPEN(UNIT=97, FILE='restart.log', STATUS='REPLACE', &
+           ACTION='WRITE', IOSTAT=log_ioerr)
+      IF (log_ioerr == 0) THEN
+      WRITE(97,'(A,A)') 'restart from ... ', trim(restart_step)
+      CLOSE(97)
+      ELSE
+      WRITE(*,*) 'failed to open restart.log', log_ioerr
+      ENDIF
+
+      ENDSUBROUTINE INIT_RESTART_LOG
+
+
+      SUBROUTINE WRITE_RESTART_LOG(log_message)
+      IMPLICIT NONE
+
+      CHARACTER(LEN=*), INTENT(IN) :: log_message
+
+      INTEGER :: log_ioerr
+
+      IF (my_task /= 0) RETURN
+
+      OPEN(UNIT=97, FILE='restart.log', STATUS='UNKNOWN', &
+           POSITION='APPEND', ACTION='WRITE', IOSTAT=log_ioerr)
+      IF (log_ioerr == 0) THEN
+      WRITE(97,'(A)') trim(log_message)
+      CLOSE(97)
+      ELSE
+      WRITE(*,*) 'failed to write restart.log', log_ioerr
+      ENDIF
+
+      ENDSUBROUTINE WRITE_RESTART_LOG
 
 
       SUBROUTINE RESOLVE_RESTART_IT(restart_it, read_restart_it)
@@ -521,6 +579,87 @@ CONTAINS
       WRITE(*,*) "TRACER RESTART is successfully completed"
 
       ENDSUBROUTINE READ_TRACER_RESTART
+
+
+      SUBROUTINE READ_CHEMICAL_RESTART(restart_filename)
+
+      CHARACTER(LEN=*), INTENT(IN) :: restart_filename
+
+#if defined (CHEM)
+      INTEGER :: nc_err
+      INTEGER :: ncid, varid
+      INTEGER(KIND=int_kind) :: nt
+      INTEGER(KIND=mpi_offset_kind), DIMENSION(4) :: arraystart, readlen
+      LOGICAL(KIND=log_kind), DIMENSION(nchem) :: missing_chem
+      CHARACTER(LEN=6) :: chem_name
+
+      IF (nchem <= 0) RETURN
+
+      nc_err = nfmpi_open(mpi_comm_world, restart_filename, nf_nowrite, &
+                          mpi_info_null, ncid)
+      IF (nc_err /= 0) THEN
+      WRITE(*,*) "restart chemical file don't exist"
+      STOP
+      ENDIF
+
+      arraystart(1) = (NI_SBDM) * MI1 + 1
+      arraystart(2) = (NJ_SBDM) * MJ1 + 1
+      arraystart(3) = 1
+      arraystart(4) = 1
+
+      readlen(1) = MI1
+      readlen(2) = MJ1
+      readlen(3) = NK2
+      readlen(4) = 1
+
+      missing_chem = .false.
+
+      IF (my_task == 0) WRITE(*,*) "chemical restart mapping:"
+
+      DO nt = 1, nchem
+      chem_name = restart_chem_name_list(nt)
+      IF (my_task == 0) WRITE(*,'(I4,1X,A)') nt, trim(chem_name)
+
+      nc_err = nfmpi_inq_varid(ncid, trim(chem_name), varid)
+      IF (nc_err /= 0) THEN
+      missing_chem(nt) = .true.
+      CYCLE
+      ENDIF
+
+      nc_err = nfmpi_get_vara_double_all(ncid, varid, arraystart, &
+               readlen, CHEM3D(1:MI1,1:MJ1,1:NK2,nt))
+      IF (nc_err /= 0) THEN
+      WRITE(*,*) "restart chemical read fail", trim(chem_name), nc_err
+      nc_err = nfmpi_close(ncid)
+      STOP
+      ENDIF
+      ENDDO
+
+      nc_err = nfmpi_close(ncid)
+
+      IF (ANY(missing_chem)) THEN
+      IF (my_task == 0) THEN
+      WRITE(*,*) "chemical restart is incomplete"
+      WRITE(*,*) "missing chemical variables in:", trim(restart_filename)
+      DO nt = 1, nchem
+      IF (missing_chem(nt)) WRITE(*,'(I4,1X,A)') nt, &
+        trim(restart_chem_name_list(nt))
+      ENDDO
+      WRITE(*,*) "all required chemical species must be present"
+      ENDIF
+      STOP
+      ENDIF
+
+      CALL bound_3d
+
+      IF (my_task == 0) &
+      WRITE(*,*) "CHEMICAL RESTART is successfully completed"
+#else
+      IF (my_task == 0) WRITE(*,*) &
+        "CHEMICAL RESTART skipped: CHEM is not enabled"
+#endif
+
+      ENDSUBROUTINE READ_CHEMICAL_RESTART
 
 
       SUBROUTINE READ_LANDSURFACE_RESTART(restart_filename)
