@@ -9,7 +9,7 @@ USE const3d
 USE bound
 USE domain_decomposition
 #if defined (LSM)
-USE land_module, only : lT1, lST, lSM, lSL, lALBEDO, LU
+USE land_module, only : lST, lSM, lSL, lALBEDO, LU, lCM, lCH
 #endif
 #if defined (RADCODE)
 USE rrtm_vars, only : sstxy, albdo
@@ -532,7 +532,7 @@ CONTAINS
       INTEGER :: ncid
       INTEGER :: I, J
       INTEGER(KIND=mpi_offset_kind), DIMENSION(3) :: arraystart, readlen
-      REAL(KIND=int_kind), DIMENSION(MI1,MJ1) :: read_albedo
+      REAL(KIND=int_kind), DIMENSION(MI1,MJ1) :: read_albedo, read_lcm, read_lch
       REAL(KIND=int_kind), DIMENSION(MI1,MJ1,4) :: read_st, read_sm, read_sl
 
       nc_err = nfmpi_open(mpi_comm_world, restart_filename, nf_nowrite, &
@@ -576,6 +576,10 @@ CONTAINS
                                   arraystart, readlen)
       CALL READ_LANDSURFACE_LAYER(ncid, 'albedo', read_albedo, &
                                   arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'cm', read_lcm, &
+                                  arraystart, readlen)
+      CALL READ_LANDSURFACE_LAYER(ncid, 'ch', read_lch, &
+                                  arraystart, readlen)
 
       nc_err = nfmpi_close(ncid)
 
@@ -585,6 +589,8 @@ CONTAINS
               lST(I,J,1:4) = read_st(I,J,1:4)
               lSM(I,J,1:4) = read_sm(I,J,1:4)
               lSL(I,J,1:4) = read_sl(I,J,1:4)
+              lCM(I,J)     = read_lcm(I,J)
+              lCH(I,J)     = read_lch(I,J)
               lALBEDO(I,J) = read_albedo(I,J)
 #if defined (RADCODE)
               albdo(I,J) = lALBEDO(I,J)
