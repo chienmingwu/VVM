@@ -8,10 +8,7 @@ USE workcom
 USE const3d
 USE utils
 USE bound
-use domain_decomposition, only : my_task
-USE restart_module, only : READ_THERMODYNAMIC_RESTART, &
-                           READ_DYNAMIC_RESTART, &
-                           READ_SURFACE_RESTART
+USE domain_decomposition, only : my_task
 
 IMPLICIT NONE
 PRIVATE
@@ -19,7 +16,6 @@ PRIVATE
 PUBLIC :: &
   USER_set_mean_profile_and_SST, &
   USER_set_3D_perturbation, &
-  USER_apply_restart, &
   USER_set_vertical_coordinate, &
   USER_set_start_time, &
   USER_set_topography_and_land_type, &
@@ -97,53 +93,6 @@ CONTAINS
   ENDSUBROUTINE USER_set_3D_perturbation
 
 
-  SUBROUTINE USER_apply_restart
-      IMPLICIT NONE
-
-      LOGICAL(KIND=log_kind), PARAMETER :: do_restart = .false.
-
-      LOGICAL(KIND=log_kind), PARAMETER :: do_thermo_restart = .true.
-      LOGICAL(KIND=log_kind), PARAMETER :: do_dynamic_restart = .true.
-      LOGICAL(KIND=log_kind), PARAMETER :: do_surface_restart = .true.
-      LOGICAL(KIND=log_kind), PARAMETER :: read_hydrometeor = .true.
-
-      CHARACTER(LEN=*), PARAMETER :: restart_prefix = &
-           '/data/C.shaoyu/VVM/DATA/case_half_land_mountain/archive/case_half_land_mountain'
-      CHARACTER(LEN=6), PARAMETER :: restart_step = '000100'
-
-      CHARACTER(LEN=900) :: thermo_file
-      CHARACTER(LEN=900) :: dynamic_file
-      CHARACTER(LEN=900) :: surface_file
-      CHARACTER(LEN=900) :: topo_file
-
-      IF (.NOT. do_restart) RETURN
-      if(my_task.eq.0) WRITE(*,'(A,A)') '--- RESTART_STEP: ', restart_step
-
-      thermo_file = trim(restart_prefix)//'.L.Thermodynamic-'//restart_step//'.nc'
-      dynamic_file = trim(restart_prefix)//'.L.Dynamic-'//restart_step//'.nc'
-      surface_file = trim(restart_prefix)//'.C.Surface-'//restart_step//'.nc'
-      topo_file = "TOPO.nc"
-
-      IF (do_thermo_restart) THEN
-      if(my_task.eq.0) WRITE(*,'(A)') 'thermo_file:', trim(thermo_file)
-      if(my_task.eq.0) WRITE(*,*) 'hydro:', read_hydrometeor
-      CALL READ_THERMODYNAMIC_RESTART(trim(thermo_file), read_hydrometeor)
-      ENDIF
-
-      IF (do_dynamic_restart) THEN
-      if(my_task.eq.0) WRITE(*,'(A)') 'dynamic_file:', trim(dynamic_file)
-      CALL READ_DYNAMIC_RESTART(trim(dynamic_file))
-      ENDIF
-
-      IF (do_surface_restart) THEN
-      if(my_task.eq.0) WRITE(*,'(A)') 'surface_file:', trim(surface_file)
-      if(my_task.eq.0) WRITE(*,'(A)') 'topo_file:', trim(topo_file)
-      CALL READ_SURFACE_RESTART(trim(surface_file), trim(topo_file))
-      ENDIF
-
-  ENDSUBROUTINE USER_apply_restart
-
- 
   SUBROUTINE USER_set_start_time(iyear0, imonth0, iday0, hour0)
       !! --------------------
       !! This module is used in time_manager_module.F 

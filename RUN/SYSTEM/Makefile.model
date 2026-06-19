@@ -257,7 +257,6 @@ TOPODEP = $(TOPOCODE) \
 	bound.F \
 	domain_decomposition.F \
 	physics_v10d.f90 \
-        restart_module.F \
 
 ####hchun###
 SRC_FREE = $(SRC_FREE_CDECKS) $(SRC_FREE_RRTMG) $(SRC_FREE_CODE) $(SRC_FREE_LSM) $(SRC_FREE_RAD_RRTM_OPT)
@@ -537,11 +536,9 @@ ldinput.o: kinds.o PARMSLD.o RADOUTLD.o CONSTLD.o CONST3D.o workcom.o ldoutput.o
 
 ini_3d_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o TIMEINTERP.o bound.o time_interp_module.o update_tracer_module.o ldoutput.o domain_decomposition.o turb_1d_module.o turb_3d_module.o wind_module.o user_module.o update_chemical_module.o restart_module.o
 
-restart_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o workcom.o bound.o domain_decomposition.o
+restart_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o workcom.o bound.o domain_decomposition.o land_module.o rrtm_vars.o
 
-user_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o bound.o domain_decomposition.o physics_v10d.o restart_module.o
-
-restart_module.o: 
+user_module.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o bound.o domain_decomposition.o physics_v10d.o
 
 ldoutput.o: kinds.o PARMSLD.o CONST3D.o CONSTLD.o utils.o workcom.o PROFOUTLD.o RADOUTLD.o TIMEINFO.o gather_scatter.o domain_decomposition.o TIMEINTERP.o 
 
@@ -571,12 +568,12 @@ time_interp_module.o: kinds.o PARMSLD.o TIMEINTERP.o CONST3D.o CONSTLD.o workcom
 
 time_manager_module.o: kinds.o PARMSLD.o TIMEINFO.o CONSTLD.o ldinput.o TIMEINTERP.o CONST3D.o workcom.o domain_decomposition.o user_module.o
 
-land_module.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o module_simple_driver.o workcom.o kpp_module.o
+land_module.o: kinds.o PARMSLD.o CONSTLD.o domain_decomposition.o module_simple_driver.o workcom.o kpp_module.o rrtm_vars.o utils.o TIMEINFO.o
 
 kpp_module.o: kpp_module.F
 
 #======hchun====================================
-turb_3d_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o workcom.o bound.o utils.o land_module.o
+turb_3d_module.o: kinds.o PARMSLD.o PROFOUTLD.o CONST3D.o CONSTLD.o workcom.o bound.o utils.o land_module.o rad.o
 #===============================================
 turb_1d_module.o: kinds.o PARMSLD.o CONSTLD.o bound.o
 
@@ -614,5 +611,3 @@ vertical_adaptive.o: CONST3D.o CONSTLD.o PARMSLD.o kinds.o domain_decomposition.
 #-----------------------------------------------------------------------------
 # Der (7 Jan 2023)
 create_topolsm.o: CONSTLD.o PARMSLD.o kinds.o user_module.o
-
-

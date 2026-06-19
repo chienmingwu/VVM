@@ -24,8 +24,9 @@ USE pnetcdf
 USE wind_module
 USE user_module, only: USER_set_mean_profile_and_SST, &
                        USER_set_vertical_coordinate, &
-                       USER_set_3D_perturbation, &
-                       USER_apply_restart
+                       USER_set_3D_perturbation
+USE restart_module, only: APPLY_3D_RESTART, &
+                          APPLY_SURFACE_RESTART
 
 
 IMPLICIT NONE
@@ -275,7 +276,7 @@ CONTAINS
   660 CONTINUE
       CALL BOUND_3D_XY
 
-      CALL USER_apply_restart
+      CALL APPLY_3D_RESTART(-1_int_kind)
 
 #if defined (AREAMN)
 !-------------------
@@ -332,6 +333,8 @@ CONTAINS
 #if defined (DIFFUSION)
       call turb_3d_ini
 #endif
+
+      CALL APPLY_SURFACE_RESTART(-1_int_kind)
 
    END SUBROUTINE ini_3d
 
