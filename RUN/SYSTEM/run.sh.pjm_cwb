@@ -27,5 +27,6 @@ date > runtime
 mpirun -np 1 ./create_topolsm
 mpirun -np total_cores ./vvm 
 date >> runtime
+bash make_ctl_bash.sh
 
 

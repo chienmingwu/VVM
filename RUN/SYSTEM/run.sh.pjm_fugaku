@@ -35,5 +35,6 @@ date > runtime
 mpiexec -n 1 ./create_topolsm
 mpiexec -n total_cores ./vvm 
 date >> runtime
+bash make_ctl_bash.sh
 
 
