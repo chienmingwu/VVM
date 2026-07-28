@@ -40,6 +40,16 @@ Studies use VVM
    * Hsu et al. 2023
    * Tsai et al. 2023
    * Hsieh et al. 2024
+   * Chen et al. 2024
+   * Wang et al. 2024
+   * Chen et al. 2025
+   * Kao et al. 2025
+   * Chen et al. 2025
+   * Fan et al. 2025
+   * Hsu et al. 2026
+   * Huang and Wu 2026
+   * Hsieh et al. 2026
+   * Tseng et al. 2026
      
 
 To run VVM 
